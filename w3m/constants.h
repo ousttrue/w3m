@@ -2,6 +2,36 @@
 
 // #define CURRENT_VERSION = "w3m/0.5.3+git20230718";
 #define KEYMAP_FILE "keymap"
+#define PIPEBUFFERNAME "*stream*"
+#define MINIMUM_PIXEL_PER_CHAR 4.0
+#define MAXIMUM_PIXEL_PER_CHAR 32.0
+#define LINELEN 256 /* Initial line length */
+#define MAXIMUM_COLS 1024
+#define DEFAULT_COLS 80
+#define W3M_LANG EN
+#define LANG W3M_LANG
+
+#ifdef FALSE
+#undef FALSE
+#endif
+
+#ifdef TRUE
+#undef TRUE
+#endif
+
+#define FALSE 0
+#define TRUE 1
+
+#ifdef FALSE
+#undef FALSE
+#endif
+
+#ifdef TRUE
+#undef TRUE
+#endif
+
+#define FALSE 0
+#define TRUE 1
 
 #define DNS_ORDER_UNSPEC 0
 #define DNS_ORDER_INET_INET6 1
@@ -30,3 +60,9 @@
 #define GRAPHIC_CHAR_ASCII 2
 #define GRAPHIC_CHAR_DEC 1
 #define GRAPHIC_CHAR_CHARSET 0
+
+#define INLINE_IMG_NONE 0
+#define INLINE_IMG_OSC5379 1
+#define INLINE_IMG_SIXEL 2
+#define INLINE_IMG_ITERM2 3
+#define INLINE_IMG_KITTY 4

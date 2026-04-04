@@ -15,6 +15,9 @@
 
 #define FIRST_ANCHOR_SIZE 30
 
+#define bpcmp(a, b) \
+    (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
+
 AnchorList*
 putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
     char* referer, char* title, unsigned char key, int line, int pos)
@@ -360,7 +363,7 @@ reAnchorAny(Buffer* buf, char* re,
     if ((re = regexCompile(re, 1)) != NULL) {
         return re;
     }
-    for (l = MarkAllPages ? buf->firstLine : buf->topLine; l != NULL && (MarkAllPages || l->linenumber < buf->topLine->linenumber + (LINES-1));
+    for (l = MarkAllPages ? buf->firstLine : buf->topLine; l != NULL && (MarkAllPages || l->linenumber < buf->topLine->linenumber + (LINES - 1));
         l = l->next) {
         if (p && l->bpos)
             goto next_line;

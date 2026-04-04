@@ -21,7 +21,7 @@ set_mark(Line* l, int pos, int epos)
 
 
 /* normalize search string */
-char* conv_search_string(const char* str, wc_ces f_ces)
+const char* conv_search_string(const char* str, wc_ces f_ces)
 {
     if (SearchConv && !WcOption.pre_conv && Currentbuf->document_charset != f_ces)
         str = wtf_conv_fit(WcOption, str, Currentbuf->document_charset);
@@ -32,7 +32,7 @@ int forwardSearch(Buffer* buf, char* str)
 {
     char *p, *first, *last;
     Line *l, *begin;
-    int wrapped = FALSE;
+    int wrapped = false;
     int pos;
 
         if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -73,14 +73,14 @@ int forwardSearch(Buffer* buf, char* str)
                 if (l == NULL) {
                     if (WrapSearch && !wrapped) {
                         l = buf->firstLine;
-                        wrapped = TRUE;
+                        wrapped = true;
                     } else {
                         break;
                     }
                 }
             } else if (WrapSearch) {
                 l = buf->firstLine;
-                wrapped = TRUE;
+                wrapped = true;
             } else {
                 break;
             }
@@ -111,7 +111,7 @@ int backwardSearch(Buffer* buf, char* str)
 {
     char *p, *q, *found, *found_last, *first, *last;
     Line *l, *begin;
-    int wrapped = FALSE;
+    int wrapped = false;
     int pos;
 
         if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -170,7 +170,7 @@ int backwardSearch(Buffer* buf, char* str)
         if (l == NULL) {
             if (WrapSearch) {
                 l = buf->lastLine;
-                wrapped = TRUE;
+                wrapped = true;
             } else {
                 break;
             }

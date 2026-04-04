@@ -1036,7 +1036,7 @@ message_list_panel(void)
     return loadHTMLString(tmp);
 }
 
-void message(char* s, int return_x, int return_y)
+void message(const char* s, int return_x, int return_y)
 {
     if (!fmInitialized)
         return;

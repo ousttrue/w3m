@@ -20,6 +20,7 @@ typedef struct _ParsedURL {
     const char* label;
     bool is_nocache;
 } ParsedURL;
+#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
 ParsedURL* baseURL(Buffer* buf);
 int openSocket(char* hostname, char* remoteport_name, unsigned short remoteport_num);
@@ -35,6 +36,8 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 struct form_list;
 struct _textlist;
 struct HttpRequest;
+
+#define NO_REFERER ((char*)-1)
 
 enum UrlOptionFlags {
     RG_NOCACHE = 1,
@@ -55,5 +58,5 @@ ParsedURL* schemeToProxy(int scheme);
 wc_ces url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset);
 char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset);
 char* url_decode2(const char* url, const Buffer* buf);
-Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label);
+Str _parsedURL2Str(ParsedURL* pu, bool pass, bool user, bool label);
 const char* guessContentType(const char* filename);

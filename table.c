@@ -340,8 +340,8 @@ int visible_length_offset = 0;
 int visible_length(char* str)
 {
     int len = 0, n, max_len = 0;
-    int status = R_ST_NORMAL;
-    int prev_status = status;
+    enum TokenStatus status = R_ST_NORMAL;
+    enum TokenStatus prev_status = status;
     Str tagbuf = Strnew();
     char *t, *r2;
     int amp_len = 0;

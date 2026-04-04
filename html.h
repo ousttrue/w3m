@@ -28,21 +28,6 @@ struct table2 {
     char* item2;
 };
 
-union input_stream;
-struct URLFile {
-    unsigned char scheme;
-    char is_cgi;
-    char encoding;
-    union input_stream* stream;
-    const char* ext;
-    int compression;
-    int content_encoding;
-    const char* guess_type;
-    const char* ssl_certificate;
-    const char* url;
-    time_t modtime;
-};
-
 #define CMP_NOCOMPRESS 0
 #define CMP_COMPRESS 1
 #define CMP_GZIP 2

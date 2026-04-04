@@ -2,6 +2,9 @@
 #include "html.h"
 #include "Str.h"
 
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
+#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
+
 #define ALIGN_CENTER 0
 #define ALIGN_LEFT 1
 #define ALIGN_RIGHT 2

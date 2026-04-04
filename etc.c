@@ -1,5 +1,7 @@
 #include "etc.h"
+#include "constants.h"
 #include "ctrlcode.h"
+#include "istream.h"
 #include "textlist.h"
 #include "terms.h"
 #include "indep.h"

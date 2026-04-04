@@ -19,7 +19,7 @@ void addChar(char c, Lineprop mode);
 void addMChar(char* c, Lineprop mode, size_t len);
 void record_err_message(char* s);
 Buffer* message_list_panel(void);
-void message(char* s, int return_x, int return_y);
+void message(const char* s, int return_x, int return_y);
 void disp_err_message(char* s, int redraw_current);
 void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse);
 void disp_message(char* s, int redraw_current);

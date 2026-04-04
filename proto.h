@@ -4,25 +4,22 @@
  *
  *   Created: Wed Feb 10 12:47:03 1999
  */
+#include <libwc/wc_types.h>
+
 struct Hist;
 extern int main(int argc, char** argv);
 extern void pushEvent(const char* cmd, void* data);
-extern void chkURLBuffer(Buffer* buf);
-extern void chkNMIDBuffer(Buffer* buf);
 extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status,
     const char* cmd, void* data);
 
-extern int currentLn(Buffer* buf);
-extern void tmpClearBuffer(Buffer* buf);
+typedef struct _Buffer Buffer;
 
-extern void examineFile(const char* path, struct URLFile* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
-extern Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
-    wc_ces doc_charset);
 struct form_list;
-extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, char* referer,
+struct _ParsedURL;
+extern Buffer* loadGeneralFile(const char* path, struct _ParsedURL* current, char* referer,
     int flag, struct form_list* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -45,6 +42,7 @@ extern int getMetaRefreshParam(char* q, Str* refresh_uri);
 
 struct _textlinelist;
 extern void HTMLlineproc2(Buffer* buf, struct _textlinelist* tl);
+struct URLFile;
 extern Buffer* loadHTMLBuffer(struct URLFile* f, Buffer* newBuf);
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
@@ -52,8 +50,8 @@ extern void showProgress(int64_t* linelen, int64_t* trbyte);
 extern void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src,
     int internal);
 extern Buffer* loadHTMLString(Str page);
-extern Str loadGopherDir(struct URLFile* uf, ParsedURL* pu, wc_ces* charset);
-extern Str loadGopherSearch(struct URLFile* uf, ParsedURL* pu, wc_ces* charset);
+extern Str loadGopherDir(struct URLFile* uf, struct _ParsedURL* pu, wc_ces* charset);
+extern Str loadGopherSearch(struct URLFile* uf, struct _ParsedURL* pu, wc_ces* charset);
 
 extern int save2tmp(struct URLFile uf, const char* tmpf);
 extern int _doFileCopy(const char* tmpf, const char* defstr, int download);
@@ -61,11 +59,10 @@ extern int _doFileCopy(const char* tmpf, const char* defstr, int download);
 extern int doFileMove(const char* tmpf, const char* defstr);
 extern int doFileSave(struct URLFile uf, const char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
-extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
-extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
+extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct _ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, char* field);
 
 extern int forwardSearch(Buffer* buf, char* str);
@@ -95,25 +92,16 @@ extern void form_write_from_file(FILE* f, char* boundary, char* name,
 
 extern Buffer* page_info_panel(Buffer* buf);
 
-
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 
-
-extern void reAnchorWord(Buffer* buf, Line* l, int spos, int epos);
-extern char* reAnchor(Buffer* buf, char* re);
-extern char* reAnchorNews(Buffer* buf, char* re);
-extern char* reAnchorNewsheader(Buffer* buf);
-extern Buffer* link_list_panel(Buffer* buf);
-
-
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(ParsedURL* pu, char* realm,
+extern int find_auth_user_passwd(struct _ParsedURL* pu, char* realm,
     Str* uname, Str* pwd, int is_proxy);
-extern void add_auth_user_passwd(ParsedURL* pu, char* realm,
+extern void add_auth_user_passwd(struct _ParsedURL* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(ParsedURL* pu, char* realm,
+extern void invalidate_auth_user_passwd(struct _ParsedURL* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
 extern char* last_modified(Buffer* buf);
 extern Str romanNumeral(int n);
@@ -138,4 +126,3 @@ extern char* getRegexWord(const char** str, struct regex** regex_ret);
 extern const char* guess_save_name(Buffer* buf, const char* file);
 
 extern Str getLinkNumberStr(int correction);
-

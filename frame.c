@@ -1,5 +1,6 @@
 #include "frame.h"
 #include "html_token.h"
+#include "html_feed_environ.h"
 #include "form.h"
 #include "terms.h"
 #include "istream.h"
@@ -441,8 +442,8 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
             union frameset_element frame;
             struct frameset* f_frameset;
             int i = c + r * f->col;
-            char* p = "";
-            int status = R_ST_NORMAL;
+            const char* p = "";
+            enum TokenStatus status = R_ST_NORMAL;
             Str tok = Strnew();
             int pre_mode = 0;
             int end_tag = 0;

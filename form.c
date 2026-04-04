@@ -1,4 +1,5 @@
 #include "form.h"
+#include "istream.h"
 #include "global.h"
 #include "indep.h"
 #include "alloc.h"

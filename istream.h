@@ -1,8 +1,9 @@
-/* $Id: istream.h,v 1.12 2003/10/20 16:41:56 ukai Exp $ */
-#ifndef IO_STREAM_H
-#define IO_STREAM_H
+#pragma once
 
 #include "indep.h"
+
+#include <libwc/wc_types.h>
+
 #include <stdio.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
@@ -90,6 +91,20 @@ union input_stream {
     struct encoded_stream ens;
 };
 
+struct URLFile {
+    unsigned char scheme;
+    char is_cgi;
+    char encoding;
+    union input_stream* stream;
+    const char* ext;
+    int compression;
+    int content_encoding;
+    const char* guess_type;
+    const char* ssl_certificate;
+    const char* url;
+    time_t modtime;
+};
+
 typedef struct base_stream* BaseStream;
 typedef struct file_stream* FileStream;
 typedef struct str_stream* StrStream;
@@ -136,4 +151,8 @@ extern Str ssl_get_certificate(SSL* ssl, char* hostname);
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
-#endif
+
+void examineFile(const char* path, struct URLFile* uf);
+Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
+    wc_ces doc_charset);
+int checkSaveFile(InputStream stream, char* path);

@@ -1,4 +1,3 @@
-/* $Id: Str.h,v 1.6 2006/04/07 13:35:35 inu Exp $ */
 /*
  * String manipulation library for Boehm GC
  *
@@ -13,8 +12,7 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
-#ifndef GC_STR_H
-#define GC_STR_H
+#pragma once
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -80,4 +78,6 @@ void Strgrow(Str s);
 #define Strinsert(s, n, p) Strinsert_charp((s), (n), (p)->ptr)
 #define Strshrinkfirst(s, n) Strdelete((s), 0, (n))
 #define Strfputs(s, f) fwrite((s)->ptr, 1, (s)->length, (f))
-#endif /* not GC_STR_H */
+
+#define EOL(l) (&(l)->ptr[(l)->length])
+#define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])

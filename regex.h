@@ -24,14 +24,14 @@ typedef struct regex {
     struct regex* alt_regex;
 } Regex;
 
-Regex* newRegex(char* ex, int igncase, Regex* regex, char** error_msg);
+Regex* newRegex(const char* ex, int igncase, Regex* regex, const char** error_msg);
 
 int RegexMatch(Regex* re, char* str, int len, int firstp);
 
 void MatchedPosition(Regex* re, char** first, char** last);
 
 /* backward compatibility */
-char* regexCompile(char* ex, int igncase);
+const char* regexCompile(const char* ex, int igncase);
 
 int regexMatch(char* str, int len, int firstp);
 

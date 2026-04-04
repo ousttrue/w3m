@@ -1,4 +1,5 @@
 #include "image.h"
+#include "constants.h"
 #include "textlist.h"
 #include "hash.h"
 #include "terms.h"

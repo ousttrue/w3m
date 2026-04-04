@@ -980,7 +980,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
     }
 }
 
-Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
+Str _parsedURL2Str(ParsedURL* pu, bool pass, bool user, bool label)
 {
     Str tmp;
     ;

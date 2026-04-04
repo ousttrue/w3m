@@ -1,6 +1,21 @@
 #pragma once
 #include <sys/types.h>
 
+#define MAX_IMAGE 1000
+#define MAX_IMAGE_SIZE 2048
+
+#define IMG_FLAG_SKIP 1
+#define IMG_FLAG_AUTO 2
+
+#define IMG_FLAG_START 0
+#define IMG_FLAG_STOP 1
+#define IMG_FLAG_NEXT 2
+
+#define IMG_FLAG_UNLOADED 0
+#define IMG_FLAG_LOADED 1
+#define IMG_FLAG_ERROR 2
+#define IMG_FLAG_DONT_REMOVE 4
+
 typedef struct _imageCache {
     const char* url;
     struct _ParsedURL* current;

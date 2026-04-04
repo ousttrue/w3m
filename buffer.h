@@ -4,6 +4,10 @@
 #include "line.h"
 #include "url.h"
 
+#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
+#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
+#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
+
 /* Link Buffer */
 #define LB_NOLINK -1
 #define LB_FRAME 0 /* rFrame() */
@@ -25,6 +29,19 @@ typedef struct _BufferPos {
     struct _BufferPos* next;
     struct _BufferPos* prev;
 } BufferPos;
+
+/* Buffer Property */
+#define BP_NORMAL 0x0
+#define BP_PIPE 0x1
+#define BP_FRAME 0x2
+#define BP_INTERNAL 0x8
+#define BP_NO_URL 0x10
+#define BP_REDIRECTED 0x20
+#define BP_CLOSE 0x40
+
+/* mark URL, Message-ID */
+#define CHK_URL 1
+#define CHK_NMID 2
 
 typedef struct _Buffer {
     const char* filename;
@@ -164,3 +181,12 @@ extern void arrangeLine(Buffer* buf);
 extern void cursorXY(Buffer* buf, int x, int y);
 extern void restorePosition(Buffer* buf, Buffer* orig);
 extern int columnSkip(Buffer* buf, int offset);
+extern void reAnchorWord(Buffer* buf, Line* l, int spos, int epos);
+extern char* reAnchor(Buffer* buf, char* re);
+extern char* reAnchorNews(Buffer* buf, char* re);
+extern char* reAnchorNewsheader(Buffer* buf);
+extern Buffer* link_list_panel(Buffer* buf);
+extern void chkURLBuffer(Buffer* buf);
+extern void chkNMIDBuffer(Buffer* buf);
+extern int currentLn(Buffer* buf);
+extern void tmpClearBuffer(Buffer* buf);

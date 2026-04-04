@@ -1146,7 +1146,7 @@ void move(int line, int column)
 #define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
 
 static int
-need_redraw(char* c1, l_prop pr1, char* c2, l_prop pr2)
+need_redraw(const char* c1, l_prop pr1, const char* c2, l_prop pr2)
 {
     if (!c1 || !c2 || strcmp(c1, c2))
         return 1;
@@ -1667,7 +1667,7 @@ void addstr(const char* s)
     }
 }
 
-void addnstr(char* s, int n)
+void addnstr(const char* s, int n)
 {
     int i;
     int len, width;

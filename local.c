@@ -1,4 +1,5 @@
 #include "local.h"
+#include "url.h"
 #include "form.h"
 #include "indep.h"
 #include "alloc.h"

@@ -28,7 +28,7 @@
 
 static char** FRAME;
 static int FRAME_WIDTH;
-static int graph_mode = FALSE;
+static int graph_mode = false;
 #define G_start           \
     {                     \
         if (graph_mode)   \
@@ -648,7 +648,7 @@ static int smDelTab(char c);
 Menu MainMenu;
 /* FIXME: gettextize here */
 static wc_ces MainMenuCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
-static int MainMenuEncode = FALSE;
+static int MainMenuEncode = false;
 
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
@@ -1036,11 +1036,11 @@ static void
 set_menu_frame(void)
 {
     if (graph_ok()) {
-        graph_mode = TRUE;
+        graph_mode = true;
         FRAME_WIDTH = 1;
         FRAME = graph_symbol;
     } else {
-        graph_mode = FALSE;
+        graph_mode = false;
         FRAME_WIDTH = 0;
         FRAME = get_symbol(DisplayCharset, &FRAME_WIDTH);
         if (!WcOption.use_wide)
@@ -1298,15 +1298,15 @@ mSusp(char c)
     return (MENU_NOTHING);
 }
 
-static char* SearchString = NULL;
+static const char* SearchString = NULL;
 
-int (*menuSearchRoutine)(Menu*, char*, int);
+int (*menuSearchRoutine)(Menu*, const char*, int);
 
 static int
-menuForwardSearch(Menu* menu, char* str, int from)
+menuForwardSearch(Menu* menu, const char* str, int from)
 {
     int i;
-    char* p;
+    const char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
         message(p, 0, 0);
         return -1;
@@ -1322,7 +1322,7 @@ menuForwardSearch(Menu* menu, char* str, int from)
 static int
 menu_search_forward(Menu* menu, int from)
 {
-    char* str;
+    const char* str;
     int found;
     str = inputStrHist("Forward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
@@ -1337,7 +1337,7 @@ menu_search_forward(Menu* menu, int from)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
         return found;
-    disp_message("Not found", TRUE);
+    disp_message("Not found", true);
     return -1;
 }
 
@@ -1352,10 +1352,10 @@ mSrchF(char c)
 }
 
 static int
-menuBackwardSearch(Menu* menu, char* str, int from)
+menuBackwardSearch(Menu* menu, const char* str, int from)
 {
     int i;
-    char* p;
+    const char* p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
         message(p, 0, 0);
         return -1;
@@ -1371,7 +1371,7 @@ menuBackwardSearch(Menu* menu, char* str, int from)
 static int
 menu_search_backward(Menu* menu, int from)
 {
-    char* str;
+    const char* str;
     int found;
     str = inputStrHist("Backward: ", NULL, TextHist);
     if (str != NULL && *str == '\0')
@@ -1386,7 +1386,7 @@ menu_search_backward(Menu* menu, int from)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
         return found;
-    disp_message("Not found", TRUE);
+    disp_message("Not found", true);
     return -1;
 }
 
@@ -1404,16 +1404,16 @@ static int
 menu_search_next_previous(Menu* menu, int from, int reverse)
 {
     int found;
-    static int (*routine[2])(Menu*, char*, int) = {
+    static int (*routine[2])(Menu*, const char*, int) = {
         menuForwardSearch, menuBackwardSearch
     };
-    char* str;
 
     if (menuSearchRoutine == NULL) {
-        disp_message("No previous regular expression", TRUE);
+        disp_message("No previous regular expression", true);
         return -1;
     }
-    str = conv_search_string(SearchString, DisplayCharset);
+
+    const char* str = conv_search_string(SearchString, DisplayCharset);
     if (reverse != 0)
         reverse = 1;
     if (menuSearchRoutine == menuBackwardSearch)
@@ -1424,7 +1424,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
         return found;
-    disp_message("Not found", TRUE);
+    disp_message("Not found", true);
     return -1;
 }
 
@@ -1841,7 +1841,7 @@ void initMenu(void)
         MenuItem* item;
         for (item = MainMenuItem; item->type != MENU_END; item++)
             item->label = Strnew_wc_output(wc_conv(WcOption, item->label, MainMenuCharset, InnerCharset))->ptr;
-        MainMenuEncode = TRUE;
+        MainMenuEncode = true;
     }
     if ((mf = fopen(confFile(MENU_FILE), "rt")) != NULL) {
         interpret_menu(mf);
@@ -2042,7 +2042,7 @@ Anchor* list_menu(Buffer* buf)
     AnchorList* al = buf->href;
     Anchor* a;
     Anchor** ap;
-    int i, n, nitem = 0, key = -1, two = FALSE;
+    int i, n, nitem = 0, key = -1, two = false;
     char** label;
     char* t;
     unsigned char c;
@@ -2058,7 +2058,7 @@ Anchor* list_menu(Buffer* buf)
         return NULL;
 
     if (nitem >= nlmKeys)
-        two = TRUE;
+        two = true;
     label = New_N(char*, nitem + 1);
     ap = New_N(Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {

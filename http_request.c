@@ -5,6 +5,7 @@
 #include "url.h"
 #include "fm.h"
 #include "rc.h"
+#include <strings.h>
 
 Str HTTPrequestMethod(struct HttpRequest* hr)
 {
@@ -37,7 +38,7 @@ Str HTTPrequestURI(ParsedURL* pu, struct HttpRequest* hr)
             Strcat_charp(tmp, pu->query);
         }
     } else
-        Strcat(tmp, _parsedURL2Str(pu, TRUE, TRUE, FALSE));
+        Strcat(tmp, _parsedURL2Str(pu, true, true, false));
     return tmp;
 }
 
@@ -47,7 +48,7 @@ parsedURL2RefererOriginStr(ParsedURL* pu)
     const char *f = pu->file, *q = pu->query;
     pu->file = NULL;
     pu->query = NULL;
-    Str s = _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+    Str s = _parsedURL2Str(pu, false, false, false);
     pu->file = f;
     pu->query = q;
     return s;
@@ -93,9 +94,9 @@ otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
     no_referer_ptr = query_SCONF_NO_REFERER_TO(target);
     no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
     if (!no_referer) {
-        int cross_origin = FALSE;
+        bool cross_origin = false;
         if (CrossOriginReferer && current && current->host && (!target || !target->host || strcasecmp(current->host, target->host) != 0 || current->port != target->port || current->scheme != target->scheme))
-            cross_origin = TRUE;
+            cross_origin = true;
         if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
             /* Don't send Referer: if https:// -> http:// */
         } else if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && (current->scheme != SCM_FTP || (current->user == NULL && current->pass == NULL))) {
