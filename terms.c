@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "ctrlcode.h"
 #include "indep.h"
 #include "signal_util.h"
 #include "buffer.h"
@@ -1167,7 +1168,7 @@ void addch(char c)
     addmch(&c, 1);
 }
 
-void addmch(char* pc, size_t len)
+void addmch(const char* pc, size_t len)
 {
     l_prop* pr;
     int dest, i;

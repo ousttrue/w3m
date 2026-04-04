@@ -1,4 +1,6 @@
 #include "url.h"
+#include "form.h"
+#include "terms.h"
 #include "istream.h"
 #include "indep.h"
 #include "buffer.h"
@@ -859,7 +861,7 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q)
 
 void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 {
-    char* p;
+    const char* p;
     Str tmp;
     int relative_uri = FALSE;
 

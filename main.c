@@ -1,4 +1,8 @@
 #include "main.h"
+#include "form.h"
+#include "frame.h"
+#include "parsetag.h"
+#include "func.h"
 #include "istream.h"
 #include "indep.h"
 #include "textlist.h"
@@ -1040,7 +1044,7 @@ dump_extra(Buffer* buf)
         wc_ces_to_charset(buf->document_charset));
     if (buf->ssl_certificate) {
         Str tmp = Strnew();
-        char* p;
+        const char* p;
         for (p = buf->ssl_certificate; *p; p++) {
             Strcat_char(tmp, *p);
             if (*p == '\n') {

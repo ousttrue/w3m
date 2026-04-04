@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include "textlist.h"
 
 #define MATRIX
 #if (defined(MESCHACH) && !defined(MATRIX))
@@ -144,3 +145,4 @@ extern int feed_table(struct table* tbl, char* line, struct table_mode* mode,
 extern void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
     int width);
 extern void pushTable(struct table*, struct table*);
+extern void align(TextLine* lbuf, int width, int mode);

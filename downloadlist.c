@@ -11,6 +11,7 @@
 #include "indep.h"
 #include "fm.h"
 #include "proto.h"
+#include "parsetag.h"
 
 #include <time.h>
 #include <sys/wait.h>

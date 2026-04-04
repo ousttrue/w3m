@@ -1,4 +1,5 @@
 #include "backend.h"
+#include "form.h"
 #include "indep.h"
 #include "main.h"
 #include "global.h"

@@ -21,11 +21,12 @@ extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
 extern Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
     wc_ces doc_charset);
+struct form_list;
 extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, char* referer,
-    int flag, FormList* request);
+    int flag, struct form_list* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
-
+struct parsed_tag;
 extern Str process_img(struct parsed_tag* tag, int width);
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
 extern Str process_input(struct parsed_tag* tag);
@@ -42,7 +43,8 @@ extern Str process_form(struct parsed_tag* tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(char* q, Str* refresh_uri);
 
-extern void HTMLlineproc2(Buffer* buf, TextLineList* tl);
+struct _textlinelist;
+extern void HTMLlineproc2(Buffer* buf, struct _textlinelist* tl);
 extern Buffer* loadHTMLBuffer(struct URLFile* f, Buffer* newBuf);
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
@@ -76,18 +78,18 @@ extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
 extern int visible_length(char* str);
-extern void align(TextLine* lbuf, int width, int mode);
 
 extern struct form_list* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
     struct form_list* _next);
 extern struct form_item_list* formList_addInput(struct form_list* fl,
     struct parsed_tag* tag);
-extern char* form2str(FormItemList* fi);
+struct form_item_list;
+extern char* form2str(struct form_item_list* fi);
 extern int formtype(char* typestr);
 extern void preFormUpdateBuffer(Buffer* buf);
 extern Str textfieldrep(Str s, int width);
-extern void input_textarea(FormItemList* fi);
+extern void input_textarea(struct form_item_list* fi);
 extern void do_internal(char* action, char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,
@@ -121,7 +123,7 @@ extern Str romanAlphabet(int n);
 extern void mySystem(char* command, int background);
 extern char* url_unquote_conv(char* url, wc_ces charset);
 extern char* expandName(char* name);
-
+struct parsed_tagarg;
 extern void change_charset(struct parsed_tagarg* arg);
 
 extern char* searchKeyData(void);

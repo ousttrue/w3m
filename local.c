@@ -1,4 +1,5 @@
 #include "local.h"
+#include "form.h"
 #include "indep.h"
 #include "alloc.h"
 #include "hash.h"
@@ -11,6 +12,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
@@ -213,7 +215,7 @@ set_cgi_environ(char* name, char* fn, char* req_uri)
 static Str
 checkPath(const char* fn, const char* path)
 {
-    char* p;
+    const char* p;
     Str tmp;
     struct stat st;
     while (*path) {

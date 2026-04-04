@@ -1,4 +1,7 @@
 #include "display.h"
+#include "ctrlcode.h"
+#include "myctype.h"
+#include "terms.h"
 #include "indep.h"
 #include "anchor.h"
 #include "wc_util.h"

@@ -1,4 +1,5 @@
 #include "http_request.h"
+#include "form.h"
 #include "global.h"
 #include "cookie.h"
 #include "url.h"
@@ -43,7 +44,7 @@ Str HTTPrequestURI(ParsedURL* pu, struct HttpRequest* hr)
 static Str
 parsedURL2RefererOriginStr(ParsedURL* pu)
 {
-    char *f = pu->file, *q = pu->query;
+    const char *f = pu->file, *q = pu->query;
     pu->file = NULL;
     pu->query = NULL;
     Str s = _parsedURL2Str(pu, FALSE, FALSE, FALSE);

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "ctrlcode.h"
 #include "wc_util.h"
 #include "fm.h"
 

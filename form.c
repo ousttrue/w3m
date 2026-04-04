@@ -1,3 +1,4 @@
+#include "form.h"
 #include "global.h"
 #include "indep.h"
 #include "alloc.h"

@@ -1,4 +1,8 @@
 #include "buffer.h"
+#include "ctrlcode.h"
+#include "html.h"
+#include "frame.h"
+#include "terms.h"
 #include "istream.h"
 #include "alloc.h"
 #include "anchor.h"

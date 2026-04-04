@@ -1,4 +1,7 @@
 #include "global.h"
+#include "ctrlcode.h"
+#include "form.h"
+#include "terms.h"
 #include "indep.h"
 #include "tab.h"
 #include "buffer.h"
@@ -669,7 +672,7 @@ next_dcompl(int next)
         return;
     cm_disp_next = 0;
 
-    d = Strnew_charp(Str_conv_to_system(CDirBuf->ptr, CDirBuf->length));
+    d = Str_conv_to_system(CDirBuf->ptr, CDirBuf->length);
     if (d->length > 0 && Strlastchar(d) != '/')
         Strcat_char(d, '/');
     if (cm_mode & CPL_URL && d->ptr[0] == 'f') {
@@ -805,7 +808,7 @@ doComplete(Str ifn, int* status, int next)
 
     if (!cm_next) {
         NCFileBuf = 0;
-        ifn = Strnew_charp(Str_conv_to_system(ifn->ptr, ifn->length));
+        ifn = Str_conv_to_system(ifn->ptr, ifn->length);
         if (cm_mode & CPL_ON)
             ifn = unescape_spaces(ifn);
         CompleteBuf = Strdup(ifn);
@@ -822,7 +825,7 @@ doComplete(Str ifn, int* status, int next)
             else {
                 CompleteBuf = Strdup(ifn);
                 *status = CPL_FAIL;
-                return Strnew_charp(Str_conv_to_system(CompleteBuf->ptr, CompleteBuf->length));
+                return Str_conv_to_system(CompleteBuf->ptr, CompleteBuf->length);
             }
         }
         if (CompleteBuf->length == 0) {
@@ -909,10 +912,9 @@ static void
 _prev(void)
 {
     struct Hist* hist = CurrentHist;
-    char* p;
-
     if (!use_hist)
         return;
+    const char* p;
     if (strCurrentBuf) {
         p = prevHist(hist);
         if (p == NULL)

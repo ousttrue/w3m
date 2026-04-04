@@ -1,26 +1,6 @@
-/*
- * w3m: WWW wo Miru utility
- *
- * by A.ITO  Feb. 1995
- *
- * You can use,copy,modify and distribute this program without any permission.
- */
 #pragma once
 #define W3M_LANG EN
 #define LANG W3M_LANG
-
-#include "ctrlcode.h"
-#include "html.h"
-#include <gc.h>
-#include "Str.h"
-#include "form.h"
-#include "frame.h"
-#include "parsetag.h"
-#include "parsetagx.h"
-#include "func.h"
-#include "menu.h"
-#include "textlist.h"
-#include "terms.h"
 
 /*
  * Constants.

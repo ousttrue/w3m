@@ -1,4 +1,7 @@
 #include "image.h"
+#include "textlist.h"
+#include "hash.h"
+#include "terms.h"
 #include "indep.h"
 #include "buffer.h"
 #include "anchor.h"

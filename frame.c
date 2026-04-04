@@ -1,4 +1,6 @@
 #include "frame.h"
+#include "form.h"
+#include "terms.h"
 #include "istream.h"
 #include "indep.h"
 #include "alloc.h"

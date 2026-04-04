@@ -1,4 +1,6 @@
 #include "fm.h"
+#include "terms.h"
+#include "html.h"
 #include "istream.h"
 #include "signal_util.h"
 #include "wc_util.h"
@@ -31,7 +33,7 @@ typedef struct _News {
 static News current_news = { NULL, 0, NULL, NULL, NULL };
 
 static Str
-news_command(News* news, char* cmd, char* arg, int* status)
+news_command(News* news, const char* cmd, const char* arg, int* status)
 {
     Str tmp;
 
@@ -225,7 +227,7 @@ add_news_message(Str str, int index, char* date, char* name, char* subject,
 InputStream
 openNewsStream(ParsedURL* pu)
 {
-    char *host, *mode, *group, *p;
+    const char *host, *mode, *group, *p;
     int port, status;
 
     if (pu->file == NULL || *pu->file == '\0')
@@ -273,7 +275,7 @@ openNewsStream(ParsedURL* pu)
                 return NULL;
             p = group;
         } else { /* <newsgroup>/<message-id or article-number> */
-            *p++ = '\0';
+            *(char*)p++ = '\0';
             news_command(&current_news, "GROUP", group, &status);
             if (status != 211)
                 return NULL;

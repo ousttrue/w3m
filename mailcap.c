@@ -1,9 +1,12 @@
 #include "mailcap.h"
+#include "html.h"
+#include "hash.h"
 #include "indep.h"
 #include "global.h"
 #include "fm.h"
 #include "proto.h"
 #include "myctype.h"
+#include "textlist.h"
 #include <stdio.h>
 
 /* fallback viewer. mailcap override these configuration */

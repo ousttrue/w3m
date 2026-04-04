@@ -24,7 +24,7 @@ void setlinescols(void);
 void setupscreen(void);
 int initscr(void);
 void move(int line, int column);
-void addmch(char* p, size_t len);
+void addmch(const char* p, size_t len);
 void addch(char c);
 void wrap(void);
 void touch_line(void);

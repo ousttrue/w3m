@@ -1,4 +1,10 @@
 #include "defun_impl.h"
+#include "myctype.h"
+#include "form.h"
+#include "func.h"
+#include "frame.h"
+#include "menu.h"
+#include "terms.h"
 #include "indep.h"
 #include "anchor.h"
 #include "signal_util.h"
@@ -37,8 +43,7 @@ void nulcmd(struct CmdArgs args)
 
 void escmap(struct CmdArgs args)
 {
-    char c;
-    c = getch();
+    char c = getch();
     if (IS_ASCII(c))
         escKeyProc((int)c, K_ESC, EscKeymap);
 }
@@ -661,7 +666,7 @@ void linend(struct CmdArgs args)
 /* Run editor on the current buffer */
 void editBf(struct CmdArgs args)
 {
-    char* fn = Currentbuf->filename;
+    const char* fn = Currentbuf->filename;
     Str cmd;
 
     if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */

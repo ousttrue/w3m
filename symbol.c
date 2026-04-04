@@ -1,12 +1,13 @@
 #include "symbol.h"
+#include "ctrlcode.h"
 #include "alloc.h"
 #include "global.h"
 #include "constants.h"
-#include "fm.h"
 
 #include "wc_util.h"
 #include <libwc/ces.h>
 #include <libwc/conv.h>
+#include <libwc/wtf.h>
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

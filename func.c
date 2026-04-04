@@ -2,6 +2,7 @@
  * w3m func.c
  */
 #include "global.h"
+#include "ctrlcode.h"
 #include "indep.h"
 #include "alloc.h"
 #include "display.h"

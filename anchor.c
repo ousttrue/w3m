@@ -1,4 +1,6 @@
 #include "anchor.h"
+#include "form.h"
+#include "menu.h"
 #include "indep.h"
 #include "alloc.h"
 #include "image.h"

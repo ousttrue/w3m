@@ -365,7 +365,7 @@ char* currentdir()
     return path;
 }
 
-char* cleanupName(char* name)
+char* cleanupName(const char* name)
 {
     char *buf, *p, *q;
 

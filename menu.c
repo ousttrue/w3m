@@ -1,4 +1,5 @@
 #include "global.h"
+#include "terms.h"
 #include "alloc.h"
 #include "anchor.h"
 #include "search.h"

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "html.h"
 #include "signal_util.h"
 #include "mimehead.h"
 #include "display.h"

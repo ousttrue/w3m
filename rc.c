@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "menu.h"
 #include "indep.h"
 #include "alloc.h"
 #include "buffer.h"
