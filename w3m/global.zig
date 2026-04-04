@@ -2,6 +2,8 @@ const c = @cImport({
     @cInclude("constants.h");
 });
 
+pub export var LINES: c_int = 0;
+pub export var COLS: c_int = 0;
 pub export var Tabstop: c_int = 8;
 pub export var IndentIncr: c_int = 4;
 pub export var ShowEffect: c_int = 1;

@@ -167,14 +167,14 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, int flag, str
             else
                 offset = 0;
         }
-        move(LASTLINE, 0);
+        move((LINES-1), 0);
         addstr(prompt);
         if (is_passwd)
             addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         else
             addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         clrtoeolx();
-        move(LASTLINE, opos + x - offset);
+        move((LINES-1), opos + x - offset);
         refresh();
 
     next_char:
@@ -235,7 +235,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, int flag, str
     if (i_broken)
         return NULL;
 
-    move(LASTLINE, 0);
+    move((LINES-1), 0);
     refresh();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -638,12 +638,12 @@ next_dcompl(int next)
     cm_disp_clear = FALSE;
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    if (LASTLINE >= 3) {
+    if ((LINES-1) >= 3) {
         comment = TRUE;
-        nline = LASTLINE - 2;
-    } else if (LASTLINE) {
+        nline = (LINES-1) - 2;
+    } else if ((LINES-1)) {
         comment = FALSE;
-        nline = LASTLINE;
+        nline = (LINES-1);
     } else {
         return;
     }
@@ -736,7 +736,7 @@ disp_next:
         }
         y++;
     }
-    if (comment && y == LASTLINE - 1) {
+    if (comment && y == (LINES-1) - 1) {
         move(y, 0);
         clrtoeolx();
         bold();

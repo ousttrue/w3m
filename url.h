@@ -3,6 +3,7 @@
 #include <libwc/ces.h>
 
 extern Str header_string;
+extern int ai_family_order_table[7][3]; /* XXX */
 
 typedef struct _Buffer Buffer;
 

@@ -749,12 +749,12 @@ void geom_menu(Menu* menu, int x, int y, int mselect)
 
     win_y = menu->y - mselect - 1;
     win_h = menu->height + 2;
-    if (win_y + win_h > LASTLINE)
-        win_y = LASTLINE - win_h;
+    if (win_y + win_h > (LINES-1))
+        win_y = (LINES-1) - win_h;
     if (win_y < 0) {
         win_y = 0;
-        if (win_y + win_h > LASTLINE) {
-            win_h = LASTLINE - win_y;
+        if (win_y + win_h > (LINES-1)) {
+            win_h = (LINES-1) - win_y;
             menu->height = win_h - 2;
             if (menu->height <= mselect)
                 menu->offset = mselect - menu->height + 1;
@@ -1696,7 +1696,7 @@ void optionMenu(int x, int y, char** label, int* variable, int initial, const ch
 
     new_option_menu(&menu, label, variable, cmd);
     menu.cursorX = COLS - 1;
-    menu.cursorY = LASTLINE;
+    menu.cursorY = (LINES-1);
     menu.x = x;
     menu.y = y;
     menu.initial = initial;

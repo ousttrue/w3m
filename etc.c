@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "url.h"
 #include "main.h"
 #include "wc_util.h"
 #include "display.h"

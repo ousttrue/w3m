@@ -331,11 +331,6 @@ char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
     *T_so, *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me,
     *T_ti, *T_te, *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
 
-int LINES, COLS;
-#if defined(__CYGWIN__)
-int LASTLINE;
-#endif /* defined(__CYGWIN__) */
-
 static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
 static int CurLine, CurColumn;
@@ -1074,7 +1069,7 @@ void setlinescols(void)
     if (LINES > MAX_LINE)
         LINES = MAX_LINE;
 #if defined(__CYGWIN__)
-    LASTLINE = LINES - (isWinConsole == TERM_CYGWIN_RESERVE_IME ? 2 : 1);
+    (LINES - 1) = LINES - (isWinConsole == TERM_CYGWIN_RESERVE_IME ? 2 : 1);
 #endif /* defined(__CYGWIN__) */
 }
 
@@ -1304,7 +1299,7 @@ void addmch(char* pc, size_t len)
 
 void wrap(void)
 {
-    if (CurLine == LASTLINE)
+    if (CurLine == (LINES - 1))
         return;
     CurLine++;
     CurColumn = 0;
@@ -1430,7 +1425,7 @@ void refresh(void)
     short* dirty;
 
     wc_putc_init(WcOption, InnerCharset, DisplayCharset);
-    for (line = 0; line <= LASTLINE; line++) {
+    for (line = 0; line <= (LINES - 1); line++) {
         dirty = &ScreenImage[line]->isdirty;
         if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;

@@ -26,7 +26,7 @@ newBuffer(int width)
     bzero((void*)n, sizeof(Buffer));
     n->width = width;
     n->COLS = COLS;
-    n->LINES = LASTLINE;
+    n->LINES = (LINES-1);
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -315,7 +315,7 @@ listBuffer(Buffer* top, Buffer* current)
         setbcolor(bg_color);
     }
     clrtobotx();
-    for (i = 0; i < LASTLINE; i++) {
+    for (i = 0; i < (LINES-1); i++) {
         if (buf == current) {
             c = i;
             standout();
@@ -341,7 +341,7 @@ listBuffer(Buffer* top, Buffer* current)
         0);
     standend();
     /*
-     * move(LASTLINE, COLS - 1); */
+     * move((LINES-1), COLS - 1); */
     move(c, 0);
     refresh();
     return buf->nextBuffer;
@@ -355,7 +355,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
 {
     int i, cpoint, /* Current Buffer Number */
         spoint, /* Current Line on Screen */
-        maxbuf, sclimit = LASTLINE; /* Upper limit of line * number in
+        maxbuf, sclimit = (LINES-1); /* Upper limit of line * number in
                                      * the * screen */
     Buffer *buf, *topbuf;
     char c;
@@ -446,7 +446,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
             return currentbuf;
         }
         /*
-         * move(LASTLINE, COLS - 1);
+         * move((LINES-1), COLS - 1);
          */
         move(spoint, 0);
         refresh();
@@ -515,7 +515,7 @@ void reshapeBuffer(Buffer* buf)
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = TRUE;
 
-    buf->height = LASTLINE + 1;
+    buf->height = (LINES-1) + 1;
     if (buf->firstLine && sbuf.firstLine) {
         Line* cur = sbuf.currentLine;
         int n;

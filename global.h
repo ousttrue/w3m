@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 
+extern int LINES;
+extern int COLS;
 extern int Tabstop;
 extern int IndentIncr;
 extern int ShowEffect;

@@ -602,16 +602,6 @@ typedef struct http_request {
 
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
-/*
- * Globals.
- */
-
-extern int LINES, COLS;
-#if defined(__CYGWIN__)
-extern int LASTLINE;
-#else /* not defined(__CYGWIN__) */
-#define LASTLINE (LINES - 1)
-#endif /* not defined(__CYGWIN__) */
 
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
@@ -633,7 +623,5 @@ global ParsedURL HTTP_proxy_parsed;
 global ParsedURL HTTPS_proxy_parsed;
 global ParsedURL GOPHER_proxy_parsed;
 global ParsedURL FTP_proxy_parsed;
-extern int ai_family_order_table[7][3]; /* XXX */
 #define Do_not_use_proxy (!use_proxy)
 global TextList* NO_proxy_domains;
-

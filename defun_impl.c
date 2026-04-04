@@ -591,20 +591,10 @@ void selBuf(struct CmdArgs args)
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 void susp(struct CmdArgs args)
 {
-#ifndef SIGSTOP
-    char* shell;
-#endif /* not SIGSTOP */
-    move(LASTLINE, 0);
+    move((LINES-1), 0);
     clrtoeolx();
     refresh();
     fmTerm();
-#ifndef SIGSTOP
-    shell = getenv("SHELL");
-    if (shell == NULL)
-        shell = "/bin/sh";
-    system(shell);
-#else /* SIGSTOP */
-#ifdef SIGTSTP
     signal(SIGTSTP, SIG_DFL); /* just in case */
     /*
      * Note: If susp() was called from SIGTSTP handler,
@@ -612,10 +602,7 @@ void susp(struct CmdArgs args)
      * Currently not.
      */
     kill(0, SIGTSTP); /* stop whole job, not a single process */
-#else
-    kill((pid_t)0, SIGSTOP);
-#endif
-#endif /* SIGSTOP */
+
     fmInit();
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
