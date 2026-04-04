@@ -74,7 +74,7 @@ static int need_number = 0;
 static char* guess_filename(char* file);
 static int _MoveFile(char* path1, char* path2);
 static void uncompress_stream(struct URLFile* uf, char** src);
-static FILE* lessopen_stream(char* path);
+static FILE* lessopen_stream(const char* path);
 static Buffer* loadcmdout(char* cmd,
     Buffer* (*loadproc)(struct URLFile*, Buffer*),
     Buffer* defaultbuf);
@@ -330,12 +330,11 @@ compress_application_type(int compression)
     return NULL;
 }
 
-static char*
-uncompressed_file_type(char* path, char** ext)
+static const char*
+uncompressed_file_type(const char* path, const char** ext)
 {
     int len, slen;
     Str fn;
-    char* t0;
     struct compression_decoder* d;
 
     if (path == NULL)
@@ -357,7 +356,7 @@ uncompressed_file_type(char* path, char** ext)
     Strshrink(fn, slen);
     if (ext)
         *ext = filename_extension(fn->ptr, 0);
-    t0 = guessContentType(fn->ptr);
+    const char* t0 = guessContentType(fn->ptr);
     if (t0 == NULL)
         t0 = "text/plain";
     return t0;
@@ -404,8 +403,8 @@ void examineFile(const char* path, struct URLFile* uf)
         }
         check_compression(path, uf);
         if (uf->compression != CMP_NOCOMPRESS) {
-            char* ext = uf->ext;
-            char* t0 = uncompressed_file_type(path, &ext);
+            const char* ext = uf->ext;
+            const char* t0 = uncompressed_file_type(path, &ext);
             uf->guess_type = t0;
             uf->ext = ext;
             uncompress_stream(uf, NULL);
@@ -1813,7 +1812,7 @@ load_doc: {
     } else if (pu.scheme == SCM_FTP) {
         check_compression(path, &f);
         if (f.compression != CMP_NOCOMPRESS) {
-            char* t1 = uncompressed_file_type(pu.file, NULL);
+            const char* t1 = uncompressed_file_type(pu.file, NULL);
             real_type = f.guess_type;
             if (t1)
                 t = t1;
@@ -6397,7 +6396,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
         double ratio;
         cur_time = time(0);
         if (*trbyte == 0) {
-            move((LINES-1), 0);
+            move((LINES - 1), 0);
             clrtoeolx();
             start_time = cur_time;
         }
@@ -6406,7 +6405,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move((LINES-1), 0);
+        move((LINES - 1), 0);
         ratio = 100.0 * (*trbyte) / current_content_length;
         fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
         duration = cur_time - start_time;
@@ -6427,7 +6426,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
         addstr(messages->ptr);
         pos = 42;
         i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-        move((LINES-1), pos);
+        move((LINES - 1), pos);
         standout();
         addch(' ');
         for (j = pos + 1; j <= i; j++)
@@ -6438,7 +6437,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
-            move((LINES-1), 0);
+            move((LINES - 1), 0);
             clrtoeolx();
             start_time = cur_time;
         }
@@ -6447,7 +6446,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move((LINES-1), 0);
+        move((LINES - 1), 0);
         fmtrbyte = convert_size(*trbyte, 1);
         duration = cur_time - start_time;
         if (duration) {
@@ -7985,7 +7984,7 @@ uncompress_stream(struct URLFile* uf, char** src)
 }
 
 static FILE*
-lessopen_stream(char* path)
+lessopen_stream(const char* path)
 {
     char* lessopen;
     FILE* fp;

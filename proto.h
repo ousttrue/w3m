@@ -125,7 +125,6 @@ extern Buffer* page_info_panel(Buffer* buf);
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 
-extern char* guessContentType(char* filename);
 
 extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
     Anchor** anchor_return, char* referer,

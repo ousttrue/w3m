@@ -15,11 +15,6 @@
     }
 #define UFfileno(f) ISfileno((f)->stream)
 
-struct cmdtable {
-    char* cmdname;
-    int cmd;
-};
-
 #define MAILCAP_NEEDSTERMINAL 0x01
 #define MAILCAP_COPIOUSOUTPUT 0x02
 #define MAILCAP_HTMLOUTPUT 0x04
@@ -32,19 +27,6 @@ struct table2 {
     char* item1;
     char* item2;
 };
-
-typedef struct _ParsedURL {
-    int scheme;
-    char* user;
-    char* pass;
-    char* host;
-    int port;
-    char* file;
-    char* real_file;
-    char* query;
-    char* label;
-    int is_nocache;
-} ParsedURL;
 
 union input_stream;
 struct URLFile {
@@ -383,19 +365,3 @@ struct environment {
 
 #define INDENT_INCR IndentIncr
 
-#define SCM_UNKNOWN 255
-#define SCM_MISSING 254
-#define SCM_HTTP 0
-#define SCM_GOPHER 1
-#define SCM_FTP 2
-#define SCM_FTPDIR 3
-#define SCM_LOCAL 4
-#define SCM_LOCAL_CGI 5
-#define SCM_EXEC 6
-#define SCM_NNTP 7
-#define SCM_NNTP_GROUP 8
-#define SCM_NEWS 9
-#define SCM_NEWS_GROUP 10
-#define SCM_DATA 11
-#define SCM_MAILTO 12
-#define SCM_HTTPS 13

@@ -48,42 +48,6 @@ int ai_family_order_table[7][3] = {
     { PF_INET6, PF_UNSPEC, PF_UNSPEC }, /* 6:inet6 */
 };
 
-/* XXX: note html.h SCM_ */
-int DefaultPort[]
-    = {
-          80, /* http */
-          70, /* gopher */
-          21, /* ftp */
-          21, /* ftpdir */
-          0, /* local - not defined */
-          0, /* local-CGI - not defined? */
-          0, /* exec - not defined? */
-          119, /* nntp */
-          119, /* nntp group */
-          119, /* news */
-          119, /* news group */
-          0, /* data - not defined */
-          0, /* mailto - not defined */
-          443, /* https */
-      };
-
-struct cmdtable schemetable[] = {
-    { "http", SCM_HTTP },
-    { "gopher", SCM_GOPHER },
-    { "ftp", SCM_FTP },
-    { "local", SCM_LOCAL },
-    { "file", SCM_LOCAL },
-    /*  {"exec", SCM_EXEC}, */
-    { "nntp", SCM_NNTP },
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    { "news", SCM_NEWS },
-    /*  {"news", SCM_NEWS_GROUP}, */
-    { "data", SCM_DATA },
-    { "mailto", SCM_MAILTO },
-    { "https", SCM_HTTPS },
-    { NULL, SCM_UNKNOWN },
-};
-
 static struct table2 DefaultGuess[] = {
     { "html", "text/html" },
     { "htm", "text/html" },
@@ -108,7 +72,6 @@ static struct table2 DefaultGuess[] = {
 };
 
 static void add_index_file(ParsedURL* pu, struct URLFile* uf);
-static char* schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -691,10 +654,7 @@ void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
     /* get host and port */
     if (p[0] != '/' || p[1] != '/') { /* scheme:foo or scheme:/foo */
         p_url->host = NULL;
-        if (p_url->scheme != SCM_UNKNOWN)
-            p_url->port = DefaultPort[p_url->scheme];
-        else
-            p_url->port = 0;
+        p_url->port = getDefaultPort(p_url->scheme);
         goto analyze_file;
     }
     /* after here, p begins with // */
@@ -758,12 +718,8 @@ analyze_url:
     case '/':
     case '?':
     case '#':
-        p_url->host = copyPath(q, p - q,
-            COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
-        if (p_url->scheme != SCM_UNKNOWN)
-            p_url->port = DefaultPort[p_url->scheme];
-        else
-            p_url->port = 0;
+        p_url->host = copyPath(q, p - q, COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
+        p_url->port = getDefaultPort(p_url->scheme);
         break;
     }
 analyze_file:
@@ -779,7 +735,7 @@ analyze_file:
 
         p_url->scheme = SCM_FTP; /* ftp://host/... */
         if (p_url->port == 0)
-            p_url->port = DefaultPort[SCM_FTP];
+            p_url->port = getDefaultPort(SCM_FTP);
     }
     if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == NULL) {
         p_url->file = "";
@@ -1022,22 +978,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
 {
     Str tmp;
-    static char* scheme_str[] = {
-        "http",
-        "gopher",
-        "ftp",
-        "ftp",
-        "file",
-        "file",
-        "exec",
-        "nntp",
-        "nntp",
-        "news",
-        "news",
-        "data",
-        "mailto",
-        "https",
-    };
+    ;
 
     if (pu->scheme == SCM_MISSING) {
         return Strnew_charp("???");
@@ -1056,7 +997,7 @@ Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
         }
         return tmp;
     }
-    tmp = Strnew_charp(scheme_str[pu->scheme]);
+    tmp = Strnew_charp(schemeToStr(pu->scheme));
     Strcat_char(tmp, ':');
     if (pu->scheme == SCM_MAILTO) {
         Strcat_charp(tmp, pu->file);
@@ -1083,7 +1024,7 @@ Str _parsedURL2Str(ParsedURL* pu, int pass, int user, int label)
     }
     if (pu->host) {
         Strcat_charp(tmp, pu->host);
-        if (pu->port != DefaultPort[pu->scheme]) {
+        if (pu->port != getDefaultPort(pu->scheme)) {
             Strcat_char(tmp, ':');
             Strcat(tmp, Sprintf("%d", pu->port));
         }
@@ -1113,40 +1054,6 @@ Str parsedURL2Str(ParsedURL* pu)
 Str parsedURL2RefererStr(ParsedURL* pu)
 {
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
-}
-
-int getURLScheme(const char** url)
-{
-    const char *p = *url, *q;
-    int i;
-    int scheme = SCM_MISSING;
-
-    while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
-        p++;
-    if (*p == ':') { /* scheme found */
-        scheme = SCM_UNKNOWN;
-        for (i = 0; (q = schemetable[i].cmdname) != NULL; i++) {
-            int len = strlen(q);
-            if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-                scheme = schemetable[i].cmd;
-                *url = p + 1;
-                break;
-            }
-        }
-    }
-    return scheme;
-}
-
-static char*
-schemeNumToName(int scheme)
-{
-    int i;
-
-    for (i = 0; schemetable[i].cmdname != NULL; i++) {
-        if (schemetable[i].cmd == scheme)
-            return schemetable[i].cmdname;
-    }
-    return NULL;
 }
 
 void init_stream(struct URLFile* uf, int scheme, InputStream stream)
@@ -1287,7 +1194,7 @@ retry:
         if (non_null(FTP_proxy) && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             sock = openSocket(FTP_proxy_parsed.host,
-                schemeNumToName(FTP_proxy_parsed.scheme),
+                schemeToName(FTP_proxy_parsed.scheme),
                 FTP_proxy_parsed.port);
             if (sock < 0)
                 return uf;
@@ -1321,12 +1228,12 @@ retry:
                 }
             } else if (pu->scheme == SCM_HTTPS) {
                 sock = openSocket(HTTPS_proxy_parsed.host,
-                    schemeNumToName(HTTPS_proxy_parsed.scheme),
+                    schemeToName(HTTPS_proxy_parsed.scheme),
                     HTTPS_proxy_parsed.port);
                 sslh = NULL;
             } else {
                 sock = openSocket(HTTP_proxy_parsed.host,
-                    schemeNumToName(HTTP_proxy_parsed.scheme),
+                    schemeToName(HTTP_proxy_parsed.scheme),
                     HTTP_proxy_parsed.port);
                 sslh = NULL;
             }
@@ -1351,7 +1258,7 @@ retry:
                 *status = HTST_NORMAL;
             }
         } else {
-            sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
+            sock = openSocket(pu->host, schemeToName(pu->scheme), pu->port);
             if (sock < 0) {
                 *status = HTST_MISSING;
                 return uf;
@@ -1445,14 +1352,14 @@ retry:
         if (non_null(GOPHER_proxy) && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             sock = openSocket(GOPHER_proxy_parsed.host,
-                schemeNumToName(GOPHER_proxy_parsed.scheme),
+                schemeToName(GOPHER_proxy_parsed.scheme),
                 GOPHER_proxy_parsed.port);
             if (sock < 0)
                 return uf;
             uf.scheme = SCM_HTTP;
             tmp = HTTPrequest(pu, current, hr, extra_header);
         } else {
-            sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
+            sock = openSocket(pu->host, schemeToName(pu->scheme), pu->port);
             if (sock < 0)
                 return uf;
             if (pu->file == NULL)
@@ -1552,7 +1459,7 @@ guessContentTypeFromTable(struct table2* table, char* filename)
     return NULL;
 }
 
-char* guessContentType(char* filename)
+const char* guessContentType(const char* filename)
 {
     char* ret;
     int i;

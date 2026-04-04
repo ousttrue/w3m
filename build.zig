@@ -16,6 +16,7 @@ const w3m_srcs = [_][]const u8{
     "proxy.c",
     "setjmp_util.c",
     "http_request.c",
+    "url_scheme.c",
 
     "main.c",
     "file.c",
