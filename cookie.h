@@ -1,7 +1,9 @@
 #pragma once
 #include "Str.h"
+#include "textlist.h"
 #include <time.h>
 
+void parse_cookie(void);
 char* FQDN(char* host);
 struct _ParsedURL;
 Str find_cookie(struct _ParsedURL* pu);

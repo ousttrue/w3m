@@ -2,6 +2,8 @@
 #include "Str.h"
 #include <libwc/ces.h>
 
+extern Str header_string;
+
 typedef struct _Buffer Buffer;
 
 typedef struct _ParsedURL ParsedURL;

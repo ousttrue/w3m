@@ -11,6 +11,7 @@ const w3m_srcs = [_][]const u8{
     // "keybind.c",
     "defun_impl.c",
     "util.c",
+    "downloadlist.c",
 
     "main.c",
     "file.c",

@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "main.h"
 #include "wc_util.h"
 #include "display.h"
 #include "fm.h"
@@ -1334,7 +1335,7 @@ Str myExtCommand(const char* cmd, const char* arg, int redirect)
 {
     Str tmp = NULL;
     int set_arg = FALSE;
-    for (const char*p = cmd; *p; p++) {
+    for (const char* p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_arg) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
@@ -1359,7 +1360,7 @@ Str myEditor(const char* cmd, const char* file, int line)
 {
     Str tmp = NULL;
     int set_file = FALSE, set_line = FALSE;
-    for (const char*p = cmd; *p; p++) {
+    for (const char* p = cmd; *p; p++) {
         if (*p == '%' && *(p + 1) == 's' && !set_file) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(cmd, (int)(p - cmd));
@@ -1500,7 +1501,9 @@ Str tmpfname(int type, const char* ext)
         dir,
         tmpf_base[type],
         CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
-    pushText(fileToDelete, tmpf->ptr);
+
+    addDeleteFile(tmpf->ptr);
+
     return tmpf;
 }
 

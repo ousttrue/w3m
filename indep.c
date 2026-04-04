@@ -709,7 +709,7 @@ char* html_quote(char* str)
     return str;
 }
 
-char* html_unquote(char* str)
+char* html_unquote(const char* str)
 {
     Str tmp = NULL;
     char *p, *q;

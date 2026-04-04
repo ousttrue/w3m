@@ -1,4 +1,5 @@
 #include "global.h"
+#include "downloadlist.h"
 #include "wc_util.h"
 #include "url.h"
 #include "etc.h"

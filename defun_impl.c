@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "downloadlist.h"
 #include "alarm.h"
 #include "search.h"
 #include "wc_util.h"
@@ -1553,7 +1554,7 @@ void reload(struct CmdArgs args)
     int multipart;
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {
-        if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
+        if (0 == strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
             ldDL((struct CmdArgs) { 0 });
             return;
         }
@@ -2086,45 +2087,7 @@ void tabL(struct CmdArgs args)
 
 void ldDL(struct CmdArgs args)
 {
-    Buffer* buf;
-    int replace = FALSE, new_tab = FALSE;
-    int reload;
-
-    if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
-        replace = TRUE;
-    if (!FirstDL) {
-        if (replace) {
-            if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == NULL) {
-                if (nTab > 1)
-                    deleteTab(CurrentTab);
-            } else
-                delBuffer(Currentbuf);
-            displayBuffer(Currentbuf, B_FORCE_REDRAW);
-        }
-        return;
-    }
-    reload = checkDownloadList();
-    buf = DownloadListBuffer();
-    if (!buf) {
-        displayBuffer(Currentbuf, B_NORMAL);
-        return;
-    }
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-    if (replace) {
-        COPY_BUFROOT(buf, Currentbuf);
-        restorePosition(buf, Currentbuf);
-    }
-    if (!replace && open_tab_dl_list) {
-        _newT();
-        new_tab = TRUE;
-    }
-    pushBuffer(buf);
-    if (replace || new_tab)
-        deletePrevBuf((struct CmdArgs) { 0 });
-    if (reload)
-        Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
-            "RELOAD", NULL);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    downloadListPanel();
 }
 
 void undoPos(struct CmdArgs args)

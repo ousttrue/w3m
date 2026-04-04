@@ -23,6 +23,23 @@
 #define HAVE_STRFTIME 1
 #define COOKIE_FILE "cookie"
 
+static TextList* Cookie_reject_domains = 0;
+static TextList* Cookie_accept_domains = 0;
+static TextList* Cookie_avoid_wrong_number_of_dots_domains = 0;
+static struct auth_cookie* Auth_cookie = (NULL);
+static struct cookie* First_cookie = (NULL);
+
+void parse_cookie(void)
+{
+    if (non_null(cookie_reject_domains))
+        Cookie_reject_domains = make_domain_list(cookie_reject_domains);
+    if (non_null(cookie_accept_domains))
+        Cookie_accept_domains = make_domain_list(cookie_accept_domains);
+    if (non_null(cookie_avoid_wrong_number_of_dots))
+        Cookie_avoid_wrong_number_of_dots_domains
+            = make_domain_list(cookie_avoid_wrong_number_of_dots);
+}
+
 static int is_saved = 1;
 
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)

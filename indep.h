@@ -71,7 +71,7 @@ extern char* remove_space(const char* str);
 extern bool non_null(const char* s);
 extern void cleanup_line(Str s, int mode);
 extern char* html_quote(char* str);
-extern char* html_unquote(char* str);
+extern char* html_unquote(const char* str);
 extern char* file_quote(char* str);
 extern char* file_unquote(char* str);
 extern char* url_quote(const char* str);

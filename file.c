@@ -1,4 +1,6 @@
 #include "display.h"
+#include "downloadlist.h"
+#include "main.h"
 #include "backend.h"
 #include "alarm.h"
 #include "wc_util.h"

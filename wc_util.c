@@ -1,7 +1,17 @@
 #include "wc_util.h"
 #include "indep.h"
 #include "global.h"
-#include "fm.h"
+#include <libwc/wtf.h>
+
+// Don't change
+wc_ces InnerCharset = (WC_CES_WTF);
+#define DISPLAY_CHARSET WC_CES_UTF_8
+wc_ces DisplayCharset = (DISPLAY_CHARSET);
+#define DOCUMENT_CHARSET WC_CES_UTF_8
+wc_ces DocumentCharset = (DOCUMENT_CHARSET);
+#define SYSTEM_CHARSET WC_CES_UTF_8
+wc_ces SystemCharset = (SYSTEM_CHARSET);
+wc_ces BookmarkCharset = (SYSTEM_CHARSET);
 
 struct wc_option WcOption = {
     .auto_detect = WC_OPT_DETECT_ON,

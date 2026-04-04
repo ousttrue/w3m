@@ -352,20 +352,6 @@ typedef struct _TabBuffer {
     short y;
 } TabBuffer;
 
-typedef struct _DownloadList {
-    pid_t pid;
-    char* url;
-    char* save;
-    char* lock;
-    int64_t size;
-    time_t time;
-    int running;
-    int err;
-    struct _DownloadList* next;
-    struct _DownloadList* prev;
-} DownloadList;
-#define DOWNLOAD_LIST_TITLE "Download List Panel"
-
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
     {                                      \
         (dstbuf)->rootX = (srcbuf)->rootX; \
@@ -671,33 +657,3 @@ global TabBuffer* LastTab;
 #define NO_TABBUFFER ((TabBuffer*)1)
 #define Currentbuf (CurrentTab->currentBuffer)
 #define Firstbuf (CurrentTab->firstBuffer)
-global DownloadList* FirstDL init(NULL);
-global DownloadList* LastDL init(NULL);
-
-#define DUMP_BUFFER 0x01
-#define DUMP_HEAD 0x02
-#define DUMP_SOURCE 0x04
-#define DUMP_EXTRA 0x08
-#define DUMP_HALFDUMP 0x10
-#define DUMP_FRAME 0x20
-#define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
-global Str header_string init(NULL);
-
-global struct auth_cookie* Auth_cookie init(NULL);
-global struct cookie* First_cookie init(NULL);
-
-global TextList* fileToDelete;
-
-global wc_ces InnerCharset init(WC_CES_WTF); /* Don't change */
-#define DISPLAY_CHARSET WC_CES_UTF_8
-global wc_ces DisplayCharset init(DISPLAY_CHARSET);
-#define DOCUMENT_CHARSET WC_CES_UTF_8
-global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
-#define SYSTEM_CHARSET WC_CES_UTF_8
-global wc_ces SystemCharset init(SYSTEM_CHARSET);
-global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
-
-global TextList* Cookie_reject_domains;
-global TextList* Cookie_accept_domains;
-global TextList* Cookie_avoid_wrong_number_of_dots_domains;
-

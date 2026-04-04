@@ -2,6 +2,14 @@
 #include <stdint.h>
 #include "Str.h"
 
+#define DUMP_BUFFER 0x01
+#define DUMP_HEAD 0x02
+#define DUMP_SOURCE 0x04
+#define DUMP_EXTRA 0x08
+#define DUMP_HALFDUMP 0x10
+#define DUMP_FRAME 0x20
+#define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
+
 #define FRAME_WIDTH 2
 
 typedef struct _AlarmEvent {
@@ -61,7 +69,7 @@ void _goLine(char* l);
 int cur_real_linenumber(Buffer* buf);
 void _followForm(int submit);
 void gotoLabel(char* label);
-int handleMailto(char* url);
+int handleMailto(const char* url);
 void _newT(void);
 Buffer* loadLink(char* url, char* target, char* referer, struct form_list* request);
 void _nextA(int visited);
@@ -93,3 +101,4 @@ Buffer* DownloadListBuffer(void);
 struct _BufferPos;
 void resetPos(struct _BufferPos* b);
 void w3m_exit(int i);
+void addDeleteFile(const char* file);

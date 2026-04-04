@@ -507,7 +507,7 @@ void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int 
                 mySignal(SIGTSTP, prevstop);
             }
 
-            pushText(fileToDelete, tmpf);
+            addDeleteFile(tmpf);
         }
         url = tmpf;
     }

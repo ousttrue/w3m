@@ -5,6 +5,13 @@
 #include <libwc/ces.h>
 #include <libwc/conv.h>
 
+// Don't change
+extern wc_ces InnerCharset;
+extern wc_ces DisplayCharset;
+extern wc_ces DocumentCharset;
+extern wc_ces SystemCharset;
+extern wc_ces BookmarkCharset;
+
 extern struct wc_option WcOption;
 
 char* url_quote_conv(char* is, wc_ces c);

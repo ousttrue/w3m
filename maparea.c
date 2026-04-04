@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "wc_util.h"
 #include "etc.h"
 #include "url.h"
 #include "global.h"

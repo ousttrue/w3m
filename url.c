@@ -31,6 +31,8 @@
 #endif
 #include <openssl/err.h>
 
+Str header_string = (NULL);
+
 /* see rc.c, "dns_order" and dnsorders[] */
 int ai_family_order_table[7][3] = {
     { PF_UNSPEC, PF_UNSPEC, PF_UNSPEC }, /* 0:unspec */
