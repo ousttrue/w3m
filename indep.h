@@ -2,7 +2,6 @@
 #define INDEP_H
 #include "alloc.h"
 #include "Str.h"
-#include "config.h"
 #include <stdbool.h>
 
 #ifndef TRUE

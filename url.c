@@ -1,4 +1,5 @@
 #include "url.h"
+#include "signal_util.h"
 #include "news.h"
 #include "ftp.h"
 #include "local.h"

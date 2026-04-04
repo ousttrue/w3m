@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "signal_util.h"
 #include "downloadlist.h"
 #include "alarm.h"
 #include "search.h"

@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "signal_util.h"
 #include "main.h"
 #include "wc_util.h"
 #include "etc.h"

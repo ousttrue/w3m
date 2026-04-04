@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "main.h"
+#include "signal_util.h"
 #include "downloadlist.h"
 #include "alarm.h"
 #include "backend.h"
@@ -14,7 +15,6 @@
 #include "cookie.h"
 #include "rc.h"
 #include "local.h"
-#include "config.h"
 #include "image.h"
 #include "global.h"
 #include "constants.h"

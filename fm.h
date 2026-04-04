@@ -9,8 +9,6 @@
 #define W3M_LANG EN
 #define LANG W3M_LANG
 
-#include "config.h"
-
 #include "ctrlcode.h"
 #include "html.h"
 #include <gc.h>
@@ -600,25 +598,9 @@ typedef struct http_request {
 #define HTST_NORMAL 0
 #define HTST_CONNECT 1
 
-#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
-
-
-#define TRAP_ON                                \
-    if (TrapSignal) {                          \
-        prevtrap = mySignal(SIGINT, KeyAbort); \
-        if (fmInitialized)                     \
-            term_cbreak();                     \
-    }
-#define TRAP_OFF                        \
-    if (TrapSignal) {                   \
-        if (fmInitialized)              \
-            term_raw();                 \
-        if (prevtrap)                   \
-            mySignal(SIGINT, prevtrap); \
-    }
-
 extern void w3mFunc(const char* cmd);
 
+#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 global ParsedURL HTTP_proxy_parsed;
 global ParsedURL HTTPS_proxy_parsed;
 global ParsedURL GOPHER_proxy_parsed;

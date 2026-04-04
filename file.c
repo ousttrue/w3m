@@ -1,4 +1,5 @@
 #include "display.h"
+#include "signal_util.h"
 #include "downloadlist.h"
 #include "main.h"
 #include "backend.h"

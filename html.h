@@ -1,7 +1,4 @@
-/* $Id: html.h,v 1.31 2010/08/14 01:29:40 htrb Exp $ */
-#ifndef _HTML_H
-#define _HTML_H
-#include "config.h"
+#pragma once
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
@@ -402,5 +399,3 @@ struct environment {
 #define SCM_DATA 11
 #define SCM_MAILTO 12
 #define SCM_HTTPS 13
-
-#endif /* _HTML_H */

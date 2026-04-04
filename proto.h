@@ -7,7 +7,6 @@
 struct Hist;
 extern int main(int argc, char** argv);
 extern void pushEvent(const char* cmd, void* data);
-extern MySignalHandler intTrap(SIGNAL_ARG);
 extern void chkURLBuffer(Buffer* buf);
 extern void chkNMIDBuffer(Buffer* buf);
 extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status,

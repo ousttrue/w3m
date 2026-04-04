@@ -11,9 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
-#include "config.h"
 #include "regex.h"
-#include "config.h"
 #include "myctype.h"
 
 #include "wc_util.h"
