@@ -189,3 +189,5 @@ extern int use_lessopen;
 extern const char* keymap_file;
 extern int FollowRedirection;
 extern int w3m_backend;
+extern const char* ssl_forbid_method;
+extern const char* ssl_cipher;

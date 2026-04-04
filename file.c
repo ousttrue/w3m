@@ -1,4 +1,6 @@
 #include "display.h"
+#include "backend.h"
+#include "alarm.h"
 #include "wc_util.h"
 #include "mimehead.h"
 #include "mailcap.h"
@@ -488,9 +490,6 @@ Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
 
 int matchattr(const char* p, const char* attr, int len, Str* value)
 {
-    int quoted;
-    char* q = NULL;
-
     if (strncasecmp(p, attr, len) == 0) {
         p += len;
         SKIP_BLANKS(p);
@@ -499,7 +498,8 @@ int matchattr(const char* p, const char* attr, int len, Str* value)
             if (*p == '=') {
                 p++;
                 SKIP_BLANKS(p);
-                quoted = 0;
+                bool quoted = false;
+                const char* q = NULL;
                 while (!IS_ENDL(*p) && (quoted || *p != ';')) {
                     if (!IS_SPACE(*p))
                         q = p;
@@ -1443,14 +1443,14 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
                      NULL))
                 == NULL)
                 return;
-            *uname = Strnew_charp(Str_conv_to_system(pp, strlen(pp)));
+            *uname = Str_conv_to_system(pp, strlen(pp));
             if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
                      IN_PASSWORD))
                 == NULL) {
                 *uname = NULL;
                 return;
             }
-            *pwd = Strnew_charp(Str_conv_to_system(pp, strlen(pp)));
+            *pwd = Str_conv_to_system(pp, strlen(pp));
             term_cbreak();
         } else {
             /*

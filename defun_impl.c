@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "alarm.h"
 #include "search.h"
 #include "wc_util.h"
 #include "mailcap.h"

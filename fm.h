@@ -701,27 +701,3 @@ global TextList* Cookie_reject_domains;
 global TextList* Cookie_accept_domains;
 global TextList* Cookie_avoid_wrong_number_of_dots_domains;
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-global char* ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
-#else
-global char* ssl_cipher init(NULL);
-#endif
-
-global TextLineList* backend_halfdump_buf;
-global TextList* backend_batch_commands init(NULL);
-global char* ssl_forbid_method init("2, 3, t, 5");
-
-int backend(void);
-void deleteFiles(void);
-void w3m_exit(int i);
-
-#define AL_UNSET 0
-#define AL_EXPLICIT 1
-#define AL_IMPLICIT 2
-#define AL_IMPLICIT_ONCE 3
-
-/*
- * Externals
- */
-
-// #include "proto.h"

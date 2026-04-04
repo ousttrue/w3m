@@ -1,5 +1,7 @@
 #define MAINPROGRAM
 #include "main.h"
+#include "alarm.h"
+#include "backend.h"
 #include "search.h"
 #include "wc_util.h"
 #include "maparea.h"
@@ -2973,7 +2975,7 @@ int searchKeyNum(void)
     return n * PREC_NUM;
 }
 
-void deleteFiles()
+static void deleteFiles()
 {
     Buffer* buf;
     char* f;

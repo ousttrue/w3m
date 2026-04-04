@@ -238,3 +238,10 @@ pub export var use_lessopen: c_int = 0;
 pub export var keymap_file: [*c]const u8 = c.KEYMAP_FILE;
 pub export var FollowRedirection: c_int = 10;
 pub export var w3m_backend: c_int = 0;
+pub export var ssl_forbid_method: [*c]const u8 = "2, 3, t, 5";
+
+// #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
+pub export var ssl_cipher: [*c]const u8 = "DEFAULT:!LOW:!RC4:!EXP";
+// #else
+// global char* ssl_cipher init(NULL);
+// #endif

@@ -92,3 +92,4 @@ void moveTab(struct _TabBuffer* t, struct _TabBuffer* t2, int right);
 Buffer* DownloadListBuffer(void);
 struct _BufferPos;
 void resetPos(struct _BufferPos* b);
+void w3m_exit(int i);

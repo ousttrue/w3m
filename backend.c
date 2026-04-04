@@ -1,3 +1,5 @@
+#include "backend.h"
+#include "main.h"
 #include "global.h"
 #include "cookie.h"
 #include "buffer.h"
@@ -13,6 +15,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <gc.h>
+
+TextList* backend_batch_commands = NULL;
+TextLineList* backend_halfdump_buf = NULL;
 
 /* Prototype declaration of internal functions */
 #ifdef HAVE_READLINE
