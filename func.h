@@ -1,11 +1,4 @@
-/* $Id: func.h,v 1.4 2002/12/03 16:01:33 ukai Exp $ */
-/*
- * w3m func.h
- */
-
-#ifndef FUNC_H
-#define FUNC_H
-
+#pragma once
 #include "textlist.h"
 #include "hash.h"
 
@@ -17,4 +10,11 @@
 #define K_MULTI 0x10000000
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
-#endif /* not FUNC_H */
+void setKeymap(char* p, int lineno, int verbose);
+void initKeymap(int force);
+int getKey(char* s);
+char* getKeyData(int key);
+char* getWord(char** str);
+char* getQWord(char** str);
+struct regex;
+char* getRegexWord(const char** str, struct regex** regex_ret);

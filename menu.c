@@ -1298,8 +1298,6 @@ mSusp(char c)
     return (MENU_NOTHING);
 }
 
-static const char* SearchString = NULL;
-
 int (*menuSearchRoutine)(Menu*, const char*, int);
 
 static int

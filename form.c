@@ -1,4 +1,5 @@
 #include "form.h"
+#include "func.h"
 #include "istream.h"
 #include "global.h"
 #include "indep.h"
@@ -694,17 +695,17 @@ void form_write_from_file(FILE* f, char* boundary, char* name, char* filename,
     FILE* fd;
     struct stat st;
     int c;
-    char* type;
 
     fprintf(f, "--%s\r\n", boundary);
     fprintf(f,
         "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n",
         name, mybasename(filename));
-    type = guessContentType(file);
+
+    const char* type = guessContentType(file);
     fprintf(f, "Content-Type: %s\r\n\r\n",
         type ? type : "application/octet-stream");
 
-    if (lstat(file, &st) < 0)
+    if (stat(file, &st) < 0)
         goto write_end;
     if (S_ISDIR(st.st_mode))
         goto write_end;

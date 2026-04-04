@@ -193,3 +193,4 @@ extern int FollowRedirection;
 extern int w3m_backend;
 extern const char* ssl_forbid_method;
 extern const char* ssl_cipher;
+extern const char* SearchString;

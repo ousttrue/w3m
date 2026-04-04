@@ -1,4 +1,5 @@
 #include "display.h"
+#include "siteconf.h"
 #include "html_token.h"
 #include "ctrlcode.h"
 #include "form.h"

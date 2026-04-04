@@ -20,6 +20,7 @@ const w3m_srcs = [_][]const u8{
     "html.c",
     "html_tag.c",
     "html_token.c",
+    "siteconf.c",
 
     "main.c",
     "file.c",

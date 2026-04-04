@@ -1,4 +1,5 @@
 #include "url.h"
+#include "siteconf.h"
 #include "form.h"
 #include "terms.h"
 #include "istream.h"
@@ -262,7 +263,7 @@ str_to_ssl_version(const char* name)
 #endif /* SSL_CTX_set_min_proto_version */
 
 static SSL*
-openSSLHandle(int sock, char* hostname, char** p_cert)
+openSSLHandle(int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static const char* old_ssl_forbid_method = NULL;
@@ -462,14 +463,14 @@ baseURL(Buffer* buf)
         return &buf->currentURL;
 }
 
-int openSocket(char* const hostname,
-    char* remoteport_name, unsigned short remoteport_num)
+int openSocket(const char* const hostname,
+    const char* remoteport_name, unsigned short remoteport_num)
 {
     volatile int sock = -1;
     int* af;
     struct addrinfo hints, *res0, *res;
     int error;
-    char* hname;
+    const char* hname;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
     if (fmInitialized) {
@@ -498,7 +499,7 @@ int openSocket(char* const hostname,
     hname = hostname;
     if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
         hname = allocStr(hostname + 1, -1);
-        hname[strlen(hname) - 1] = '\0';
+        ((char*)hname)[strlen(hname) - 1] = '\0';
         if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
             goto error;
     }
@@ -1441,10 +1442,10 @@ add_index_file(ParsedURL* pu, struct URLFile* uf)
 }
 
 static char*
-guessContentTypeFromTable(struct table2* table, char* filename)
+guessContentTypeFromTable(struct table2* table, const char* filename)
 {
     struct table2* t;
-    char* p;
+    const char* p;
     if (table == NULL)
         return NULL;
     p = &filename[strlen(filename) - 1];
@@ -1485,7 +1486,7 @@ no_user_mimetypes:
 
 const char* filename_extension(const char* path, int is_url)
 {
-    char *last_dot = "", *p = path;
+    const char *last_dot = "", *p = path;
     int i;
 
     if (path == NULL)

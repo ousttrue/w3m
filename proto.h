@@ -65,8 +65,6 @@ extern int matchattr(const char* p, const char* attr, int len, Str* value);
 extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct _ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, char* field);
 
-extern int forwardSearch(Buffer* buf, char* str);
-extern int backwardSearch(Buffer* buf, char* str);
 extern void escdmap(char c);
 extern Str unescape_spaces(Str s);
 extern double log_like(int x);
@@ -112,16 +110,6 @@ extern char* expandName(char* name);
 struct parsed_tagarg;
 extern void change_charset(struct parsed_tagarg* arg);
 
-extern char* searchKeyData(void);
-
-extern void setKeymap(char* p, int lineno, int verbose);
-extern void initKeymap(int force);
-extern int getKey(char* s);
-extern char* getKeyData(int key);
-extern char* getWord(char** str);
-extern char* getQWord(char** str);
-struct regex;
-extern char* getRegexWord(const char** str, struct regex** regex_ret);
 
 extern const char* guess_save_name(Buffer* buf, const char* file);
 

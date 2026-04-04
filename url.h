@@ -23,7 +23,7 @@ typedef struct _ParsedURL {
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
 ParsedURL* baseURL(Buffer* buf);
-int openSocket(char* hostname, char* remoteport_name, unsigned short remoteport_num);
+int openSocket(const char* hostname, const char* remoteport_name, unsigned short remoteport_num);
 void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current);
 void copyParsedURL(ParsedURL* p, const ParsedURL* q);
 void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);

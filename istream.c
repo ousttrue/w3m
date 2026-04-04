@@ -335,7 +335,7 @@ int ISeos(InputStream stream)
 
 static Str accept_this_site;
 
-void ssl_accept_this_site(char* hostname)
+void ssl_accept_this_site(const char* hostname)
 {
     if (hostname)
         accept_this_site = Strnew_charp(hostname);
@@ -478,7 +478,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
     return ret;
 }
 
-Str ssl_get_certificate(SSL* ssl, char* hostname)
+Str ssl_get_certificate(SSL* ssl, const char* hostname)
 {
     BIO* bp;
     X509* x;

@@ -1,4 +1,5 @@
 #include "http_request.h"
+#include "siteconf.h"
 #include "form.h"
 #include "global.h"
 #include "cookie.h"

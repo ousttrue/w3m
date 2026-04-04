@@ -1,4 +1,6 @@
 #pragma once
+#include "line.h"
+#include "Str.h"
 #include <libwc/wc_types.h>
 
 // Search Result
@@ -7,3 +9,13 @@
 #define SR_WRAPPED 0x4
 
 const char* conv_search_string(const char* str, wc_ces f_ces);
+typedef struct _Buffer Buffer;
+int forwardSearch(Buffer* buf, const char* str);
+int backwardSearch(Buffer* buf, const char* str);
+
+typedef int (*SrchFunc)(Buffer*, const char*);
+void srch(SrchFunc func, const char* prompt);
+void isrch(SrchFunc func, const char* prompt);
+void srch_nxtprv(int reverse);
+int srchcore(const char* str, SrchFunc func);
+int dispincsrch(int ch, Str buf, Lineprop* prop);

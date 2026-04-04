@@ -1,4 +1,5 @@
 #include "main.h"
+#include "siteconf.h"
 #include "form.h"
 #include "frame.h"
 #include "parsetag.h"
@@ -90,10 +91,8 @@ static MySignalHandler SigPipe(SIGNAL_ARG);
 
 char* MarkString = NULL;
 
-static char* SearchString = NULL;
-int (*searchRoutine)(Buffer*, char*);
 
-sigjmp_buf IntReturn;
+static sigjmp_buf IntReturn;
 
 static void keyPressEventProc(int c);
 int show_params_p = 0;
@@ -1278,188 +1277,7 @@ void nscroll(int n, int mode)
     displayBuffer(buf, mode);
 }
 
-static void
-clear_mark(Line* l)
-{
-    int pos;
-    if (!l)
-        return;
-    for (pos = 0; pos < l->size; pos++)
-        l->propBuf[pos] &= ~PE_MARK;
-}
 
-/* search by regular expression */
-static int
-srchcore(char* volatile str, int (*func)(Buffer*, char*))
-{
-    volatile int i, result = SR_NOTFOUND;
-
-    if (str != NULL && str != SearchString)
-        SearchString = str;
-    if (SearchString == NULL || *SearchString == '\0')
-        return SR_NOTFOUND;
-
-    str = conv_search_string(SearchString, DisplayCharset);
-    auto prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
-    if (SETJMP(IntReturn) == 0) {
-        for (i = 0; i < PREC_NUM; i++) {
-            result = func(Currentbuf, str);
-            if (i < PREC_NUM - 1 && result & SR_FOUND)
-                clear_mark(Currentbuf->currentLine);
-        }
-    }
-    mySignal(SIGINT, prevtrap);
-    term_raw();
-    return result;
-}
-
-static void
-disp_srchresult(int result, char* prompt, char* str)
-{
-    if (str == NULL)
-        str = "";
-    if (result & SR_NOTFOUND)
-        disp_message(Sprintf("Not found: %s", str)->ptr, TRUE);
-    else if (result & SR_WRAPPED)
-        disp_message(Sprintf("Search wrapped: %s", str)->ptr, TRUE);
-    else if (show_srch_str)
-        disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
-}
-
-static int
-dispincsrch(int ch, Str buf, Lineprop* prop)
-{
-    static Buffer sbuf;
-    char* str;
-    int do_next_search = FALSE;
-
-    if (ch == 0 && buf == NULL) {
-        SAVE_BUFPOSITION(&sbuf); /* search starting point */
-        return -1;
-    }
-
-    str = buf->ptr;
-    switch (ch) {
-    case 022: /* C-r */
-        searchRoutine = backwardSearch;
-        do_next_search = TRUE;
-        break;
-    case 023: /* C-s */
-        searchRoutine = forwardSearch;
-        do_next_search = TRUE;
-        break;
-
-    default:
-        if (ch >= 0)
-            return ch; /* use InputKeymap */
-    }
-
-    if (do_next_search) {
-        if (*str) {
-            if (searchRoutine == forwardSearch)
-                Currentbuf->pos += 1;
-            SAVE_BUFPOSITION(&sbuf);
-            if (srchcore(str, searchRoutine) == SR_NOTFOUND
-                && searchRoutine == forwardSearch) {
-                Currentbuf->pos -= 1;
-                SAVE_BUFPOSITION(&sbuf);
-            }
-            arrangeCursor(Currentbuf);
-            displayBuffer(Currentbuf, B_FORCE_REDRAW);
-            clear_mark(Currentbuf->currentLine);
-            return -1;
-        } else
-            return 020; /* _prev completion for C-s C-s */
-    } else if (*str) {
-        RESTORE_BUFPOSITION(&sbuf);
-        arrangeCursor(Currentbuf);
-        srchcore(str, searchRoutine);
-        arrangeCursor(Currentbuf);
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    clear_mark(Currentbuf->currentLine);
-    return -1;
-}
-
-void isrch(int (*func)(Buffer*, char*), char* prompt)
-{
-    char* str;
-    Buffer sbuf;
-    SAVE_BUFPOSITION(&sbuf);
-    dispincsrch(0, NULL, NULL); /* initialize incremental search state */
-
-    searchRoutine = func;
-    str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
-    if (str == NULL) {
-        RESTORE_BUFPOSITION(&sbuf);
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-void srch(int (*func)(Buffer*, char*), char* prompt)
-{
-    char* str;
-    int result;
-    int disp = FALSE;
-    int pos;
-
-    str = searchKeyData();
-    if (str == NULL || *str == '\0') {
-        str = inputStrHist(prompt, NULL, TextHist);
-        if (str != NULL && *str == '\0')
-            str = SearchString;
-        if (str == NULL) {
-            displayBuffer(Currentbuf, B_NORMAL);
-            return;
-        }
-        disp = TRUE;
-    }
-    pos = Currentbuf->pos;
-    if (func == forwardSearch)
-        Currentbuf->pos += 1;
-    result = srchcore(str, func);
-    if (result & SR_FOUND)
-        clear_mark(Currentbuf->currentLine);
-    else
-        Currentbuf->pos = pos;
-    displayBuffer(Currentbuf, B_NORMAL);
-    if (disp)
-        disp_srchresult(result, prompt, str);
-    searchRoutine = func;
-}
-
-void srch_nxtprv(int reverse)
-{
-    int result;
-    /* *INDENT-OFF* */
-    static int (*routine[2])(Buffer*, char*) = {
-        forwardSearch, backwardSearch
-    };
-    /* *INDENT-ON* */
-
-    if (searchRoutine == NULL) {
-        /* FIXME: gettextize? */
-        disp_message("No previous regular expression", TRUE);
-        return;
-    }
-    if (reverse != 0)
-        reverse = 1;
-    if (searchRoutine == backwardSearch)
-        reverse ^= 1;
-    if (reverse == 0)
-        Currentbuf->pos += 1;
-    result = srchcore(SearchString, routine[reverse]);
-    if (result & SR_FOUND)
-        clear_mark(Currentbuf->currentLine);
-    else {
-        if (reverse == 0)
-            Currentbuf->pos -= 1;
-    }
-    displayBuffer(Currentbuf, B_NORMAL);
-    disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
-        SearchString);
-}
 
 void shiftvisualpos(Buffer* buf, int shift)
 {
@@ -2946,7 +2764,7 @@ void set_buffer_environ(Buffer* buf)
     prev_pos = buf->pos;
 }
 
-char* searchKeyData(void)
+const char* searchKeyData(void)
 {
     const char* data = NULL;
 
@@ -3304,8 +3122,6 @@ void moveTab(TabBuffer* t, TabBuffer* t2, int right)
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-
-
 
 static void
 save_buffer_position(Buffer* buf)

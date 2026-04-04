@@ -283,7 +283,7 @@ cgi_filename(char* uri, char** fn, char** name, char** path_info)
     return CGIFN_LIBDIR;
 }
 
-FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
+FILE* localcgi_post(const char* uri, const char* qstr, FormList* request, const char* referer)
 {
     FILE *fr = NULL, *fw = NULL;
     int status;

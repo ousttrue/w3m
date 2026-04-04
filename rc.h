@@ -20,5 +20,4 @@ int set_param_option(const char* option);
 char* get_param_option(const char* name);
 void show_params(FILE* fp);
 int str_to_bool(const char* value, bool old);
-struct _ParsedURL;
-const void* querySiteconf(const struct _ParsedURL* query_pu, int field);
+void loadSiteconf(void);

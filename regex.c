@@ -265,7 +265,7 @@ newRegex(const char* ex, int igncase, Regex* regex, const char** msg)
 /*
  * regexMatch: match regular expression
  */
-int regexMatch(char* str, int len, int firstp)
+int regexMatch(const char* str, int len, int firstp)
 {
     return RegexMatch(&DefaultRegex, str, len, firstp);
 }
@@ -315,7 +315,7 @@ void MatchedPosition(Regex* re, char** first, char** last)
     *last = re->lposition;
 }
 
-void matchedPosition(char** first, char** last)
+void matchedPosition(const char** first, const char** last)
 {
     *first = DefaultRegex.position;
     *last = DefaultRegex.lposition;
