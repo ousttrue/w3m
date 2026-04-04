@@ -89,9 +89,6 @@ extern char* inputAnswer(char* prompt);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
 extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, char* field);
-extern TabBuffer* newTab(void);
-extern void calcTabPos(void);
-extern TabBuffer* deleteTab(TabBuffer* tab);
 
 extern int read_token(Str buf, char** instr, int* status, int pre, int append);
 extern Str correct_irrtag(int status);

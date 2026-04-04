@@ -342,16 +342,6 @@ typedef struct _BufferPos {
     struct _BufferPos* prev;
 } BufferPos;
 
-typedef struct _TabBuffer {
-    struct _TabBuffer* nextTab;
-    struct _TabBuffer* prevTab;
-    Buffer* currentBuffer;
-    Buffer* firstBuffer;
-    short x1;
-    short x2;
-    short y;
-} TabBuffer;
-
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
     {                                      \
         (dstbuf)->rootX = (srcbuf)->rootX; \
@@ -647,13 +637,3 @@ extern int ai_family_order_table[7][3]; /* XXX */
 #define Do_not_use_proxy (!use_proxy)
 global TextList* NO_proxy_domains;
 
-/*
- * global Buffer *Currentbuf;
- * global Buffer *Firstbuf;
- */
-global TabBuffer* CurrentTab;
-global TabBuffer* FirstTab;
-global TabBuffer* LastTab;
-#define NO_TABBUFFER ((TabBuffer*)1)
-#define Currentbuf (CurrentTab->currentBuffer)
-#define Firstbuf (CurrentTab->firstBuffer)

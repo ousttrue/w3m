@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "buffer.h"
 #include "main.h"
 #include "defun_impl.h"
 #include "etc.h"

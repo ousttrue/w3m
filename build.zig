@@ -12,6 +12,7 @@ const w3m_srcs = [_][]const u8{
     "defun_impl.c",
     "util.c",
     "downloadlist.c",
+    "tab.c",
 
     "main.c",
     "file.c",

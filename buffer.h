@@ -1,6 +1,15 @@
 #pragma once
 #include <stdio.h>
+#include "tab.h"
+
 typedef struct _Buffer Buffer;
+
+/*
+ * global Buffer *Currentbuf;
+ * global Buffer *Firstbuf;
+ */
+#define Currentbuf (CurrentTab->currentBuffer)
+#define Firstbuf (CurrentTab->firstBuffer)
 
 extern Buffer* newBuffer(int width);
 extern Buffer* nullBuffer(void);
@@ -44,5 +53,3 @@ extern void arrangeLine(Buffer* buf);
 extern void cursorXY(Buffer* buf, int x, int y);
 extern void restorePosition(Buffer* buf, Buffer* orig);
 extern int columnSkip(Buffer* buf, int offset);
-
-
