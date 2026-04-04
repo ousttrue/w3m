@@ -1,4 +1,6 @@
 #include "defun_impl.h"
+#include "indep.h"
+#include "anchor.h"
 #include "signal_util.h"
 #include "downloadlist.h"
 #include "alarm.h"
@@ -822,7 +824,6 @@ void reMark(struct CmdArgs args)
 /* follow HREF link */
 void followA(struct CmdArgs args)
 {
-    Anchor* a;
     ParsedURL u;
     int x = 0, y = 0, map = 0;
     char* url;
@@ -830,7 +831,7 @@ void followA(struct CmdArgs args)
     if (Currentbuf->firstLine == NULL)
         return;
 
-    a = retrieveCurrentImg(Currentbuf);
+    Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
         _followForm(FALSE);
         return;
@@ -914,7 +915,7 @@ void submitForm(struct CmdArgs args)
 /* go to the top anchor */
 void topA(struct CmdArgs args)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
     Anchor* an;
     int hseq = 0;
@@ -947,7 +948,7 @@ void topA(struct CmdArgs args)
 /* go to the last anchor */
 void lastA(struct CmdArgs args)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
     Anchor* an;
     int hseq;
@@ -982,7 +983,7 @@ void lastA(struct CmdArgs args)
 /* go to the nth anchor */
 void nthA(struct CmdArgs args)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
     Anchor* an;
 
@@ -1265,7 +1266,7 @@ void pginfo(struct CmdArgs args)
 /* link menu */
 void linkMn(struct CmdArgs args)
 {
-    LinkList* l = link_menu(Currentbuf);
+    struct LinkList* l = link_menu(Currentbuf);
     ParsedURL p_url;
 
     if (!l || !l->url)

@@ -1,5 +1,6 @@
 #include "display.h"
-
+#include "indep.h"
+#include "anchor.h"
 #include "wc_util.h"
 #include "maparea.h"
 #include "buffer.h"

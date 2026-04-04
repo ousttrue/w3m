@@ -1,4 +1,6 @@
 #include "global.h"
+#include "alloc.h"
+#include "anchor.h"
 #include "search.h"
 #include "wc_util.h"
 #include "rc.h"
@@ -749,12 +751,12 @@ void geom_menu(Menu* menu, int x, int y, int mselect)
 
     win_y = menu->y - mselect - 1;
     win_h = menu->height + 2;
-    if (win_y + win_h > (LINES-1))
-        win_y = (LINES-1) - win_h;
+    if (win_y + win_h > (LINES - 1))
+        win_y = (LINES - 1) - win_h;
     if (win_y < 0) {
         win_y = 0;
-        if (win_y + win_h > (LINES-1)) {
-            win_h = (LINES-1) - win_y;
+        if (win_y + win_h > (LINES - 1)) {
+            win_h = (LINES - 1) - win_y;
             menu->height = win_h - 2;
             if (menu->height <= mselect)
                 menu->offset = mselect - menu->height + 1;
@@ -1043,6 +1045,62 @@ set_menu_frame(void)
         if (!WcOption.use_wide)
             FRAME_WIDTH = 1;
     }
+}
+
+struct LinkList* link_menu(Buffer* buf)
+{
+    Menu menu;
+    struct LinkList* l;
+    int i, nitem, len = 0, linkV = -1;
+    char** label;
+    Str str;
+    char* p;
+
+    if (!buf->linklist)
+        return NULL;
+
+    for (i = 0, l = buf->linklist; l; i++, l = l->next)
+        ;
+    nitem = i;
+
+    label = New_N(char*, nitem + 1);
+    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
+        str = Strnew_charp(l->title ? l->title : "(empty)");
+        if (l->type == LINK_TYPE_REL)
+            Strcat_charp(str, " [Rel] ");
+        else if (l->type == LINK_TYPE_REV)
+            Strcat_charp(str, " [Rev] ");
+        else
+            Strcat_charp(str, " ");
+        if (!l->url)
+            p = "";
+        else
+            p = url_decode2(l->url, buf);
+        Strcat_charp(str, p);
+        label[i] = str->ptr;
+        if (len < str->length)
+            len = str->length;
+    }
+    label[nitem] = NULL;
+
+    set_menu_frame();
+    new_option_menu(&menu, label, &linkV, NULL);
+
+    menu.initial = 0;
+    menu.cursorX = buf->cursorX + buf->rootX;
+    menu.cursorY = buf->cursorY + buf->rootY;
+    menu.x = menu.cursorX + FRAME_WIDTH + 1;
+    menu.y = menu.cursorY + 2;
+
+    popup_menu(NULL, &menu);
+
+    if (linkV < 0)
+        return NULL;
+    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
+        if (i == linkV)
+            return l;
+    }
+    return NULL;
 }
 
 /* --- MenuFunctions --- */
@@ -1696,7 +1754,7 @@ void optionMenu(int x, int y, char** label, int* variable, int initial, const ch
 
     new_option_menu(&menu, label, variable, cmd);
     menu.cursorX = COLS - 1;
-    menu.cursorY = (LINES-1);
+    menu.cursorY = (LINES - 1);
     menu.x = x;
     menu.y = y;
     menu.initial = initial;
@@ -1874,63 +1932,6 @@ int getMenuN(MenuList* list, char* id)
 
 /* --- InitMenu (END) --- */
 
-LinkList*
-link_menu(Buffer* buf)
-{
-    Menu menu;
-    LinkList* l;
-    int i, nitem, len = 0, linkV = -1;
-    char** label;
-    Str str;
-    char* p;
-
-    if (!buf->linklist)
-        return NULL;
-
-    for (i = 0, l = buf->linklist; l; i++, l = l->next)
-        ;
-    nitem = i;
-
-    label = New_N(char*, nitem + 1);
-    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
-        str = Strnew_charp(l->title ? l->title : "(empty)");
-        if (l->type == LINK_TYPE_REL)
-            Strcat_charp(str, " [Rel] ");
-        else if (l->type == LINK_TYPE_REV)
-            Strcat_charp(str, " [Rev] ");
-        else
-            Strcat_charp(str, " ");
-        if (!l->url)
-            p = "";
-        else
-            p = url_decode2(l->url, buf);
-        Strcat_charp(str, p);
-        label[i] = str->ptr;
-        if (len < str->length)
-            len = str->length;
-    }
-    label[nitem] = NULL;
-
-    set_menu_frame();
-    new_option_menu(&menu, label, &linkV, NULL);
-
-    menu.initial = 0;
-    menu.cursorX = buf->cursorX + buf->rootX;
-    menu.cursorY = buf->cursorY + buf->rootY;
-    menu.x = menu.cursorX + FRAME_WIDTH + 1;
-    menu.y = menu.cursorY + 2;
-
-    popup_menu(NULL, &menu);
-
-    if (linkV < 0)
-        return NULL;
-    for (i = 0, l = buf->linklist; l; i++, l = l->next) {
-        if (i == linkV)
-            return l;
-    }
-    return NULL;
-}
-
 /* --- LinkMenu (END) --- */
 
 Anchor*
@@ -2034,8 +2035,7 @@ lmSelect(char c)
         return (MENU_NOTHING);
 }
 
-Anchor*
-list_menu(Buffer* buf)
+Anchor* list_menu(Buffer* buf)
 {
     Menu menu;
     AnchorList* al = buf->href;

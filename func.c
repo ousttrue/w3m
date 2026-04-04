@@ -2,6 +2,8 @@
  * w3m func.c
  */
 #include "global.h"
+#include "indep.h"
+#include "alloc.h"
 #include "display.h"
 #include "constants.h"
 #include "keybind.h"
@@ -15,6 +17,7 @@
 #include "wc_util.h"
 #include <libwc/charset.h>
 
+#include <sys/stat.h>
 #include <stdio.h>
 
 #define KEYDATA_HASH_SIZE 16

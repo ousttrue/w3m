@@ -34,12 +34,12 @@ struct URLFile {
     char is_cgi;
     char encoding;
     union input_stream* stream;
-    char* ext;
+    const char* ext;
     int compression;
     int content_encoding;
-    char* guess_type;
-    char* ssl_certificate;
-    char* url;
+    const char* guess_type;
+    const char* ssl_certificate;
+    const char* url;
     time_t modtime;
 };
 

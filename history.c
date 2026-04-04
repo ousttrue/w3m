@@ -7,6 +7,7 @@
 #include "alloc.h"
 #include "indep.h"
 #include "fm.h"
+#include <sys/stat.h>
 
 #define HISTORY_FILE "history"
 

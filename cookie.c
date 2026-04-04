@@ -8,6 +8,7 @@
  */
 
 #include "cookie.h"
+#include "indep.h"
 #include "rc.h"
 #include "url.h"
 #include "global.h"
@@ -694,7 +695,7 @@ void set_cookie_flag(struct parsed_tagarg* arg)
     backBf((struct CmdArgs) { 0 });
 }
 
-int check_cookie_accept_domain(char* domain)
+int check_cookie_accept_domain(const char* domain)
 {
     TextListItem* tl;
 

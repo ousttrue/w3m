@@ -11,9 +11,6 @@ extern void chkURLBuffer(Buffer* buf);
 extern void chkNMIDBuffer(Buffer* buf);
 extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status,
     const char* cmd, void* data);
-extern LinkList* link_menu(Buffer* buf);
-extern Anchor* accesskey_menu(Buffer* buf);
-extern Anchor* list_menu(Buffer* buf);
 
 extern int currentLn(Buffer* buf);
 extern void tmpClearBuffer(Buffer* buf);
@@ -28,18 +25,6 @@ extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, char* refer
     int flag, FormList* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
-extern void push_render_image(Str str, int width, int limit,
-    struct html_feed_environ* h_env);
-extern void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
-    int indent, int force, int width);
-extern void do_blankline(struct html_feed_environ* h_env,
-    struct readbuffer* obuf, int indent, int indent_incr,
-    int width);
-extern void purgeline(struct html_feed_environ* h_env);
-extern void save_fonteffect(struct html_feed_environ* h_env,
-    struct readbuffer* obuf);
-extern void restore_fonteffect(struct html_feed_environ* h_env,
-    struct readbuffer* obuf);
 
 extern Str process_img(struct parsed_tag* tag, int width);
 extern Str process_anchor(struct parsed_tag* tag, char* tagbuf);
@@ -56,20 +41,12 @@ extern void feed_textarea(char* str);
 extern Str process_form(struct parsed_tag* tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(char* q, Str* refresh_uri);
-extern int HTMLtagproc1(struct parsed_tag* tag,
-    struct html_feed_environ* h_env);
+
 extern void HTMLlineproc2(Buffer* buf, TextLineList* tl);
-extern void HTMLlineproc0(char* istr, struct html_feed_environ* h_env,
-    int internal);
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 extern Buffer* loadHTMLBuffer(struct URLFile* f, Buffer* newBuf);
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
 extern void showProgress(int64_t* linelen, int64_t* trbyte);
-extern void init_henv(struct html_feed_environ*, struct readbuffer*,
-    struct environment*, int, TextLineList*, int, int);
-extern void completeHTMLstream(struct html_feed_environ*,
-    struct readbuffer*);
 extern void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src,
     int internal);
 extern Buffer* loadHTMLString(Str page);
@@ -77,10 +54,10 @@ extern Str loadGopherDir(struct URLFile* uf, ParsedURL* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, ParsedURL* pu, wc_ces* charset);
 
 extern int save2tmp(struct URLFile uf, const char* tmpf);
-extern int _doFileCopy(char* tmpf, char* defstr, int download);
+extern int _doFileCopy(const char* tmpf, const char* defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
-extern int doFileMove(char* tmpf, char* defstr);
-extern int doFileSave(struct URLFile uf, char* defstr);
+extern int doFileMove(const char* tmpf, const char* defstr);
+extern int doFileSave(struct URLFile uf, const char* defstr);
 extern int checkCopyFile(char* path1, char* path2);
 extern int checkSaveFile(InputStream stream, char* path);
 extern int checkOverWrite(char* path);
@@ -108,9 +85,6 @@ extern struct form_item_list* formList_addInput(struct form_list* fl,
     struct parsed_tag* tag);
 extern char* form2str(FormItemList* fi);
 extern int formtype(char* typestr);
-extern void formRecheckRadio(Anchor* a, Buffer* buf, FormItemList* form);
-extern void formResetBuffer(Buffer* buf, AnchorList* formitem);
-extern void formUpdateBuffer(Anchor* a, Buffer* buf, FormItemList* form);
 extern void preFormUpdateBuffer(Buffer* buf);
 extern Str textfieldrep(Str s, int width);
 extern void input_textarea(FormItemList* fi);
@@ -126,37 +100,10 @@ extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 
 
-extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
-    Anchor** anchor_return, char* referer,
-    char* title, unsigned char key, int line,
-    int pos);
-extern Anchor* registerHref(Buffer* buf, char* url, char* target,
-    char* referer, char* title, unsigned char key,
-    int line, int pos);
-extern Anchor* registerName(Buffer* buf, char* url, int line, int pos);
-extern Anchor* registerImg(Buffer* buf, char* url, char* title, int line,
-    int pos);
-extern Anchor* registerForm(Buffer* buf, FormList* flist,
-    struct parsed_tag* tag, int line, int pos);
-extern int onAnchor(Anchor* a, int line, int pos);
-extern Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
-extern Anchor* retrieveCurrentAnchor(Buffer* buf);
-extern Anchor* retrieveCurrentImg(Buffer* buf);
-extern Anchor* retrieveCurrentForm(Buffer* buf);
-extern Anchor* searchAnchor(AnchorList* al, char* str);
-extern Anchor* searchURLLabel(Buffer* buf, char* url);
 extern void reAnchorWord(Buffer* buf, Line* l, int spos, int epos);
 extern char* reAnchor(Buffer* buf, char* re);
 extern char* reAnchorNews(Buffer* buf, char* re);
 extern char* reAnchorNewsheader(Buffer* buf);
-extern void addMultirowsForm(Buffer* buf, AnchorList* al);
-extern Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
-extern Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
-void addMultirowsImg(Buffer* buf, AnchorList* al);
-extern HmarkerList* putHmarker(HmarkerList* ml, int line, int pos, int seq);
-extern void shiftAnchorPosition(AnchorList* a, HmarkerList* hl, int line,
-    int pos, int shift);
-extern char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a);
 extern Buffer* link_list_panel(Buffer* buf);
 
 
@@ -188,16 +135,7 @@ extern char* getQWord(char** str);
 struct regex;
 extern char* getRegexWord(const char** str, struct regex** regex_ret);
 
-extern int setMenuItem(MenuItem* item, char* type, char* line);
-extern int addMenuList(MenuList** list, char* id);
-extern int getMenuN(MenuList* list, char* id);
-
-extern void popupMenu(int x, int y, Menu* menu);
-extern void mainMenu(int x, int y);
-extern void optionMenu(int x, int y, char** label, int* variable, int initial, const char* cmd);
-extern void initMenu(void);
-
-extern char* guess_save_name(Buffer* buf, char* file);
+extern const char* guess_save_name(Buffer* buf, const char* file);
 
 extern Str getLinkNumberStr(int correction);
 

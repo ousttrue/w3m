@@ -1,8 +1,114 @@
 #pragma once
 #include <stdio.h>
 #include "tab.h"
+#include "line.h"
+#include "url.h"
 
-typedef struct _Buffer Buffer;
+/* Link Buffer */
+#define LB_NOLINK -1
+#define LB_FRAME 0 /* rFrame() */
+#define LB_N_FRAME 1
+#define LB_INFO 2 /* pginfo() */
+#define LB_N_INFO 3
+#define LB_SOURCE 4 /* vwSrc() */
+#define LB_N_SOURCE LB_SOURCE
+#define MAX_LB 5
+
+extern int REV_LB[];
+
+typedef struct _BufferPos {
+    long top_linenumber;
+    long cur_linenumber;
+    int currentColumn;
+    int pos;
+    int bpos;
+    struct _BufferPos* next;
+    struct _BufferPos* prev;
+} BufferPos;
+
+typedef struct _Buffer {
+    const char* filename;
+    char* buffername;
+    Line* firstLine;
+    Line* topLine;
+    Line* currentLine;
+    Line* lastLine;
+    struct _Buffer* nextBuffer;
+    struct _Buffer* linkBuffer[MAX_LB];
+    short width;
+    short height;
+    char* type;
+    const char* real_type;
+    int allLine;
+    short bufferprop;
+    int currentColumn;
+    short cursorX;
+    short cursorY;
+    int pos;
+    int visualpos;
+    short rootX;
+    short rootY;
+    short COLS;
+    short LINES;
+    InputStream pagerSource;
+    struct _anchorList* href;
+    struct _anchorList* name;
+    struct _anchorList* img;
+    struct _anchorList* formitem;
+    struct LinkList* linklist;
+    struct form_list* formlist;
+    struct _MapList* maplist;
+    struct HmarkerList* hmarklist;
+    struct HmarkerList* imarklist;
+    struct _ParsedURL currentURL;
+    struct _ParsedURL* baseURL;
+    char* baseTarget;
+    int real_scheme;
+    const char* sourcefile;
+    struct frameset* frameset;
+    struct frameset_queue* frameQ;
+    int* clone;
+    size_t trbyte;
+    char check_url;
+    wc_ces document_charset;
+    wc_uint8 auto_detect;
+    struct _textlist* document_header;
+    struct form_item_list* form_submit;
+    char* savecache;
+    char* edit;
+    struct mailcap* mailcap;
+    char* mailcap_source;
+    char* header_source;
+    char search_header;
+    const char* ssl_certificate;
+    char image_flag;
+    char image_loaded;
+    char need_reshape;
+    struct _anchor* submit;
+    struct _BufferPos* undo;
+    struct _AlarmEvent* event;
+} Buffer;
+
+#define NO_BUFFER ((Buffer*)1)
+
+#define COPY_BUFROOT(dstbuf, srcbuf)       \
+    {                                      \
+        (dstbuf)->rootX = (srcbuf)->rootX; \
+        (dstbuf)->rootY = (srcbuf)->rootY; \
+        (dstbuf)->COLS = (srcbuf)->COLS;   \
+        (dstbuf)->LINES = (srcbuf)->LINES; \
+    }
+
+#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
+    {                                                      \
+        (dstbuf)->topLine = (srcbuf)->topLine;             \
+        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
+        (dstbuf)->pos = (srcbuf)->pos;                     \
+        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
+        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
+        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
+        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
+    }
 
 /*
  * global Buffer *Currentbuf;
@@ -10,6 +116,11 @@ typedef struct _Buffer Buffer;
  */
 #define Currentbuf (CurrentTab->currentBuffer)
 #define Firstbuf (CurrentTab->firstBuffer)
+
+#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
+#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
+#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
+#define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
 extern Buffer* newBuffer(int width);
 extern Buffer* nullBuffer(void);

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "indep.h"
 #include "tab.h"
 #include "buffer.h"
 #include "wc_util.h"
@@ -242,7 +243,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, int flag, str
         SKIP_BLANKS(p);
     }
     if (use_hist && !(flag & IN_URL) && *p != '\0') {
-        char* q = lastHist(hist);
+        const char* q = lastHist(hist);
         if (!q || strcmp(q, p))
             pushHist(hist, p);
     }

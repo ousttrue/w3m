@@ -3,10 +3,10 @@
 
 extern int LINES, COLS;
 
-void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
-void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
-void put_image_iterm2(char* url, int x, int y, int w, int h);
-void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
+void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
+void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
+void put_image_iterm2(const char* url, int x, int y, int w, int h);
+void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
 int get_pixel_per_cell(int* ppc, int* ppl);
 
 char getch(void);
@@ -46,7 +46,7 @@ void clrtoeolx(void);
 void clrtobot(void);
 void clrtobotx(void);
 void no_clrtoeol(void);
-void addstr(char* s);
+void addstr(const char* s);
 void addnstr(char* s, int n);
 void addnstr_sup(char* s, int n);
 void crmode(void);

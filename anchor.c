@@ -1,3 +1,7 @@
+#include "anchor.h"
+#include "indep.h"
+#include "alloc.h"
+#include "image.h"
 #include "fm.h"
 #include "maparea.h"
 #include "buffer.h"
@@ -169,7 +173,7 @@ retrieveCurrentForm(Buffer* buf)
 }
 
 Anchor*
-searchAnchor(AnchorList* al, char* str)
+searchAnchor(AnchorList* al, const char* str)
 {
     int i;
     Anchor* a;
@@ -186,7 +190,7 @@ searchAnchor(AnchorList* al, char* str)
 }
 
 Anchor*
-searchURLLabel(Buffer* buf, char* url)
+searchURLLabel(Buffer* buf, const char* url)
 {
     return searchAnchor(buf->name, url);
 }
@@ -243,7 +247,7 @@ reseq_anchor(Buffer* buf)
     int i, j, n, nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
     short* seqmap;
     Anchor *a, *a1;
-    HmarkerList* ml = NULL;
+    struct HmarkerList* ml = NULL;
 
     if (!buf->href)
         return;
@@ -438,11 +442,11 @@ char* reAnchorNewsheader(Buffer* buf)
 }
 
 #define FIRST_MARKER_SIZE 30
-HmarkerList*
-putHmarker(HmarkerList* ml, int line, int pos, int seq)
+struct HmarkerList*
+putHmarker(struct HmarkerList* ml, int line, int pos, int seq)
 {
     if (ml == NULL) {
-        ml = New(HmarkerList);
+        ml = New(struct HmarkerList);
         ml->marks = NULL;
         ml->nmark = 0;
         ml->markmax = 0;
@@ -501,7 +505,7 @@ closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y)
     return an;
 }
 
-void shiftAnchorPosition(AnchorList* al, HmarkerList* hl, int line, int pos,
+void shiftAnchorPosition(AnchorList* al, struct HmarkerList* hl, int line, int pos,
     int shift)
 {
     Anchor* a;
@@ -709,7 +713,7 @@ char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a)
 Buffer*
 link_list_panel(Buffer* buf)
 {
-    LinkList* l;
+    struct LinkList* l;
     AnchorList* al;
     Anchor* a;
     FormItemList* fi;

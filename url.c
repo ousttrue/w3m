@@ -1,4 +1,7 @@
 #include "url.h"
+#include "istream.h"
+#include "indep.h"
+#include "buffer.h"
 #include "rc.h"
 #include "http_request.h"
 #include "proxy.h"
@@ -1478,7 +1481,7 @@ no_user_mimetypes:
     return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
-char* filename_extension(char* path, int is_url)
+const char* filename_extension(const char* path, int is_url)
 {
     char *last_dot = "", *p = path;
     int i;

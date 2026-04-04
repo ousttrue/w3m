@@ -1,5 +1,8 @@
-#define MAINPROGRAM
 #include "main.h"
+#include "istream.h"
+#include "indep.h"
+#include "textlist.h"
+#include "anchor.h"
 #include "proxy.h"
 #include "signal_util.h"
 #include "downloadlist.h"
@@ -753,10 +756,9 @@ int w3m_main(int argc, char** argv)
         if (i >= 0) {
             SearchHeader = search_header;
             DefaultType = default_type;
-            char* url;
             int retry = 0;
 
-            url = load_argv[i];
+            const char* url = load_argv[i];
             if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
             retry_as_local_file:
                 url = file_to_url(load_argv[i]);
@@ -1714,9 +1716,9 @@ Buffer* loadLink(char* url, char* target, char* referer, FormList* request)
     discardBuffer(buf);
     rFrame((struct CmdArgs) { 0 });
     {
-        Anchor* al = NULL;
-        char* label = pu.label;
+        const char* label = pu.label;
 
+        Anchor* al = NULL;
         if (label && f_element->element->attr == F_BODY) {
             al = searchAnchor(f_element->body->nameList, label);
         }
@@ -1738,7 +1740,7 @@ Buffer* loadLink(char* url, char* target, char* referer, FormList* request)
     return buf;
 }
 
-void gotoLabel(char* label)
+void gotoLabel(const char* label)
 {
     Buffer* buf;
     Anchor* al;
@@ -2179,7 +2181,7 @@ void _followForm(int submit)
 /* go to the next [visited] anchor */
 void _nextA(int visited)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
@@ -2261,7 +2263,7 @@ _end:
 /* go to the previous anchor */
 void _prevA(int visited)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
@@ -2343,7 +2345,7 @@ _end:
 /* go to the next left/right anchor */
 void nextX(int d, int dy)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     Anchor *an, *pan;
     Line* l;
     int i, x, y, n = searchKeyNum();
@@ -2398,7 +2400,7 @@ void nextX(int d, int dy)
 /* go to the next downward/upward anchor */
 void nextY(int d)
 {
-    HmarkerList* hl = Currentbuf->hmarklist;
+    struct HmarkerList* hl = Currentbuf->hmarklist;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     int hseq;

@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "indep.h"
 #include "global.h"
 #include "fm.h"
 #include "proto.h"

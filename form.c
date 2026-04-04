@@ -1,4 +1,7 @@
 #include "global.h"
+#include "indep.h"
+#include "alloc.h"
+#include "anchor.h"
 #include "downloadlist.h"
 #include "wc_util.h"
 #include "url.h"

@@ -1,4 +1,9 @@
 #include "maparea.h"
+#include "indep.h"
+#include "alloc.h"
+#include "buffer.h"
+#include "image.h"
+#include "anchor.h"
 #include "wc_util.h"
 #include "etc.h"
 #include "url.h"
@@ -362,9 +367,9 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
 
 /* append links */
 static void
-append_link_info(Buffer* buf, Str html, LinkList* link)
+append_link_info(Buffer* buf, Str html, struct LinkList* link)
 {
-    LinkList* l;
+    struct LinkList* l;
     ParsedURL pu;
     char* url;
 

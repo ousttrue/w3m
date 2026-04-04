@@ -1,4 +1,6 @@
 #include "local.h"
+#include "indep.h"
+#include "alloc.h"
 #include "hash.h"
 #include "fm.h"
 #include "wc_util.h"
@@ -48,7 +50,7 @@ Str localCookie()
     return Local_cookie;
 }
 
-Str loadLocalDir(char* dname)
+Str loadLocalDir(const char* dname)
 {
     Str tmp;
     DIR* d;

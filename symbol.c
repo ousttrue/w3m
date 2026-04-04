@@ -1,4 +1,5 @@
 #include "symbol.h"
+#include "alloc.h"
 #include "global.h"
 #include "constants.h"
 #include "fm.h"

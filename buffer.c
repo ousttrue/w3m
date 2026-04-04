@@ -1,4 +1,7 @@
 #include "buffer.h"
+#include "istream.h"
+#include "alloc.h"
+#include "anchor.h"
 #include "wc_util.h"
 #include "url.h"
 #include "etc.h"
@@ -11,6 +14,14 @@
 
 char* NullLine = "";
 Lineprop NullProp[] = { 0 };
+
+int REV_LB[MAX_LB] = {
+    LB_N_FRAME,
+    LB_FRAME,
+    LB_N_INFO,
+    LB_INFO,
+    LB_N_SOURCE,
+};
 
 /*
  * Buffer creation
@@ -26,7 +37,7 @@ newBuffer(int width)
     memset((void*)n, 0, sizeof(Buffer));
     n->width = width;
     n->COLS = COLS;
-    n->LINES = (LINES-1);
+    n->LINES = (LINES - 1);
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -315,7 +326,7 @@ listBuffer(Buffer* top, Buffer* current)
         setbcolor(bg_color);
     }
     clrtobotx();
-    for (i = 0; i < (LINES-1); i++) {
+    for (i = 0; i < (LINES - 1); i++) {
         if (buf == current) {
             c = i;
             standout();
@@ -355,8 +366,8 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
 {
     int i, cpoint, /* Current Buffer Number */
         spoint, /* Current Line on Screen */
-        maxbuf, sclimit = (LINES-1); /* Upper limit of line * number in
-                                     * the * screen */
+        maxbuf, sclimit = (LINES - 1); /* Upper limit of line * number in
+                                        * the * screen */
     Buffer *buf, *topbuf;
     char c;
 
@@ -515,7 +526,7 @@ void reshapeBuffer(Buffer* buf)
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = TRUE;
 
-    buf->height = (LINES-1) + 1;
+    buf->height = (LINES - 1) + 1;
     if (buf->firstLine && sbuf.firstLine) {
         Line* cur = sbuf.currentLine;
         int n;

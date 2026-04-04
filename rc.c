@@ -1,4 +1,7 @@
 #include "rc.h"
+#include "indep.h"
+#include "alloc.h"
+#include "buffer.h"
 #include "proxy.h"
 #include "display.h"
 #include "cookie.h"
@@ -21,6 +24,7 @@
 #include <libwc/ces.h>
 #include <libwc/charset.h>
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>

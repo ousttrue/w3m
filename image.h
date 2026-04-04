@@ -1,9 +1,37 @@
 #pragma once
+#include <sys/types.h>
+
+typedef struct _imageCache {
+    const char* url;
+    struct _ParsedURL* current;
+    const char* file;
+    const char* touch;
+    pid_t pid;
+    char loaded;
+    int index;
+    short width;
+    short height;
+    short a_width;
+    short a_height;
+} ImageCache;
+
+typedef struct _image {
+    const char* url;
+    const char* ext;
+    short width;
+    short height;
+    short xoffset;
+    short yoffset;
+    short y;
+    short rows;
+    const char* map;
+    char ismap;
+    int touch;
+    ImageCache* cache;
+} Image;
 
 struct _Buffer;
-struct _image;
 struct _ParsedURL;
-struct _imageCache;
 
 extern void initImage(void);
 extern void termImage(void);

@@ -1,4 +1,7 @@
 #include "image.h"
+#include "indep.h"
+#include "buffer.h"
+#include "anchor.h"
 #include "display.h"
 #include "url.h"
 #include "etc.h"
@@ -213,7 +216,7 @@ void drawImage(void)
             if (!i->cache->touch || stat(i->cache->file, &st))
                 return;
 
-            char* url = i->cache->file;
+            const char* url = i->cache->file;
 
             int x = i->x / pixel_per_char_i;
             int y = i->y / pixel_per_line_i;

@@ -21,15 +21,6 @@
 #include "menu.h"
 #include "textlist.h"
 #include "terms.h"
-#include "istream.h"
-
-#ifdef MAINPROGRAM
-#define global
-#define init(x) = (x)
-#else /* not MAINPROGRAM */
-#define global extern
-#define init(x)
-#endif /* not MAINPROGRAM */
 
 /*
  * Constants.
@@ -71,32 +62,10 @@
 #define BP_REDIRECTED 0x20
 #define BP_CLOSE 0x40
 
-/* Link Buffer */
-#define LB_NOLINK -1
-#define LB_FRAME 0 /* rFrame() */
-#define LB_N_FRAME 1
-#define LB_INFO 2 /* pginfo() */
-#define LB_N_INFO 3
-#define LB_SOURCE 4 /* vwSrc() */
-#define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 5
-
 /* Search Result */
 #define SR_FOUND 0x1
 #define SR_NOTFOUND 0x2
 #define SR_WRAPPED 0x4
-
-#ifdef MAINPROGRAM
-int REV_LB[MAX_LB] = {
-    LB_N_FRAME,
-    LB_FRAME,
-    LB_N_INFO,
-    LB_INFO,
-    LB_N_SOURCE,
-};
-#else /* not MAINPROGRAM */
-extern int REV_LB[];
-#endif /* not MAINPROGRAM */
 
 /* mark URL, Message-ID */
 #define CHK_URL 1
@@ -188,251 +157,16 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef struct {
-    int line;
-    int pos;
-    int invalid;
-} BufferPoint;
-
-typedef struct _imageCache {
-    char* url;
-    struct _ParsedURL* current;
-    char* file;
-    char* touch;
-    pid_t pid;
-    char loaded;
-    int index;
-    short width;
-    short height;
-    short a_width;
-    short a_height;
-} ImageCache;
-
-typedef struct _image {
-    char* url;
-    char* ext;
-    short width;
-    short height;
-    short xoffset;
-    short yoffset;
-    short y;
-    short rows;
-    char* map;
-    char ismap;
-    int touch;
-    ImageCache* cache;
-} Image;
-
-typedef struct _anchor {
-    char* url;
-    char* target;
-    char* referer;
-    char* title;
-    unsigned char accesskey;
-    BufferPoint start;
-    BufferPoint end;
-    int hseq;
-    char slave;
-    short y;
-    short rows;
-    Image* image;
-} Anchor;
-
 #define NO_REFERER ((char*)-1)
-
-typedef struct _anchorList {
-    Anchor* anchors;
-    int nanchor;
-    int anchormax;
-    int acache;
-} AnchorList;
-
-typedef struct {
-    BufferPoint* marks;
-    int nmark;
-    int markmax;
-    int prevhseq;
-} HmarkerList;
-
-#define LINK_TYPE_NONE 0
-#define LINK_TYPE_REL 1
-#define LINK_TYPE_REV 2
-typedef struct _LinkList {
-    char* url;
-    char* title; /* Next, Contents, ... */
-    char* ctype; /* Content-Type */
-    char type; /* Rel, Rev */
-    struct _LinkList* next;
-} LinkList;
 
 #include "line.h"
 #include "url.h"
 
-typedef struct _Buffer {
-    char* filename;
-    char* buffername;
-    Line* firstLine;
-    Line* topLine;
-    Line* currentLine;
-    Line* lastLine;
-    struct _Buffer* nextBuffer;
-    struct _Buffer* linkBuffer[MAX_LB];
-    short width;
-    short height;
-    char* type;
-    char* real_type;
-    int allLine;
-    short bufferprop;
-    int currentColumn;
-    short cursorX;
-    short cursorY;
-    int pos;
-    int visualpos;
-    short rootX;
-    short rootY;
-    short COLS;
-    short LINES;
-    InputStream pagerSource;
-    AnchorList* href;
-    AnchorList* name;
-    AnchorList* img;
-    AnchorList* formitem;
-    LinkList* linklist;
-    FormList* formlist;
-    struct _MapList* maplist;
-    HmarkerList* hmarklist;
-    HmarkerList* imarklist;
-    struct _ParsedURL currentURL;
-    struct _ParsedURL* baseURL;
-    char* baseTarget;
-    int real_scheme;
-    char* sourcefile;
-    struct frameset* frameset;
-    struct frameset_queue* frameQ;
-    int* clone;
-    size_t trbyte;
-    char check_url;
-    wc_ces document_charset;
-    wc_uint8 auto_detect;
-    TextList* document_header;
-    FormItemList* form_submit;
-    char* savecache;
-    char* edit;
-    struct mailcap* mailcap;
-    char* mailcap_source;
-    char* header_source;
-    char search_header;
-    char* ssl_certificate;
-    char image_flag;
-    char image_loaded;
-    char need_reshape;
-    Anchor* submit;
-    struct _BufferPos* undo;
-    struct _AlarmEvent* event;
-} Buffer;
-
-typedef struct _BufferPos {
-    long top_linenumber;
-    long cur_linenumber;
-    int currentColumn;
-    int pos;
-    int bpos;
-    struct _BufferPos* next;
-    struct _BufferPos* prev;
-} BufferPos;
-
-#define COPY_BUFROOT(dstbuf, srcbuf)       \
-    {                                      \
-        (dstbuf)->rootX = (srcbuf)->rootX; \
-        (dstbuf)->rootY = (srcbuf)->rootY; \
-        (dstbuf)->COLS = (srcbuf)->COLS;   \
-        (dstbuf)->LINES = (srcbuf)->LINES; \
-    }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
-    {                                                      \
-        (dstbuf)->topLine = (srcbuf)->topLine;             \
-        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
-        (dstbuf)->pos = (srcbuf)->pos;                     \
-        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
-        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
-        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
-        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
-    }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
-
-#define NO_BUFFER ((Buffer*)1)
-
-#define RB_STACK_SIZE 10
-
-#define TAG_STACK_SIZE 10
-
-#define FONT_STACK_SIZE 5
-
-#define FONTSTAT_SIZE 7
 #define FONTSTAT_MAX 127
 
 #define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
-struct input_alt_attr {
-    int hseq;
-    int fid;
-    int in;
-    Str type, name, value;
-};
-
-typedef struct {
-    int pos;
-    int len;
-    int tlen;
-    long flag;
-    Anchor anchor;
-    Str img_alt;
-    struct input_alt_attr input_alt;
-    char fontstat[FONTSTAT_SIZE];
-    short nobr_level;
-    Lineprop prev_ctype;
-    char init_flag;
-    short top_margin;
-    short bottom_margin;
-} Breakpoint;
-
-struct cmdtable {
-    const char* cmdname;
-    int cmd;
-};
-
-struct readbuffer {
-    Str line;
-    Lineprop cprop;
-    short pos;
-    Str prevchar;
-    long flag;
-    long flag_stack[RB_STACK_SIZE];
-    int flag_sp;
-    int status;
-    unsigned char end_tag;
-    unsigned char q_level;
-    short table_level;
-    short nobr_level;
-    Anchor anchor;
-    Str img_alt;
-    struct input_alt_attr input_alt;
-    char fontstat[FONTSTAT_SIZE];
-    char fontstat_stack[FONT_STACK_SIZE][FONTSTAT_SIZE];
-    int fontstat_sp;
-    Lineprop prev_ctype;
-    Breakpoint bp;
-    struct cmdtable* tag_stack[TAG_STACK_SIZE];
-    int tag_sp;
-    short top_margin;
-    short bottom_margin;
-};
 
 #define in_bold fontstat[0]
 #define in_under fontstat[1]
@@ -514,21 +248,6 @@ struct readbuffer {
 #define RG_NOCACHE 1
 #define RG_FRAME 2
 #define RG_FRAME_SRC 4
-
-struct html_feed_environ {
-    struct readbuffer* obuf;
-    TextLineList* buf;
-    FILE* f;
-    Str tagbuf;
-    int limit;
-    int maxlimit;
-    struct environment* envs;
-    int nenv;
-    int envc;
-    int envc_real;
-    char* title;
-    int blank_lines;
-};
 
 /* modes for align() */
 

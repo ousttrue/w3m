@@ -10,15 +10,15 @@ typedef struct _Buffer Buffer;
 
 typedef struct _ParsedURL {
     enum UrlScheme scheme;
-    char* user;
-    char* pass;
-    char* host;
+    const char* user;
+    const char* pass;
+    const char* host;
     int port;
-    char* file;
-    char* real_file;
-    char* query;
-    char* label;
-    int is_nocache;
+    const char* file;
+    const char* real_file;
+    const char* query;
+    const char* label;
+    bool is_nocache;
 } ParsedURL;
 
 ParsedURL* baseURL(Buffer* buf);
@@ -44,7 +44,7 @@ struct URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct _textlist* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);
 
-char* filename_extension(char* patch, int is_url);
+const char* filename_extension(const char* patch, int is_url);
 ParsedURL* schemeToProxy(int scheme);
 wc_ces url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset);
 char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset);

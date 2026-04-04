@@ -1,4 +1,7 @@
 #include "frame.h"
+#include "istream.h"
+#include "indep.h"
+#include "alloc.h"
 #include "signal_util.h"
 #include "main.h"
 #include "wc_util.h"

@@ -1,4 +1,7 @@
 #include "display.h"
+#include "istream.h"
+#include "html_feed_environ.h"
+#include "anchor.h"
 #include "http_request.h"
 #include "proxy.h"
 #include "signal_util.h"
@@ -71,9 +74,9 @@
 static int frame_source = 0;
 static int need_number = 0;
 
-static char* guess_filename(char* file);
+static const char* guess_filename(const char* file);
 static int _MoveFile(char* path1, char* path2);
-static void uncompress_stream(struct URLFile* uf, char** src);
+static void uncompress_stream(struct URLFile* uf, const char** src);
 static FILE* lessopen_stream(const char* path);
 static Buffer* loadcmdout(char* cmd,
     Buffer* (*loadproc)(struct URLFile*, Buffer*),
@@ -388,12 +391,12 @@ void examineFile(const char* path, struct URLFile* uf)
     uf->stream = openIS(path);
     if (!do_download) {
         if (use_lessopen && getenv("LESSOPEN") != NULL) {
-            FILE* fp;
             uf->guess_type = guessContentType(path);
             if (uf->guess_type == NULL)
                 uf->guess_type = "text/plain";
             if (is_html_type(uf->guess_type))
                 return;
+            FILE* fp;
             if ((fp = lessopen_stream(path))) {
                 UFclose(uf);
                 uf->stream = newFileStream(fp, (void (*)())pclose);
@@ -1897,10 +1900,9 @@ page_loaded:
             fclose(src);
         }
         if (do_download || gopher_download) {
-            char* file;
             if (!src)
                 return NULL;
-            file = guess_filename(pu.file);
+            const char* file = guess_filename(pu.file);
             if (f.scheme == SCM_GOPHER)
                 file = Sprintf("%s.html", file)->ptr;
             if (f.scheme == SCM_NEWS_GROUP)
@@ -1929,7 +1931,7 @@ page_loaded:
         current_content_length = strtoclen(p);
     if (do_download || gopher_download) {
         /* download only */
-        char* file;
+        const char* file;
         TRAP_OFF;
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
             f.stream = newEncodedStream(f.stream, f.encoding);
@@ -5751,7 +5753,7 @@ addLink(Buffer* buf, struct parsed_tag* tag)
 {
     char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
     char type = LINK_TYPE_NONE;
-    LinkList* l;
+    struct LinkList* l;
 
     parsedtag_get_value(tag, ATTR_HREF, &href);
     if (href)
@@ -5774,14 +5776,14 @@ addLink(Buffer* buf, struct parsed_tag* tag)
             title = rev;
     }
 
-    l = New(LinkList);
+    l = New(struct LinkList);
     l->url = href;
     l->title = title;
     l->ctype = ctype;
     l->type = type;
     l->next = NULL;
     if (buf->linklist) {
-        LinkList* i;
+        struct LinkList* i;
         for (i = buf->linklist; i->next; i = i->next)
             ;
         i->next = l;
@@ -7627,7 +7629,7 @@ _MoveFile(char* path1, char* path2)
     return 0;
 }
 
-int _doFileCopy(char* tmpf, char* defstr, int download)
+int _doFileCopy(const char* tmpf, const char* defstr, int download)
 {
     Str msg;
     Str filen;
@@ -7728,14 +7730,14 @@ int _doFileCopy(char* tmpf, char* defstr, int download)
     return 0;
 }
 
-int doFileMove(char* tmpf, char* defstr)
+int doFileMove(const char* tmpf, const char* defstr)
 {
     int ret = doFileCopy(tmpf, defstr);
     unlink(tmpf);
     return ret;
 }
 
-int doFileSave(struct URLFile uf, char* defstr)
+int doFileSave(struct URLFile uf, const char* defstr)
 {
     Str msg;
     Str filen;
@@ -7892,7 +7894,7 @@ char* inputAnswer(char* prompt)
 }
 
 static void
-uncompress_stream(struct URLFile* uf, char** src)
+uncompress_stream(struct URLFile* uf, const char** src)
 {
     pid_t pid1;
     FILE* f1;
@@ -8033,8 +8035,8 @@ lessopen_stream(const char* path)
 
 #define DEF_SAVE_FILE "index.html"
 
-static char*
-guess_filename(char* file)
+static const char*
+guess_filename(const char* file)
 {
     char *p = NULL, *s;
 
@@ -8055,7 +8057,7 @@ guess_filename(char* file)
     return s;
 }
 
-char* guess_save_name(Buffer* buf, char* path)
+const char* guess_save_name(Buffer* buf, const char* path)
 {
     if (buf && buf->document_header) {
         Str name = NULL;

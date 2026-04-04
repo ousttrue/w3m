@@ -68,7 +68,7 @@ void delBuffer(Buffer* buf);
 void _goLine(char* l);
 int cur_real_linenumber(Buffer* buf);
 void _followForm(int submit);
-void gotoLabel(char* label);
+void gotoLabel(const char* label);
 int handleMailto(const char* url);
 void _newT(void);
 Buffer* loadLink(char* url, char* target, char* referer, struct form_list* request);

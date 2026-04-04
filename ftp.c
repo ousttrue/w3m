@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "istream.h"
 #include "signal_util.h"
 #include "etc.h"
 #include "url.h"

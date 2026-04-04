@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "istream.h"
 #include "signal_util.h"
 #include "wc_util.h"
 #include "buffer.h"

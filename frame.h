@@ -16,12 +16,12 @@ struct frame_body {
     char* name;
     char* url;
     struct _ParsedURL* baseURL;
-    char* source;
+    const char* source;
     char* type;
     char* referer;
     struct _anchorList* nameList;
     struct form_list* request;
-    char* ssl_certificate;
+    const char* ssl_certificate;
 };
 
 union frameset_element {
