@@ -1437,7 +1437,7 @@ int is_localhost(const char* host)
     return FALSE;
 }
 
-char* file_to_url(char* file)
+char* file_to_url(const char* file)
 {
     Str tmp;
     char* drive = NULL;

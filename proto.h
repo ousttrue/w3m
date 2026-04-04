@@ -18,7 +18,7 @@ extern Anchor* list_menu(Buffer* buf);
 extern int currentLn(Buffer* buf);
 extern void tmpClearBuffer(Buffer* buf);
 
-extern void examineFile(char* path, struct URLFile* uf);
+extern void examineFile(const char* path, struct URLFile* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
@@ -160,7 +160,6 @@ extern void shiftAnchorPosition(AnchorList* a, HmarkerList* hl, int line,
 extern char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a);
 extern Buffer* link_list_panel(Buffer* buf);
 
-extern const void* querySiteconf(const ParsedURL* query_pu, int field);
 
 extern void loadPasswd(void);
 extern void loadPreForm(void);
@@ -174,7 +173,6 @@ extern char* last_modified(Buffer* buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
 extern void mySystem(char* command, int background);
-extern char* file_to_url(char* file);
 extern char* url_unquote_conv(char* url, wc_ces charset);
 extern char* expandName(char* name);
 

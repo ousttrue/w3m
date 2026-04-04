@@ -72,7 +72,7 @@ extern void cleanup_line(Str s, int mode);
 extern char* html_quote(char* str);
 extern char* html_unquote(const char* str);
 extern char* file_quote(char* str);
-extern char* file_unquote(char* str);
+extern char* file_unquote(const char* str);
 extern char* url_quote(const char* str);
 extern Str Str_url_unquote(Str x, int is_form, int safe);
 extern Str Str_form_quote(Str x);
