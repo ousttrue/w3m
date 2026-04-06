@@ -1832,7 +1832,7 @@ From: aito
   効かないバグの修正。
 
 From: rubikitch <rubikitch@ruby-lang.org>
-・Buffer の URL をファイルにセーブする機能追加。
+・struct Buffer の URL をファイルにセーブする機能追加。
 
 From: Yamate Keiichirou <yamate@ebina.hitachi.co.jp>
 ・FTP proxyが効かなくなっていたバグの修正。
@@ -2135,7 +2135,7 @@ mailto: で、mailを出す途中に C-c で intr かけると segfaultすると
 From: Yamate Keiichirou <yamate@ebina.hitachi.co.jp>
         * fm.h, frame.c, map.c, buffer.c, file.c, main.c: framesetの変
         更履歴のbackができるように、Bufferの内部でframesetをスタックに
-        して持つように変更。Buffer selectのように任意の時点を指定する
+        して持つように変更。struct Buffer selectのように任意の時点を指定する
         のは難しいっぽいです
 
         * rc.c, main.c, frame.c: default targetを_selfに変更。伴って、
@@ -2157,7 +2157,7 @@ From: Yamate Keiichirou <yamate@ebina.hitachi.co.jp>
         * html.h, url.c, file.c, menu.c, frame.c: オブジェクトの捕まえ
         方 (retrieve schemeだろうか)の流れを、char *url -> parse?URL()
         -> parsedURL.scheme -> openURL() -> URLFile.scheme ->
-        loadGeneralFile() -> Buffer.real_scheme と仮定して、openURL()
+        loadGeneralFile() -> struct Buffer.real_scheme と仮定して、openURL()
         にてurlがlocal_cgiだったときにはURLFile.schemeにSCM_LOCAL_CGI
         をいれて、cache file付きで返すように変更。つまり、frameでディ
         レクトリを見れるようになってます。SCM_EXECは……見逃してくださ
@@ -2902,7 +2902,7 @@ From: Hironori Sakamoto <h-saka@lsi.nec.co.jp>
 なっていましたので、その修正 patch です。
 ＃ http://www.ntk.net/ 見ていて気づきました。
 また、ラベルに移動した時にはまだバグがあって copyBuffer() を使っているために、
-sourcefile も同じになり Buffer を消した時に元の Buffer の sourcefile
+sourcefile も同じになり struct Buffer を消した時に元の struct Buffer の sourcefile
 も消されてしまいます。他にも、pagerSource や frameset もまずいようです。
 そこで、カウンタ(int のポインタ)を設けておいて、それが 0 になったら消すように
 してみました。
@@ -3179,7 +3179,7 @@ shell を起動する前に, それまでの shell の output を deleteBuffer �
 いる所があるのですが, その buffer が Currentbuf のときでも消してし
 まいます.
 その後 pushBuffer によって新しい shell output を Currentbuf の前に
-追加しようとして, 前と後がリンクした Buffer list ができてしまいます.
+追加しようとして, 前と後がリンクした struct Buffer list ができてしまいます.
 そのため, 3 回目に実行したときに pushBuffer の中で無限ループになってし
 まうようです.
 
@@ -3296,7 +3296,7 @@ w3m (990814) の修正と改良です。
 
 [バッファ]
 ・フレーム表示、ソース表示画面や内部ページの扱いを統一的にするため、
-  Buffer 構造体の bufferprop に BP_FRAME(フレーム), BP_SOURCE(ソース表示)
+  struct Buffer 構造体の bufferprop に BP_FRAME(フレーム), BP_SOURCE(ソース表示)
   BP_INTERNAL(内部ページ), BP_NO_URL(基準URLなし) を設定するようにした。
 ・自動フレーム表示の場合は、LOAD(ldfile) でもフレーム表示をするように修正。
 ・フレーム表示状態で RELOAD(reload) した場合にはフレーム表示をするように修正。

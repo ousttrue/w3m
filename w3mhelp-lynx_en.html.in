@@ -67,7 +67,7 @@ w3m</A>
 <TR><TD>#<TD>Execute shell command and browse
 </table>
 
-<H2>Buffer operation</H2>
+<H2>struct Buffer operation</H2>
 <table cellpadding=0>
 <TR><TD WIDTH=100>B, C-b, Left arrow<TD>Back to the previous buffer
 <TR><TD>\<TD>View HTML source
@@ -80,7 +80,7 @@ w3m</A>
 <TR><TD>ESC e<TD>Edit buffer image
 </table>
 
-<H2>Buffer selection mode</H2>
+<H2>struct Buffer selection mode</H2>
 <table cellpadding=0>
 <TR><TD WIDTH=100>k, C-p<TD>Select previous buffer
 <TR><TD>j, C-n<TD>Select next buffer

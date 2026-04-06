@@ -8,7 +8,7 @@
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
-/* Link Buffer */
+/* Link struct Buffer */
 #define LB_NOLINK -1
 #define LB_FRAME 0 /* rFrame() */
 #define LB_N_FRAME 1
@@ -30,7 +30,7 @@ typedef struct _BufferPos {
     struct _BufferPos* prev;
 } BufferPos;
 
-/* Buffer Property */
+/* struct Buffer Property */
 #define BP_NORMAL 0x0
 #define BP_PIPE 0x1
 #define BP_FRAME 0x2
@@ -43,15 +43,15 @@ typedef struct _BufferPos {
 #define CHK_URL 1
 #define CHK_NMID 2
 
-typedef struct _Buffer {
+struct Buffer {
     const char* filename;
     char* buffername;
     struct Line* firstLine;
     struct Line* topLine;
     struct Line* currentLine;
     struct Line* lastLine;
-    struct _Buffer* nextBuffer;
-    struct _Buffer* linkBuffer[MAX_LB];
+    struct Buffer* nextBuffer;
+    struct Buffer* linkBuffer[MAX_LB];
     short width;
     short height;
     char* type;
@@ -104,9 +104,9 @@ typedef struct _Buffer {
     struct Anchor* submit;
     struct _BufferPos* undo;
     struct _AlarmEvent* event;
-} Buffer;
+};
 
-#define NO_BUFFER ((Buffer*)1)
+#define NO_BUFFER ((struct Buffer*)1)
 
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
     {                                      \
@@ -128,8 +128,8 @@ typedef struct _Buffer {
     }
 
 /*
- * global Buffer *Currentbuf;
- * global Buffer *Firstbuf;
+ * global struct Buffer *Currentbuf;
+ * global struct Buffer *Firstbuf;
  */
 #define Currentbuf (CurrentTab->currentBuffer)
 #define Firstbuf (CurrentTab->firstBuffer)
@@ -139,54 +139,54 @@ typedef struct _Buffer {
 #define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
 #define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
-extern Buffer* newBuffer(int width);
-extern Buffer* nullBuffer(void);
-extern void clearBuffer(Buffer* buf);
-extern void discardBuffer(Buffer* buf);
-extern Buffer* namedBuffer(Buffer* first, char* name);
-extern Buffer* deleteBuffer(Buffer* first, Buffer* delbuf);
-extern Buffer* replaceBuffer(Buffer* first, Buffer* delbuf, Buffer* newbuf);
-extern Buffer* nthBuffer(Buffer* firstbuf, int n);
-extern void gotoRealLine(Buffer* buf, int n);
-extern void gotoLine(Buffer* buf, int n);
-extern Buffer* selectBuffer(Buffer* firstbuf, Buffer* currentbuf,
+extern struct Buffer* newBuffer(int width);
+extern struct Buffer* nullBuffer(void);
+extern void clearBuffer(struct Buffer* buf);
+extern void discardBuffer(struct Buffer* buf);
+extern struct Buffer* namedBuffer(struct Buffer* first, char* name);
+extern struct Buffer* deleteBuffer(struct Buffer* first, struct Buffer* delbuf);
+extern struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf, struct Buffer* newbuf);
+extern struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
+extern void gotoRealLine(struct Buffer* buf, int n);
+extern void gotoLine(struct Buffer* buf, int n);
+extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf,
     char* selectchar);
-extern void reshapeBuffer(Buffer* buf);
-extern void copyBuffer(Buffer* a, Buffer* b);
-extern Buffer* prevBuffer(Buffer* first, Buffer* buf);
-extern int writeBufferCache(Buffer* buf);
-extern int readBufferCache(Buffer* buf);
+extern void reshapeBuffer(struct Buffer* buf);
+extern void copyBuffer(struct Buffer* a, struct Buffer* b);
+extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
+extern int writeBufferCache(struct Buffer* buf);
+extern int readBufferCache(struct Buffer* buf);
 struct URLFile;
-extern Buffer* loadBuffer(struct URLFile* uf, Buffer* newBuf);
-extern Buffer* loadImageBuffer(struct URLFile* uf, Buffer* newBuf);
-extern void saveBuffer(Buffer* buf, FILE* f, int cont);
-extern void saveBufferBody(Buffer* buf, FILE* f, int cont);
-extern Buffer* getshell(const char* cmd);
-extern Buffer* getpipe(const char* cmd);
+extern struct Buffer* loadBuffer(struct URLFile* uf, struct Buffer* newBuf);
+extern struct Buffer* loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf);
+extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
+extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
+extern struct Buffer* getshell(const char* cmd);
+extern struct Buffer* getpipe(const char* cmd);
 typedef union input_stream* InputStream;
-extern Buffer* openPagerBuffer(InputStream stream, Buffer* buf);
-extern Buffer* openGeneralPagerBuffer(InputStream stream);
-extern struct Line* getNextPage(Buffer* buf, int plen);
-extern Buffer* doExternal(struct URLFile uf, const char* type, Buffer* defaultbuf);
-extern void cursorUp0(Buffer* buf, int n);
-extern void cursorUp(Buffer* buf, int n);
-extern void cursorDown0(Buffer* buf, int n);
-extern void cursorDown(Buffer* buf, int n);
-extern void cursorUpDown(Buffer* buf, int n);
-extern void cursorRight(Buffer* buf, int n);
-extern void cursorLeft(Buffer* buf, int n);
-extern void cursorHome(Buffer* buf);
-extern void arrangeCursor(Buffer* buf);
-extern void arrangeLine(Buffer* buf);
-extern void cursorXY(Buffer* buf, int x, int y);
-extern void restorePosition(Buffer* buf, Buffer* orig);
-extern int columnSkip(Buffer* buf, int offset);
-extern void reAnchorWord(Buffer* buf, struct Line* l, int spos, int epos);
-extern char* reAnchor(Buffer* buf, char* re);
-extern char* reAnchorNews(Buffer* buf, char* re);
-extern char* reAnchorNewsheader(Buffer* buf);
-extern Buffer* link_list_panel(Buffer* buf);
-extern void chkURLBuffer(Buffer* buf);
-extern void chkNMIDBuffer(Buffer* buf);
-extern int currentLn(Buffer* buf);
-extern void tmpClearBuffer(Buffer* buf);
+extern struct Buffer* openPagerBuffer(InputStream stream, struct Buffer* buf);
+extern struct Buffer* openGeneralPagerBuffer(InputStream stream);
+extern struct Line* getNextPage(struct Buffer* buf, int plen);
+extern struct Buffer* doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf);
+extern void cursorUp0(struct Buffer* buf, int n);
+extern void cursorUp(struct Buffer* buf, int n);
+extern void cursorDown0(struct Buffer* buf, int n);
+extern void cursorDown(struct Buffer* buf, int n);
+extern void cursorUpDown(struct Buffer* buf, int n);
+extern void cursorRight(struct Buffer* buf, int n);
+extern void cursorLeft(struct Buffer* buf, int n);
+extern void cursorHome(struct Buffer* buf);
+extern void arrangeCursor(struct Buffer* buf);
+extern void arrangeLine(struct Buffer* buf);
+extern void cursorXY(struct Buffer* buf, int x, int y);
+extern void restorePosition(struct Buffer* buf, struct Buffer* orig);
+extern int columnSkip(struct Buffer* buf, int offset);
+extern void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos);
+extern char* reAnchor(struct Buffer* buf, char* re);
+extern char* reAnchorNews(struct Buffer* buf, char* re);
+extern char* reAnchorNewsheader(struct Buffer* buf);
+extern struct Buffer* link_list_panel(struct Buffer* buf);
+extern void chkURLBuffer(struct Buffer* buf);
+extern void chkNMIDBuffer(struct Buffer* buf);
+extern int currentLn(struct Buffer* buf);
+extern void tmpClearBuffer(struct Buffer* buf);

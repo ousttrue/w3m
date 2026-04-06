@@ -296,7 +296,7 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset)
     volatile Str page;
     Str tmp;
     struct URLFile f;
-    Buffer* buf;
+    struct Buffer* buf;
     char *qgroup, *p, *q, *s, *t, *n;
     char* volatile scheme, * volatile group, * volatile list;
     int status, i, first, last;

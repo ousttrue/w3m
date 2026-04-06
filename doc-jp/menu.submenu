@@ -12,7 +12,7 @@
 
 menu Main
  func	"戻る         (b)"	BACK		"b"
- popup	"バッファ操作>(f)"	Buffer		"fF"
+ popup	"バッファ操作>(f)"	struct Buffer		"fF"
  popup	"リンク操作  >(l)"	Link		"lL"
  nop	"────────"
  popup	"ブックマーク>(B)"	Bookmark	"B"
@@ -22,7 +22,7 @@ menu Main
  func	"終了         (q)"	QUIT		"qQ"
 end
 
-menu Buffer
+menu struct Buffer
  popup	"バッファ選択 (s)"	Select		"s"
  func	"ソースを表示 (v)"	VIEW		"vV"
  func	"ソースを編集 (e)"	EDIT		"eE"

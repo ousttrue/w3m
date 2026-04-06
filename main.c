@@ -96,13 +96,13 @@ int show_params_p = 0;
 void show_params(FILE* fp);
 
 int display_ok = FALSE;
-static void do_dump(Buffer*);
+static void do_dump(struct Buffer*);
 int prec_num = 0;
 int prev_key = -1;
 int on_target = 1;
 
-void set_buffer_environ(Buffer*);
-static void save_buffer_position(Buffer* buf);
+void set_buffer_environ(struct Buffer*);
+static void save_buffer_position(struct Buffer* buf);
 
 int check_target = TRUE;
 #define PREC_LIMIT 10000
@@ -300,7 +300,7 @@ die_oom(size_t bytes)
 
 int w3m_main(int argc, char** argv)
 {
-    Buffer* newbuf = NULL;
+    struct Buffer* newbuf = NULL;
     char* p;
     int c, i;
     InputStream redin;
@@ -1001,7 +1001,7 @@ void pushEvent(const char* cmd, void* data)
 }
 
 static void
-dump_source(Buffer* buf)
+dump_source(struct Buffer* buf)
 {
     FILE* f;
     int c;
@@ -1017,7 +1017,7 @@ dump_source(Buffer* buf)
 }
 
 static void
-dump_head(Buffer* buf)
+dump_head(struct Buffer* buf)
 {
     if (buf->document_header == NULL) {
         if (w3m_dump & DUMP_EXTRA)
@@ -1031,7 +1031,7 @@ dump_head(Buffer* buf)
 }
 
 static void
-dump_extra(Buffer* buf)
+dump_extra(struct Buffer* buf)
 {
     printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
     if (buf->baseURL)
@@ -1063,7 +1063,7 @@ cmp_anchor_hseq(const void* a, const void* b)
 }
 
 static void
-do_dump(Buffer* buf)
+do_dump(struct Buffer* buf)
 {
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
@@ -1146,7 +1146,7 @@ void escdmap(char c)
         escKeyProc((int)d, K_ESCD, EscDKeymap);
 }
 
-void tmpClearBuffer(Buffer* buf)
+void tmpClearBuffer(struct Buffer* buf)
 {
     if (buf->pagerSource == NULL && writeBufferCache(buf) == 0) {
         buf->firstLine = NULL;
@@ -1156,9 +1156,9 @@ void tmpClearBuffer(Buffer* buf)
     }
 }
 
-void pushBuffer(Buffer* buf)
+void pushBuffer(struct Buffer* buf)
 {
-    Buffer* b;
+    struct Buffer* b;
 
     deleteImage(Currentbuf);
     if (clear_buffer)
@@ -1173,7 +1173,7 @@ void pushBuffer(Buffer* buf)
     }
 }
 
-void delBuffer(Buffer* buf)
+void delBuffer(struct Buffer* buf)
 {
     if (buf == NULL)
         return;
@@ -1184,7 +1184,7 @@ void delBuffer(Buffer* buf)
         Currentbuf = Firstbuf;
 }
 
-void repBuffer(Buffer* oldbuf, Buffer* buf)
+void repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
 {
     Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
     Currentbuf = buf;
@@ -1228,7 +1228,7 @@ SigPipe(SIGNAL_ARG)
 
 void nscroll(int n, int mode)
 {
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     struct Line *top = buf->topLine, *cur = buf->currentLine;
     int lnum, tlnum, llnum, diff_n;
 
@@ -1274,7 +1274,7 @@ void nscroll(int n, int mode)
     displayBuffer(buf, mode);
 }
 
-void shiftvisualpos(Buffer* buf, int shift)
+void shiftvisualpos(struct Buffer* buf, int shift)
 {
     struct Line* l = buf->currentLine;
     buf->visualpos -= shift;
@@ -1289,7 +1289,7 @@ void shiftvisualpos(Buffer* buf, int shift)
 
 void cmd_loadfile(const char* fn)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
@@ -1443,7 +1443,7 @@ void _goLine(const char* l)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-int cur_real_linenumber(Buffer* buf)
+int cur_real_linenumber(struct Buffer* buf)
 {
     struct Line *l, *cur = buf->currentLine;
     int n;
@@ -1458,8 +1458,8 @@ int cur_real_linenumber(Buffer* buf)
     return n;
 }
 
-static Buffer*
-loadNormalBuf(Buffer* buf, int renderframe)
+static struct Buffer*
+loadNormalBuf(struct Buffer* buf, int renderframe)
 {
     pushBuffer(buf);
     if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
@@ -1467,9 +1467,9 @@ loadNormalBuf(Buffer* buf, int renderframe)
     return buf;
 }
 
-Buffer* loadLink(const char* url, const char* target, const char* referer, FormList* request)
+struct Buffer* loadLink(const char* url, const char* target, const char* referer, FormList* request)
 {
-    Buffer *buf, *nfbuf;
+    struct Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
     int flag = 0;
     struct Url *base, pu;
@@ -1559,7 +1559,7 @@ Buffer* loadLink(const char* url, const char* target, const char* referer, FormL
 
 void gotoLabel(const char* label)
 {
-    Buffer* buf;
+    struct Buffer* buf;
     struct Anchor* al;
     int i;
 
@@ -1698,7 +1698,7 @@ save_submit_formlist(FormItemList* src)
 }
 
 static Str
-conv_form_encoding(Str val, FormItemList* fi, Buffer* buf)
+conv_form_encoding(Str val, FormItemList* fi, struct Buffer* buf)
 {
     wc_ces charset = SystemCharset;
     if (fi->parent->charset)
@@ -1948,7 +1948,7 @@ void _followForm(int submit)
             Strcat(tmp2, tmp);
             loadLink(tmp2->ptr, a->target, NULL, NULL);
         } else if (fi->parent->method == FORM_METHOD_POST) {
-            Buffer* buf;
+            struct Buffer* buf;
             if (multipart) {
                 struct stat st;
                 stat(fi->parent->body, &st);
@@ -2259,9 +2259,9 @@ void nextY(int d)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-int checkBackBuffer(Buffer* buf)
+int checkBackBuffer(struct Buffer* buf)
 {
-    Buffer* fbuf = buf->linkBuffer[LB_N_FRAME];
+    struct Buffer* fbuf = buf->linkBuffer[LB_N_FRAME];
 
     if (fbuf) {
         if (fbuf->frameQ)
@@ -2288,7 +2288,7 @@ void cmd_loadURL(const char* url, struct Url* current, char* referer, FormList* 
         return;
 
     refresh();
-    Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
+    struct Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -2306,7 +2306,7 @@ void goURL0(char* prompt, int relative)
 {
     char* referer;
     struct Url p_url, *current;
-    Buffer* cur_buf = Currentbuf;
+    struct Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
 
     const char* url = searchKeyData();
@@ -2364,7 +2364,7 @@ void goURL0(char* prompt, int relative)
         pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
 }
 
-void cmd_loadBuffer(Buffer* buf, int prop, int linkid)
+void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid)
 {
     if (buf == NULL) {
         disp_err_message("Can't load string", FALSE);
@@ -2403,7 +2403,7 @@ void follow_map(struct parsed_tagarg* arg)
     parseURL2(a->url, &p_url, baseURL(Currentbuf));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        Buffer* buf;
+        struct Buffer* buf;
 
         _newT();
         buf = Currentbuf;
@@ -2420,7 +2420,7 @@ void follow_map(struct parsed_tagarg* arg)
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
 }
 
-void anchorMn(struct Anchor* (*menu_func)(Buffer*), int go)
+void anchorMn(struct Anchor* (*menu_func)(struct Buffer*), int go)
 {
     if (!Currentbuf->href || !Currentbuf->hmarklist)
         return;
@@ -2509,7 +2509,7 @@ void _docCSet(wc_ces charset)
 
 void change_charset(struct parsed_tagarg* arg)
 {
-    Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
+    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
     wc_ces charset;
 
     if (buf == NULL)
@@ -2527,7 +2527,7 @@ void change_charset(struct parsed_tagarg* arg)
 }
 
 /* mark URL-like patterns as anchors */
-void chkURLBuffer(Buffer* buf)
+void chkURLBuffer(struct Buffer* buf)
 {
     static char* url_like_pat[] = {
         "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
@@ -2549,7 +2549,7 @@ void chkURLBuffer(Buffer* buf)
 }
 
 /* mark Message-ID-like patterns as NEWS anchors */
-void chkNMIDBuffer(Buffer* buf)
+void chkNMIDBuffer(struct Buffer* buf)
 {
     static char* url_like_pat[] = {
         "<[!-;=?-~]+@[a-zA-Z0-9\\.\\-_]+>",
@@ -2627,7 +2627,7 @@ void invoke_browser(char* url)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-char* getCurWord(Buffer* buf, int* spos, int* epos)
+char* getCurWord(struct Buffer* buf, int* spos, int* epos)
 {
     char* p;
     struct Line* l = buf->currentLine;
@@ -2658,7 +2658,7 @@ char* getCurWord(Buffer* buf, int* spos, int* epos)
     return &p[b];
 }
 
-char* GetWord(Buffer* buf)
+char* GetWord(struct Buffer* buf)
 {
     int b, e;
     char* p;
@@ -2673,7 +2673,7 @@ char* GetWord(Buffer* buf)
 void execdict(char* word)
 {
     char *w, *dictcmd;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (!UseDictCommand || word == NULL || *word == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -2701,9 +2701,9 @@ void execdict(char* word)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void set_buffer_environ(Buffer* buf)
+void set_buffer_environ(struct Buffer* buf)
 {
-    static Buffer* prev_buf = NULL;
+    static struct Buffer* prev_buf = NULL;
     static struct Line* prev_line = NULL;
     static int prev_pos = -1;
     struct Line* l;
@@ -2784,7 +2784,7 @@ int searchKeyNum(void)
 
 static void deleteFiles()
 {
-    Buffer* buf;
+    struct Buffer* buf;
     char* f;
 
     for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
@@ -2879,7 +2879,7 @@ newTab(void)
 void _newT(void)
 {
     TabBuffer* tag;
-    Buffer* buf;
+    struct Buffer* buf;
     int i;
 
     tag = newTab();
@@ -2970,7 +2970,7 @@ void calcTabPos(void)
 TabBuffer*
 deleteTab(TabBuffer* tab)
 {
-    Buffer *buf, *next;
+    struct Buffer *buf, *next;
 
     if (nTab <= 1)
         return FirstTab;
@@ -3000,7 +3000,7 @@ deleteTab(TabBuffer* tab)
 
 void followTab(TabBuffer* tab)
 {
-    Buffer* buf;
+    struct Buffer* buf;
     struct Anchor* a;
 
     a = retrieveCurrentImg(Currentbuf);
@@ -3027,7 +3027,7 @@ void followTab(TabBuffer* tab)
             deleteTab(CurrentTab);
     } else if (buf != Currentbuf) {
         /* buf <- p <- ... <- Currentbuf = c */
-        Buffer *c, *p;
+        struct Buffer *c, *p;
 
         c = Currentbuf;
         if ((p = prevBuffer(c, buf)))
@@ -3045,7 +3045,7 @@ void followTab(TabBuffer* tab)
 
 void tabURL0(TabBuffer* tab, char* prompt, int relative)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (tab == CurrentTab) {
         goURL0(prompt, relative);
@@ -3061,7 +3061,7 @@ void tabURL0(TabBuffer* tab, char* prompt, int relative)
             deleteTab(CurrentTab);
     } else if (buf != Currentbuf) {
         /* buf <- p <- ... <- Currentbuf = c */
-        Buffer *c, *p;
+        struct Buffer *c, *p;
 
         c = Currentbuf;
         if ((p = prevBuffer(c, buf)))
@@ -3114,7 +3114,7 @@ void moveTab(TabBuffer* t, TabBuffer* t2, int right)
 }
 
 static void
-save_buffer_position(Buffer* buf)
+save_buffer_position(struct Buffer* buf)
 {
     BufferPos* b = buf->undo;
 
@@ -3137,7 +3137,7 @@ save_buffer_position(Buffer* buf)
 
 void resetPos(BufferPos* b)
 {
-    Buffer buf;
+    struct Buffer buf;
     struct Line top, cur;
 
     top.linenumber = b->top_linenumber;

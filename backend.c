@@ -74,7 +74,7 @@ struct {
 /* *INDENT-ON* */
 
 static void
-print_headers(Buffer* buf, int len)
+print_headers(struct Buffer* buf, int len)
 {
     TextListItem* tp;
 
@@ -95,7 +95,7 @@ print_headers(Buffer* buf, int len)
 static void
 internal_get(char* url, int flag, FormList* request)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     backend_halfdump_buf = NULL;
     do_download = flag;

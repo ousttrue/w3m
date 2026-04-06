@@ -57,17 +57,17 @@ struct frameset_queue {
 extern struct frameset* renderFrameSet;
 
 struct HtmlTag;
-struct _Buffer;
-struct frame_body* newFrame(struct HtmlTag* tag, struct _Buffer* buf);
+struct Buffer;
+struct frame_body* newFrame(struct HtmlTag* tag, struct Buffer* buf);
 struct frameset* newFrameSet(struct HtmlTag* tag);
 void addFrameSetElement(struct frameset* f, union frameset_element element);
 void deleteFrame(struct frame_body* b);
 void deleteFrameSet(struct frameset* f);
 void deleteFrameSetElement(union frameset_element e);
 struct frameset* copyFrameSet(struct frameset* of);
-void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct _Buffer* buf);
+void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct Buffer* buf);
 struct frameset* popFrameTree(struct frameset_queue** fqpp);
 struct form_list;
-void resetFrameElement(union frameset_element* f_element, struct _Buffer* buf, char* referer, struct form_list* request);
-struct _Buffer* renderFrame(struct _Buffer* Cbuf, int force_reload);
+void resetFrameElement(union frameset_element* f_element, struct Buffer* buf, char* referer, struct form_list* request);
+struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);
 union frameset_element* search_frame(struct frameset* fset, char* name);

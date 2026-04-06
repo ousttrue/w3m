@@ -197,7 +197,7 @@ void shiftr(struct CmdArgs args)
 
 void col1R(struct CmdArgs args)
 {
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     struct Line* l = buf->currentLine;
     int j, column, n = searchKeyNum();
 
@@ -215,7 +215,7 @@ void col1R(struct CmdArgs args)
 
 void col1L(struct CmdArgs args)
 {
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     struct Line* l = buf->currentLine;
     int j, n = searchKeyNum();
 
@@ -273,7 +273,7 @@ void pipeBuf(struct CmdArgs args)
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
+    struct Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
@@ -302,7 +302,7 @@ void pipesh(struct CmdArgs args)
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    Buffer* buf = getpipe(cmd);
+    struct Buffer* buf = getpipe(cmd);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
@@ -330,7 +330,7 @@ void readsh(struct CmdArgs args)
     }
     auto prevtrap = mySignal(SIGINT, intTrap);
     crmode();
-    Buffer* buf = getshell(cmd);
+    struct Buffer* buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);
     term_raw();
     if (buf == NULL) {
@@ -543,7 +543,7 @@ void qquitfm(struct CmdArgs args)
 /* Select buffer */
 void selBuf(struct CmdArgs args)
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int ok;
     char cmd;
 
@@ -856,7 +856,7 @@ void followA(struct CmdArgs args)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
     if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        Buffer* buf;
+        struct Buffer* buf;
 
         _newT();
         buf = Currentbuf;
@@ -876,7 +876,7 @@ void followA(struct CmdArgs args)
 void followI(struct CmdArgs args)
 {
     struct Anchor* a;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -1064,7 +1064,7 @@ void nextU(struct CmdArgs args)
 /* go to the next bufferr */
 void nextBf(struct CmdArgs args)
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int i;
 
     for (i = 0; i < PREC_NUM; i++) {
@@ -1082,7 +1082,7 @@ void nextBf(struct CmdArgs args)
 /* go to the previous bufferr */
 void prevBf(struct CmdArgs args)
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int i;
 
     for (i = 0; i < PREC_NUM; i++) {
@@ -1100,7 +1100,7 @@ void prevBf(struct CmdArgs args)
 /* delete current buffer and back to the previous buffer */
 void backBf(struct CmdArgs args)
 {
-    Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
+    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
     if (!checkBackBuffer(Currentbuf)) {
         if (close_tab_back && nTab >= 1) {
@@ -1147,7 +1147,7 @@ void backBf(struct CmdArgs args)
 
 void deletePrevBuf(struct CmdArgs args)
 {
-    Buffer* buf = Currentbuf->nextBuffer;
+    struct Buffer* buf = Currentbuf->nextBuffer;
     if (buf)
         delBuffer(buf);
 }
@@ -1162,7 +1162,7 @@ void goHome(struct CmdArgs args)
     char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
         struct Url p_url;
-        Buffer* cur_buf = Currentbuf;
+        struct Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
         parseURL2(url, &p_url, NULL);
@@ -1240,7 +1240,7 @@ void msgs(struct CmdArgs args)
 /* page info */
 void pginfo(struct CmdArgs args)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != NULL) {
         Currentbuf = buf;
@@ -1291,7 +1291,7 @@ void movlistMn(struct CmdArgs args)
 /* link,anchor,image list */
 void linkLst(struct CmdArgs args)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     buf = link_list_panel(Currentbuf);
     if (buf != NULL) {
@@ -1303,7 +1303,7 @@ void linkLst(struct CmdArgs args)
 /* cookie list */
 void cooLst(struct CmdArgs args)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     buf = cookie_list_panel();
     if (buf != NULL)
@@ -1447,7 +1447,7 @@ void curURL(struct CmdArgs args)
 
 void vwSrc(struct CmdArgs args)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (Currentbuf->type == NULL || Currentbuf->bufferprop & BP_FRAME)
         return;
@@ -1525,7 +1525,7 @@ void vwSrc(struct CmdArgs args)
 /* reload */
 void reload(struct CmdArgs args)
 {
-    Buffer *buf, *fbuf = NULL, sbuf;
+    struct Buffer *buf, *fbuf = NULL, sbuf;
     wc_ces old_charset;
     Str url;
     FormList* request;
@@ -1691,7 +1691,7 @@ void chkNMID(struct CmdArgs args)
 /* render frames */
 void rFrame(struct CmdArgs args)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if ((buf = Currentbuf->linkBuffer[LB_FRAME]) != NULL) {
         Currentbuf = buf;

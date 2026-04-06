@@ -444,7 +444,7 @@ Subject: [w3m-dev 01487] A string in <textarea> is broken after editing
   <textarea> related fix.
 
 Subject: [w3m-dev 01488] buffer overflow bugs
-  * Buffer overflow fixes.
+  * struct Buffer overflow fixes.
 
 2000/12/9
 
@@ -1253,7 +1253,7 @@ From: aito
 * Bugfix: mouse doesn't work when both GPM and SYSMOUSE are undefined.
 
 From: rubikitch <rubikitch@ruby-lang.org>
-* Enhancement: Save Buffer URL into file.
+* Enhancement: Save struct Buffer URL into file.
 
 From: Yamate Keiichirou <yamate@ebina.hitachi.co.jp>
 * FTP proxy bugfix.

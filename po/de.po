@@ -21,7 +21,7 @@ msgid " Back         (b) "
 msgstr " Zurück             (b) "
 
 #: menu.c:270
-msgid " Select Buffer(s) "
+msgid " Select struct Buffer(s) "
 msgstr " Puffer auswählen   (s) "
 
 #: menu.c:272

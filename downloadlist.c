@@ -71,7 +71,7 @@ int checkDownloadList(void)
 
 void downloadListPanel()
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int replace = FALSE, new_tab = FALSE;
     int reload;
 
@@ -144,7 +144,7 @@ convert_size3(int64_t size)
     return tmp->ptr;
 }
 
-Buffer* DownloadListBuffer(void)
+struct Buffer* DownloadListBuffer(void)
 {
     DownloadList* d;
     Str src = NULL;

@@ -12,14 +12,14 @@ extern void pushEvent(const char* cmd, void* data);
 extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status,
     const char* cmd, void* data);
 
-typedef struct _Buffer Buffer;
+struct Buffer;
 
 extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
 struct form_list;
 struct Url;
-extern Buffer* loadGeneralFile(const char* path, struct Url* current, char* referer,
+extern struct Buffer* loadGeneralFile(const char* path, struct Url* current, char* referer,
     int flag, struct form_list* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -41,15 +41,15 @@ extern Str process_n_form(void);
 extern int getMetaRefreshParam(char* q, Str* refresh_uri);
 
 struct _textlinelist;
-extern void HTMLlineproc2(Buffer* buf, struct _textlinelist* tl);
+extern void HTMLlineproc2(struct Buffer* buf, struct _textlinelist* tl);
 struct URLFile;
-extern Buffer* loadHTMLBuffer(struct URLFile* f, Buffer* newBuf);
+extern struct Buffer* loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf);
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
 extern void showProgress(int64_t* linelen, int64_t* trbyte);
-extern void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src,
+extern void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src,
     int internal);
-extern Buffer* loadHTMLString(Str page);
+extern struct Buffer* loadHTMLString(Str page);
 extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 
@@ -62,8 +62,8 @@ extern int checkCopyFile(char* path1, char* path2);
 extern int checkOverWrite(const char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
-extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu);
-extern char* checkHeader(Buffer* buf, char* field);
+extern void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
+extern char* checkHeader(struct Buffer* buf, char* field);
 
 extern void escdmap(char c);
 extern Str unescape_spaces(Str s);
@@ -80,7 +80,7 @@ extern struct form_item_list* formList_addInput(struct form_list* fl,
 struct form_item_list;
 extern char* form2str(struct form_item_list* fi);
 extern int formtype(char* typestr);
-extern void preFormUpdateBuffer(Buffer* buf);
+extern void preFormUpdateBuffer(struct Buffer* buf);
 extern Str textfieldrep(Str s, int width);
 extern void input_textarea(struct form_item_list* fi);
 extern void do_internal(char* action, char* data);
@@ -88,7 +88,7 @@ extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,
     char* filename, char* file);
 
-extern Buffer* page_info_panel(Buffer* buf);
+extern struct Buffer* page_info_panel(struct Buffer* buf);
 
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
@@ -101,7 +101,7 @@ extern void add_auth_user_passwd(struct Url* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
 extern void invalidate_auth_user_passwd(struct Url* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
-extern char* last_modified(Buffer* buf);
+extern char* last_modified(struct Buffer* buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
 extern void mySystem(char* command, int background);
@@ -111,6 +111,6 @@ struct parsed_tagarg;
 extern void change_charset(struct parsed_tagarg* arg);
 
 
-extern const char* guess_save_name(Buffer* buf, const char* file);
+extern const char* guess_save_name(struct Buffer* buf, const char* file);
 
 extern Str getLinkNumberStr(int correction);

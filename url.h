@@ -6,8 +6,6 @@
 extern Str header_string;
 extern int ai_family_order_table[7][3]; /* XXX */
 
-typedef struct _Buffer Buffer;
-
 struct Url {
     enum UrlScheme scheme;
     const char* user;
@@ -22,7 +20,8 @@ struct Url {
 };
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
-struct Url* baseURL(Buffer* buf);
+struct Buffer;
+struct Url* baseURL(struct Buffer* buf);
 int openSocket(const char* hostname, const char* remoteport_name, unsigned short remoteport_num);
 void parseURL(const char* url, struct Url* p_url, struct Url* current);
 void copyParsedURL(struct Url* p, const struct Url* q);
@@ -57,6 +56,6 @@ const char* filename_extension(const char* patch, int is_url);
 struct Url* schemeToProxy(int scheme);
 wc_ces url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset);
 char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset);
-char* url_decode2(const char* url, const Buffer* buf);
+char* url_decode2(const char* url, const struct Buffer* buf);
 Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label);
 const char* guessContentType(const char* filename);

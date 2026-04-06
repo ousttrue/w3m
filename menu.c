@@ -653,7 +653,7 @@ static int MainMenuEncode = false;
 static MenuItem MainMenuItem[] = {
     /* type        label           variable value func     popup keys data  */
     { MENU_FUNC, " Back         (b) ", NULL, 0, "BACK", NULL, "b", NULL },
-    { MENU_POPUP, " Select Buffer(s) ", NULL, 0, NULL, &SelectMenu, "s",
+    { MENU_POPUP, " Select struct Buffer(s) ", NULL, 0, NULL, &SelectMenu, "s",
         NULL },
     { MENU_POPUP, " Select Tab   (t) ", NULL, 0, NULL, &SelTabMenu, "tT",
         NULL },
@@ -1048,7 +1048,7 @@ set_menu_frame(void)
     }
 }
 
-struct LinkList* link_menu(Buffer* buf)
+struct LinkList* link_menu(struct Buffer* buf)
 {
     Menu menu;
     struct LinkList* l;
@@ -1490,7 +1490,7 @@ static void
 initSelectMenu(void)
 {
     int i, nitem, len = 0, l;
-    Buffer* buf;
+    struct Buffer* buf;
     Str str;
     char** label;
     char* p;
@@ -1556,7 +1556,7 @@ static void
 smChBuf(void)
 {
     int i;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (SelectV < 0 || SelectV >= SelectMenu.nitem)
         return;
@@ -1576,7 +1576,7 @@ static int
 smDelBuf(char c)
 {
     int i, x, y, mselect;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (CurrentMenu->select < 0 || CurrentMenu->select >= SelectMenu.nitem)
         return (MENU_NOTHING);
@@ -1623,7 +1623,7 @@ initSelTabMenu(void)
 {
     int i, nitem, len = 0, l;
     TabBuffer* tab;
-    Buffer* buf;
+    struct Buffer* buf;
     Str str;
     char** label;
     char* p;
@@ -1690,7 +1690,7 @@ smChTab(void)
 {
     int i;
     TabBuffer* tab;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (SelTabV < 0 || SelTabV >= SelTabMenu.nitem)
         return;
@@ -1933,7 +1933,7 @@ int getMenuN(MenuList* list, char* id)
 /* --- LinkMenu (END) --- */
 
 struct Anchor*
-accesskey_menu(Buffer* buf)
+accesskey_menu(struct Buffer* buf)
 {
     Menu menu;
     struct AnchorList* al = buf->href;
@@ -2033,7 +2033,7 @@ lmSelect(char c)
         return (MENU_NOTHING);
 }
 
-struct Anchor* list_menu(Buffer* buf)
+struct Anchor* list_menu(struct Buffer* buf)
 {
     Menu menu;
     struct AnchorList* al = buf->href;

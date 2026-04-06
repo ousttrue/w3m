@@ -3,8 +3,8 @@
 typedef struct _TabBuffer {
     struct _TabBuffer* nextTab;
     struct _TabBuffer* prevTab;
-    struct _Buffer* currentBuffer;
-    struct _Buffer* firstBuffer;
+    struct Buffer* currentBuffer;
+    struct Buffer* firstBuffer;
     short x1;
     short x2;
     short y;

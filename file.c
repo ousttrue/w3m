@@ -83,12 +83,12 @@ static const char* guess_filename(const char* file);
 static int _MoveFile(char* path1, char* path2);
 static void uncompress_stream(struct URLFile* uf, const char** src);
 static FILE* lessopen_stream(const char* path);
-static Buffer* loadcmdout(const char* cmd,
-    Buffer* (*loadproc)(struct URLFile*, Buffer*),
-    Buffer* defaultbuf);
-static void addnewline(Buffer* buf, char* line, Lineprop* prop,
+static struct Buffer* loadcmdout(const char* cmd,
+    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*),
+    struct Buffer* defaultbuf);
+static void addnewline(struct Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
-static void addLink(Buffer* buf, struct HtmlTag* tag);
+static void addLink(struct Buffer* buf, struct HtmlTag* tag);
 
 static struct table* tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
@@ -232,7 +232,7 @@ UFhalfclose(struct URLFile* f)
     }
 }
 
-int currentLn(Buffer* buf)
+int currentLn(struct Buffer* buf)
 {
     if (buf->currentLine)
         /*     return buf->currentLine->real_linenumber + 1;      */
@@ -241,11 +241,11 @@ int currentLn(Buffer* buf)
         return 1;
 }
 
-static Buffer*
+static struct Buffer*
 loadSomething(struct URLFile* f,
-    Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
+    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if ((buf = loadproc(f, defaultbuf)) == NULL)
         return NULL;
@@ -525,7 +525,7 @@ int matchattr(const char* p, const char* attr, int len, Str* value)
     return 0;
 }
 
-void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
+void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
 {
     char *p, *q;
     char* emsg;
@@ -815,7 +815,7 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
         fclose(src);
 }
 
-char* checkHeader(Buffer* buf, char* field)
+char* checkHeader(struct Buffer* buf, char* field)
 {
     int len;
     TextListItem* i;
@@ -834,7 +834,7 @@ char* checkHeader(Buffer* buf, char* field)
 }
 
 static char*
-checkContentType(Buffer* buf)
+checkContentType(struct Buffer* buf)
 {
     char* p;
     Str r;
@@ -1342,7 +1342,7 @@ struct http_auth www_auth[] = {
 /* *INDENT-ON* */
 
 static struct http_auth*
-findAuthentication(struct http_auth* hauth, Buffer* buf, char* auth_field)
+findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field)
 {
     struct http_auth* ha;
     int len = strlen(auth_field), slen;
@@ -1549,17 +1549,17 @@ Str getLinkNumberStr(int correction)
 /*
  * loadGeneralFile: load file to buffer
  */
-#define DO_EXTERNAL ((Buffer * (*)(struct URLFile*, Buffer*)) doExternal)
-Buffer*
+#define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
+struct Buffer*
 loadGeneralFile(const char* path, struct Url* volatile current, char* referer,
     int flag, FormList* volatile request)
 {
     struct URLFile f, *volatile of = NULL;
     struct Url pu;
-    Buffer* b = NULL;
-    Buffer* (*volatile proc)(struct URLFile*, Buffer*) = loadBuffer;
+    struct Buffer* b = NULL;
+    struct Buffer* (*volatile proc)(struct URLFile*, struct Buffer*) = loadBuffer;
     const char* volatile t = "text/plain", *p, * volatile real_type = NULL;
-    Buffer* volatile t_buf = NULL;
+    struct Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = TRUE;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
@@ -1969,7 +1969,7 @@ page_loaded:
         }
     }
     if (image_source) {
-        Buffer* b = NULL;
+        struct Buffer* b = NULL;
         if (IStype(f.stream) != IST_ENCODED)
             f.stream = newEncodedStream(f.stream, f.encoding);
         if (save2tmp(f, image_source) == 0) {
@@ -5155,7 +5155,7 @@ ex_efct(int ex)
 }
 
 static void
-HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
+HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
 {
     static char* outc = NULL;
     static Lineprop* outp = NULL;
@@ -5754,7 +5754,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
 }
 
 static void
-addLink(Buffer* buf, struct HtmlTag* tag)
+addLink(struct Buffer* buf, struct HtmlTag* tag)
 {
     char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
     char type = LINK_TYPE_NONE;
@@ -5796,7 +5796,7 @@ addLink(Buffer* buf, struct HtmlTag* tag)
         buf->linklist = l;
 }
 
-void HTMLlineproc2(Buffer* buf, TextLineList* tl)
+void HTMLlineproc2(struct Buffer* buf, TextLineList* tl)
 {
     _tl_lp2 = tl->first;
     HTMLlineproc2body(buf, textlist_feed, -1);
@@ -5817,7 +5817,7 @@ file_feed(void)
 }
 
 static void
-HTMLlineproc3(Buffer* buf, InputStream stream)
+HTMLlineproc3(struct Buffer* buf, InputStream stream)
 {
     _file_lp2 = stream;
     HTMLlineproc2body(buf, file_feed, -1);
@@ -6229,7 +6229,7 @@ extern char* NullLine;
 extern Lineprop NullProp[];
 
 static void
-addnewline2(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
+addnewline2(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int nlines)
 {
     struct Line* l;
@@ -6265,7 +6265,7 @@ addnewline2(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
 }
 
 static void
-addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
+addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int width, int nlines)
 {
     char* s;
@@ -6321,8 +6321,8 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
 /*
  * loadHTMLBuffer: read file and make new buffer
  */
-Buffer*
-loadHTMLBuffer(struct URLFile* f, Buffer* newBuf)
+struct Buffer*
+loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf)
 {
     FILE* src = NULL;
     Str tmp;
@@ -6628,7 +6628,7 @@ print_internal_information(struct html_feed_environ* henv)
     }
 }
 
-void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src, int internal)
+void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int internal)
 {
     struct environment envs[MAX_ENV_LEVEL];
     int64_t linelen = 0;
@@ -6778,12 +6778,12 @@ phase2:
 /*
  * loadHTMLString: read string and make new buffer
  */
-Buffer*
+struct Buffer*
 loadHTMLString(Str page)
 {
     struct URLFile f;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-    Buffer* newBuf;
+    struct Buffer* newBuf;
 
     init_stream(&f, SCM_LOCAL, newStrStream(page));
 
@@ -6959,8 +6959,8 @@ Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset)
 /*
  * loadBuffer: read file and make new buffer
  */
-Buffer*
-loadBuffer(struct URLFile* uf, Buffer* volatile newBuf)
+struct Buffer*
+loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
 {
     FILE* volatile src = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -7043,8 +7043,8 @@ _end:
     return newBuf;
 }
 
-Buffer*
-loadImageBuffer(struct URLFile* uf, Buffer* newBuf)
+struct Buffer*
+loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf)
 {
     Image image;
     ImageCache* cache;
@@ -7139,7 +7139,7 @@ conv_symbol(struct Line* l)
  * saveBuffer: write buffer to file
  */
 static void
-_saveBuffer(Buffer* buf, struct Line* l, FILE* f, int cont)
+_saveBuffer(struct Buffer* buf, struct Line* l, FILE* f, int cont)
 {
     Str tmp;
     int is_html = FALSE;
@@ -7167,12 +7167,12 @@ pager_next:
     }
 }
 
-void saveBuffer(Buffer* buf, FILE* f, int cont)
+void saveBuffer(struct Buffer* buf, FILE* f, int cont)
 {
     _saveBuffer(buf, buf->firstLine, f, cont);
 }
 
-void saveBufferBody(Buffer* buf, FILE* f, int cont)
+void saveBufferBody(struct Buffer* buf, FILE* f, int cont)
 {
     struct Line* l = buf->firstLine;
 
@@ -7181,12 +7181,12 @@ void saveBufferBody(Buffer* buf, FILE* f, int cont)
     _saveBuffer(buf, l, f, cont);
 }
 
-static Buffer*
+static struct Buffer*
 loadcmdout(const char* cmd,
-    Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
+    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
 {
     FILE *f, *popen(const char*, const char*);
-    Buffer* buf;
+    struct Buffer* buf;
     struct URLFile uf;
 
     if (cmd == NULL || *cmd == '\0')
@@ -7204,10 +7204,10 @@ loadcmdout(const char* cmd,
  * getshell: execute shell command and get the result into a buffer
  */
 #define SHELLBUFFERNAME "*Shellout*"
-Buffer*
+struct Buffer*
 getshell(const char* cmd)
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     buf = loadcmdout(cmd, loadBuffer, NULL);
     if (buf == NULL)
@@ -7222,11 +7222,11 @@ getshell(const char* cmd)
 /*
  * getpipe: execute shell command and connect pipe to the buffer
  */
-Buffer*
+struct Buffer*
 getpipe(const char* cmd)
 {
     FILE *f, *popen(const char*, const char*);
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (cmd == NULL || *cmd == '\0')
         return NULL;
@@ -7247,8 +7247,8 @@ getpipe(const char* cmd)
 /*
  * Open pager buffer
  */
-Buffer*
-openPagerBuffer(InputStream stream, Buffer* buf)
+struct Buffer*
+openPagerBuffer(InputStream stream, struct Buffer* buf)
 {
 
     if (buf == NULL)
@@ -7269,12 +7269,12 @@ openPagerBuffer(InputStream stream, Buffer* buf)
     return buf;
 }
 
-Buffer*
+struct Buffer*
 openGeneralPagerBuffer(InputStream stream)
 {
-    Buffer* buf;
+    struct Buffer* buf;
     const char* t = "text/plain";
-    Buffer* t_buf = NULL;
+    struct Buffer* t_buf = NULL;
     struct URLFile uf;
 
     init_stream(&uf, SCM_UNKNOWN, stream);
@@ -7327,7 +7327,7 @@ openGeneralPagerBuffer(InputStream stream)
 }
 
 #define CPIPEBUFFERNAME "*stream(closed)*"
-struct Line* getNextPage(Buffer* buf, int plen)
+struct Line* getNextPage(struct Buffer* buf, int plen)
 {
     struct Line* volatile top = buf->topLine, * volatile last = buf->lastLine, * volatile cur = buf->currentLine;
     int i;
@@ -7504,13 +7504,13 @@ _end:
     return retval;
 }
 
-Buffer*
-doExternal(struct URLFile uf, const char* type, Buffer* defaultbuf)
+struct Buffer*
+doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 {
     Str tmpf, command;
     struct mailcap* mcap;
     int mc_stat;
-    Buffer* buf = NULL;
+    struct Buffer* buf = NULL;
     char *header, *src = NULL, *ext = uf.ext;
 
     if (!(mcap = searchExtViewer(type)))
@@ -8062,7 +8062,7 @@ guess_filename(const char* file)
     return s;
 }
 
-const char* guess_save_name(Buffer* buf, const char* path)
+const char* guess_save_name(struct Buffer* buf, const char* path)
 {
     if (buf && buf->document_header) {
         Str name = NULL;

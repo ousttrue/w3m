@@ -23,7 +23,7 @@ msgid " Back         (b) "
 msgstr " Bakåt        (b) "
 
 #: menu.c:270
-msgid " Select Buffer(s) "
+msgid " Select struct Buffer(s) "
 msgstr " Välj buffert (s) "
 
 #: menu.c:272

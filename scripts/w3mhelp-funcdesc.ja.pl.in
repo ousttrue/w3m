@@ -1,7 +1,7 @@
 # charset
 $charset = 'UTF-8';
 
-# Buffer selection mode
+# struct Buffer selection mode
 
 %buf_funcdesc = (
  'BUF:PREV', '一つ上のバッファを選択',
@@ -50,9 +50,9 @@ $charset = 'UTF-8';
  "In-page Navigation", 'ページ/カーソル移動',
  "Hyperlink Operations", 'ハイパーリンク操作',
  "File/Stream Operations", 'ファイル/ストリーム操作',
- "Buffer Operations", 'バッファ操作',
+ "struct Buffer Operations", 'バッファ操作',
  "Tab Operations", 'タブ操作',
- "Buffer and Tab Selection Mode", 'バッファ選択モード',
+ "struct Buffer and Tab Selection Mode", 'バッファ選択モード',
  "Bookmark Management", 'ブックマーク操作',
  "Searches", '検索',
  "Dictionary Lookup", '辞書検索',

@@ -9,11 +9,11 @@
 #define SR_WRAPPED 0x4
 
 const char* conv_search_string(const char* str, wc_ces f_ces);
-typedef struct _Buffer Buffer;
-int forwardSearch(Buffer* buf, const char* str);
-int backwardSearch(Buffer* buf, const char* str);
+struct Buffer;
+int forwardSearch(struct Buffer* buf, const char* str);
+int backwardSearch(struct Buffer* buf, const char* str);
 
-typedef int (*SrchFunc)(Buffer*, const char*);
+typedef int (*SrchFunc)(struct Buffer*, const char*);
 void srch(SrchFunc func, const char* prompt);
 void isrch(SrchFunc func, const char* prompt);
 void srch_nxtprv(int reverse);

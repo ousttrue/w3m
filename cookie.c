@@ -559,7 +559,7 @@ void initCookie(void)
     check_expired_cookies();
 }
 
-Buffer*
+struct Buffer*
 cookie_list_panel(void)
 {
     /* FIXME: gettextize? */

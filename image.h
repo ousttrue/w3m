@@ -45,7 +45,7 @@ typedef struct _image {
     ImageCache* cache;
 } Image;
 
-struct _Buffer;
+struct Buffer;
 struct Url;
 
 extern void initImage(void);
@@ -53,8 +53,8 @@ extern void termImage(void);
 extern void addImage(struct _imageCache* cache, int x, int y, int sx, int sy, int w, int h);
 extern void drawImage(void);
 extern void clearImage(void);
-extern void deleteImage(struct _Buffer* buf);
-extern void getAllImage(struct _Buffer* buf);
-extern void loadImage(struct _Buffer* buf, int flag);
+extern void deleteImage(struct Buffer* buf);
+extern void getAllImage(struct Buffer* buf);
+extern void loadImage(struct Buffer* buf, int flag);
 extern struct _imageCache* getImage(struct _image* image, struct Url* current, int flag);
 extern int getImageSize(struct _imageCache* cache);

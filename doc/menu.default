@@ -8,11 +8,11 @@
 #
 # MENU_ID
 #  Main:   Main menu
-#  Select: Buffer selection menu
+#  Select: struct Buffer selection menu
 
 menu Main
   func   " Back         (b) "  BACK		"b"
-  popup  " Select Buffer(s) "  Select		"s"
+  popup  " Select struct Buffer(s) "  Select		"s"
   popup  " Select Tab   (t) "  SelectTab	"tT"
   func   " View Source  (v) "  VIEW		"vV"
   func   " Edit Source  (e) "  EDIT		"eE"

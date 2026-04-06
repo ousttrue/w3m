@@ -8,11 +8,11 @@
 #
 # MENU_ID
 #  Main:   Main Menu
-#  Select: Buffer selection menu
+#  Select: struct Buffer selection menu
 
 menu Main
  func	"Back         (b)"	BACK		"b"
- popup	"Buffer ops  >(f)"	Buffer		"fF"
+ popup	"struct Buffer ops  >(f)"	struct Buffer		"fF"
  popup	"Link ops    >(l)"	Link		"lL"
  nop	"----------------"
  popup	"Bookmarks   >(B)"	Bookmark	"B"
@@ -22,8 +22,8 @@ menu Main
  func	"Quit         (q)"	QUIT		"qQ"
 end
 
-menu Buffer
- popup	"Buffer select(s)"	Select		"s"
+menu struct Buffer
+ popup	"struct Buffer select(s)"	Select		"s"
  func	"View source  (v)"	VIEW		"vV"
  func	"Edit source  (e)"	EDIT		"eE"
  func	"Save source  (S)"	SAVE		"S"

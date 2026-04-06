@@ -5,7 +5,7 @@
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
 
 void init_tmp(void);
-struct _Buffer* load_option_panel(void);
+struct Buffer* load_option_panel(void);
 struct parsed_tagarg;
 void panel_set_option(struct parsed_tagarg*);
 void sync_with_option(void);

@@ -151,7 +151,7 @@ print "<P><A HREF=\"$keymap\">$head</A>\n";
 	     split(" ", "goURL gorURL tabURL tabrURL ldfile readsh pipesh
 		pipeBuf"));
 
-&show_keymap('Buffer Operations',
+&show_keymap('struct Buffer Operations',
 	     split(" ", "backBf nextBf prevBf goHome selMn selBuf vwSrc svSrc
 		svBuf editBf editScr reload reshape rdrwSc dispI stopI"));
 
@@ -180,7 +180,7 @@ print "<P><A HREF=\"$keymap\">$head</A>\n";
 
 print "<BR>\n<HR WIDTH=80%>\n";
 
-&show_keymap('Buffer and Tab Selection Mode',
+&show_keymap('struct Buffer and Tab Selection Mode',
 	     split(" ", "buffer_next buffer_prev buffer_delete buffer_go"));
 
 print "<BR>\n<HR WIDTH=80%>\n";

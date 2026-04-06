@@ -32,7 +32,7 @@ msgid " Back         (b) "
 msgstr " 返回         (b) "
 
 #: menu.c:270
-msgid " Select Buffer(s) "
+msgid " Select struct Buffer(s) "
 msgstr " 選擇緩衝區   (s) "
 
 #: menu.c:272

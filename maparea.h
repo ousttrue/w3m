@@ -19,13 +19,13 @@ typedef struct _MapList {
     struct _MapList* next;
 } MapList;
 
-typedef struct _Buffer Buffer;
-MapList* searchMapList(Buffer* buf, char* name);
+struct Buffer;
+MapList* searchMapList(struct Buffer* buf, char* name);
 struct parsed_tagarg;
 void follow_map(struct parsed_tagarg* arg);
 struct Anchor;
-MapArea* follow_map_menu(Buffer* buf, char* name, struct Anchor* a_img, int x, int y);
-int getMapXY(Buffer* buf, struct Anchor* a, int* x, int* y);
-MapArea* retrieveCurrentMapArea(Buffer* buf);
-struct Anchor* retrieveCurrentMap(Buffer* buf);
+MapArea* follow_map_menu(struct Buffer* buf, char* name, struct Anchor* a_img, int x, int y);
+int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
+MapArea* retrieveCurrentMapArea(struct Buffer* buf);
+struct Anchor* retrieveCurrentMap(struct Buffer* buf);
 MapArea* newMapArea(char* url, char* target, char* alt, char* shape, char* coords);

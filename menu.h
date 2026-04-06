@@ -61,8 +61,8 @@ struct LinkList {
     char type; /* Rel, Rev */
     struct LinkList* next;
 };
-typedef struct _Buffer Buffer;
-struct LinkList* link_menu(Buffer* buf);
+struct Buffer;
+struct LinkList* link_menu(struct Buffer* buf);
 
 void new_menu(Menu* menu, MenuItem* item);
 void geom_menu(Menu* menu, int x, int y, int mselect);

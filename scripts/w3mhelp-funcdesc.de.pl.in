@@ -1,7 +1,7 @@
 # charset
 $charset = 'UTF-8';
 
-# Buffer selection mode
+# struct Buffer selection mode
 
 %buf_funcdesc = (
  'BUF:PREV', 'Gehe zum vorherigen Punkt',
@@ -50,9 +50,9 @@ $charset = 'UTF-8';
  "In-page Navigation", 'Navigation auf der Seite',
  "Hyperlink Operations", 'Umgang mit Hyperlinks',
  "File/Stream Operations", 'Umgang mit Dateien und Datenströmen',
- "Buffer Operations", 'Umgang mit Puffern',
+ "struct Buffer Operations", 'Umgang mit Puffern',
  "Tab Operations", 'Umgang mit Reitern',
- "Buffer and Tab Selection Mode", 'Puffer/Reiter-Auswahl-Modus',
+ "struct Buffer and Tab Selection Mode", 'Puffer/Reiter-Auswahl-Modus',
  "Bookmark Management", 'Lesezeichenverwaltung',
  "Searches", 'Suchen',
  "Dictionary Lookup", 'Abgleich mit Wörterbuch',

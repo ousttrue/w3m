@@ -89,7 +89,7 @@ newFrameSet(struct HtmlTag* tag)
 }
 
 struct frame_body*
-newFrame(struct HtmlTag* tag, Buffer* buf)
+newFrame(struct HtmlTag* tag, struct Buffer* buf)
 {
     struct frame_body* body;
     char* p;
@@ -241,7 +241,7 @@ flushFrameSet(struct frameset* fs)
     }
 }
 
-void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, Buffer* buf)
+void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct Buffer* buf)
 {
     struct frameset_queue *rfq, *cfq = *fqpp;
 
@@ -293,7 +293,7 @@ popFrameTree(struct frameset_queue** fqpp)
 }
 
 void resetFrameElement(union frameset_element* f_element,
-    Buffer* buf, char* referer, FormList* request)
+    struct Buffer* buf, char* referer, FormList* request)
 {
     char* f_name;
     struct frame_body* f_body;
@@ -330,7 +330,7 @@ static struct frameset*
 frame_download_source(struct frame_body* b, struct Url* currentURL,
     struct Url* baseURL, int flag)
 {
-    Buffer* buf;
+    struct Buffer* buf;
     struct frameset* ret_frameset = NULL;
     struct Url url;
 
@@ -399,7 +399,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
     case HTML_COL
 
 static int
-createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
+createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     int force_reload)
 {
     int r, c, t_stack;
@@ -847,12 +847,12 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
     return 0;
 }
 
-Buffer*
-renderFrame(Buffer* Cbuf, int force_reload)
+struct Buffer*
+renderFrame(struct Buffer* Cbuf, int force_reload)
 {
     Str tmp;
     FILE* f;
-    Buffer* buf;
+    struct Buffer* buf;
     int flag;
     struct frameset* fset;
     wc_ces doc_charset = DocumentCharset;

@@ -64,9 +64,9 @@ struct Line {
 
 int columnPos(struct Line* line, int column);
 int columnLen(struct Line* line, int column);
-struct _Buffer;
-struct Line* lineSkip(struct _Buffer* buf, struct Line* line, int offset, int last);
-struct Line* currentLineSkip(struct _Buffer* buf, struct Line* line, int offset, int last);
+struct Buffer;
+struct Line* lineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
+struct Line* currentLineSkip(struct Buffer* buf, struct Line* line, int offset, int last);
 int gethtmlcmd(char** s);
 Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 

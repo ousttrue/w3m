@@ -165,7 +165,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right")
 
 DEFUN(col1R, RIGHT, "Shift screen one column right")
 {
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     Line* l = buf->currentLine;
     int j, column, n = searchKeyNum();
 
@@ -183,7 +183,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right")
 
 DEFUN(col1L, LEFT, "Shift screen one column left")
 {
-    Buffer* buf = Currentbuf;
+    struct Buffer* buf = Currentbuf;
     Line* l = buf->currentLine;
     int j, n = searchKeyNum();
 
@@ -224,7 +224,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
 
 DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and display output")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     char *cmd, *tmpf;
     FILE* f;
 
@@ -269,7 +269,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
 
 DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     char* cmd;
 
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
@@ -298,7 +298,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     char* cmd;
 
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
@@ -535,7 +535,7 @@ DEFUN(qquitfm, QUIT, "Quit with confirmation request")
 /* Select buffer */
 DEFUN(selBuf, SELECT, "Display buffer-stack panel")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int ok;
     char cmd;
 
@@ -868,7 +868,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
     if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-        Buffer* buf;
+        struct Buffer* buf;
 
         _newT();
         buf = Currentbuf;
@@ -888,7 +888,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
 {
     struct Anchor* a;
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -1076,7 +1076,7 @@ DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink")
 /* go to the next bufferr */
 DEFUN(nextBf, NEXT, "Switch to the next buffer")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int i;
 
     for (i = 0; i < PREC_NUM; i++) {
@@ -1094,7 +1094,7 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer")
 /* go to the previous bufferr */
 DEFUN(prevBf, PREV, "Switch to the previous buffer")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int i;
 
     for (i = 0; i < PREC_NUM; i++) {
@@ -1112,7 +1112,7 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer")
 /* delete current buffer and back to the previous buffer */
 DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 {
-    Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
+    struct Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
     if (!checkBackBuffer(Currentbuf)) {
         if (close_tab_back && nTab >= 1) {
@@ -1159,7 +1159,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local CGI-scripts)")
 {
-    Buffer* buf = Currentbuf->nextBuffer;
+    struct Buffer* buf = Currentbuf->nextBuffer;
     if (buf)
         delBuffer(buf);
 }
@@ -1174,7 +1174,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
     char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
         struct Url p_url;
-        Buffer* cur_buf = Currentbuf;
+        struct Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
         parseURL2(url, &p_url, NULL);
@@ -1258,7 +1258,7 @@ DEFUN(msgs, MSGS, "Display error messages")
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document")
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != NULL) {
         Currentbuf = buf;
@@ -1309,7 +1309,7 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     buf = link_list_panel(Currentbuf);
     if (buf != NULL) {
@@ -1321,7 +1321,7 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     buf = cookie_list_panel();
     if (buf != NULL)
@@ -1465,7 +1465,7 @@ DEFUN(curURL, PEEK, "Show current address")
 
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if (Currentbuf->type == NULL || Currentbuf->bufferprop & BP_FRAME)
         return;
@@ -1543,7 +1543,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew")
 {
-    Buffer *buf, *fbuf = NULL, sbuf;
+    struct Buffer *buf, *fbuf = NULL, sbuf;
     wc_ces old_charset;
     Str url;
     FormList* request;
@@ -1715,7 +1715,7 @@ DEFUN(chkNMID, MARK_MID, "Turn Message-ID-like strings into hyperlinks")
 /* render frames */
 DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
 {
-    Buffer* buf;
+    struct Buffer* buf;
 
     if ((buf = Currentbuf->linkBuffer[LB_FRAME]) != NULL) {
         Currentbuf = buf;
@@ -2231,7 +2231,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
 
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
-    Buffer* buf;
+    struct Buffer* buf;
     int replace = FALSE, new_tab = FALSE;
     int reload;
 

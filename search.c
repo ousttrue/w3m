@@ -34,7 +34,7 @@ const char* conv_search_string(const char* str, wc_ces f_ces)
     return str;
 }
 
-int forwardSearch(Buffer* buf, const char* str)
+int forwardSearch(struct Buffer* buf, const char* str)
 {
     const char *p, *first, *last;
     struct Line *l, *begin;
@@ -113,7 +113,7 @@ int forwardSearch(Buffer* buf, const char* str)
     return SR_NOTFOUND;
 }
 
-int backwardSearch(Buffer* buf, const char* str)
+int backwardSearch(struct Buffer* buf, const char* str)
 {
     const char *p, *q, *found, *found_last, *first, *last;
     struct Line *l, *begin;
@@ -295,7 +295,7 @@ int srchcore(const char* str, SrchFunc func)
 
 int dispincsrch(int ch, Str buf, Lineprop* prop)
 {
-    static Buffer sbuf;
+    static struct Buffer sbuf;
     const char* str;
     bool do_next_search = false;
 
@@ -350,7 +350,7 @@ int dispincsrch(int ch, Str buf, Lineprop* prop)
 void isrch(SrchFunc func, const char* prompt)
 {
     const char* str;
-    Buffer sbuf;
+    struct Buffer sbuf;
     SAVE_BUFPOSITION(&sbuf);
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
