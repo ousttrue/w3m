@@ -1080,7 +1080,7 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 
 struct URLFile
 openURL(const char* url, struct Url* pu, struct Url* current,
-    struct URLOption* option, FormList* request, TextList* extra_header,
+    struct URLOption* option, struct Form* request, TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
     Str tmp;

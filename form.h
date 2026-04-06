@@ -33,40 +33,7 @@
 #define MAX_SELECT 10 /* max number of <select>..</select> \
                        * within one document */
 
-typedef struct form_list {
-    struct form_item_list* item;
-    struct form_item_list* lastitem;
-    int method;
-    Str action;
-    char* target;
-    char* name;
-    wc_ces charset;
-    int enctype;
-    struct form_list* next;
-    int nitems;
-    char* body;
-    char* boundary;
-    unsigned long length;
-} FormList;
-
-typedef struct form_select_option_item {
-    Str value;
-    Str label;
-    int checked;
-    struct form_select_option_item* next;
-} FormSelectOptionItem;
-
-typedef struct form_select_option {
-    FormSelectOptionItem* first;
-    FormSelectOptionItem* last;
-} FormSelectOption;
-
-void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk);
-void chooseSelectOption(struct form_item_list* fi, FormSelectOptionItem* item);
-void updateSelectOption(struct form_item_list* fi, FormSelectOptionItem* item);
-int formChooseOptionByMenu(struct form_item_list* fi, int x, int y);
-
-typedef struct form_item_list {
+struct FormItem {
     int type;
     Str name;
     Str value, init_value;
@@ -76,9 +43,42 @@ typedef struct form_item_list {
     int rows;
     int maxlength;
     int readonly;
-    FormSelectOptionItem* select_option;
+    struct FormSelectOptionItem* select_option;
     Str label, init_label;
     int selected, init_selected;
-    struct form_list* parent;
-    struct form_item_list* next;
-} FormItemList;
+    struct Form* parent;
+    struct FormItem* next;
+};
+
+struct Form {
+    struct FormItem* item;
+    struct FormItem* lastitem;
+    int method;
+    Str action;
+    const char* target;
+    const char* name;
+    wc_ces charset;
+    int enctype;
+    struct Form* next;
+    int nitems;
+    const char* body;
+    const char* boundary;
+    unsigned long length;
+};
+
+struct FormSelectOptionItem {
+    Str value;
+    Str label;
+    int checked;
+    struct FormSelectOptionItem* next;
+};
+
+struct FormSelectOption {
+    struct FormSelectOptionItem* first;
+    struct FormSelectOptionItem* last;
+};
+
+void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk);
+void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
+void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
+int formChooseOptionByMenu(struct FormItem* fi, int x, int y);

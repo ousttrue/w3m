@@ -30,7 +30,7 @@
 
 extern Str* textarea_str;
 extern int max_textarea;
-extern FormSelectOption* select_option;
+extern struct FormSelectOption* select_option;
 extern int max_select;
 
 /* *INDENT-OFF* */
@@ -48,11 +48,11 @@ struct {
 };
 /* *INDENT-ON* */
 
-struct form_list*
+struct Form*
 newFormList(char* action, char* method, char* charset, char* enctype,
-    char* target, char* name, struct form_list* _next)
+    char* target, char* name, struct Form* _next)
 {
-    struct form_list* l;
+    struct Form* l;
     Str a = Strnew_charp(action);
     int m = FORM_METHOD_GET;
     int e = FORM_ENCTYPE_URLENCODED;
@@ -73,7 +73,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
     if (charset != NULL)
         c = wc_guess_charset(charset, 0);
 
-    l = New(struct form_list);
+    l = New(struct Form);
     l->item = l->lastitem = NULL;
     l->action = a;
     l->method = m;
@@ -89,12 +89,12 @@ newFormList(char* action, char* method, char* charset, char* enctype,
 }
 
 /*
- * add <input> element to form_list
+ * add <input> element to Form
  */
-struct form_item_list*
-formList_addInput(struct form_list* fl, struct HtmlTag* tag)
+struct FormItem*
+formList_addInput(struct Form* fl, struct HtmlTag* tag)
 {
-    struct form_item_list* item;
+    struct FormItem* item;
     char* p;
     int i;
 
@@ -102,7 +102,7 @@ formList_addInput(struct form_list* fl, struct HtmlTag* tag)
     if (fl == NULL)
         return NULL;
 
-    item = New(struct form_item_list);
+    item = New(struct FormItem);
     item->type = FORM_UNKNOWN;
     item->size = -1;
     item->rows = 0;
@@ -170,7 +170,7 @@ static char* _formmethodtbl[] = {
     "GET", "POST", "INTERNAL", "HEAD"
 };
 
-char* form2str(FormItemList* fi)
+char* form2str(struct FormItem* fi)
 {
     Str tmp = Strnew();
 
@@ -196,15 +196,15 @@ int formtype(char* typestr)
     return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(struct Anchor* a, struct Buffer* buf, FormItemList* fi)
+void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItem* fi)
 {
     int i;
     struct Anchor* a2;
-    FormItemList* f2;
+    struct FormItem* f2;
 
     for (i = 0; i < buf->formitem->nanchor; i++) {
         a2 = &buf->formitem->anchors[i];
-        f2 = (FormItemList*)a2->url;
+        f2 = (struct FormItem*)a2->url;
         if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
             f2->checked = 0;
             formUpdateBuffer(a2, buf, f2);
@@ -218,7 +218,7 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
 {
     int i;
     struct Anchor* a;
-    FormItemList *f1, *f2;
+    struct FormItem *f1, *f2;
 
     if (buf == NULL || buf->formitem == NULL || formitem == NULL)
         return;
@@ -226,8 +226,8 @@ void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem)
         a = &buf->formitem->anchors[i];
         if (a->y != a->start.line)
             continue;
-        f1 = (FormItemList*)a->url;
-        f2 = (FormItemList*)formitem->anchors[i].url;
+        f1 = (struct FormItem*)a->url;
+        f2 = (struct FormItem*)formitem->anchors[i].url;
         if (f1->type != f2->type || strcmp(((f1->name == NULL) ? "" : f1->name->ptr), ((f2->name == NULL) ? "" : f2->name->ptr)))
             break; /* What's happening */
         switch (f1->type) {
@@ -376,7 +376,7 @@ form_update_line(struct Line* line, char** str, int spos, int epos, int width,
     return pos;
 }
 
-void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, FormItemList* form)
+void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form)
 {
     struct Buffer save;
     char* p;
@@ -532,7 +532,7 @@ form_fputs_decode(Str s, FILE* f)
     Strfputs(z, f);
 }
 
-void input_textarea(FormItemList* fi)
+void input_textarea(struct FormItem* fi)
 {
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
@@ -594,10 +594,10 @@ void do_internal(char* action, char* data)
     }
 }
 
-void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk)
+void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk)
 {
-    FormSelectOptionItem* o;
-    o = New(FormSelectOptionItem);
+    struct FormSelectOptionItem* o;
+    o = New(struct FormSelectOptionItem);
     if (value == NULL)
         value = label;
     o->value = value;
@@ -614,9 +614,9 @@ void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk)
     }
 }
 
-void chooseSelectOption(FormItemList* fi, FormSelectOptionItem* item)
+void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
 {
-    FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* opt;
     int i;
 
     fi->selected = 0;
@@ -638,7 +638,7 @@ void chooseSelectOption(FormItemList* fi, FormSelectOptionItem* item)
     updateSelectOption(fi, item);
 }
 
-void updateSelectOption(FormItemList* fi, FormSelectOptionItem* item)
+void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
 {
     int i;
 
@@ -652,10 +652,10 @@ void updateSelectOption(FormItemList* fi, FormSelectOptionItem* item)
     }
 }
 
-int formChooseOptionByMenu(struct form_item_list* fi, int x, int y)
+int formChooseOptionByMenu(struct FormItem* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
-    FormSelectOptionItem* opt;
+    struct FormSelectOptionItem* opt;
 
     for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next)
         ;
@@ -720,17 +720,17 @@ write_end:
 
 struct pre_form_item {
     int type;
-    char* name;
-    char* value;
+    const char* name;
+    const char* value;
     int checked;
     struct pre_form_item* next;
 };
 
 struct pre_form {
-    char* url;
+    const char* url;
     Regex* re_url;
-    char* name;
-    char* action;
+    const char* name;
+    const char* action;
     struct pre_form_item* item;
     struct pre_form* next;
 };
@@ -738,7 +738,7 @@ struct pre_form {
 static struct pre_form* PreForm = NULL;
 
 static struct pre_form*
-add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* action)
+add_pre_form(struct pre_form* prev, const char* url, Regex* re_url, const char* name, const char* action)
 {
     struct Url pu;
     struct pre_form* new;
@@ -762,7 +762,7 @@ add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* 
 
 static struct pre_form_item*
 add_pre_form_item(struct pre_form* pf, struct pre_form_item* prev, int type,
-    char* name, char* value, char* checked)
+    const char* name, const char* value, const char* checked)
 {
     struct pre_form_item* new;
 
@@ -813,7 +813,7 @@ void loadPreForm(void)
     if (fp == NULL)
         return;
     while (1) {
-        char *p, *s, *arg;
+        const char *p, *s, *arg;
         Regex* re_arg;
 
         line = Strfgets(fp);
@@ -905,9 +905,9 @@ void preFormUpdateBuffer(struct Buffer* buf)
     struct pre_form_item* pi;
     int i;
     struct Anchor* a;
-    FormList* fl;
-    FormItemList* fi;
-    FormSelectOptionItem* opt;
+    struct Form* fl;
+    struct FormItem* fi;
+    struct FormSelectOptionItem* opt;
     int j;
 
     if (!buf || !buf->formitem || !PreForm)
@@ -925,7 +925,7 @@ void preFormUpdateBuffer(struct Buffer* buf)
             continue;
         for (i = 0; i < buf->formitem->nanchor; i++) {
             a = &buf->formitem->anchors[i];
-            fi = (FormItemList*)a->url;
+            fi = (struct FormItem*)a->url;
             fl = fi->parent;
             if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))
                 continue;

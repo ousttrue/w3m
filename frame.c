@@ -293,7 +293,7 @@ popFrameTree(struct frameset_queue** fqpp)
 }
 
 void resetFrameElement(union frameset_element* f_element,
-    struct Buffer* buf, const char* referer, FormList* request)
+    struct Buffer* buf, const char* referer, struct Form* request)
 {
     char* f_name;
     struct frame_body* f_body;

@@ -1200,7 +1200,7 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
     Str tmp;
-    FormList* request;
+    struct Form* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
                   "&charset=%s"
@@ -1546,7 +1546,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     struct Buffer *buf, *fbuf = NULL, sbuf;
     wc_ces old_charset;
     Str url;
-    FormList* request;
+    struct Form* request;
     int multipart;
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {

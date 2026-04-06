@@ -48,8 +48,8 @@ struct Anchor* registerName(struct Buffer* buf, const char* url, int line, int p
 struct Anchor* registerImg(struct Buffer* buf, const char* url, const char* title, int line,
     int pos);
 struct HtmlTag;
-struct form_list;
-struct Anchor* registerForm(struct Buffer* buf, struct form_list* flist,
+struct Form;
+struct Anchor* registerForm(struct Buffer* buf, struct Form* flist,
     struct HtmlTag* tag, int line, int pos);
 int onAnchor(struct Anchor* a, int line, int pos);
 struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
@@ -60,9 +60,9 @@ struct Anchor* searchAnchor(struct AnchorList* al, const char* str);
 struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
 struct Anchor* accesskey_menu(struct Buffer* buf);
 struct Anchor* accesskey_menu(struct Buffer* buf);
-struct form_item_list;
-void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct form_item_list* form);
-void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct form_item_list* form);
+struct FormItem;
+void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
+void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
 void formResetBuffer(struct Buffer* buf, struct AnchorList* formitem);
 void addMultirowsForm(struct Buffer* buf, struct AnchorList* al);
 struct Anchor* closest_next_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);

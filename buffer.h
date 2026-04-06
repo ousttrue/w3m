@@ -73,7 +73,7 @@ struct Buffer {
     struct AnchorList* img;
     struct AnchorList* formitem;
     struct LinkList* linklist;
-    struct form_list* formlist;
+    struct Form* formlist;
     struct _MapList* maplist;
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
@@ -90,7 +90,7 @@ struct Buffer {
     wc_ces document_charset;
     wc_uint8 auto_detect;
     struct _textlist* document_header;
-    struct form_item_list* form_submit;
+    struct FormItem* form_submit;
     char* savecache;
     char* edit;
     struct mailcap* mailcap;

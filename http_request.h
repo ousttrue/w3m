@@ -17,7 +17,7 @@ struct HttpRequest {
     enum HttpMethod http_method;
     enum HttpRequestFlags flag;
     const char* referer;
-    struct form_list* request;
+    struct Form* request;
 };
 
 Str HTTPrequestMethod(struct HttpRequest* hr);

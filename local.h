@@ -44,6 +44,6 @@ typedef struct direct Directory;
 void set_environ(const char* var, const char* value);
 Str localCookie(void);
 Str loadLocalDir(const char* dirname);
-struct form_list;
-FILE* localcgi_post(const char*, const char*, struct form_list*, const char*);
+struct Form;
+FILE* localcgi_post(const char*, const char*, struct Form*, const char*);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))

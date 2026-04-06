@@ -17,10 +17,10 @@ struct Buffer;
 extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
-struct form_list;
+struct Form;
 struct Url;
 extern struct Buffer* loadGeneralFile(const char* path, struct Url* current, const char* referer,
-    int flag, struct form_list* request);
+    int flag, struct Form* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
 struct HtmlTag;
@@ -72,17 +72,17 @@ extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
 extern int visible_length(char* str);
 
-extern struct form_list* newFormList(char* action, char* method, char* charset,
+extern struct Form* newFormList(char* action, char* method, char* charset,
     char* enctype, char* target, char* name,
-    struct form_list* _next);
-extern struct form_item_list* formList_addInput(struct form_list* fl,
+    struct Form* _next);
+extern struct FormItem* formList_addInput(struct Form* fl,
     struct HtmlTag* tag);
-struct form_item_list;
-extern char* form2str(struct form_item_list* fi);
+struct FormItem;
+extern char* form2str(struct FormItem* fi);
 extern int formtype(char* typestr);
 extern void preFormUpdateBuffer(struct Buffer* buf);
 extern Str textfieldrep(Str s, int width);
-extern void input_textarea(struct form_item_list* fi);
+extern void input_textarea(struct FormItem* fi);
 extern void do_internal(char* action, char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,

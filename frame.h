@@ -20,7 +20,7 @@ struct frame_body {
     const char* type;
     const char* referer;
     struct AnchorList* nameList;
-    struct form_list* request;
+    struct Form* request;
     const char* ssl_certificate;
 };
 
@@ -67,7 +67,7 @@ void deleteFrameSetElement(union frameset_element e);
 struct frameset* copyFrameSet(struct frameset* of);
 void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct Buffer* buf);
 struct frameset* popFrameTree(struct frameset_queue** fqpp);
-struct form_list;
-void resetFrameElement(union frameset_element* f_element, struct Buffer* buf, const char* referer, struct form_list* request);
+struct Form;
+void resetFrameElement(union frameset_element* f_element, struct Buffer* buf, const char* referer, struct Form* request);
 struct Buffer* renderFrame(struct Buffer* Cbuf, int force_reload);
 union frameset_element* search_frame(struct frameset* fset, const char* name);

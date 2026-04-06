@@ -96,11 +96,11 @@ registerImg(struct Buffer* buf, const char* url, const char* title, int line, in
 }
 
 struct Anchor*
-registerForm(struct Buffer* buf, FormList* flist, struct HtmlTag* tag, int line,
+registerForm(struct Buffer* buf, struct Form* flist, struct HtmlTag* tag, int line,
     int pos)
 {
     struct Anchor* a;
-    FormItemList* fi;
+    struct FormItem* fi;
 
     fi = formList_addInput(flist, tag);
     if (fi == NULL)
@@ -716,7 +716,7 @@ link_list_panel(struct Buffer* buf)
     struct LinkList* l;
     struct AnchorList* al;
     struct Anchor* a;
-    FormItemList* fi;
+    struct FormItem* fi;
     int i;
     const char *t, *u, *p;
     struct Url pu;
@@ -800,7 +800,7 @@ link_list_panel(struct Buffer* buf)
             a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
             if (!a)
                 continue;
-            fi = (FormItemList*)a->url;
+            fi = (struct FormItem*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
                 MapList* ml = searchMapList(buf, fi->value->ptr);

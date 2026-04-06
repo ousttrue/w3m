@@ -1002,7 +1002,7 @@ terminated(unsigned char c)
 static void
 _editor(void)
 {
-    FormItemList fi;
+    struct FormItem fi;
     char* p;
 
     if (is_passwd)

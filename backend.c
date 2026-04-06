@@ -93,7 +93,7 @@ print_headers(struct Buffer* buf, int len)
 }
 
 static void
-internal_get(char* url, int flag, FormList* request)
+internal_get(char* url, int flag, struct Form* request)
 {
     struct Buffer* buf;
 
@@ -160,7 +160,7 @@ get(TextList* argv)
 static void
 post(TextList* argv)
 {
-    FormList* request;
+    struct Form* request;
     char *p, *target = NULL, *charset = NULL,
              *enctype = NULL, *body = NULL, *boundary = NULL, *url = NULL;
     int flag = FALSE, length = 0;

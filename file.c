@@ -109,7 +109,7 @@ static Str cur_option_label;
 static int cur_option_selected;
 static enum TokenStatus cur_status;
 /* menu based <select>  */
-FormSelectOption* select_option;
+struct FormSelectOption* select_option;
 int max_select = MAX_SELECT;
 static int n_select;
 static int cur_option_maxwidth;
@@ -148,7 +148,7 @@ static struct link_stack* link_stack = NULL;
 #define Str_news_endline(s) ((s)->ptr[0] == '.' && ((s)->ptr[1] == '\n' || (s)->ptr[1] == '\r' || (s)->ptr[1] == '\0'))
 
 #define INITIAL_FORM_SIZE 10
-static FormList** forms;
+static struct Form** forms;
 static int* form_stack;
 static int form_max = -1;
 static int forms_size = 0;
@@ -868,7 +868,7 @@ struct http_auth {
     char* scheme;
     struct auth_param* param;
     Str (*cred)(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-        struct HttpRequest* hr, FormList* request);
+        struct HttpRequest* hr, struct Form* request);
 };
 
 enum {
@@ -1063,7 +1063,7 @@ get_auth_param(struct auth_param* auth, char* name)
 
 static Str
 AuthBasicCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    struct HttpRequest* hr, FormList* request)
+    struct HttpRequest* hr, struct Form* request)
 {
     Str s = Strdup(uname);
     Strcat_char(s, ':');
@@ -1119,7 +1119,7 @@ enum {
 
 static Str
 AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* pu,
-    struct HttpRequest* hr, FormList* request)
+    struct HttpRequest* hr, struct Form* request)
 {
     Str tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
@@ -1388,7 +1388,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
 static void
 getAuthCookie(struct http_auth* hauth, char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
-    FormList* request,
+    struct Form* request,
     volatile Str* uname, volatile Str* pwd)
 {
     Str ss = NULL;
@@ -1552,7 +1552,7 @@ Str getLinkNumberStr(int correction)
 #define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
 loadGeneralFile(const char* path, struct Url* volatile current, const char* referer,
-    int flag, FormList* volatile request)
+    int flag, struct Form* volatile request)
 {
     struct URLFile f, *volatile of = NULL;
     struct Url pu;
@@ -3543,7 +3543,7 @@ Str process_select(struct HtmlTag* tag)
         Strcat_charp(select_str, ">");
         if (n_select == max_select) {
             max_select *= 2;
-            select_option = New_Reuse(FormSelectOption, select_option, max_select);
+            select_option = New_Reuse(struct FormSelectOption, select_option, max_select);
         }
         select_option[n_select].first = NULL;
         select_option[n_select].last = NULL;
@@ -3563,7 +3563,7 @@ Str process_n_select(void)
     process_option();
     if (!select_is_multiple) {
         if (select_option[n_select].first) {
-            FormItemList sitem;
+            struct FormItem sitem;
             chooseSelectOption(&sitem, select_option[n_select].first);
             Strcat(select_str, textfieldrep(sitem.label, cur_option_maxwidth));
         }
@@ -3870,12 +3870,12 @@ process_form_int(struct HtmlTag* tag, int fid)
     }
     if (forms_size == 0) {
         forms_size = INITIAL_FORM_SIZE;
-        forms = New_N(FormList*, forms_size);
+        forms = New_N(struct Form*, forms_size);
         form_stack = NewAtom_N(int, forms_size);
     }
     if (forms_size <= form_max) {
         forms_size += form_max;
-        forms = New_Reuse(FormList*, forms, forms_size);
+        forms = New_Reuse(struct Form*, forms, forms_size);
         form_stack = New_Reuse(int, form_stack, forms_size);
     }
     form_stack[form_sp] = fid;
@@ -5198,7 +5198,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
     n_select = -1;
     if (!max_select) { /* halfload */
         max_select = MAX_SELECT;
-        select_option = New_N(FormSelectOption, max_select);
+        select_option = New_N(struct FormSelectOption, max_select);
         a_select = New_N(struct Anchor*, max_select);
     }
 
@@ -5467,7 +5467,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     a_img = NULL;
                     break;
                 case HTML_INPUT_ALT: {
-                    FormList* form;
+                    struct Form* form;
                     int top = 0, bottom = 0;
                     int textareanumber = -1;
                     int selectnumber = -1;
@@ -5514,7 +5514,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     if (a_select && parsedtag_get_value(tag, ATTR_SELECTNUMBER, &selectnumber)) {
                         if (selectnumber >= max_select) {
                             max_select = 2 * selectnumber;
-                            select_option = New_Reuse(FormSelectOption,
+                            select_option = New_Reuse(struct FormSelectOption,
                                 select_option,
                                 max_select);
                             a_select = New_Reuse(struct Anchor*, a_select,
@@ -5658,7 +5658,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_N_TEXTAREA_INT:
                     if (a_textarea && n_textarea >= 0) {
-                        FormItemList* item = (FormItemList*)a_textarea[n_textarea]->url;
+                        struct FormItem* item = (struct FormItem*)a_textarea[n_textarea]->url;
                         item->init_value = item->value = textarea_str[n_textarea];
                     }
                     break;
@@ -5672,7 +5672,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     break;
                 case HTML_N_SELECT_INT:
                     if (a_select && n_select >= 0) {
-                        FormItemList* item = (FormItemList*)a_select[n_select]->url;
+                        struct FormItem* item = (struct FormItem*)a_select[n_select]->url;
                         item->select_option = select_option[n_select].first;
                         chooseSelectOption(item, item->select_option);
                         item->init_selected = item->selected;
@@ -6587,7 +6587,7 @@ print_internal_information(struct html_feed_environ* henv)
         pushTextLine(tl, newTextLine(s, 0));
     }
     if (n_select > 0) {
-        FormSelectOptionItem* ip;
+        struct FormSelectOptionItem* ip;
         for (i = 0; i < n_select; i++) {
             s = Sprintf("<select_int selectnumber=%d>", i);
             pushTextLine(tl, newTextLine(s, 0));
@@ -6652,7 +6652,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     textarea_str = New_N(Str, max_textarea);
     n_select = 0;
     max_select = MAX_SELECT;
-    select_option = New_N(FormSelectOption, max_select);
+    select_option = New_N(struct FormSelectOption, max_select);
     cur_select = NULL;
     form_sp = -1;
     form_max = -1;

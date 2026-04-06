@@ -1188,7 +1188,7 @@ void ldBmark(struct CmdArgs args)
 void adBmark(struct CmdArgs args)
 {
     Str tmp;
-    FormList* request;
+    struct Form* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
                   "&charset=%s",
@@ -1528,7 +1528,7 @@ void reload(struct CmdArgs args)
     struct Buffer *buf, *fbuf = NULL, sbuf;
     wc_ces old_charset;
     Str url;
-    FormList* request;
+    struct Form* request;
     int multipart;
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {

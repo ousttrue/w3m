@@ -32,7 +32,7 @@ struct URLFile;
 typedef union input_stream* InputStream;
 void init_stream(struct URLFile* uf, int scheme, InputStream stream);
 
-struct form_list;
+struct Form;
 struct _textlist;
 struct HttpRequest;
 
@@ -48,7 +48,7 @@ struct URLOption {
     enum UrlOptionFlags flag;
 };
 struct URLFile openURL(const char* url, struct Url* pu, struct Url* current,
-    struct URLOption* option, struct form_list* request,
+    struct URLOption* option, struct Form* request,
     struct _textlist* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);
 
