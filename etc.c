@@ -1200,7 +1200,7 @@ char* file_to_url(const char* file)
     return tmp->ptr;
 }
 
-char* url_unquote_conv(char* url, wc_ces charset)
+char* url_unquote_conv(const char* url, wc_ces charset)
 {
     wc_uint8 old_auto_detect = WcOption.auto_detect;
     Str tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
@@ -1485,7 +1485,7 @@ mymktime(const char* timestr)
 
 #include <sys/socket.h>
 #include <netdb.h>
-char* FQDN(char* host)
+const char* FQDN(const char* host)
 {
     char* p;
     int* af;

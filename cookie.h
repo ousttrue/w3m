@@ -46,7 +46,7 @@ struct cookie {
 #define COO_EMAX COO_EPORT
 
 void parse_cookie(void);
-char* FQDN(char* host);
+const char* FQDN(const char* host);
 struct Url;
 Str find_cookie(struct Url* pu);
 int add_cookie(struct Url* pu, Str name, Str value, time_t expires, Str domain, Str path, int flag, Str comment, int version, Str port, Str commentURL);

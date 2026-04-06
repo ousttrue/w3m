@@ -355,7 +355,7 @@ append_map_info(struct Buffer* buf, Str tmp, FormItemList* fi)
         a = (struct MapArea*)al->ptr;
         if (!a)
             continue;
-        parseURL2(a->url, &pu, baseURL(buf));
+        pu = parseURL2(a->url, baseURL(buf));
         q = html_quote(parsedURL2Str(&pu)->ptr);
         p = html_quote(url_decode2(a->url, buf));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
@@ -380,7 +380,7 @@ append_link_info(struct Buffer* buf, Str html, struct LinkList* link)
     Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
     for (l = link; l; l = l->next) {
         if (l->url) {
-            parseURL2(l->url, &pu, baseURL(buf));
+            pu = parseURL2(l->url, baseURL(buf));
             url = html_quote(parsedURL2Str(&pu)->ptr);
         } else
             url = "(empty)";
@@ -509,7 +509,7 @@ page_info_panel(struct Buffer* buf)
 
     a = retrieveCurrentAnchor(buf);
     if (a != NULL) {
-        parseURL2(a->url, &pu, baseURL(buf));
+        pu = parseURL2(a->url, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         q = html_quote(p);
         if (DecodeURL)
@@ -522,7 +522,7 @@ page_info_panel(struct Buffer* buf)
     }
     a = retrieveCurrentImg(buf);
     if (a != NULL) {
-        parseURL2(a->url, &pu, baseURL(buf));
+        pu = parseURL2(a->url, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         q = html_quote(p);
         if (DecodeURL)

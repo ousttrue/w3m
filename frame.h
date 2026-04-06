@@ -13,12 +13,12 @@ struct frame_body {
     char attr;
     char flags;
 #define FB_NO_BUFFER 0x01
-    char* name;
-    char* url;
+    const char* name;
+    const char* url;
     struct Url* baseURL;
     const char* source;
-    char* type;
-    char* referer;
+    const char* type;
+    const char* referer;
     struct AnchorList* nameList;
     struct form_list* request;
     const char* ssl_certificate;
@@ -33,7 +33,7 @@ union frameset_element {
 struct frameset {
     char attr;
     char dummy;
-    char* name;
+    const char* name;
     struct Url* currentURL;
     char** width;
     char** height;

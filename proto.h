@@ -105,7 +105,7 @@ extern char* last_modified(struct Buffer* buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
 extern void mySystem(char* command, int background);
-extern char* url_unquote_conv(char* url, wc_ces charset);
+extern char* url_unquote_conv(const char* url, wc_ces charset);
 extern char* expandName(char* name);
 struct parsed_tagarg;
 extern void change_charset(struct parsed_tagarg* arg);

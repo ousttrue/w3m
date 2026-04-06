@@ -841,7 +841,7 @@ void followA(struct CmdArgs args)
         gotoLabel(a->url + 1);
         return;
     }
-    parseURL2(a->url, &u, baseURL(Currentbuf));
+    u = parseURL2(a->url, baseURL(Currentbuf));
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
         /* index within this buffer */
         if (u.label) {
@@ -1165,7 +1165,7 @@ void goHome(struct CmdArgs args)
         struct Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
-        parseURL2(url, &p_url, NULL);
+        p_url = parseURL2(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
         cmd_loadURL(url, NULL, NULL, NULL);
         if (Currentbuf != cur_buf) /* success */
@@ -1265,7 +1265,7 @@ void linkMn(struct CmdArgs args)
         gotoLabel(l->url + 1);
         return;
     }
-    parseURL2(l->url, &p_url, baseURL(Currentbuf));
+    p_url = parseURL2(l->url, baseURL(Currentbuf));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(l->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
@@ -1739,15 +1739,14 @@ void extbrz(struct CmdArgs args)
 
 void linkbrz(struct CmdArgs args)
 {
-    struct Anchor* a;
-    struct Url pu;
-
     if (Currentbuf->firstLine == NULL)
         return;
-    a = retrieveCurrentAnchor(Currentbuf);
+
+    struct Anchor* a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL)
         return;
-    parseURL2(a->url, &pu, baseURL(Currentbuf));
+
+    struct Url pu = parseURL2(a->url, baseURL(Currentbuf));
     invoke_browser(parsedURL2Str(&pu)->ptr);
 }
 

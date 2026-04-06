@@ -656,11 +656,11 @@ int formChooseOptionByMenu(struct form_item_list* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     FormSelectOptionItem* opt;
-    char** label;
 
     for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next)
         ;
-    label = New_N(char*, n + 1);
+
+    const char** label; label = New_N(char*, n + 1);
     for (i = 0, opt = fi->select_option; opt != NULL; i++, opt = opt->next)
         label[i] = opt->label->ptr;
     label[n] = NULL;
@@ -748,7 +748,7 @@ add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* 
     else
         new = PreForm = New(struct pre_form);
     if (url && !re_url) {
-        parseURL2(url, &pu, NULL);
+        pu = parseURL2(url, NULL);
         new->url = parsedURL2Str(&pu)->ptr;
     } else
         new->url = url;

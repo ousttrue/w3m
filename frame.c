@@ -338,7 +338,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         return NULL;
     if (b->baseURL)
         baseURL = b->baseURL;
-    parseURL2(b->url, &url, currentURL);
+    url = parseURL2(b->url, currentURL);
     switch (url.scheme) {
     case SCM_LOCAL:
         b->flags = 0;
@@ -405,7 +405,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     int r, c, t_stack;
     struct URLFile f2;
     wc_ces charset, doc_charset;
-    char *d_target, *p_target, *s_target, *t_target;
+    const char *d_target, *p_target, *s_target, *t_target;
     struct Url *currentURL, base;
     MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
     int flag;
@@ -511,7 +511,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                              : "(no name)");
                     break;
                 }
-                parseURL2(frame.body->url, &base, currentURL);
+                base = parseURL2(frame.body->url, currentURL);
                 p_target = f->name;
                 s_target = frame.body->name;
                 t_target = "_blank";
@@ -627,7 +627,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                             /* "BASE" is prohibit tag */
                             if (parsedtag_get_value(tag, ATTR_HREF, &q)) {
                                 q = url_encode(remove_space(q), NULL, charset);
-                                parseURL(q, &base, NULL);
+                                base = parseURL(q, NULL);
                             }
                             if (parsedtag_get_value(tag, ATTR_TARGET, &q)) {
                                 if (!strcasecmp(q, "_self"))
@@ -751,7 +751,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                 tag->value[j] = url_encode(remove_space(tag->value[j]),
                                     &base, charset);
                                 tag->need_reconstruct = TRUE;
-                                parseURL2(tag->value[j], &url, &base);
+                                url = parseURL2(tag->value[j], &base);
                                 if (url.scheme == SCM_UNKNOWN ||
                                     url.scheme == SCM_MAILTO ||
                                     url.scheme == SCM_MISSING)

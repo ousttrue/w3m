@@ -1585,7 +1585,7 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
 
 load_doc: {
     const char* sc_redirect;
-    parseURL2(tpath, &pu, current);
+    pu = parseURL2(tpath, current);
     sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
     if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
         tpath = (char*)sc_redirect;
@@ -3052,10 +3052,8 @@ Str process_img(struct HtmlTag* tag, int width)
         w0 = w;
         i0 = i;
         if (w < 0 || i < 0) {
+            struct Url u = parseURL2(p, cur_baseURL);
             Image image;
-            struct Url u;
-
-            parseURL2(p, &u, cur_baseURL);
             image.url = parsedURL2Str(&u)->ptr;
             if (!uncompressed_file_type(u.file, &image.ext))
                 image.ext = filename_extension(u.file, TRUE);
@@ -4915,7 +4913,7 @@ int HTMLtagproc1(struct HtmlTag* tag, struct html_feed_environ* h_env)
         p = NULL;
         if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
             cur_baseURL = New(struct Url);
-            parseURL(p, cur_baseURL, NULL);
+            *cur_baseURL = parseURL(p, NULL);
         }
 
     case HTML_MAP:
@@ -5426,10 +5424,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
-                            struct Url u;
+                            struct Url u = parseURL2(a_img->url, base);
                             Image* image;
-
-                            parseURL2(a_img->url, &u, base);
                             a_img->image = image = New(Image);
                             image->url = parsedURL2Str(&u)->ptr;
                             if (!uncompressed_file_type(u.file, &image->ext))
@@ -5614,7 +5610,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                             buf->document_charset);
                         if (!buf->baseURL)
                             buf->baseURL = New(struct Url);
-                        parseURL2(p, buf->baseURL, &buf->currentURL);
+                        *buf->baseURL = parseURL2(p, &buf->currentURL);
 
                         base = buf->baseURL;
                     }

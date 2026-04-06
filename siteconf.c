@@ -60,8 +60,7 @@ newSiteconfRec(void)
     return ent;
 }
 
-void
-loadSiteconf(void)
+void loadSiteconf(void)
 {
     char* efname;
     FILE* fp;
@@ -77,14 +76,12 @@ loadSiteconf(void)
     if (fp == NULL)
         return;
     while (line = Strfgets(fp), line->length > 0) {
-        char *p, *s;
-
         Strchop(line);
-        p = line->ptr;
+        const char* p = line->ptr;
         SKIP_BLANKS(p);
         if (*p == '#' || *p == '\0')
             continue;
-        s = getWord(&p);
+        const char* s = getWord(&p);
 
         /* The "url" begins a new record. */
         if (strcmp(s, "url") == 0) {
@@ -107,7 +104,7 @@ loadSiteconf(void)
                 struct Url pu;
                 if (!url || !*url)
                     continue;
-                parseURL2(url, &pu, NULL);
+                pu = parseURL2(url, NULL);
                 newent->url = parsedURL2Str(&pu)->ptr;
             }
             /* If we have an extra or unknown option, ignore this record

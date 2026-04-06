@@ -46,7 +46,7 @@ static int is_saved = 1;
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
 
 static unsigned int
-total_dot_number(char* p, char* ep, unsigned int max_count)
+total_dot_number(const char* p, const char* ep, unsigned int max_count)
 {
     unsigned int count = 0;
     if (!ep)
@@ -59,8 +59,8 @@ total_dot_number(char* p, char* ep, unsigned int max_count)
     return count;
 }
 
-static char*
-domain_match(char* host, char* domain)
+static const char*
+domain_match(const char* host, const char* domain)
 {
     int m0, m1;
 
@@ -75,7 +75,7 @@ domain_match(char* host, char* domain)
             return host;
     } else if (!m0 && !m1) {
         int offset;
-        char* domain_p;
+        const char* domain_p;
         /*
          * "." match all domains (w3m only),
          * and ".local" match local domains ([DRAFT 12] s. 2)
@@ -189,7 +189,7 @@ make_cookie(struct cookie* cookie)
 }
 
 static int
-match_cookie(struct Url* pu, struct cookie* cookie, char* domainname)
+match_cookie(struct Url* pu, struct cookie* cookie, const char* domainname)
 {
     if (!domainname)
         return 0;
@@ -223,7 +223,7 @@ Str find_cookie(struct Url* pu)
     Str tmp;
     struct cookie *p, *p1, *fco = NULL;
     int version = 0;
-    char *fq_domainname, *domainname;
+    const char *fq_domainname, *domainname;
 
     fq_domainname = FQDN(pu->host);
     check_expired_cookies();
@@ -296,7 +296,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
     int flag, Str comment, int version, Str port, Str commentURL)
 {
     struct cookie* p;
-    char* domainname = (version == 0) ? FQDN(pu->host) : pu->host;
+    const char* domainname = (version == 0) ? FQDN(pu->host) : pu->host;
     Str odomain = domain, opath = path;
     struct portlist* portlist = NULL;
     int use_security = !(flag & COO_OVERRIDE);
@@ -322,7 +322,7 @@ int add_cookie(struct Url* pu, Str name, Str value,
         return COO_ENODOT;
 
     if (domain) {
-        char* dp;
+        const char* dp;
         /* [DRAFT 12] s. 4.2.2 (does not apply in the case that
          * host name is the same as domain attribute for version 0
          * cookie)
@@ -507,7 +507,7 @@ void load_cookies(void)
         cookie->comment = NULL;
         cookie->portl = NULL;
         cookie->commentURL = NULL;
-        parseURL(readcol(&str)->ptr, &cookie->url, NULL);
+        cookie->url = parseURL(readcol(&str)->ptr, NULL);
         if (!*str)
             break;
         cookie->name = readcol(&str);

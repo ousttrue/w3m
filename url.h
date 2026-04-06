@@ -23,9 +23,9 @@ struct Url {
 struct Buffer;
 struct Url* baseURL(struct Buffer* buf);
 int openSocket(const char* hostname, const char* remoteport_name, unsigned short remoteport_num);
-void parseURL(const char* url, struct Url* p_url, struct Url* current);
+struct Url parseURL(const char* url, struct Url* current);
 void copyParsedURL(struct Url* p, const struct Url* q);
-void parseURL2(const char* url, struct Url* pu, struct Url* current);
+struct Url parseURL2(const char* url, const struct Url* current);
 Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
 struct URLFile;
