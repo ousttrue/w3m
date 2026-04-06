@@ -1245,9 +1245,15 @@ to_str(struct param_ptr* p)
         return Sprintf("%c", *(char*)p->varptr);
     case P_STRING:
 
-    case P_SSLPATH:
-        /*  SystemCharset -> InnerCharset */
-        return Strnew_charp(conv_from_system(*(char**)p->varptr));
+    case P_SSLPATH: {
+        // SystemCharset -> InnerCharset
+        char* varptr = *(char**)p->varptr;
+        if (varptr) {
+            return Strnew_charp(conv_from_system(varptr));
+        } else {
+            return Strnew_charp("");
+        }
+    }
     case P_PIXELS:
     case P_SCALE:
         return Sprintf("%g", *(double*)p->varptr);
@@ -1420,5 +1426,3 @@ char* confFile(const char* base)
 {
     return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
-
-
