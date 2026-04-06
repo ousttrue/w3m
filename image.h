@@ -18,7 +18,7 @@
 
 typedef struct _imageCache {
     const char* url;
-    struct _ParsedURL* current;
+    struct Url* current;
     const char* file;
     const char* touch;
     pid_t pid;
@@ -46,7 +46,7 @@ typedef struct _image {
 } Image;
 
 struct _Buffer;
-struct _ParsedURL;
+struct Url;
 
 extern void initImage(void);
 extern void termImage(void);
@@ -56,5 +56,5 @@ extern void clearImage(void);
 extern void deleteImage(struct _Buffer* buf);
 extern void getAllImage(struct _Buffer* buf);
 extern void loadImage(struct _Buffer* buf, int flag);
-extern struct _imageCache* getImage(struct _image* image, struct _ParsedURL* current, int flag);
+extern struct _imageCache* getImage(struct _image* image, struct Url* current, int flag);
 extern int getImageSize(struct _imageCache* cache);

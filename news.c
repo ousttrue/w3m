@@ -224,7 +224,7 @@ add_news_message(Str str, int index, char* date, char* name, char* subject,
  */
 
 InputStream
-openNewsStream(ParsedURL* pu)
+openNewsStream(struct Url* pu)
 {
     const char *host, *mode, *group, *p;
     int port, status;
@@ -291,7 +291,7 @@ openNewsStream(ParsedURL* pu)
     return NULL;
 }
 
-Str loadNewsgroup(ParsedURL* pu, wc_ces* charset)
+Str loadNewsgroup(struct Url* pu, wc_ces* charset)
 {
     volatile Str page;
     Str tmp;

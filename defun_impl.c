@@ -817,7 +817,7 @@ void reMark(struct CmdArgs args)
 /* follow HREF link */
 void followA(struct CmdArgs args)
 {
-    ParsedURL u;
+    struct Url u;
     int x = 0, y = 0, map = 0;
 
     if (Currentbuf->firstLine == NULL)
@@ -1161,7 +1161,7 @@ void goHome(struct CmdArgs args)
 {
     char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
-        ParsedURL p_url;
+        struct Url p_url;
         Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
@@ -1257,7 +1257,7 @@ void pginfo(struct CmdArgs args)
 void linkMn(struct CmdArgs args)
 {
     struct LinkList* l = link_menu(Currentbuf);
-    ParsedURL p_url;
+    struct Url p_url;
 
     if (!l || !l->url)
         return;
@@ -1740,7 +1740,7 @@ void extbrz(struct CmdArgs args)
 void linkbrz(struct CmdArgs args)
 {
     struct Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
 
     if (Currentbuf->firstLine == NULL)
         return;

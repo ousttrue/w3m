@@ -25,7 +25,7 @@ Str HTTPrequestMethod(struct HttpRequest* hr)
     return NULL;
 }
 
-Str HTTPrequestURI(ParsedURL* pu, struct HttpRequest* hr)
+Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr)
 {
     Str tmp = Strnew();
     if (hr->http_method == HR_COMMAND_CONNECT) {
@@ -43,7 +43,7 @@ Str HTTPrequestURI(ParsedURL* pu, struct HttpRequest* hr)
 }
 
 static Str
-parsedURL2RefererOriginStr(ParsedURL* pu)
+parsedURL2RefererOriginStr(struct Url* pu)
 {
     const char *f = pu->file, *q = pu->query;
     pu->file = NULL;
@@ -55,7 +55,7 @@ parsedURL2RefererOriginStr(ParsedURL* pu)
 }
 
 static char*
-otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
+otherinfo(struct Url* target, struct Url* current, const char* referer)
 {
     Str s = Strnew();
     const int* no_referer_ptr;
@@ -118,7 +118,7 @@ otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
     return s->ptr;
 }
 
-Str HTTPrequest(ParsedURL* pu, ParsedURL* current, struct HttpRequest* hr, TextList* extra)
+Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra)
 {
     Str tmp;
     TextListItem* i;

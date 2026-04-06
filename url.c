@@ -76,7 +76,7 @@ static struct table2 DefaultGuess[] = {
     { NULL, NULL }
 };
 
-static void add_index_file(ParsedURL* pu, struct URLFile* uf);
+static void add_index_file(struct Url* pu, struct URLFile* uf);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -446,7 +446,7 @@ write_from_file(int sock, char* file)
     }
 }
 
-ParsedURL*
+struct Url*
 baseURL(Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
@@ -589,7 +589,7 @@ copyPath(const char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
+void parseURL(const char* url, struct Url* p_url, struct Url* current)
 {
     url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
 
@@ -840,10 +840,10 @@ do_label:
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
 
-void copyParsedURL(ParsedURL* p, const ParsedURL* q)
+void copyParsedURL(struct Url* p, const struct Url* q)
 {
     if (q == NULL) {
-        memset(p, 0, sizeof(ParsedURL));
+        memset(p, 0, sizeof(struct Url));
         p->scheme = SCM_UNKNOWN;
         return;
     }
@@ -859,7 +859,7 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q)
     p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
+void parseURL2(const char* url, struct Url* pu, struct Url* current)
 {
     const char* p;
     Str tmp;
@@ -980,7 +980,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
     }
 }
 
-Str _parsedURL2Str(ParsedURL* pu, bool pass, bool user, bool label)
+Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
 {
     Str tmp;
     ;
@@ -1051,12 +1051,12 @@ Str _parsedURL2Str(ParsedURL* pu, bool pass, bool user, bool label)
     return tmp;
 }
 
-Str parsedURL2Str(ParsedURL* pu)
+Str parsedURL2Str(struct Url* pu)
 {
     return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
 }
 
-Str parsedURL2RefererStr(ParsedURL* pu)
+Str parsedURL2RefererStr(struct Url* pu)
 {
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
@@ -1076,7 +1076,7 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 }
 
 struct URLFile
-openURL(const char* url, ParsedURL* pu, ParsedURL* current,
+openURL(const char* url, struct Url* pu, struct Url* current,
     struct URLOption* option, FormList* request, TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
@@ -1415,7 +1415,7 @@ retry:
 
 /* add index_file if exists */
 static void
-add_index_file(ParsedURL* pu, struct URLFile* uf)
+add_index_file(struct Url* pu, struct URLFile* uf)
 {
     char *p, *q;
     TextList* index_file_list = NULL;
@@ -1508,10 +1508,10 @@ const char* filename_extension(const char* path, int is_url)
         return last_dot;
 }
 
-ParsedURL*
+struct Url*
 schemeToProxy(int scheme)
 {
-    ParsedURL* pu = NULL; /* for gcc */
+    struct Url* pu = NULL; /* for gcc */
     switch (scheme) {
     case SCM_HTTP:
         pu = &HTTP_proxy_parsed;
@@ -1534,14 +1534,14 @@ schemeToProxy(int scheme)
 }
 
 wc_ces
-url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
+url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
 {
-    const ParsedURL* pu;
-    ParsedURL pu_buf;
+    const struct Url* pu;
+    struct Url pu_buf;
     const wc_ces* csptr;
 
     if (url && *url && *url != '#') {
-        parseURL2((char*)url, &pu_buf, (ParsedURL*)base);
+        parseURL2((char*)url, &pu_buf, (struct Url*)base);
         pu = &pu_buf;
     } else {
         pu = base;
@@ -1553,7 +1553,7 @@ url_to_charset(const char* url, const ParsedURL* base, wc_ces doc_charset)
                                                     : DocumentCharset;
 }
 
-char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset)
+char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset)
 {
     return url_quote_conv((char*)url,
         url_to_charset(url, base, doc_charset));
@@ -1561,7 +1561,7 @@ char* url_encode(const char* url, const ParsedURL* base, wc_ces doc_charset)
 
 #if 0 /* unused */
 char *
-url_decode(const char *url, const ParsedURL *base, wc_ces doc_charset)
+url_decode(const char *url, const struct Url *base, wc_ces doc_charset)
 {
     if (!DecodeURL)
 	return (char *)url;

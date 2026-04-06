@@ -77,8 +77,8 @@ typedef struct _Buffer {
     struct _MapList* maplist;
     struct HmarkerList* hmarklist;
     struct HmarkerList* imarklist;
-    struct _ParsedURL currentURL;
-    struct _ParsedURL* baseURL;
+    struct Url currentURL;
+    struct Url* baseURL;
     char* baseTarget;
     int real_scheme;
     const char* sourcefile;

@@ -13,6 +13,6 @@
 #define query_SCONF_NO_REFERER_FROM(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_FROM))
 #define query_SCONF_NO_REFERER_TO(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_TO))
 
-struct _ParsedURL;
-const void* querySiteconf(const struct _ParsedURL* query_pu, int field);
+struct Url;
+const void* querySiteconf(const struct Url* query_pu, int field);
 

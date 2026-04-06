@@ -21,10 +21,10 @@ struct HttpRequest {
 };
 
 Str HTTPrequestMethod(struct HttpRequest* hr);
-struct _ParsedURL;
-Str HTTPrequestURI(struct _ParsedURL* pu, struct HttpRequest* hr);
+struct Url;
+Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr);
 struct _textlist;
-Str HTTPrequest(struct _ParsedURL* pu, struct _ParsedURL* current, struct HttpRequest* hr, struct _textlist* extra);
+Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, struct _textlist* extra);
 
 #define HTST_UNKNOWN 255
 #define HTST_MISSING 254

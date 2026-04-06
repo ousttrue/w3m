@@ -828,7 +828,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
     struct Anchor* a;
-    ParsedURL u;
+    struct Url u;
     int x = 0, y = 0, map = 0;
     char* url;
 
@@ -1173,7 +1173,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 {
     char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
-        ParsedURL p_url;
+        struct Url p_url;
         Buffer* cur_buf = Currentbuf;
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
@@ -1275,7 +1275,7 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
     LinkList* l = link_menu(Currentbuf);
-    ParsedURL p_url;
+    struct Url p_url;
 
     if (!l || !l->url)
         return;
@@ -1764,7 +1764,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 {
     struct Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
 
     if (Currentbuf->firstLine == NULL)
         return;

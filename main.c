@@ -681,7 +681,7 @@ int w3m_main(int argc, char** argv)
     if (getimage_args) {
         char* image_url = conv_from_system(getimage_args[0]);
         char* base_url = conv_from_system(getimage_args[1]);
-        ParsedURL base_pu;
+        struct Url base_pu;
 
         parseURL2(base_url, &base_pu, NULL);
         image_source = getimage_args[2];
@@ -1089,7 +1089,7 @@ do_dump(Buffer* buf)
                 in_order[i] = buf->href->anchors + i;
             qsort(in_order, nanchor, sizeof(struct Anchor*), cmp_anchor_hseq);
             for (i = 0; i < nanchor; i++) {
-                ParsedURL pu;
+                struct Url pu;
                 char* url;
                 if (in_order[i]->slave)
                     continue;
@@ -1472,7 +1472,7 @@ Buffer* loadLink(const char* url, const char* target, const char* referer, FormL
     Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
     int flag = 0;
-    ParsedURL *base, pu;
+    struct Url *base, pu;
     const int* no_referer_ptr;
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
@@ -2002,7 +2002,7 @@ void _nextA(int visited)
     struct BufferPoint* po;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
-    ParsedURL url;
+    struct Url url;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -2084,7 +2084,7 @@ void _prevA(int visited)
     struct BufferPoint* po;
     struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
-    ParsedURL url;
+    struct Url url;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -2282,7 +2282,7 @@ int checkBackBuffer(Buffer* buf)
     return FALSE;
 }
 
-void cmd_loadURL(const char* url, ParsedURL* current, char* referer, FormList* request)
+void cmd_loadURL(const char* url, struct Url* current, char* referer, FormList* request)
 {
     if (handleMailto(url))
         return;
@@ -2305,7 +2305,7 @@ void cmd_loadURL(const char* url, ParsedURL* current, char* referer, FormList* r
 void goURL0(char* prompt, int relative)
 {
     char* referer;
-    ParsedURL p_url, *current;
+    struct Url p_url, *current;
     Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
 
@@ -2387,7 +2387,7 @@ void follow_map(struct parsed_tagarg* arg)
     struct Anchor* an;
     MapArea* a;
     int x, y;
-    ParsedURL p_url;
+    struct Url p_url;
 
     an = retrieveCurrentImg(Currentbuf);
     x = Currentbuf->cursorX + Currentbuf->rootX;
@@ -2440,7 +2440,7 @@ void _peekURL(int only_img)
 {
 
     struct Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
     static Str s = NULL;
     static Lineprop* p = NULL;
     Lineprop* pp;
@@ -2721,7 +2721,7 @@ void set_buffer_environ(Buffer* buf)
     l = buf->currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
         struct Anchor* a;
-        ParsedURL pu;
+        struct Url pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
         a = retrieveCurrentAnchor(buf);

@@ -10,10 +10,10 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-ParsedURL HTTP_proxy_parsed;
-ParsedURL HTTPS_proxy_parsed;
-ParsedURL GOPHER_proxy_parsed;
-ParsedURL FTP_proxy_parsed;
+struct Url HTTP_proxy_parsed;
+struct Url HTTPS_proxy_parsed;
+struct Url GOPHER_proxy_parsed;
+struct Url FTP_proxy_parsed;
 TextList* NO_proxy_domains;
 
 void proxyInit()

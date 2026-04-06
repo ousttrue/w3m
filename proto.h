@@ -18,8 +18,8 @@ extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
 struct form_list;
-struct _ParsedURL;
-extern Buffer* loadGeneralFile(const char* path, struct _ParsedURL* current, char* referer,
+struct Url;
+extern Buffer* loadGeneralFile(const char* path, struct Url* current, char* referer,
     int flag, struct form_list* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -50,8 +50,8 @@ extern void showProgress(int64_t* linelen, int64_t* trbyte);
 extern void loadHTMLstream(struct URLFile* f, Buffer* newBuf, FILE* src,
     int internal);
 extern Buffer* loadHTMLString(Str page);
-extern Str loadGopherDir(struct URLFile* uf, struct _ParsedURL* pu, wc_ces* charset);
-extern Str loadGopherSearch(struct URLFile* uf, struct _ParsedURL* pu, wc_ces* charset);
+extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
+extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 
 extern int save2tmp(struct URLFile uf, const char* tmpf);
 extern int _doFileCopy(const char* tmpf, const char* defstr, int download);
@@ -62,7 +62,7 @@ extern int checkCopyFile(char* path1, char* path2);
 extern int checkOverWrite(const char* path);
 extern char* inputAnswer(char* prompt);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
-extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct _ParsedURL* pu);
+extern void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(Buffer* buf, char* field);
 
 extern void escdmap(char c);
@@ -95,11 +95,11 @@ extern void free_ssl_ctx(void);
 
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(struct _ParsedURL* pu, char* realm,
+extern int find_auth_user_passwd(struct Url* pu, char* realm,
     Str* uname, Str* pwd, int is_proxy);
-extern void add_auth_user_passwd(struct _ParsedURL* pu, char* realm,
+extern void add_auth_user_passwd(struct Url* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(struct _ParsedURL* pu, char* realm,
+extern void invalidate_auth_user_passwd(struct Url* pu, char* realm,
     Str uname, Str pwd, int is_proxy);
 extern char* last_modified(Buffer* buf);
 extern Str romanNumeral(int n);

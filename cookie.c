@@ -189,7 +189,7 @@ make_cookie(struct cookie* cookie)
 }
 
 static int
-match_cookie(ParsedURL* pu, struct cookie* cookie, char* domainname)
+match_cookie(struct Url* pu, struct cookie* cookie, char* domainname)
 {
     if (!domainname)
         return 0;
@@ -218,7 +218,7 @@ get_cookie_info(Str domain, Str path, Str name)
     return NULL;
 }
 
-Str find_cookie(ParsedURL* pu)
+Str find_cookie(struct Url* pu)
 {
     Str tmp;
     struct cookie *p, *p1, *fco = NULL;
@@ -291,7 +291,7 @@ check_avoid_wrong_number_of_dots_domain(Str domain)
     }
 }
 
-int add_cookie(ParsedURL* pu, Str name, Str value,
+int add_cookie(struct Url* pu, Str name, Str value,
     time_t expires, Str domain, Str path,
     int flag, Str comment, int version, Str port, Str commentURL)
 {

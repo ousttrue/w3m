@@ -344,7 +344,7 @@ void getAllImage(Buffer* buf)
 {
     struct AnchorList* al;
     struct Anchor* a;
-    ParsedURL* current;
+    struct Url* current;
     int i;
 
     image_buffer = buf;
@@ -545,7 +545,7 @@ void loadImage(Buffer* buf, int flag)
 }
 
 ImageCache*
-getImage(Image* image, ParsedURL* current, int flag)
+getImage(Image* image, struct Url* current, int flag)
 {
     Str key = NULL;
     ImageCache* cache;
