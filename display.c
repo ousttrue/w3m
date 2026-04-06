@@ -207,7 +207,7 @@ static void do_effects(Lineprop m);
 static void do_color(Linecolor c);
 
 static Str
-make_lastline_link(Buffer* buf, char* title, char* url)
+make_lastline_link(Buffer* buf, const char* title, const char* url)
 {
     Str s = NULL, u;
     Lineprop* pr;
@@ -265,12 +265,12 @@ make_lastline_message(Buffer* buf)
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
         else {
-            Anchor* a = retrieveCurrentAnchor(buf);
-            char* p = NULL;
+            struct Anchor* a = retrieveCurrentAnchor(buf);
+            const char* p = NULL;
             if (a && a->title && *a->title)
                 p = a->title;
             else {
-                Anchor* a_img = retrieveCurrentImg(buf);
+                struct Anchor* a_img = retrieveCurrentImg(buf);
                 if (a_img && a_img->title && *a_img->title)
                     p = a_img->title;
             }
@@ -414,12 +414,12 @@ void displayBuffer(Buffer* buf, int mode)
 }
 
 static void
-drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
+drawAnchorCursor0(Buffer* buf, struct AnchorList* al, int hseq, int prevhseq,
     int tline, int eline, int active)
 {
     int i, j;
     Line* l;
-    Anchor* an;
+    struct Anchor* an;
 
     l = buf->topLine;
     for (j = 0; j < al->nanchor; j++) {
@@ -465,7 +465,7 @@ drawAnchorCursor0(Buffer* buf, AnchorList* al, int hseq, int prevhseq,
 static void
 drawAnchorCursor(Buffer* buf)
 {
-    Anchor* an;
+    struct Anchor* an;
     int hseq, prevhseq;
     int tline, eline;
 
@@ -567,7 +567,7 @@ redrawLine(Buffer* buf, Line* l, int i)
     char* p;
     Lineprop* pr;
     Linecolor* pc;
-    Anchor* a;
+    struct Anchor* a;
     ParsedURL url;
     int k, vpos = -1;
 
@@ -704,7 +704,7 @@ redrawLineImage(Buffer* buf, Line* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
-    Anchor* a;
+    struct Anchor* a;
     int x, y, sx, sy, w, h;
 
     if (l == NULL)
@@ -778,7 +778,7 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     Lineprop* pr;
     Linecolor* pc;
     int bcol, ecol;
-    Anchor* a;
+    struct Anchor* a;
     ParsedURL url;
     int k, vpos = -1;
 

@@ -51,7 +51,7 @@ struct frameset_queue {
     long top_linenumber;
     int pos;
     int currentColumn;
-    struct _anchorList* formitem;
+    struct AnchorList* formitem;
 };
 
 extern struct frameset* renderFrameSet;

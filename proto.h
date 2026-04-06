@@ -31,7 +31,7 @@ extern Str process_button(struct HtmlTag* tag);
 extern Str process_n_button(void);
 extern Str process_select(struct HtmlTag* tag);
 extern Str process_n_select(void);
-extern void feed_select(char* str);
+extern void feed_select(const char* str);
 extern void process_option(void);
 extern Str process_textarea(struct HtmlTag* tag, int width);
 extern Str process_n_textarea(void);

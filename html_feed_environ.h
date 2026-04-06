@@ -81,7 +81,7 @@ typedef struct {
     int len;
     int tlen;
     long flag;
-    Anchor anchor;
+    struct Anchor anchor;
     Str img_alt;
     struct input_alt_attr input_alt;
     char fontstat[FONTSTAT_SIZE];
@@ -110,7 +110,7 @@ struct readbuffer {
     unsigned char q_level;
     short table_level;
     short nobr_level;
-    Anchor anchor;
+    struct Anchor anchor;
     Str img_alt;
     struct input_alt_attr input_alt;
     char fontstat[FONTSTAT_SIZE];
@@ -153,7 +153,7 @@ void restore_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
 int HTMLtagproc1(struct HtmlTag* tag,
     struct html_feed_environ* h_env);
-void HTMLlineproc0(char* istr, struct html_feed_environ* h_env,
+void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env,
     int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 void init_henv(struct html_feed_environ*, struct readbuffer*,

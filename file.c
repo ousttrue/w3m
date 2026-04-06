@@ -107,7 +107,7 @@ static Str cur_option;
 static Str cur_option_value;
 static Str cur_option_label;
 static int cur_option_selected;
-static int cur_status;
+static enum TokenStatus cur_status;
 /* menu based <select>  */
 FormSelectOption* select_option;
 int max_select = MAX_SELECT;
@@ -2036,7 +2036,7 @@ page_loaded:
             b->type = allocStr(t, -1);
         if (pu.label) {
             if (proc == loadHTMLBuffer) {
-                Anchor* a;
+                struct Anchor* a;
                 a = searchURLLabel(b, pu.label);
                 if (a != NULL) {
                     gotoLine(b, a->start.line);
@@ -3578,7 +3578,7 @@ Str process_n_select(void)
     return select_str;
 }
 
-void feed_select(char* str)
+void feed_select(const char* str)
 {
     Str tmp = Strnew();
     int prev_status = cur_status;
@@ -5160,7 +5160,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     static char* outc = NULL;
     static Lineprop* outp = NULL;
     static int out_size = 0;
-    Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
+    struct Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
     char *p, *q, *r, *s, *t, *str;
     Lineprop mode, effect, ex_effect;
     int pos;
@@ -5177,8 +5177,8 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     char* endp;
     char symbol = '\0';
     int internal = 0;
-    Anchor** a_textarea = NULL;
-    Anchor** a_select = NULL;
+    struct Anchor** a_textarea = NULL;
+    struct Anchor** a_select = NULL;
 
     ParsedURL* base = baseURL(buf);
 
@@ -5195,13 +5195,13 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
     if (!max_textarea) { /* halfload */
         max_textarea = MAX_TEXTAREA;
         textarea_str = New_N(Str, max_textarea);
-        a_textarea = New_N(Anchor*, max_textarea);
+        a_textarea = New_N(struct Anchor*, max_textarea);
     }
     n_select = -1;
     if (!max_select) { /* halfload */
         max_select = MAX_SELECT;
         select_option = New_N(FormSelectOption, max_select);
-        a_select = New_N(Anchor*, max_select);
+        a_select = New_N(struct Anchor*, max_select);
     }
 
 #ifdef DEBUG
@@ -5370,7 +5370,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                     }
                     if (id && idFrame)
                         idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                            (Anchor**)NULL, NULL, NULL, '\0',
+                            (struct Anchor**)NULL, NULL, NULL, '\0',
                             currentLn(buf), pos);
                     if (p) {
                         effect |= PE_ANCHOR;
@@ -5451,8 +5451,8 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             image->cache = getImage(image, base,
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
-                            BufferPoint* po = buf->imarklist->marks - iseq - 1;
-                            Anchor* a = retrieveAnchor(buf->img,
+                            struct BufferPoint* po = buf->imarklist->marks - iseq - 1;
+                            struct Anchor* a = retrieveAnchor(buf->img,
                                 po->line, po->pos);
                             if (a) {
                                 a_img->url = a->url;
@@ -5511,7 +5511,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             max_textarea = 2 * textareanumber;
                             textarea_str = New_Reuse(Str, textarea_str,
                                 max_textarea);
-                            a_textarea = New_Reuse(Anchor*, a_textarea,
+                            a_textarea = New_Reuse(struct Anchor*, a_textarea,
                                 max_textarea);
                         }
                     }
@@ -5521,7 +5521,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                             select_option = New_Reuse(FormSelectOption,
                                 select_option,
                                 max_select);
-                            a_select = New_Reuse(Anchor*, a_select,
+                            a_select = New_Reuse(struct Anchor*, a_select,
                                 max_select);
                         }
                     }
@@ -5726,7 +5726,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(), int llimit)
                 }
                 if (id && idFrame)
                     idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                        (Anchor**)NULL, NULL, NULL, '\0',
+                        (struct Anchor**)NULL, NULL, NULL, '\0',
                         currentLn(buf), pos);
             }
         }
@@ -5888,7 +5888,7 @@ table_width(struct html_feed_environ* h_env, int table_level)
 }
 
 /* HTML processing first pass */
-void HTMLlineproc0(char* line, struct html_feed_environ* h_env, int internal)
+void HTMLlineproc0(const char* line, struct html_feed_environ* h_env, int internal)
 {
     Lineprop mode;
     int cmd;

@@ -1,73 +1,74 @@
 #pragma once
+#include <stdbool.h>
 
-typedef struct {
+struct BufferPoint {
     int line;
     int pos;
-    int invalid;
-} BufferPoint;
+    bool invalid;
+};
 
-typedef struct _anchor {
-    char* url;
-    char* target;
-    char* referer;
-    char* title;
+struct Anchor {
+    const char* url;
+    const char* target;
+    const char* referer;
+    const char* title;
     unsigned char accesskey;
-    BufferPoint start;
-    BufferPoint end;
+    struct BufferPoint start;
+    struct BufferPoint end;
     int hseq;
     char slave;
     short y;
     short rows;
     struct _image* image;
-} Anchor;
+};
 
-typedef struct _anchorList {
-    Anchor* anchors;
+struct AnchorList {
+    struct Anchor* anchors;
     int nanchor;
     int anchormax;
     int acache;
-} AnchorList;
+};
 
 struct HmarkerList {
-    BufferPoint* marks;
+    struct BufferPoint* marks;
     int nmark;
     int markmax;
     int prevhseq;
 };
 
-AnchorList* putAnchor(AnchorList* al, char* url, char* target,
-    Anchor** anchor_return, char* referer,
-    char* title, unsigned char key, int line,
+struct AnchorList* putAnchor(struct AnchorList* al, const char* url, const char* target,
+    struct Anchor** anchor_return, const char* referer,
+    const char* title, unsigned const char key, int line,
     int pos);
 typedef struct _Buffer Buffer;
-Anchor* registerHref(Buffer* buf, char* url, char* target,
-    char* referer, char* title, unsigned char key,
+struct Anchor* registerHref(Buffer* buf, const char* url, const char* target,
+    const char* referer, const char* title, unsigned char key,
     int line, int pos);
-Anchor* registerName(Buffer* buf, char* url, int line, int pos);
-Anchor* registerImg(Buffer* buf, char* url, char* title, int line,
+struct Anchor* registerName(Buffer* buf, const char* url, int line, int pos);
+struct Anchor* registerImg(Buffer* buf, const char* url, const char* title, int line,
     int pos);
 struct HtmlTag;
 struct form_list;
-Anchor* registerForm(Buffer* buf, struct form_list* flist,
+struct Anchor* registerForm(Buffer* buf, struct form_list* flist,
     struct HtmlTag* tag, int line, int pos);
-int onAnchor(Anchor* a, int line, int pos);
-Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
-Anchor* retrieveCurrentAnchor(Buffer* buf);
-Anchor* retrieveCurrentImg(Buffer* buf);
-Anchor* retrieveCurrentForm(Buffer* buf);
-Anchor* searchAnchor(AnchorList* al, const char* str);
-Anchor* searchURLLabel(Buffer* buf, const char* url);
-Anchor* accesskey_menu(Buffer* buf);
-Anchor* accesskey_menu(Buffer* buf);
+int onAnchor(struct Anchor* a, int line, int pos);
+struct Anchor* retrieveAnchor(struct AnchorList* al, int line, int pos);
+struct Anchor* retrieveCurrentAnchor(Buffer* buf);
+struct Anchor* retrieveCurrentImg(Buffer* buf);
+struct Anchor* retrieveCurrentForm(Buffer* buf);
+struct Anchor* searchAnchor(struct AnchorList* al, const char* str);
+struct Anchor* searchURLLabel(Buffer* buf, const char* url);
+struct Anchor* accesskey_menu(Buffer* buf);
+struct Anchor* accesskey_menu(Buffer* buf);
 struct form_item_list;
-void formRecheckRadio(Anchor* a, Buffer* buf, struct form_item_list* form);
-void formUpdateBuffer(Anchor* a, Buffer* buf, struct form_item_list* form);
-void formResetBuffer(Buffer* buf, AnchorList* formitem);
-void addMultirowsForm(Buffer* buf, AnchorList* al);
-Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
-Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
-void addMultirowsImg(Buffer* buf, AnchorList* al);
+void formRecheckRadio(struct Anchor* a, Buffer* buf, struct form_item_list* form);
+void formUpdateBuffer(struct Anchor* a, Buffer* buf, struct form_item_list* form);
+void formResetBuffer(Buffer* buf, struct AnchorList* formitem);
+void addMultirowsForm(Buffer* buf, struct AnchorList* al);
+struct Anchor* closest_next_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
+struct Anchor* closest_prev_anchor(struct AnchorList* a, struct Anchor* an, int x, int y);
+void addMultirowsImg(Buffer* buf, struct AnchorList* al);
 struct HmarkerList* putHmarker(struct HmarkerList* ml, int line, int pos, int seq);
-void shiftAnchorPosition(AnchorList* a, struct HmarkerList* hl, int line, int pos, int shift);
-char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a);
-Anchor* list_menu(Buffer* buf);
+void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, int line, int pos, int shift);
+const char* getAnchorText(Buffer* buf, struct AnchorList* al, struct Anchor* a);
+struct Anchor* list_menu(Buffer* buf);

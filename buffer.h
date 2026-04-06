@@ -68,10 +68,10 @@ typedef struct _Buffer {
     short COLS;
     short LINES;
     InputStream pagerSource;
-    struct _anchorList* href;
-    struct _anchorList* name;
-    struct _anchorList* img;
-    struct _anchorList* formitem;
+    struct AnchorList* href;
+    struct AnchorList* name;
+    struct AnchorList* img;
+    struct AnchorList* formitem;
     struct LinkList* linklist;
     struct form_list* formlist;
     struct _MapList* maplist;
@@ -101,7 +101,7 @@ typedef struct _Buffer {
     char image_flag;
     char image_loaded;
     char need_reshape;
-    struct _anchor* submit;
+    struct Anchor* submit;
     struct _BufferPos* undo;
     struct _AlarmEvent* event;
 } Buffer;

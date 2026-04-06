@@ -827,7 +827,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
-    Anchor* a;
+    struct Anchor* a;
     ParsedURL u;
     int x = 0, y = 0, map = 0;
     char* url;
@@ -887,7 +887,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 /* view inline image */
 DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
 {
-    Anchor* a;
+    struct Anchor* a;
     Buffer* buf;
 
     if (Currentbuf->firstLine == NULL)
@@ -921,7 +921,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
     int hseq = 0;
 
     if (Currentbuf->firstLine == NULL)
@@ -954,7 +954,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
     int hseq;
 
     if (Currentbuf->firstLine == NULL)
@@ -989,7 +989,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
 {
     HmarkerList* hl = Currentbuf->hmarklist;
     BufferPoint* po;
-    Anchor* an;
+    struct Anchor* an;
 
     int n = searchKeyNum();
     if (n < 0 || n > hl->nmark)
@@ -1763,7 +1763,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 {
-    Anchor* a;
+    struct Anchor* a;
     ParsedURL pu;
 
     if (Currentbuf->firstLine == NULL)

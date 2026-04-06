@@ -324,8 +324,8 @@ static Buffer* image_buffer = NULL;
 
 void deleteImage(Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
+    struct AnchorList* al;
+    struct Anchor* a;
     int i;
 
     if (!buf)
@@ -342,8 +342,8 @@ void deleteImage(Buffer* buf)
 
 void getAllImage(Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
+    struct AnchorList* al;
+    struct Anchor* a;
     ParsedURL* current;
     int i;
 
@@ -367,8 +367,8 @@ void getAllImage(Buffer* buf)
 static void
 showImageProgress(Buffer* buf)
 {
-    AnchorList* al;
-    Anchor* a;
+    struct AnchorList* al;
+    struct Anchor* a;
     int i, l, n;
 
     if (!buf)

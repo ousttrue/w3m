@@ -1769,7 +1769,6 @@ static void
 interpret_menu(FILE* mf)
 {
     Str line;
-    char *p, *s;
     int in_menu = 0, nmenu = 0, nitem = 0, type;
     MenuItem* item = NULL;
     wc_ces charset = SystemCharset;
@@ -1781,8 +1780,8 @@ interpret_menu(FILE* mf)
         if (line->length == 0)
             continue;
         line = Strnew_wc_output(wc_Str_conv(WcOption, line->ptr, line->length, charset, InnerCharset));
-        p = line->ptr;
-        s = getWord(&p);
+        const char* p = line->ptr;
+        char* s = getWord(&p);
         if (*s == '#') /* comment */
             continue;
         if (in_menu) {
@@ -1857,7 +1856,7 @@ void initMenu(void)
     }
 }
 
-int setMenuItem(MenuItem* item, char* type, char* line)
+int setMenuItem(MenuItem* item, const char* type, const char* line)
 {
     char *label, *func, *popup, *keys, *data;
     int f;
@@ -1933,13 +1932,13 @@ int getMenuN(MenuList* list, char* id)
 
 /* --- LinkMenu (END) --- */
 
-Anchor*
+struct Anchor*
 accesskey_menu(Buffer* buf)
 {
     Menu menu;
-    AnchorList* al = buf->href;
-    Anchor* a;
-    Anchor** ap;
+    struct AnchorList* al = buf->href;
+    struct Anchor* a;
+    struct Anchor** ap;
     int i, n, nitem = 0, key = -1;
     char** label;
     char* t;
@@ -1956,7 +1955,7 @@ accesskey_menu(Buffer* buf)
         return NULL;
 
     label = New_N(char*, nitem + 1);
-    ap = New_N(Anchor*, nitem);
+    ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave && a->accesskey && IS_ASCII(a->accesskey)) {
@@ -2034,12 +2033,12 @@ lmSelect(char c)
         return (MENU_NOTHING);
 }
 
-Anchor* list_menu(Buffer* buf)
+struct Anchor* list_menu(Buffer* buf)
 {
     Menu menu;
-    AnchorList* al = buf->href;
-    Anchor* a;
-    Anchor** ap;
+    struct AnchorList* al = buf->href;
+    struct Anchor* a;
+    struct Anchor** ap;
     int i, n, nitem = 0, key = -1, two = false;
     char** label;
     char* t;
@@ -2058,7 +2057,7 @@ Anchor* list_menu(Buffer* buf)
     if (nitem >= nlmKeys)
         two = true;
     label = New_N(char*, nitem + 1);
-    ap = New_N(Anchor*, nitem);
+    ap = New_N(struct Anchor*, nitem);
     for (i = 0, n = 0; i < al->nanchor; i++) {
         a = &al->anchors[i];
         if (!a->slave) {

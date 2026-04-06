@@ -77,7 +77,7 @@ int action_menu(Menu* menu);
 void popup_menu(Menu* parent, Menu* menu);
 void guess_menu_xy(Menu* menu, int width, int* x, int* y);
 void new_option_menu(Menu* menu, char** label, int* variable, const char* cmd);
-int setMenuItem(MenuItem* item, char* type, char* line);
+int setMenuItem(MenuItem* item, const char* type, const char* line);
 int addMenuList(MenuList** list, char* id);
 int getMenuN(MenuList* list, char* id);
 void popupMenu(int x, int y, Menu* menu);

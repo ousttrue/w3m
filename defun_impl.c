@@ -35,6 +35,7 @@
 
 #include <libwc/charset.h>
 
+#include <strings.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -242,9 +243,9 @@ void setEnv(struct CmdArgs args)
             return;
         }
     }
-    const char *value;
+    const char* value;
     if ((value = strchr(env, '=')) != NULL && value > env) {
-        const char *var = allocStr(env, value - env);
+        const char* var = allocStr(env, value - env);
         value++;
         set_environ(var, value);
     }
@@ -818,12 +819,11 @@ void followA(struct CmdArgs args)
 {
     ParsedURL u;
     int x = 0, y = 0, map = 0;
-    char* url;
 
     if (Currentbuf->firstLine == NULL)
         return;
 
-    Anchor* a = retrieveCurrentImg(Currentbuf);
+    struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
         _followForm(FALSE);
         return;
@@ -851,7 +851,7 @@ void followA(struct CmdArgs args)
     }
     if (handleMailto(a->url))
         return;
-    url = a->url;
+    const char* url = a->url;
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
 
@@ -875,7 +875,7 @@ void followA(struct CmdArgs args)
 /* view inline image */
 void followI(struct CmdArgs args)
 {
-    Anchor* a;
+    struct Anchor* a;
     Buffer* buf;
 
     if (Currentbuf->firstLine == NULL)
@@ -908,8 +908,8 @@ void submitForm(struct CmdArgs args)
 void topA(struct CmdArgs args)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
-    Anchor* an;
+    struct BufferPoint* po;
+    struct Anchor* an;
     int hseq = 0;
 
     if (Currentbuf->firstLine == NULL)
@@ -941,8 +941,8 @@ void topA(struct CmdArgs args)
 void lastA(struct CmdArgs args)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
-    Anchor* an;
+    struct BufferPoint* po;
+    struct Anchor* an;
     int hseq;
 
     if (Currentbuf->firstLine == NULL)
@@ -976,8 +976,8 @@ void lastA(struct CmdArgs args)
 void nthA(struct CmdArgs args)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
-    Anchor* an;
+    struct BufferPoint* po;
+    struct Anchor* an;
 
     int n = searchKeyNum();
     if (n < 0 || n > hl->nmark)
@@ -1121,7 +1121,7 @@ void backBf(struct CmdArgs args)
             long top = buf->frameQ->top_linenumber;
             int pos = buf->frameQ->pos;
             int currentColumn = buf->frameQ->currentColumn;
-            AnchorList* formitem = buf->frameQ->formitem;
+            struct AnchorList* formitem = buf->frameQ->formitem;
 
             fs = popFrameTree(&(buf->frameQ));
             deleteFrameSet(buf->frameset);
@@ -1739,7 +1739,7 @@ void extbrz(struct CmdArgs args)
 
 void linkbrz(struct CmdArgs args)
 {
-    Anchor* a;
+    struct Anchor* a;
     ParsedURL pu;
 
     if (Currentbuf->firstLine == NULL)
@@ -1872,12 +1872,11 @@ void execCmd(struct CmdArgs args)
 
 void setAlarm(struct CmdArgs args)
 {
-    char* data;
     int sec = 0;
     const char* cmd = 0;
 
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {

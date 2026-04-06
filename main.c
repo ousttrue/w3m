@@ -903,7 +903,7 @@ int w3m_main(int argc, char** argv)
             ldDL((struct CmdArgs) { 0 });
         }
         if (Currentbuf->submit) {
-            Anchor* a = Currentbuf->submit;
+            struct Anchor* a = Currentbuf->submit;
             Currentbuf->submit = NULL;
             gotoLine(Currentbuf, a->start.line);
             Currentbuf->pos = a->start.pos;
@@ -1059,7 +1059,7 @@ dump_extra(Buffer* buf)
 static int
 cmp_anchor_hseq(const void* a, const void* b)
 {
-    return (*((const Anchor**)a))->hseq - (*((const Anchor**)b))->hseq;
+    return (*((const struct Anchor**)a))->hseq - (*((const struct Anchor**)b))->hseq;
 }
 
 static void
@@ -1084,10 +1084,10 @@ do_dump(Buffer* buf)
         if (displayLinkNumber && buf->href) {
             int nanchor = buf->href->nanchor;
             printf("\nReferences:\n\n");
-            Anchor** in_order = New_N(Anchor*, buf->href->nanchor);
+            struct Anchor** in_order = New_N(struct Anchor*, buf->href->nanchor);
             for (i = 0; i < nanchor; i++)
                 in_order[i] = buf->href->anchors + i;
-            qsort(in_order, nanchor, sizeof(Anchor*), cmp_anchor_hseq);
+            qsort(in_order, nanchor, sizeof(struct Anchor*), cmp_anchor_hseq);
             for (i = 0; i < nanchor; i++) {
                 ParsedURL pu;
                 char* url;
@@ -1467,7 +1467,7 @@ loadNormalBuf(Buffer* buf, int renderframe)
     return buf;
 }
 
-Buffer* loadLink(char* url, char* target, char* referer, FormList* request)
+Buffer* loadLink(const char* url, const char* target, const char* referer, FormList* request)
 {
     Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
@@ -1535,7 +1535,7 @@ Buffer* loadLink(char* url, char* target, char* referer, FormList* request)
     {
         const char* label = pu.label;
 
-        Anchor* al = NULL;
+        struct Anchor* al = NULL;
         if (label && f_element->element->attr == F_BODY) {
             al = searchAnchor(f_element->body->nameList, label);
         }
@@ -1560,7 +1560,7 @@ Buffer* loadLink(char* url, char* target, char* referer, FormList* request)
 void gotoLabel(const char* label)
 {
     Buffer* buf;
-    Anchor* al;
+    struct Anchor* al;
     int i;
 
     al = searchURLLabel(Currentbuf, label);
@@ -1821,7 +1821,7 @@ void followForm(void)
 
 void _followForm(int submit)
 {
-    Anchor *a, *a2;
+    struct Anchor *a, *a2;
     char* p;
     FormItemList *fi, *f2;
     Str tmp, tmp2;
@@ -1999,8 +1999,8 @@ void _followForm(int submit)
 void _nextA(int visited)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
-    Anchor *an, *pan;
+    struct BufferPoint* po;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     ParsedURL url;
 
@@ -2081,8 +2081,8 @@ _end:
 void _prevA(int visited)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    BufferPoint* po;
-    Anchor *an, *pan;
+    struct BufferPoint* po;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     ParsedURL url;
 
@@ -2163,7 +2163,7 @@ _end:
 void nextX(int d, int dy)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    Anchor *an, *pan;
+    struct Anchor *an, *pan;
     Line* l;
     int i, x, y, n = searchKeyNum();
 
@@ -2218,7 +2218,7 @@ void nextX(int d, int dy)
 void nextY(int d)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
-    Anchor *an, *pan;
+    struct Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
     int hseq;
 
@@ -2304,15 +2304,15 @@ void cmd_loadURL(const char* url, ParsedURL* current, char* referer, FormList* r
 /* go to specified URL */
 void goURL0(char* prompt, int relative)
 {
-    char *url, *referer;
+    char* referer;
     ParsedURL p_url, *current;
     Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
 
-    url = searchKeyData();
+    const char* url = searchKeyData();
     if (url == NULL) {
         struct Hist* hist = copyHist(URLHist);
-        Anchor* a;
+        struct Anchor* a;
 
         current = baseURL(Currentbuf);
         if (current) {
@@ -2384,7 +2384,7 @@ void cmd_loadBuffer(Buffer* buf, int prop, int linkid)
 void follow_map(struct parsed_tagarg* arg)
 {
     char* name = tag_get_value(arg, "link");
-    Anchor* an;
+    struct Anchor* an;
     MapArea* a;
     int x, y;
     ParsedURL p_url;
@@ -2420,17 +2420,14 @@ void follow_map(struct parsed_tagarg* arg)
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
 }
 
-void anchorMn(Anchor* (*menu_func)(Buffer*), int go)
+void anchorMn(struct Anchor* (*menu_func)(Buffer*), int go)
 {
-    Anchor* a;
-    BufferPoint* po;
-
     if (!Currentbuf->href || !Currentbuf->hmarklist)
         return;
-    a = menu_func(Currentbuf);
+    struct Anchor* a = menu_func(Currentbuf);
     if (!a || a->hseq < 0)
         return;
-    po = &Currentbuf->hmarklist->marks[a->hseq];
+    struct BufferPoint* po = &Currentbuf->hmarklist->marks[a->hseq];
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
@@ -2442,7 +2439,7 @@ void anchorMn(Anchor* (*menu_func)(Buffer*), int go)
 void _peekURL(int only_img)
 {
 
-    Anchor* a;
+    struct Anchor* a;
     ParsedURL pu;
     static Str s = NULL;
     static Lineprop* p = NULL;
@@ -2723,7 +2720,7 @@ void set_buffer_environ(Buffer* buf)
     }
     l = buf->currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
-        Anchor* a;
+        struct Anchor* a;
         ParsedURL pu;
         char* s = GetWord(buf);
         set_environ("W3M_CURRENT_WORD", s ? s : "");
@@ -2778,10 +2775,8 @@ const char* searchKeyData(void)
 
 int searchKeyNum(void)
 {
-    char* d;
     int n = 1;
-
-    d = searchKeyData();
+    const char* d = searchKeyData();
     if (d != NULL)
         n = atoi(d);
     return n * PREC_NUM;
@@ -3006,7 +3001,7 @@ deleteTab(TabBuffer* tab)
 void followTab(TabBuffer* tab)
 {
     Buffer* buf;
-    Anchor* a;
+    struct Anchor* a;
 
     a = retrieveCurrentImg(Currentbuf);
     if (!(a && a->image && a->image->map))
