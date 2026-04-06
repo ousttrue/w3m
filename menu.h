@@ -82,5 +82,5 @@ int addMenuList(MenuList** list, char* id);
 int getMenuN(MenuList* list, char* id);
 void popupMenu(int x, int y, Menu* menu);
 void mainMenu(int x, int y);
-void optionMenu(int x, int y, char** label, int* variable, int initial, const char* cmd);
+void optionMenu(int x, int y, const char** label, int* variable, int initial, const char* cmd);
 void initMenu(void);

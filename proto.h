@@ -19,7 +19,7 @@ extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
 struct form_list;
 struct Url;
-extern struct Buffer* loadGeneralFile(const char* path, struct Url* current, char* referer,
+extern struct Buffer* loadGeneralFile(const char* path, struct Url* current, const char* referer,
     int flag, struct form_list* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);

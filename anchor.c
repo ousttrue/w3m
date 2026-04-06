@@ -200,7 +200,7 @@ searchURLLabel(struct Buffer* buf, const char* url)
 }
 
 static struct Anchor*
-_put_anchor_news(struct Buffer* buf, char* p1, char* p2, int line, int pos)
+_put_anchor_news(struct Buffer* buf, const char* p1, const char* p2, int line, int pos)
 {
     Str tmp;
 
@@ -217,7 +217,7 @@ _put_anchor_news(struct Buffer* buf, char* p1, char* p2, int line, int pos)
 }
 
 static struct Anchor*
-_put_anchor_all(struct Buffer* buf, char* p1, char* p2, int line, int pos)
+_put_anchor_all(struct Buffer* buf, const char* p1, const char* p2, int line, int pos)
 {
     Str tmp;
 
@@ -300,29 +300,26 @@ reseq_anchor(struct Buffer* buf)
     reseq_anchor0(buf->formitem, seqmap);
 }
 
-static char*
-reAnchorPos(struct Buffer* buf, struct Line* l, char* p1, char* p2,
-    struct Anchor* (*anchorproc)(struct Buffer*, char*, char*, int, int))
+typedef struct Anchor* (*AnchorProcFunc)(struct Buffer*, const char*, const char*, int, int);
+static const char*
+reAnchorPos(struct Buffer* buf, struct Line* l, const char* p1, const char* p2, AnchorProcFunc anchorproc)
 {
-    struct Anchor* a;
-    int spos, epos;
-    int i, hseq = -2;
-
-    spos = p1 - l->lineBuf;
-    epos = p2 - l->lineBuf;
-    for (i = spos; i < epos; i++) {
+    int spos = p1 - l->lineBuf;
+    int epos = p2 - l->lineBuf;
+    for (int i = spos; i < epos; i++) {
         if (l->propBuf[i] & (PE_ANCHOR | PE_FORM))
             return p2;
     }
-    for (i = spos; i < epos; i++)
+    for (int i = spos; i < epos; i++)
         l->propBuf[i] |= PE_ANCHOR;
     while (spos > l->len && l->next && l->next->bpos) {
         spos -= l->len;
         epos -= l->len;
         l = l->next;
     }
+    int hseq = -2;
     while (1) {
-        a = anchorproc(buf, p1, p2, l->linenumber, spos);
+        struct Anchor* a = anchorproc(buf, p1, p2, l->linenumber, spos);
         a->hseq = hseq;
         if (hseq == -2) {
             reseq_anchor(buf);
@@ -350,8 +347,7 @@ void reAnchorWord(struct Buffer* buf, struct Line* l, int spos, int epos)
 /* search regexp and register them as anchors */
 /* returns error message if any               */
 static const char*
-reAnchorAny(struct Buffer* buf, const char* re,
-    struct Anchor* (*anchorproc)(struct Buffer*, char*, char*, int, int))
+reAnchorAny(struct Buffer* buf, const char* re, AnchorProcFunc anchorproc)
 {
     struct Line* l;
     const char *p = NULL, *p1, *p2;
@@ -381,12 +377,12 @@ reAnchorAny(struct Buffer* buf, const char* re,
     return NULL;
 }
 
-char* reAnchor(struct Buffer* buf, char* re)
+const char* reAnchor(struct Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
 }
 
-char* reAnchorNews(struct Buffer* buf, char* re)
+const char* reAnchorNews(struct Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_news);
 }
@@ -394,7 +390,7 @@ char* reAnchorNews(struct Buffer* buf, char* re)
 char* reAnchorNewsheader(struct Buffer* buf)
 {
     struct Line* l;
-    char *p, *p1, *p2;
+    const char *p, *p1, *p2;
     static char* header_mid[] = {
         "Message-Id:", "References:", "In-Reply-To:", NULL
     };
@@ -722,7 +718,7 @@ link_list_panel(struct Buffer* buf)
     struct Anchor* a;
     FormItemList* fi;
     int i;
-    char *t, *u, *p;
+    const char *t, *u, *p;
     struct Url pu;
     /* FIXME: gettextize? */
     Str tmp = Strnew_charp("<title>Link List</title>\
@@ -808,13 +804,11 @@ link_list_panel(struct Buffer* buf)
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
                 MapList* ml = searchMapList(buf, fi->value->ptr);
-                ListItem* mi;
-                MapArea* m;
                 if (!ml)
                     continue;
                 Strcat_charp(tmp, "<br>\n<b>Image map</b>\n<ol>\n");
-                for (mi = ml->area->first; mi != NULL; mi = mi->next) {
-                    m = (MapArea*)mi->ptr;
+                for (ListItem* mi = ml->area->first; mi != NULL; mi = mi->next) {
+                    struct MapArea* m = (struct MapArea*)mi->ptr;
                     if (!m)
                         continue;
                     parseURL2(m->url, &pu, baseURL(buf));

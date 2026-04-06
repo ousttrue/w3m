@@ -1745,7 +1745,7 @@ smDelTab(char c)
 
 /* --- OptionMenu --- */
 
-void optionMenu(int x, int y, char** label, int* variable, int initial, const char* cmd)
+void optionMenu(int x, int y, const char** label, int* variable, int initial, const char* cmd)
 {
     Menu menu;
 

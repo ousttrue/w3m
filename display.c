@@ -157,7 +157,7 @@ static void EFFECT_VISITED_END
 void fmTerm(void)
 {
     if (fmInitialized) {
-        move((LINES-1), 0);
+        move((LINES - 1), 0);
         clrtoeolx();
         refresh();
         if (activeImage)
@@ -196,7 +196,7 @@ static Linecolor color_mode = 0;
 static char* delayed_msg = NULL;
 
 static void drawAnchorCursor(struct Buffer* buf);
-#define redrawBuffer(buf) redrawNLine(buf, (LINES-1))
+#define redrawBuffer(buf) redrawNLine(buf, (LINES - 1))
 static void redrawNLine(struct Buffer* buf, int n);
 static struct Line* redrawLine(struct Buffer* buf, struct Line* l, int i);
 static int image_touch = 0;
@@ -257,11 +257,10 @@ make_lastline_link(struct Buffer* buf, const char* title, const char* url)
 static Str
 make_lastline_message(struct Buffer* buf)
 {
-    Str msg, s = NULL;
+    Str s = NULL;
     int sl = 0;
-
     if (displayLink) {
-        MapArea* a = retrieveCurrentMapArea(buf);
+        struct MapArea* a = retrieveCurrentMapArea(buf);
         if (a)
             s = make_lastline_link(buf, a->alt, a->url);
         else {
@@ -278,13 +277,13 @@ make_lastline_message(struct Buffer* buf)
                 s = make_lastline_link(buf, p, a ? a->url : NULL);
         }
         if (s) {
-            sl = get_Str_strwidth(s);
+            int sl = get_Str_strwidth(s);
             if (sl >= COLS - 3)
                 return s;
         }
     }
 
-    msg = Strnew();
+    Str msg = Strnew();
     if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
         int cl = buf->currentLine->real_linenumber;
         int ll = buf->lastLine->real_linenumber;
@@ -333,7 +332,7 @@ void displayBuffer(struct Buffer* buf, int mode)
     if (buf->width == 0)
         buf->width = INIT_BUFFER_WIDTH;
     if (buf->height == 0)
-        buf->height = (LINES-1) + 1;
+        buf->height = (LINES - 1) + 1;
     if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = TRUE;
@@ -355,12 +354,12 @@ void displayBuffer(struct Buffer* buf, int mode)
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
         ny = LastTab->y + 2;
-        if (ny > (LINES-1))
-            ny = (LINES-1);
+        if (ny > (LINES - 1))
+            ny = (LINES - 1);
     }
-    if (buf->rootY != ny || buf->LINES != (LINES-1) - ny) {
+    if (buf->rootY != ny || buf->LINES != (LINES - 1) - ny) {
         buf->rootY = ny;
-        buf->LINES = (LINES-1) - ny;
+        buf->LINES = (LINES - 1) - ny;
         arrangeCursor(buf);
         mode = B_REDRAW_IMAGE;
     }
@@ -757,8 +756,8 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
                     h = (int)(pixel_per_line - sy);
                 if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
                     w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)((LINES-1) * pixel_per_line - y))
-                    h = (int)((LINES-1) * pixel_per_line - y);
+                if (h > (int)((LINES - 1) * pixel_per_line - y))
+                    h = (int)((LINES - 1) * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
                 image->touch = image_touch;
                 draw_image_flag = TRUE;
@@ -1039,7 +1038,7 @@ void message(const char* s, int return_x, int return_y)
 {
     if (!fmInitialized)
         return;
-    move((LINES-1), 0);
+    move((LINES - 1), 0);
     addnstr(s, COLS - 1);
     clrtoeolx();
     move(return_y, return_x);
@@ -1063,7 +1062,7 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
         message(s, Currentbuf->cursorX + Currentbuf->rootX,
             Currentbuf->cursorY + Currentbuf->rootY);
     else
-        message(s, (LINES-1), 0);
+        message(s, (LINES - 1), 0);
     refresh();
     sleep_till_anykey(sec, purge);
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)

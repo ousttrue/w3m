@@ -1551,7 +1551,7 @@ Str getLinkNumberStr(int correction)
  */
 #define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
-loadGeneralFile(const char* path, struct Url* volatile current, char* referer,
+loadGeneralFile(const char* path, struct Url* volatile current, const char* referer,
     int flag, FormList* volatile request)
 {
     struct URLFile f, *volatile of = NULL;
@@ -5565,7 +5565,6 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                     if (buf->maplist == NULL) /* outside of <map>..</map> */
                         break;
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-                        MapArea* a;
                         p = url_encode(remove_space(p), base,
                             buf->document_charset);
                         t = NULL;
@@ -5576,7 +5575,7 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_SHAPE, &r);
                         parsedtag_get_value(tag, ATTR_COORDS, &s);
-                        a = newMapArea(p, t, q, r, s);
+                        struct MapArea* a = newMapArea(p, t, q, r, s);
                         pushValue(buf->maplist->area, (void*)a);
                     }
                     break;
