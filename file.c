@@ -83,7 +83,7 @@ static const char* guess_filename(const char* file);
 static int _MoveFile(char* path1, char* path2);
 static void uncompress_stream(struct URLFile* uf, const char** src);
 static FILE* lessopen_stream(const char* path);
-static Buffer* loadcmdout(char* cmd,
+static Buffer* loadcmdout(const char* cmd,
     Buffer* (*loadproc)(struct URLFile*, Buffer*),
     Buffer* defaultbuf);
 static void addnewline(Buffer* buf, char* line, Lineprop* prop,
@@ -611,7 +611,7 @@ void readHeader(struct URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 }
                 if (src) {
                     struct URLFile f;
-                    Line* l;
+                    struct Line* l;
                     wc_ces old_charset = newBuf->document_charset;
                     init_stream(&f, SCM_LOCAL, newStrStream(src));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
@@ -6232,8 +6232,8 @@ static void
 addnewline2(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int nlines)
 {
-    Line* l;
-    l = New(Line);
+    struct Line* l;
+    l = New(struct Line);
     l->next = NULL;
     l->lineBuf = line;
     l->propBuf = prop;
@@ -6271,7 +6271,7 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     char* s;
     Lineprop* p;
     Linecolor* c;
-    Line* l;
+    struct Line* l;
     int i, bpos, bwidth;
 
     if (pos > 0) {
@@ -7105,7 +7105,7 @@ image_buffer:
 }
 
 static Str
-conv_symbol(Line* l)
+conv_symbol(struct Line* l)
 {
     Str tmp = NULL;
     char *p = l->lineBuf, *ep = p + l->len;
@@ -7139,7 +7139,7 @@ conv_symbol(Line* l)
  * saveBuffer: write buffer to file
  */
 static void
-_saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
+_saveBuffer(Buffer* buf, struct Line* l, FILE* f, int cont)
 {
     Str tmp;
     int is_html = FALSE;
@@ -7174,7 +7174,7 @@ void saveBuffer(Buffer* buf, FILE* f, int cont)
 
 void saveBufferBody(Buffer* buf, FILE* f, int cont)
 {
-    Line* l = buf->firstLine;
+    struct Line* l = buf->firstLine;
 
     while (l != NULL && l->real_linenumber == 0)
         l = l->next;
@@ -7182,7 +7182,7 @@ void saveBufferBody(Buffer* buf, FILE* f, int cont)
 }
 
 static Buffer*
-loadcmdout(char* cmd,
+loadcmdout(const char* cmd,
     Buffer* (*loadproc)(struct URLFile*, Buffer*), Buffer* defaultbuf)
 {
     FILE *f, *popen(const char*, const char*);
@@ -7273,7 +7273,7 @@ Buffer*
 openGeneralPagerBuffer(InputStream stream)
 {
     Buffer* buf;
-    char* t = "text/plain";
+    const char* t = "text/plain";
     Buffer* t_buf = NULL;
     struct URLFile uf;
 
@@ -7327,9 +7327,9 @@ openGeneralPagerBuffer(InputStream stream)
 }
 
 #define CPIPEBUFFERNAME "*stream(closed)*"
-Line* getNextPage(Buffer* buf, int plen)
+struct Line* getNextPage(Buffer* buf, int plen)
 {
-    Line* volatile top = buf->topLine, * volatile last = buf->lastLine, * volatile cur = buf->currentLine;
+    struct Line* volatile top = buf->topLine, * volatile last = buf->lastLine, * volatile cur = buf->currentLine;
     int i;
     int volatile nlines = 0;
     int64_t linelen = 0, trbyte = buf->trbyte;
@@ -7412,7 +7412,7 @@ Line* getNextPage(Buffer* buf, int plen)
         }
         if (buf->lastLine->real_linenumber - buf->firstLine->real_linenumber
             >= PagerMax) {
-            Line* l = buf->firstLine;
+            struct Line* l = buf->firstLine;
             do {
                 if (top == l)
                     top = l->next;

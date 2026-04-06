@@ -46,12 +46,12 @@
 typedef unsigned short Lineprop;
 typedef unsigned char Linecolor;
 
-typedef struct _Line {
+struct Line {
     char* lineBuf;
     Lineprop* propBuf;
     Linecolor* colorBuf;
-    struct _Line* next;
-    struct _Line* prev;
+    struct Line* next;
+    struct Line* prev;
     int len;
     int width;
     long linenumber; /* on buffer */
@@ -60,13 +60,13 @@ typedef struct _Line {
     int size;
     int bpos;
     int bwidth;
-} Line;
+};
 
-int columnPos(Line* line, int column);
-int columnLen(Line* line, int column);
+int columnPos(struct Line* line, int column);
+int columnLen(struct Line* line, int column);
 struct _Buffer;
-Line* lineSkip(struct _Buffer* buf, Line* line, int offset, int last);
-Line* currentLineSkip(struct _Buffer* buf, Line* line, int offset, int last);
+struct Line* lineSkip(struct _Buffer* buf, struct Line* line, int offset, int last);
+struct Line* currentLineSkip(struct _Buffer* buf, struct Line* line, int offset, int last);
 int gethtmlcmd(char** s);
 Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 

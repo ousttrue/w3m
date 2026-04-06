@@ -1,4 +1,5 @@
 #pragma once
+#include "html_token.h"
 #include "line.h"
 #include "Str.h"
 #include "anchor.h"
@@ -105,7 +106,7 @@ struct readbuffer {
     long flag;
     long flag_stack[RB_STACK_SIZE];
     int flag_sp;
-    int status;
+    enum TokenStatus status;
     unsigned char end_tag;
     unsigned char q_level;
     short table_level;

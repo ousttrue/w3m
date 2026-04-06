@@ -1229,7 +1229,7 @@ SigPipe(SIGNAL_ARG)
 void nscroll(int n, int mode)
 {
     Buffer* buf = Currentbuf;
-    Line *top = buf->topLine, *cur = buf->currentLine;
+    struct Line *top = buf->topLine, *cur = buf->currentLine;
     int lnum, tlnum, llnum, diff_n;
 
     if (buf->firstLine == NULL)
@@ -1276,7 +1276,7 @@ void nscroll(int n, int mode)
 
 void shiftvisualpos(Buffer* buf, int shift)
 {
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     buf->visualpos -= shift;
     if (buf->visualpos - l->bwidth >= buf->COLS)
         buf->visualpos = l->bwidth + buf->COLS - 1;
@@ -1364,9 +1364,9 @@ int is_wordchar(wc_uint32 c)
     return wc_is_ucs_alnum(c);
 }
 
-int prev_nonnull_line(Line* line)
+int prev_nonnull_line(struct Line* line)
 {
-    Line* l;
+    struct Line* l;
 
     for (l = line; l != NULL && l->len == 0; l = l->prev)
         ;
@@ -1379,9 +1379,9 @@ int prev_nonnull_line(Line* line)
     return 0;
 }
 
-int next_nonnull_line(Line* line)
+int next_nonnull_line(struct Line* line)
 {
-    Line* l;
+    struct Line* l;
 
     for (l = line; l != NULL && l->len == 0; l = l->next)
         ;
@@ -1445,7 +1445,7 @@ void _goLine(const char* l)
 
 int cur_real_linenumber(Buffer* buf)
 {
-    Line *l, *cur = buf->currentLine;
+    struct Line *l, *cur = buf->currentLine;
     int n;
 
     if (!cur)
@@ -2164,7 +2164,7 @@ void nextX(int d, int dy)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct Anchor *an, *pan;
-    Line* l;
+    struct Line* l;
     int i, x, y, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
@@ -2630,7 +2630,7 @@ void invoke_browser(char* url)
 char* getCurWord(Buffer* buf, int* spos, int* epos)
 {
     char* p;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int b, e;
 
     *spos = 0;
@@ -2704,9 +2704,9 @@ void execdict(char* word)
 void set_buffer_environ(Buffer* buf)
 {
     static Buffer* prev_buf = NULL;
-    static Line* prev_line = NULL;
+    static struct Line* prev_line = NULL;
     static int prev_pos = -1;
-    Line* l;
+    struct Line* l;
 
     if (buf == NULL)
         return;
@@ -3138,7 +3138,7 @@ save_buffer_position(Buffer* buf)
 void resetPos(BufferPos* b)
 {
     Buffer buf;
-    Line top, cur;
+    struct Line top, cur;
 
     top.linenumber = b->top_linenumber;
     cur.linenumber = b->cur_linenumber;

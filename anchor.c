@@ -301,7 +301,7 @@ reseq_anchor(Buffer* buf)
 }
 
 static char*
-reAnchorPos(Buffer* buf, Line* l, char* p1, char* p2,
+reAnchorPos(Buffer* buf, struct Line* l, char* p1, char* p2,
     struct Anchor* (*anchorproc)(Buffer*, char*, char*, int, int))
 {
     struct Anchor* a;
@@ -342,19 +342,19 @@ reAnchorPos(Buffer* buf, Line* l, char* p1, char* p2,
     return p2;
 }
 
-void reAnchorWord(Buffer* buf, Line* l, int spos, int epos)
+void reAnchorWord(Buffer* buf, struct Line* l, int spos, int epos)
 {
     reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-static char*
-reAnchorAny(Buffer* buf, char* re,
+static const char*
+reAnchorAny(Buffer* buf, const char* re,
     struct Anchor* (*anchorproc)(Buffer*, char*, char*, int, int))
 {
-    Line* l;
-    char *p = NULL, *p1, *p2;
+    struct Line* l;
+    const char *p = NULL, *p1, *p2;
 
     if (re == NULL || *re == '\0') {
         return NULL;
@@ -393,7 +393,7 @@ char* reAnchorNews(Buffer* buf, char* re)
 
 char* reAnchorNewsheader(Buffer* buf)
 {
-    Line* l;
+    struct Line* l;
     char *p, *p1, *p2;
     static char* header_mid[] = {
         "Message-Id:", "References:", "In-Reply-To:", NULL
@@ -551,7 +551,7 @@ void addMultirowsImg(Buffer* buf, struct AnchorList* al)
     int i, j, k, col, ecol, pos;
     Image* img;
     struct Anchor a_img, a_href, a_form, *a;
-    Line *l, *ls;
+    struct Line *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
@@ -626,7 +626,7 @@ void addMultirowsForm(Buffer* buf, struct AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
     struct Anchor a_form, *a;
-    Line *l, *ls;
+    struct Line *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
@@ -681,7 +681,7 @@ void addMultirowsForm(Buffer* buf, struct AnchorList* al)
 const char* getAnchorText(Buffer* buf, struct AnchorList* al, struct Anchor* a)
 {
     int hseq, i;
-    Line* l;
+    struct Line* l;
     Str tmp = NULL;
     char *p, *ep;
 

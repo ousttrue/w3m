@@ -121,7 +121,7 @@ internal_get(char* url, int flag, FormList* request)
             printf("%s", last->ptr);
         } else {
             if (!strcasecmp(buf->type, "text/plain")) {
-                Line* lp;
+                struct Line* lp;
                 int len = 0;
                 for (lp = buf->firstLine; lp; lp = lp->next) {
                     len += lp->len;

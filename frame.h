@@ -19,7 +19,7 @@ struct frame_body {
     const char* source;
     char* type;
     char* referer;
-    struct _anchorList* nameList;
+    struct AnchorList* nameList;
     struct form_list* request;
     const char* ssl_certificate;
 };

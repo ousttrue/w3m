@@ -185,7 +185,7 @@ void fmInit(void)
 /*
  * Display some lines.
  */
-static Line* cline = NULL;
+static struct Line* cline = NULL;
 static int ccolumn = -1;
 
 static int ulmode = 0, somode = 0, bomode = 0;
@@ -198,11 +198,11 @@ static char* delayed_msg = NULL;
 static void drawAnchorCursor(Buffer* buf);
 #define redrawBuffer(buf) redrawNLine(buf, (LINES-1))
 static void redrawNLine(Buffer* buf, int n);
-static Line* redrawLine(Buffer* buf, Line* l, int i);
+static struct Line* redrawLine(Buffer* buf, struct Line* l, int i);
 static int image_touch = 0;
 static int draw_image_flag = FALSE;
-static Line* redrawLineImage(Buffer* buf, Line* l, int i);
-static int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos);
+static struct Line* redrawLineImage(Buffer* buf, struct Line* l, int i);
+static int redrawLineRegion(Buffer* buf, struct Line* l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
 static void do_color(Linecolor c);
 
@@ -418,7 +418,7 @@ drawAnchorCursor0(Buffer* buf, struct AnchorList* al, int hseq, int prevhseq,
     int tline, int eline, int active)
 {
     int i, j;
-    Line* l;
+    struct Line* l;
     struct Anchor* an;
 
     l = buf->topLine;
@@ -499,7 +499,7 @@ drawAnchorCursor(Buffer* buf)
 static void
 redrawNLine(Buffer* buf, int n)
 {
-    Line* l;
+    struct Line* l;
     int i;
 
     if (useColor) {
@@ -559,8 +559,8 @@ redrawNLine(Buffer* buf, int n)
     getAllImage(buf);
 }
 
-static Line*
-redrawLine(Buffer* buf, Line* l, int i)
+static struct Line*
+redrawLine(Buffer* buf, struct Line* l, int i)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -699,8 +699,8 @@ redrawLine(Buffer* buf, Line* l, int i)
     return l;
 }
 
-static Line*
-redrawLineImage(Buffer* buf, Line* l, int i)
+static struct Line*
+redrawLineImage(Buffer* buf, struct Line* l, int i)
 {
     int j, pos, rcol;
     int column = buf->currentColumn;
@@ -770,7 +770,7 @@ redrawLineImage(Buffer* buf, Line* l, int i)
 }
 
 static int
-redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
+redrawLineRegion(Buffer* buf, struct Line* l, int i, int bpos, int epos)
 {
     int j, pos, rcol, ncol, delta = 1;
     int column = buf->currentColumn;
@@ -1051,7 +1051,7 @@ void disp_err_message(char* s, int redraw_current)
     disp_message(s, redraw_current);
 }
 
-void disp_message_nsec(char* s, int redraw_current, int sec, int purge, int mouse)
+void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, int mouse)
 {
     if (QuietMessage)
         return;
@@ -1094,7 +1094,7 @@ void cursorUp0(Buffer* buf, int n)
 
 void cursorUp(Buffer* buf, int n)
 {
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     if (buf->firstLine == NULL)
         return;
     while (buf->currentLine->prev && buf->currentLine->bpos)
@@ -1123,7 +1123,7 @@ void cursorDown0(Buffer* buf, int n)
 
 void cursorDown(Buffer* buf, int n)
 {
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     if (buf->firstLine == NULL)
         return;
     while (buf->currentLine->next && buf->currentLine->next->bpos)
@@ -1140,7 +1140,7 @@ void cursorDown(Buffer* buf, int n)
 
 void cursorUpDown(Buffer* buf, int n)
 {
-    Line* cl = buf->currentLine;
+    struct Line* cl = buf->currentLine;
 
     if (buf->firstLine == NULL)
         return;
@@ -1152,7 +1152,7 @@ void cursorUpDown(Buffer* buf, int n)
 void cursorRight(Buffer* buf, int n)
 {
     int i, delta = 1, cpos, vpos2;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
 
     if (buf->firstLine == NULL)
         return;
@@ -1192,7 +1192,7 @@ void cursorRight(Buffer* buf, int n)
 void cursorLeft(Buffer* buf, int n)
 {
     int i, delta = 1, cpos;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
 
     if (buf->firstLine == NULL)
         return;

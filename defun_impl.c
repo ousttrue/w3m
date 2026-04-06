@@ -198,7 +198,7 @@ void shiftr(struct CmdArgs args)
 void col1R(struct CmdArgs args)
 {
     Buffer* buf = Currentbuf;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int j, column, n = searchKeyNum();
 
     if (l == NULL)
@@ -216,7 +216,7 @@ void col1R(struct CmdArgs args)
 void col1L(struct CmdArgs args)
 {
     Buffer* buf = Currentbuf;
-    Line* l = buf->currentLine;
+    struct Line* l = buf->currentLine;
     int j, n = searchKeyNum();
 
     if (l == NULL)
@@ -437,7 +437,7 @@ void movR1(struct CmdArgs args)
 void movLW(struct CmdArgs args)
 {
     char* lb;
-    Line *pline, *l;
+    struct Line *pline, *l;
     int ppos;
     int i, n = searchKeyNum();
 
@@ -489,7 +489,7 @@ end:
 void movRW(struct CmdArgs args)
 {
     char* lb;
-    Line *pline, *l;
+    struct Line *pline, *l;
     int ppos;
     int i, n = searchKeyNum();
 
@@ -699,7 +699,7 @@ void editScr(struct CmdArgs args)
 /* Set / unset mark */
 void _mark(struct CmdArgs args)
 {
-    Line* l;
+    struct Line* l;
     if (!use_mark)
         return;
     if (Currentbuf->firstLine == NULL)
@@ -712,7 +712,7 @@ void _mark(struct CmdArgs args)
 /* Go to next mark */
 void nextMk(struct CmdArgs args)
 {
-    Line* l;
+    struct Line* l;
     int i;
 
     if (!use_mark)
@@ -745,7 +745,7 @@ void nextMk(struct CmdArgs args)
 /* Go to previous mark */
 void prevMk(struct CmdArgs args)
 {
-    Line* l;
+    struct Line* l;
     int i;
 
     if (!use_mark)
@@ -780,7 +780,7 @@ void prevMk(struct CmdArgs args)
 /* Mark place to which the regular expression matches */
 void reMark(struct CmdArgs args)
 {
-    Line* l;
+    struct Line* l;
     const char *p, *p1, *p2;
 
     if (!use_mark)
@@ -1754,7 +1754,7 @@ void linkbrz(struct CmdArgs args)
 /* show current line number and number of lines in the entire document */
 void curlno(struct CmdArgs args)
 {
-    Line* l = Currentbuf->currentLine;
+    struct Line* l = Currentbuf->currentLine;
     Str tmp;
     int cur = 0, all = 0, col = 0, len = 0;
 

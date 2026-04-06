@@ -20,7 +20,7 @@
 SrchFunc searchRoutine = 0;
 
 static void
-set_mark(Line* l, int pos, int epos)
+set_mark(struct Line* l, int pos, int epos)
 {
     for (; pos < epos && pos < l->size; pos++)
         l->propBuf[pos] |= PE_MARK;
@@ -37,7 +37,7 @@ const char* conv_search_string(const char* str, wc_ces f_ces)
 int forwardSearch(Buffer* buf, const char* str)
 {
     const char *p, *first, *last;
-    Line *l, *begin;
+    struct Line *l, *begin;
     int wrapped = false;
     int pos;
 
@@ -116,7 +116,7 @@ int forwardSearch(Buffer* buf, const char* str)
 int backwardSearch(Buffer* buf, const char* str)
 {
     const char *p, *q, *found, *found_last, *first, *last;
-    Line *l, *begin;
+    struct Line *l, *begin;
     int wrapped = false;
     int pos;
 
@@ -214,7 +214,7 @@ int backwardSearch(Buffer* buf, const char* str)
 }
 
 static void
-clear_mark(Line* l)
+clear_mark(struct Line* l)
 {
     if (!l)
         return;
