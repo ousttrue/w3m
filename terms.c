@@ -35,77 +35,35 @@
 #include <sys/select.h>
 #include <sys/ioctl.h>
 
-enum CellProperty : uint16_t {
-    // struct ScreenLine properties
-    S_SCREENPROP = 0x0f,
-    S_NORMAL = 0x00,
-    S_STANDOUT = 0x01,
-    S_UNDERLINE = 0x02,
-    S_BOLD = 0x04,
-    S_EOL = 0x08,
-
-    // Sort of Character
-    C_WHICHCHAR = 0xc0,
-    C_ASCII = 0x00,
-    C_WCHAR1 = 0x40,
-    C_WCHAR2 = 0x80,
-    C_CTRL = 0xc0,
-
-    // Charactor Color
-    COL_FCOLOR = 0xf00,
-    COL_FBLACK = 0x800,
-    COL_FRED = 0x900,
-    COL_FGREEN = 0xa00,
-    COL_FYELLOW = 0xb00,
-    COL_FBLUE = 0xc00,
-    COL_FMAGENTA = 0xd00,
-    COL_FCYAN = 0xe00,
-    COL_FWHITE = 0xf00,
-    COL_FTERM = 0x000,
-
-    S_COLORED = 0xf00,
-
-    // Background Color
-    COL_BCOLOR = 0xf000,
-    COL_BBLACK = 0x8000,
-    COL_BRED = 0x9000,
-    COL_BGREEN = 0xa000,
-    COL_BYELLOW = 0xb000,
-    COL_BBLUE = 0xc000,
-    COL_BMAGENTA = 0xd000,
-    COL_BCYAN = 0xe000,
-    COL_BWHITE = 0xf000,
-    COL_BTERM = 0x0000,
-
-    S_BCOLORED = 0xf000,
-
-    S_GRAPHICS = 0x10,
-
-    S_DIRTY = 0x20,
-};
-#define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
-#define M_CEOL (~(M_SPACE | C_WHICHCHAR))
-#define SPACE " "
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
-
 static enum CellProperty CHMODE(enum CellProperty c) { return ((c)&C_WHICHCHAR); }
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
-#define SETCH(var, ch, len) ((var) = New_Reuse(char, (var), (len) + 1), \
-    strncpy((var), (ch), (len + 1)))
-#define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
 
-enum LineFlags : uint16_t {
-    L_DIRTY = 0x01,
-    L_UNUSED = 0x02,
-    L_NEED_CE = 0x04,
-    L_CLRTOEOL = 0x08,
-};
+// #define SETCH(var, ch, len) ((var) = New_Reuse(char, (var), (len) + 1), \
+//     strncpy((var), (ch), (len + 1)))
+// #define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
+static void setCell(struct Cell* cell, CellCharBytes ch, size_t len, enum CellProperty prop)
+{
+    cell->bytes = New_Reuse(uint8_t, cell->bytes, len + 1);
+    strncpy((char*)cell->bytes, (const char*)ch, len + 1);
+    cell->prop = (cell->prop & S_DIRTY) | prop;
+}
 
-typedef uint8_t* CellCharBytes;
+static bool
+need_redraw(const struct Cell* cell, const CellCharBytes c2, enum CellProperty pr2)
+{
+    if (!cell->bytes || !c2 || strcmp((const char*)cell->bytes, (const char*)c2))
+        return 1;
+    if (cell->bytes[0] == ' ')
+        return (cell->prop ^ pr2) & M_SPACE & ~S_DIRTY;
+
+    if ((cell->prop ^ pr2) & ~S_DIRTY)
+        return 1;
+
+    return 0;
+}
 
 struct ScreenLine {
-    CellCharBytes* cols;
-    enum CellProperty* props;
+    struct Cell* cells;
     enum LineFlags isdirty;
     short eol;
 };
@@ -556,14 +514,13 @@ void setupscreen(void)
     if (COLS + 1 > max_COLS) {
         max_COLS = COLS + 1;
         for (i = 0; i < max_LINES; i++) {
-            ScreenElem[i].cols = New_N(char*, max_COLS);
-            memset((void*)ScreenElem[i].cols, 0, max_COLS * sizeof(char*));
-            ScreenElem[i].props = New_N(enum CellProperty, max_COLS);
+            ScreenElem[i].cells = New_N(struct Cell, max_COLS);
+            memset(ScreenElem[i].cells, 0, max_COLS * sizeof(struct Cell));
         }
     }
     for (i = 0; i < LINES; i++) {
         ScreenImage[i] = &ScreenElem[i];
-        ScreenImage[i]->props[0] = S_EOL;
+        ScreenImage[i]->cells[0].prop = S_EOL;
         ScreenImage[i]->isdirty = 0;
     }
     for (; i < max_LINES; i++) {
@@ -596,20 +553,6 @@ void move(int line, int column)
         CurColumn = column;
 }
 
-static int
-need_redraw(const CellCharBytes c1, enum CellProperty pr1, const CellCharBytes c2, enum CellProperty pr2)
-{
-    if (!c1 || !c2 || strcmp((const char*)c1, (const char*)c2))
-        return 1;
-    if (*c1 == ' ')
-        return (pr1 ^ pr2) & M_SPACE & ~S_DIRTY;
-
-    if ((pr1 ^ pr2) & ~S_DIRTY)
-        return 1;
-
-    return 0;
-}
-
 void addch(uint8_t c)
 {
     addmch(&c, 1);
@@ -618,46 +561,41 @@ void addch(uint8_t c)
 static void touch_column(int col)
 {
     if (col >= 0 && col < COLS)
-        ScreenImage[CurLine]->props[col] |= S_DIRTY;
+        ScreenImage[CurLine]->cells[col].prop |= S_DIRTY;
 }
 
-void addmch(const uint8_t* pc, size_t len)
+void addmch(const uint8_t* src, size_t len)
 {
-    enum CellProperty* pr;
     int dest, i;
     static Str tmp = NULL;
-    char c = *pc;
-    int width = wtf_width(WcOption, *(const wc_uchar*)pc);
+    int width = wtf_width(WcOption, src[0]);
 
     if (tmp == NULL)
         tmp = Strnew();
-    Strcopy_charp_n(tmp, pc, len);
-    pc = tmp->ptr;
+    Strcopy_charp_n(tmp, (const char*)src, len);
+    char* pc = tmp->ptr;
 
     if (CurColumn == COLS)
         wrap();
     if (CurColumn >= COLS)
         return;
 
-    CellCharBytes* p = ScreenImage[CurLine]->cols;
-    pr = ScreenImage[CurLine]->props;
-
-    if (pr[CurColumn] & S_EOL) {
-        if (c == ' ' && !(CurrentMode & M_SPACE)) {
+    struct Cell* line = ScreenImage[CurLine]->cells;
+    if (line[CurColumn].prop & S_EOL) {
+        if (src[0] == ' ' && !(CurrentMode & M_SPACE)) {
             CurColumn++;
             return;
         }
-        for (i = CurColumn; i >= 0 && (pr[i] & S_EOL); i--) {
-            SETCH(p[i], SPACE, 1);
-            SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
+        for (i = CurColumn; i >= 0 && (line[i].prop & S_EOL); i--) {
+            setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & M_CEOL) | C_ASCII);
         }
     }
 
-    if (c == '\t' || c == '\n' || c == '\r' || c == '\b')
+    if (src[0] == '\t' || src[0] == '\n' || src[0] == '\r' || src[0] == '\b')
         SETCHMODE(CurrentMode, C_CTRL);
     else if (len > 1)
         SETCHMODE(CurrentMode, C_WCHAR1);
-    else if (!IS_CNTRL(c))
+    else if (!IS_CNTRL(src[0]))
         SETCHMODE(CurrentMode, C_ASCII);
     else
         return;
@@ -665,16 +603,15 @@ void addmch(const uint8_t* pc, size_t len)
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
     i = CurColumn + width - 1;
-    if (i < COLS && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], (CellCharBytes)pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
+    if (i < COLS && (((line[i].prop & S_BOLD) && need_redraw(&line[i], (CellCharBytes)pc, CurrentMode)) || ((line[i].prop & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
         touch_line();
         i++;
         if (i < COLS) {
             touch_column(i);
-            if (pr[i] & S_EOL) {
-                SETCH(p[i], SPACE, 1);
-                SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
+            if (line[i].prop & S_EOL) {
+                setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & M_CEOL) | C_ASCII);
             } else {
-                for (i++; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
+                for (i++; i < COLS && CHMODE(line[i].prop) == C_WCHAR2; i++)
                     touch_column(i);
             }
         }
@@ -683,71 +620,63 @@ void addmch(const uint8_t* pc, size_t len)
     if (CurColumn + width > COLS) {
         touch_line();
         for (i = CurColumn; i < COLS; i++) {
-            SETCH(p[i], SPACE, 1);
-            SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+            setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & ~C_WHICHCHAR) | C_ASCII);
             touch_column(i);
         }
         wrap();
         if (CurColumn + width > COLS)
             return;
-        p = ScreenImage[CurLine]->cols;
-        pr = ScreenImage[CurLine]->props;
+        line = ScreenImage[CurLine]->cells;
     }
-    if (CHMODE(pr[CurColumn]) == C_WCHAR2) {
+    if (CHMODE(line[CurColumn].prop) == C_WCHAR2) {
         touch_line();
         for (i = CurColumn - 1; i >= 0; i--) {
-            enum CellProperty l = CHMODE(pr[i]);
-            SETCH(p[i], SPACE, 1);
-            SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+            enum CellProperty l = CHMODE(line[i].prop);
+            setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & ~C_WHICHCHAR) | C_ASCII);
             touch_column(i);
             if (l != C_WCHAR2)
                 break;
         }
     }
     if (CHMODE(CurrentMode) != C_CTRL) {
-        if (need_redraw(p[CurColumn], pr[CurColumn], (CellCharBytes)pc, CurrentMode)) {
-            SETCH(p[CurColumn], pc, len);
-            SETPROP(pr[CurColumn], CurrentMode);
+        if (need_redraw(&line[CurColumn], (CellCharBytes)pc, CurrentMode)) {
+            setCell(&line[CurColumn], (CellCharBytes)pc, len, CurrentMode);
             touch_line();
             touch_column(CurColumn);
             SETCHMODE(CurrentMode, C_WCHAR2);
             for (i = CurColumn + 1; i < CurColumn + width; i++) {
-                SETCH(p[i], SPACE, 1);
-                SETPROP(pr[i], (pr[CurColumn] & ~C_WHICHCHAR) | C_WCHAR2);
+                setCell(&line[i], (CellCharBytes)SPACE, 1, (line[CurColumn].prop & ~C_WHICHCHAR) | C_WCHAR2);
                 touch_column(i);
             }
-            for (; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++) {
-                SETCH(p[i], SPACE, 1);
-                SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+            for (; i < COLS && CHMODE(line[i].prop) == C_WCHAR2; i++) {
+                setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & ~C_WHICHCHAR) | C_ASCII);
                 touch_column(i);
             }
         }
         CurColumn += width;
-    } else if (c == '\t') {
+    } else if (src[0] == '\t') {
         dest = (CurColumn + tab_step) / tab_step * tab_step;
         if (dest >= COLS) {
             wrap();
             touch_line();
             dest = tab_step;
-            p = ScreenImage[CurLine]->cols;
-            pr = ScreenImage[CurLine]->props;
+            line = ScreenImage[CurLine]->cells;
         }
         for (i = CurColumn; i < dest; i++) {
-            if (need_redraw(p[i], pr[i], (CellCharBytes)SPACE, CurrentMode)) {
-                SETCH(p[i], SPACE, 1);
-                SETPROP(pr[i], CurrentMode);
+            if (need_redraw(&line[i], (CellCharBytes)SPACE, CurrentMode)) {
+                setCell(&line[i], (CellCharBytes)SPACE, 1, CurrentMode);
                 touch_line();
                 touch_column(i);
             }
         }
         CurColumn = i;
-    } else if (c == '\n') {
+    } else if (src[0] == '\n') {
         wrap();
-    } else if (c == '\r') { /* Carriage return */
+    } else if (src[0] == '\r') { /* Carriage return */
         CurColumn = 0;
-    } else if (c == '\b' && CurColumn > 0) { /* Backspace */
+    } else if (src[0] == '\b' && CurColumn > 0) { /* Backspace */
         CurColumn--;
-        while (CurColumn > 0 && CHMODE(pr[CurColumn]) == C_WCHAR2)
+        while (CurColumn > 0 && CHMODE(line[CurColumn].prop) == C_WCHAR2)
             CurColumn--;
     }
 }
@@ -765,7 +694,7 @@ void touch_line(void)
     if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
         int i;
         for (i = 0; i < COLS; i++)
-            ScreenImage[CurLine]->props[i] &= ~S_DIRTY;
+            ScreenImage[CurLine]->cells[i].prop &= ~S_DIRTY;
         ScreenImage[CurLine]->isdirty |= L_DIRTY;
     }
 }
@@ -782,12 +711,11 @@ void standend(void)
 
 void toggle_stand(void)
 {
-    int i;
-    enum CellProperty* pr = ScreenImage[CurLine]->props;
-    pr[CurColumn] ^= S_STANDOUT;
-    if (CHMODE(pr[CurColumn]) != C_WCHAR2) {
-        for (i = CurColumn + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
-            pr[i] ^= S_STANDOUT;
+    struct Cell* line = ScreenImage[CurLine]->cells;
+    line[CurColumn].prop ^= S_STANDOUT;
+    if (CHMODE(line[CurColumn].prop) != C_WCHAR2) {
+        for (int i = CurColumn + 1; CHMODE(line[i].prop) == C_WCHAR2; i++)
+            line[i].prop ^= S_STANDOUT;
     }
 }
 
@@ -868,8 +796,7 @@ void refresh(void)
     int line, col, pcol;
     int pline = CurLine;
     enum MoveStatus moved = RF_NEED_TO_MOVE;
-    CellCharBytes* pc;
-    enum CellProperty *pr, mode = 0;
+    enum CellProperty mode = 0;
     enum CellProperty color = COL_FTERM;
     enum CellProperty bcolor = COL_BTERM;
     enum LineFlags* dirty;
@@ -879,14 +806,13 @@ void refresh(void)
         dirty = &ScreenImage[line]->isdirty;
         if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;
-            pc = ScreenImage[line]->cols;
-            pr = ScreenImage[line]->props;
-            for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
+            struct Cell* cells = ScreenImage[line]->cells;
+            for (col = 0; col < COLS && !(cells[col].prop & S_EOL); col++) {
                 if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
-                    if (need_redraw(pc[col], pr[col], (CellCharBytes)SPACE, 0))
+                    if (need_redraw(&cells[col], (CellCharBytes)SPACE, 0))
                         break;
                 } else {
-                    if (pr[col] & S_DIRTY)
+                    if (cells[col].prop & S_DIRTY)
                         break;
                 }
             }
@@ -925,7 +851,7 @@ void refresh(void)
             pline = line;
             pcol = col;
             for (; col < COLS; col++) {
-                if (pr[col] & S_EOL)
+                if (cells[col].prop & S_EOL)
                     break;
 
                 /*
@@ -938,49 +864,50 @@ void refresh(void)
                  * avoid the scroll, I prohibit to draw character on
                  * (COLS-1,LINES-1).
                  */
-                if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
-                    || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
-                    || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
-                    if ((mode & S_COLORED)
-                        || (mode & S_BCOLORED))
+                if ((!(cells[col].prop & S_STANDOUT) && (mode & S_STANDOUT))
+                    || (!(cells[col].prop & S_UNDERLINE) && (mode & S_UNDERLINE))
+                    || (!(cells[col].prop & S_BOLD) && (mode & S_BOLD))
+                    || (!(cells[col].prop & S_COLORED) && (mode & S_COLORED))
+                    || (!(cells[col].prop & S_BCOLORED) && (mode & S_BCOLORED))
+                    || (!(cells[col].prop & S_GRAPHICS) && (mode & S_GRAPHICS))) {
+                    if ((mode & S_COLORED) || (mode & S_BCOLORED))
                         writestr(&write1, terminfo.T_op);
                     if (mode & S_GRAPHICS)
                         writestr(&write1, terminfo.T_ae);
                     writestr(&write1, terminfo.T_me);
                     mode &= ~M_MEND;
                 }
-                if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) ? need_redraw(pc[col], pr[col], (CellCharBytes)SPACE,
-                                                                                0)
-                                                                          : (pr[col] & S_DIRTY)) {
+                if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) ? need_redraw(&cells[col], (CellCharBytes)SPACE, 0)
+                                                                          : (cells[col].prop & S_DIRTY)) {
                     if (pcol == col - 1)
                         writestr(&write1, terminfo.T_nd);
                     else if (pcol != col)
                         MOVE(&write1, &terminfo, line, col);
 
-                    if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
+                    if ((cells[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
                         writestr(&write1, terminfo.T_so);
                         mode |= S_STANDOUT;
                     }
-                    if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
+                    if ((cells[col].prop & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
                         writestr(&write1, terminfo.T_us);
                         mode |= S_UNDERLINE;
                     }
-                    if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
+                    if ((cells[col].prop & S_BOLD) && !(mode & S_BOLD)) {
                         writestr(&write1, terminfo.T_md);
                         mode |= S_BOLD;
                     }
-                    if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
-                        color = (pr[col] & COL_FCOLOR);
+                    if ((cells[col].prop & S_COLORED) && (cells[col].prop ^ mode) & COL_FCOLOR) {
+                        color = (cells[col].prop & COL_FCOLOR);
                         mode = ((mode & ~COL_FCOLOR) | color);
                         writestr(&write1, color_seq(color));
                     }
-                    if ((pr[col] & S_BCOLORED)
-                        && (pr[col] ^ mode) & COL_BCOLOR) {
-                        bcolor = (pr[col] & COL_BCOLOR);
+                    if ((cells[col].prop & S_BCOLORED)
+                        && (cells[col].prop ^ mode) & COL_BCOLOR) {
+                        bcolor = (cells[col].prop & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
                         writestr(&write1, bcolor_seq(bcolor));
                     }
-                    if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
+                    if ((cells[col].prop & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
                         wc_putc_end(&writer);
                         if (!graph_enabled) {
                             graph_enabled = 1;
@@ -989,17 +916,17 @@ void refresh(void)
                         writestr(&write1, terminfo.T_as);
                         mode |= S_GRAPHICS;
                     }
-                    if (pr[col] & S_GRAPHICS)
-                        write1(graphchar(*pc[col]));
-                    else if (CHMODE(pr[col]) != C_WCHAR2)
-                        wc_putc(WcOption, (char*)pc[col], &writer);
+                    if (cells[col].prop & S_GRAPHICS)
+                        write1(graphchar(cells[col].bytes[0]));
+                    else if (CHMODE(cells[col].prop) != C_WCHAR2)
+                        wc_putc(WcOption, (char*)cells[col].bytes, &writer);
                     pcol = col + 1;
                 }
             }
             if (col == COLS)
                 moved = RF_NEED_TO_MOVE;
-            for (; col < COLS && !(pr[col] & S_EOL); col++)
-                pr[col] |= S_EOL;
+            for (; col < COLS && !(cells[col].prop & S_EOL); col++)
+                cells[col].prop |= S_EOL;
         }
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
@@ -1021,14 +948,13 @@ void refresh(void)
 void clear(void)
 {
     int i, j;
-    enum CellProperty* p;
     writestr(&write1, terminfo.T_cl);
     move(0, 0);
     for (i = 0; i < LINES; i++) {
         ScreenImage[i]->isdirty = 0;
-        p = ScreenImage[i]->props;
+        struct Cell* p = ScreenImage[i]->cells;
         for (j = 0; j < COLS; j++) {
-            p[j] = S_EOL;
+            p[j].prop = S_EOL;
         }
     }
     CurrentMode = C_ASCII;
@@ -1037,10 +963,9 @@ void clear(void)
 /* XXX: conflicts with curses's clrtoeol(3) ? */
 void clrtoeol(void)
 { /* Clear to the end of line */
-    int i;
-    enum CellProperty* lprop = ScreenImage[CurLine]->props;
+    struct Cell* line = ScreenImage[CurLine]->cells;
 
-    if (lprop[CurColumn] & S_EOL)
+    if (line[CurColumn].prop & S_EOL)
         return;
 
     if (!(ScreenImage[CurLine]->isdirty & (L_NEED_CE | L_CLRTOEOL)) || ScreenImage[CurLine]->eol > CurColumn)
@@ -1048,8 +973,8 @@ void clrtoeol(void)
 
     ScreenImage[CurLine]->isdirty |= L_CLRTOEOL;
     touch_line();
-    for (i = CurColumn; i < COLS && !(lprop[i] & S_EOL); i++) {
-        lprop[i] = S_EOL | S_DIRTY;
+    for (int i = CurColumn; i < COLS && !(line[i].prop & S_EOL); i++) {
+        line[i].prop = S_EOL | S_DIRTY;
     }
 }
 
@@ -1110,22 +1035,19 @@ void addstr(const char* s)
 
     while (*s != '\0') {
         len = wtf_len((wc_uchar*)s);
-        addmch(s, len);
+        addmch((CellCharBytes)s, len);
         s += len;
     }
 }
 
 void addnstr(const char* s, int n)
 {
-    int i;
-    int len, width;
-
-    for (i = 0; *s != '\0';) {
-        width = wtf_width(WcOption, *(const wc_uchar*)s);
+    for (int i = 0; *s != '\0';) {
+        int width = wtf_width(WcOption, *(const wc_uchar*)s);
         if (i + width > n)
             break;
-        len = wtf_len((const wc_uchar*)s);
-        addmch(s, len);
+        int len = wtf_len((const wc_uchar*)s);
+        addmch((CellCharBytes)s, len);
         s += len;
         i += width;
     }
@@ -1133,15 +1055,13 @@ void addnstr(const char* s, int n)
 
 void addnstr_sup(char* s, int n)
 {
-    int i;
-    int len, width;
-
-    for (i = 0; *s != '\0';) {
-        width = wtf_width(WcOption, *(const wc_uchar*)s);
+    int i = 0;
+    for (; *s != '\0';) {
+        int width = wtf_width(WcOption, *(const wc_uchar*)s);
         if (i + width > n)
             break;
-        len = wtf_len((const wc_uchar*)s);
-        addmch(s, len);
+        int len = wtf_len((const wc_uchar*)s);
+        addmch((CellCharBytes)s, len);
         s += len;
         i += width;
     }
@@ -1151,15 +1071,14 @@ void addnstr_sup(char* s, int n)
 
 void touch_cursor(void)
 {
-    int i;
     touch_line();
-    for (i = CurColumn; i >= 0; i--) {
+    for (int i = CurColumn; i >= 0; i--) {
         touch_column(i);
-        if (CHMODE(ScreenImage[CurLine]->props[i]) != C_WCHAR2)
+        if (CHMODE(ScreenImage[CurLine]->cells[i].prop) != C_WCHAR2)
             break;
     }
-    for (i = CurColumn + 1; i < COLS; i++) {
-        if (CHMODE(ScreenImage[CurLine]->props[i]) != C_WCHAR2)
+    for (int i = CurColumn + 1; i < COLS; i++) {
+        if (CHMODE(ScreenImage[CurLine]->cells[i].prop) != C_WCHAR2)
             break;
         touch_column(i);
     }
