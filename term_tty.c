@@ -244,7 +244,7 @@ void writer(const uint8_t* str, size_t len)
     fwrite(str, 1, len, ttyf);
 }
 
-int write1(char c)
+int write1(int c)
 {
     putc(c, ttyf);
     return 0;

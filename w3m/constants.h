@@ -4,7 +4,6 @@
 #define MAX_COLUMN 400
 
 #define DEV_TTY_PATH "/dev/tty"
-#define DEFAULT_TERM 0 /* XXX */
 
 // #define CURRENT_VERSION = "w3m/0.5.3+git20230718";
 #define KEYMAP_FILE "keymap"

@@ -4,6 +4,7 @@
  */
 #include "terms.h"
 #include "term_tty.h"
+#include "terminfo_entry.h"
 #include "ctrlcode.h"
 #include "indep.h"
 #include "signal_util.h"
@@ -33,11 +34,6 @@
 #include <sys/wait.h>
 #include <sys/select.h>
 #include <sys/ioctl.h>
-
-char* getenv(const char*);
-MySignalHandler reset_exit(SIGNAL_ARG), reset_error_exit(SIGNAL_ARG), error_dump(SIGNAL_ARG);
-void setlinescols(void);
-void flush_tty(void);
 
 enum CellProperty : uint16_t {
     // struct ScreenLine properties
@@ -114,12 +110,6 @@ struct ScreenLine {
     short eol;
 };
 
-static char bp[1024], funcstr[256];
-
-char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
-    *T_so, *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me,
-    *T_ti, *T_te, *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
-
 static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
 static int CurLine, CurColumn;
@@ -127,24 +117,13 @@ static struct ScreenLine *ScreenElem = NULL, **ScreenImage = NULL;
 static enum CellProperty CurrentMode = 0;
 static int graph_enabled = 0;
 
-static char gcmap[96];
+static struct TermInfo terminfo;
 
-extern int tgetent(char*, char*);
-extern int tgetnum(char*);
-extern int tgetflag(char*);
-extern char* tgetstr(char*, char**);
-extern char* tgoto(char*, int, int);
-extern int tputs(char*, int, int (*)(char));
-void clear(void), wrap(void), touch_line(void), touch_column(int);
-void clrtoeol(void); /* conflicts with curs_clear(3)? */
-
-static void
-writestr(char* s)
+void reset_tty(void)
 {
-    tputs(s, 1, write1);
+    terminfo_reset(&write1, &terminfo, Do_not_use_ti_te);
+    clear_tty();
 }
-
-#define MOVE(line, column) writestr(tgoto(T_cm, column, line));
 
 void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
@@ -156,10 +135,10 @@ void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int 
     else
         size = "";
 
-    MOVE(y, x);
+    MOVE(&write1, &terminfo, y, x);
     buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
-    writestr(buf->ptr);
-    MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    writestr(&write1, buf->ptr);
+    MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
 void put_image_iterm2(const char* url, int x, int y, int w, int h)
@@ -188,9 +167,9 @@ void put_image_iterm2(const char* url, int x, int y, int w, int h)
                   ":",
         url, st.st_size, w, h);
 
-    MOVE(y, x);
+    MOVE(&write1, &terminfo, y, x);
 
-    writestr(buf->ptr);
+    writestr(&write1, buf->ptr);
 
     cbuf = GC_MALLOC_ATOMIC(3072);
     if (!cbuf)
@@ -200,20 +179,20 @@ void put_image_iterm2(const char* url, int x, int y, int w, int h)
         cbuf[i++] = c;
         if (i == 3072) {
             buf = base64_encode(cbuf, i);
-            writestr(buf->ptr);
+            writestr(&write1, buf->ptr);
             i = 0;
         }
     }
 
     if (i) {
         buf = base64_encode(cbuf, i);
-        writestr(buf->ptr);
+        writestr(&write1, buf->ptr);
     }
 
 cleanup:
     fclose(fp);
-    writestr("\a");
-    MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    writestr(&write1, "\a");
+    MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
 void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
@@ -299,7 +278,7 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
     if (!fp)
         return;
 
-    MOVE(y, x);
+    MOVE(&write1, &terminfo, y, x);
 
     cbuf = GC_MALLOC_ATOMIC(3072); /* base64-encoded chunks of 4096 bytes */
     if (!cbuf)
@@ -318,7 +297,7 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
     buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
                   "%s\x1b\\",
         t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
-    writestr(buf->ptr);
+    writestr(&write1, buf->ptr);
 
     if (m) {
         i = 0;
@@ -327,7 +306,7 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
             if (j) {
                 base64 = base64_encode(cbuf, i);
                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
-                writestr(buf->ptr);
+                writestr(&write1, buf->ptr);
                 i = 0;
                 j = 0;
             }
@@ -339,12 +318,12 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
         if (i) {
             base64 = base64_encode(cbuf, i);
             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
-            writestr(buf->ptr);
+            writestr(&write1, buf->ptr);
         }
     }
 cleanup:
     fclose(fp);
-    MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
 static void
@@ -444,7 +423,7 @@ void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy
     MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
     MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
 
-    MOVE(y, x);
+    MOVE(&write1, &terminfo, y, x);
     flush_tty();
 
     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
@@ -463,7 +442,7 @@ void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy
 
         close(STDERR_FILENO); /* Don't output error message. */
         if (do_anim) {
-            writestr("\x1b[?80h");
+            writestr(&write1, "\x1b[?80h");
         } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
             url = str_url->ptr;
         }
@@ -511,26 +490,11 @@ void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy
         mySignal(SIGQUIT, prevquit);
         mySignal(SIGTSTP, prevstop);
         if (do_anim) {
-            writestr("\x1b[?80l");
+            writestr(&write1, "\x1b[?80l");
         }
     }
 
-    MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
-}
-
-void reset_tty(void)
-{
-    writestr(T_op); /* turn off */
-    writestr(T_me);
-    if (!Do_not_use_ti_te) {
-        if (T_te && *T_te)
-            writestr(T_te);
-        else
-            writestr(T_cl);
-    }
-    writestr(T_se); /* reset terminal */
-
-    clear_tty();
+    MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
 static MySignalHandler
@@ -577,104 +541,7 @@ void set_int(void)
     /* mySignal(SIGSEGV, error_dump); */
 }
 
-static void
-setgraphchar(void)
-{
-    int c, i, n;
-
-    for (c = 0; c < 96; c++)
-        gcmap[c] = (char)(c + ' ');
-
-    if (!T_ac)
-        return;
-
-    n = strlen(T_ac);
-    for (i = 0; i < n - 1; i += 2) {
-        c = (unsigned)T_ac[i] - ' ';
-        if (c >= 0 && c < 96)
-            gcmap[c] = T_ac[i + 1];
-    }
-}
-
-#define graphchar(c) (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c))
-#define GETSTR(v, s)               \
-    {                              \
-        v = pt;                    \
-        suc = tgetstr(s, &pt);     \
-        if (!suc)                  \
-            v = "";                \
-        else                       \
-            v = allocStr(suc, -1); \
-    }
-
-void getTCstr(void)
-{
-    char* ent;
-    char* suc;
-    char* pt = funcstr;
-    int r;
-
-    ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
-    if (ent == NULL) {
-        fprintf(stderr, "TERM is not set\n");
-        reset_error_exit(SIGNAL_ARGLIST);
-    }
-
-    r = tgetent(bp, ent);
-    if (r != 1) {
-        /* Can't find termcap entry */
-        fprintf(stderr, "Can't find termcap entry %s\n", ent);
-        reset_error_exit(SIGNAL_ARGLIST);
-    }
-
-    GETSTR(T_ce, "ce"); /* clear to the end of line */
-    GETSTR(T_cd, "cd"); /* clear to the end of display */
-    GETSTR(T_kr, "nd"); /* cursor right */
-    if (suc == NULL)
-        GETSTR(T_kr, "kr");
-    if (tgetflag("bs"))
-        T_kl = "\b"; /* cursor left */
-    else {
-        GETSTR(T_kl, "le");
-        if (suc == NULL)
-            GETSTR(T_kl, "kb");
-        if (suc == NULL)
-            GETSTR(T_kl, "kl");
-    }
-    GETSTR(T_cr, "cr"); /* carriage return */
-    GETSTR(T_ta, "ta"); /* tab */
-    GETSTR(T_sc, "sc"); /* save cursor */
-    GETSTR(T_rc, "rc"); /* restore cursor */
-    GETSTR(T_so, "so"); /* standout mode */
-    GETSTR(T_se, "se"); /* standout mode end */
-    GETSTR(T_us, "us"); /* underline mode */
-    GETSTR(T_ue, "ue"); /* underline mode end */
-    GETSTR(T_md, "md"); /* bold mode */
-    GETSTR(T_me, "me"); /* bold mode end */
-    GETSTR(T_cl, "cl"); /* clear screen */
-    GETSTR(T_cm, "cm"); /* cursor move */
-    GETSTR(T_al, "al"); /* append line */
-    GETSTR(T_sr, "sr"); /* scroll reverse */
-    GETSTR(T_ti, "ti"); /* terminal init */
-    GETSTR(T_te, "te"); /* terminal end */
-    GETSTR(T_nd, "nd"); /* move right one space */
-    GETSTR(T_eA, "eA"); /* enable alternative charset */
-    GETSTR(T_as, "as"); /* alternative (graphic) charset start */
-    GETSTR(T_ae, "ae"); /* alternative (graphic) charset end */
-    GETSTR(T_ac, "ac"); /* graphics charset pairs */
-    GETSTR(T_op, "op"); /* set default color pair to its original value */
-#if defined(CYGWIN) && CYGWIN < 1
-    /* for TERM=pcansi on MS-DOS prompt. */
-    T_eA = "";
-    T_as = "";
-    T_ae = "";
-    T_ac = "";
-#endif /* CYGWIN */
-
-    LINES = COLS = 0;
-    setlinescols();
-    setgraphchar();
-}
+#define graphchar(c) (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? terminfo.gcmap[(c) - ' '] : (c))
 
 void setupscreen(void)
 {
@@ -714,9 +581,9 @@ int initscr(void)
     if (set_tty() < 0)
         return -1;
     set_int();
-    getTCstr();
-    if (T_ti && !Do_not_use_ti_te)
-        writestr(T_ti);
+    getTCstr(&terminfo);
+    if (terminfo.T_ti && !Do_not_use_ti_te)
+        writestr(&write1, terminfo.T_ti);
     setupscreen();
     return 0;
 }
@@ -730,9 +597,9 @@ void move(int line, int column)
 }
 
 static int
-need_redraw(const char* c1, enum CellProperty pr1, const char* c2, enum CellProperty pr2)
+need_redraw(const CellCharBytes c1, enum CellProperty pr1, const CellCharBytes c2, enum CellProperty pr2)
 {
-    if (!c1 || !c2 || strcmp(c1, c2))
+    if (!c1 || !c2 || strcmp((const char*)c1, (const char*)c2))
         return 1;
     if (*c1 == ' ')
         return (pr1 ^ pr2) & M_SPACE & ~S_DIRTY;
@@ -743,12 +610,18 @@ need_redraw(const char* c1, enum CellProperty pr1, const char* c2, enum CellProp
     return 0;
 }
 
-void addch(char c)
+void addch(uint8_t c)
 {
     addmch(&c, 1);
 }
 
-void addmch(const char* pc, size_t len)
+static void touch_column(int col)
+{
+    if (col >= 0 && col < COLS)
+        ScreenImage[CurLine]->props[col] |= S_DIRTY;
+}
+
+void addmch(const uint8_t* pc, size_t len)
 {
     enum CellProperty* pr;
     int dest, i;
@@ -766,7 +639,7 @@ void addmch(const char* pc, size_t len)
     if (CurColumn >= COLS)
         return;
 
-    char** p = ScreenImage[CurLine]->cols;
+    CellCharBytes* p = ScreenImage[CurLine]->cols;
     pr = ScreenImage[CurLine]->props;
 
     if (pr[CurColumn] & S_EOL) {
@@ -792,7 +665,7 @@ void addmch(const char* pc, size_t len)
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
     i = CurColumn + width - 1;
-    if (i < COLS && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
+    if (i < COLS && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], (CellCharBytes)pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
         touch_line();
         i++;
         if (i < COLS) {
@@ -832,7 +705,7 @@ void addmch(const char* pc, size_t len)
         }
     }
     if (CHMODE(CurrentMode) != C_CTRL) {
-        if (need_redraw(p[CurColumn], pr[CurColumn], pc, CurrentMode)) {
+        if (need_redraw(p[CurColumn], pr[CurColumn], (CellCharBytes)pc, CurrentMode)) {
             SETCH(p[CurColumn], pc, len);
             SETPROP(pr[CurColumn], CurrentMode);
             touch_line();
@@ -860,7 +733,7 @@ void addmch(const char* pc, size_t len)
             pr = ScreenImage[CurLine]->props;
         }
         for (i = CurColumn; i < dest; i++) {
-            if (need_redraw(p[i], pr[i], SPACE, CurrentMode)) {
+            if (need_redraw(p[i], pr[i], (CellCharBytes)SPACE, CurrentMode)) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], CurrentMode);
                 touch_line();
@@ -885,12 +758,6 @@ void wrap(void)
         return;
     CurLine++;
     CurColumn = 0;
-}
-
-void touch_column(int col)
-{
-    if (col >= 0 && col < COLS)
-        ScreenImage[CurLine]->props[col] |= S_DIRTY;
 }
 
 void touch_line(void)
@@ -958,7 +825,7 @@ int graph_ok(void)
 {
     if (UseGraphicChar != GRAPHIC_CHAR_DEC)
         return 0;
-    return T_as[0] != 0 && T_ae[0] != 0 && T_ac[0] != 0;
+    return terminfo.T_as[0] != 0 && terminfo.T_ae[0] != 0 && terminfo.T_ac[0] != 0;
 }
 
 void setfcolor(int color)
@@ -1001,11 +868,11 @@ void refresh(void)
     int line, col, pcol;
     int pline = CurLine;
     enum MoveStatus moved = RF_NEED_TO_MOVE;
-    char** pc;
+    CellCharBytes* pc;
     enum CellProperty *pr, mode = 0;
     enum CellProperty color = COL_FTERM;
     enum CellProperty bcolor = COL_BTERM;
-    short* dirty;
+    enum LineFlags* dirty;
 
     wc_putc_init(WcOption, InnerCharset, DisplayCharset);
     for (line = 0; line <= (LINES - 1); line++) {
@@ -1016,7 +883,7 @@ void refresh(void)
             pr = ScreenImage[line]->props;
             for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
                 if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
-                    if (need_redraw(pc[col], pr[col], SPACE, 0))
+                    if (need_redraw(pc[col], pr[col], (CellCharBytes)SPACE, 0))
                         break;
                 } else {
                     if (pr[col] & S_DIRTY)
@@ -1035,7 +902,7 @@ void refresh(void)
             if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
                 switch (moved) {
                 case RF_NEED_TO_MOVE:
-                    MOVE(line, 0);
+                    MOVE(&write1, &terminfo, line, 0);
                     moved = RF_CR_OK;
                     break;
                 case RF_CR_OK:
@@ -1047,13 +914,13 @@ void refresh(void)
                     break;
                 }
             } else {
-                MOVE(line, pcol);
+                MOVE(&write1, &terminfo, line, pcol);
                 moved = RF_CR_OK;
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                writestr(T_ce);
+                writestr(&write1, terminfo.T_ce);
                 if (col != pcol)
-                    MOVE(line, col);
+                    MOVE(&write1, &terminfo, line, col);
             }
             pline = line;
             pcol = col;
@@ -1076,56 +943,56 @@ void refresh(void)
                     || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED)
                         || (mode & S_BCOLORED))
-                        writestr(T_op);
+                        writestr(&write1, terminfo.T_op);
                     if (mode & S_GRAPHICS)
-                        writestr(T_ae);
-                    writestr(T_me);
+                        writestr(&write1, terminfo.T_ae);
+                    writestr(&write1, terminfo.T_me);
                     mode &= ~M_MEND;
                 }
-                if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) ? need_redraw(pc[col], pr[col], SPACE,
+                if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) ? need_redraw(pc[col], pr[col], (CellCharBytes)SPACE,
                                                                                 0)
                                                                           : (pr[col] & S_DIRTY)) {
                     if (pcol == col - 1)
-                        writestr(T_nd);
+                        writestr(&write1, terminfo.T_nd);
                     else if (pcol != col)
-                        MOVE(line, col);
+                        MOVE(&write1, &terminfo, line, col);
 
                     if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                        writestr(T_so);
+                        writestr(&write1, terminfo.T_so);
                         mode |= S_STANDOUT;
                     }
                     if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                        writestr(T_us);
+                        writestr(&write1, terminfo.T_us);
                         mode |= S_UNDERLINE;
                     }
                     if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
-                        writestr(T_md);
+                        writestr(&write1, terminfo.T_md);
                         mode |= S_BOLD;
                     }
                     if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
                         color = (pr[col] & COL_FCOLOR);
                         mode = ((mode & ~COL_FCOLOR) | color);
-                        writestr(color_seq(color));
+                        writestr(&write1, color_seq(color));
                     }
                     if ((pr[col] & S_BCOLORED)
                         && (pr[col] ^ mode) & COL_BCOLOR) {
                         bcolor = (pr[col] & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
-                        writestr(bcolor_seq(bcolor));
+                        writestr(&write1, bcolor_seq(bcolor));
                     }
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
                         wc_putc_end(&writer);
                         if (!graph_enabled) {
                             graph_enabled = 1;
-                            writestr(T_eA);
+                            writestr(&write1, terminfo.T_eA);
                         }
-                        writestr(T_as);
+                        writestr(&write1, terminfo.T_as);
                         mode |= S_GRAPHICS;
                     }
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
-                        wc_putc(WcOption, pc[col], &writer);
+                        wc_putc(WcOption, (char*)pc[col], &writer);
                     pcol = col + 1;
                 }
             }
@@ -1137,17 +1004,17 @@ void refresh(void)
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
             if (mode & (S_COLORED | S_BCOLORED))
-                writestr(T_op);
+                writestr(&write1, terminfo.T_op);
             if (mode & S_GRAPHICS) {
-                writestr(T_ae);
+                writestr(&write1, terminfo.T_ae);
                 wc_putc_clear_status();
             }
-            writestr(T_me);
+            writestr(&write1, terminfo.T_me);
             mode &= ~M_MEND;
         }
     }
     wc_putc_end(writer);
-    MOVE(CurLine, CurColumn);
+    MOVE(&write1, &terminfo, CurLine, CurColumn);
     flush_tty();
 }
 
@@ -1155,7 +1022,7 @@ void clear(void)
 {
     int i, j;
     enum CellProperty* p;
-    writestr(T_cl);
+    writestr(&write1, terminfo.T_cl);
     move(0, 0);
     for (i = 0; i < LINES; i++) {
         ScreenImage[i]->isdirty = 0;

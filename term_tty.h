@@ -24,6 +24,6 @@ void bell(void);
 void flush_tty(void);
 bool get_pixel_per_cell(int* ppc, int* ppl);
 void writer(const uint8_t* str, size_t len);
-int write1(char c);
+int write1(int c);
 char getch(void);
 int sleep_till_anykey(int sec, int purge);
