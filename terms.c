@@ -18,6 +18,8 @@
 #include "wc_util.h"
 #include <libwc/putc.h>
 
+#include <termios.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -31,298 +33,91 @@
 #include <sys/select.h>
 #include <sys/ioctl.h>
 
-#define DEV_TTY_PATH "/dev/tty"
-#define DEFAULT_TERM 0 /* XXX */
-
 static char* title_str = NULL;
 
 static int tty;
-
-#if defined(__CYGWIN__)
-#include <windows.h>
-#include <sys/cygwin.h>
-static int isWinConsole = 0;
-#define TERM_CYGWIN 1
-#define TERM_CYGWIN_RESERVE_IME 2
-static int isLocalConsole = 0;
-
-#if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
-int cygwin_mouse_btn_swapped = 0;
-#endif
-
-#if defined(SUPPORT_WIN9X_CONSOLE_MBCS)
-static HANDLE hConIn = INVALID_HANDLE_VALUE;
-static int isWin95 = 0;
-static char* ConInV;
-static int iConIn, nConIn, nConInMax;
-
-static void
-check_win9x(void)
-{
-    OSVERSIONINFO winVersionInfo;
-
-    winVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    if (GetVersionEx(&winVersionInfo) == 0) {
-        fprintf(stderr, "can't get Windows version information.\n");
-        exit(1);
-    }
-    if (winVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-        isWin95 = 1;
-    } else {
-        isWin95 = 0;
-    }
-}
-
-void enable_win9x_console_input(void)
-{
-    if (isWin95 && isWinConsole && isLocalConsole && hConIn == INVALID_HANDLE_VALUE) {
-        hConIn = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
-            NULL, OPEN_EXISTING, 0, NULL);
-        if (hConIn != INVALID_HANDLE_VALUE) {
-            getch();
-        }
-    }
-}
-
-void disable_win9x_console_input(void)
-{
-    if (hConIn != INVALID_HANDLE_VALUE) {
-        CloseHandle(hConIn);
-        hConIn = INVALID_HANDLE_VALUE;
-    }
-}
-
-static void
-expand_win32_console_input_buffer(int n)
-{
-    if (nConIn + n >= nConInMax) {
-        char* oldv;
-
-        nConInMax = ((nConIn + n) / 2 + 1) * 3;
-        oldv = ConInV;
-        ConInV = GC_MALLOC_ATOMIC(nConInMax);
-        memcpy(ConInV, oldv, nConIn);
-    }
-}
-
-static int
-read_win32_console_input(void)
-{
-    INPUT_RECORD rec;
-    DWORD nevents;
-
-    if (PeekConsoleInput(hConIn, &rec, 1, &nevents) && nevents) {
-        switch (rec.EventType) {
-        case KEY_EVENT:
-            expand_win32_console_input_buffer(3);
-
-            if (ReadConsole(hConIn, &ConInV[nConIn], 1, &nevents, NULL)) {
-                nConIn += nevents;
-                return nevents;
-            }
-
-            break;
-        default:
-            break;
-        }
-
-        ReadConsoleInput(hConIn, &rec, 1, &nevents);
-    }
-    return 0;
-}
-
-static int
-read_win32_console(char* s, int n)
-{
-    KEY_EVENT_RECORD* ker;
-
-    if (hConIn == INVALID_HANDLE_VALUE)
-        return read(tty, s, n);
-
-    if (n > 0)
-        for (;;) {
-            if (iConIn < nConIn) {
-                if (n > nConIn - iConIn)
-                    n = nConIn - iConIn;
-
-                memcpy(s, ConInV, n);
-
-                if ((iConIn += n) >= nConIn)
-                    iConIn = nConIn = 0;
-
-                break;
-            }
-
-            iConIn = nConIn = 0;
-
-            while (!read_win32_console_input())
-                ;
-        }
-
-    return n;
-}
-
-#endif /* SUPPORT_WIN9X_CONSOLE_MBCS */
-
-static HWND
-GetConsoleHwnd(void)
-{
-#define MY_BUFSIZE 1024
-    HWND hwndFound;
-    char pszNewWindowTitle[MY_BUFSIZE];
-    char pszOldWindowTitle[MY_BUFSIZE];
-
-    GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
-    wsprintf(pszNewWindowTitle, "%d/%d",
-        GetTickCount(), GetCurrentProcessId());
-    SetConsoleTitle(pszNewWindowTitle);
-    Sleep(40);
-    hwndFound = FindWindow(NULL, pszNewWindowTitle);
-    SetConsoleTitle(pszOldWindowTitle);
-    return (hwndFound);
-}
-
-#if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
-static unsigned long
-cygwin_version(void)
-{
-    struct per_process* p;
-
-    p = (struct per_process*)cygwin_internal(CW_USER_DATA);
-    if (p != NULL) {
-        return (p->dll_major * 1000) + p->dll_minor;
-    }
-    return 0;
-}
-#endif
-
-static void
-check_cygwin_console(void)
-{
-    char* term = getenv("TERM");
-    char* ctype;
-    HANDLE hWnd;
-
-    if (term == NULL)
-        term = DEFAULT_TERM;
-    if (term && strncmp(term, "cygwin", 6) == 0) {
-        isWinConsole = TERM_CYGWIN;
-    }
-    if (isWinConsole) {
-        hWnd = GetConsoleHwnd();
-        if (hWnd != INVALID_HANDLE_VALUE) {
-            if (IsWindowVisible(hWnd)) {
-                isLocalConsole = 1;
-            }
-        }
-        if (((ctype = getenv("LC_ALL")) || (ctype = getenv("LC_CTYPE")) || (ctype = getenv("LANG"))) && strncmp(ctype, "ja", 2) == 0) {
-            isWinConsole = TERM_CYGWIN_RESERVE_IME;
-        }
-    }
-#if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
-    if (cygwin_version() <= 1003015) {
-        /* cygwin DLL 1.3.15 or earler */
-        cygwin_mouse_btn_swapped = 1;
-    }
-#endif
-}
-#endif /* __CYGWIN__ */
 
 char* getenv(const char*);
 MySignalHandler reset_exit(SIGNAL_ARG), reset_error_exit(SIGNAL_ARG), error_dump(SIGNAL_ARG);
 void setlinescols(void);
 void flush_tty(void);
 
-#ifndef SIGIOT
-#define SIGIOT SIGABRT
-#endif /* not SIGIOT */
+enum CellProperty : uint16_t {
+    // struct ScreenLine properties
+    S_SCREENPROP = 0x0f,
+    S_NORMAL = 0x00,
+    S_STANDOUT = 0x01,
+    S_UNDERLINE = 0x02,
+    S_BOLD = 0x04,
+    S_EOL = 0x08,
 
-#include <termios.h>
-#include <unistd.h>
-typedef struct termios TerminalMode;
-#define TerminalSet(fd, x) tcsetattr(fd, TCSANOW, x)
-#define TerminalGet(fd, x) tcgetattr(fd, x)
-#define MODEFLAG(d) ((d).c_lflag)
-#define IMODEFLAG(d) ((d).c_iflag)
+    // Sort of Character
+    C_WHICHCHAR = 0xc0,
+    C_ASCII = 0x00,
+    C_WCHAR1 = 0x40,
+    C_WCHAR2 = 0x80,
+    C_CTRL = 0xc0,
 
-#define MAX_LINE 200
-#define MAX_COLUMN 400
+    // Charactor Color
+    COL_FCOLOR = 0xf00,
+    COL_FBLACK = 0x800,
+    COL_FRED = 0x900,
+    COL_FGREEN = 0xa00,
+    COL_FYELLOW = 0xb00,
+    COL_FBLUE = 0xc00,
+    COL_FMAGENTA = 0xd00,
+    COL_FCYAN = 0xe00,
+    COL_FWHITE = 0xf00,
+    COL_FTERM = 0x000,
 
-/* Screen properties */
-#define S_SCREENPROP 0x0f
-#define S_NORMAL 0x00
-#define S_STANDOUT 0x01
-#define S_UNDERLINE 0x02
-#define S_BOLD 0x04
-#define S_EOL 0x08
+    S_COLORED = 0xf00,
 
-/* Sort of Character */
-#define C_WHICHCHAR 0xc0
-#define C_ASCII 0x00
-#define C_WCHAR1 0x40
-#define C_WCHAR2 0x80
-#define C_CTRL 0xc0
+    // Background Color
+    COL_BCOLOR = 0xf000,
+    COL_BBLACK = 0x8000,
+    COL_BRED = 0x9000,
+    COL_BGREEN = 0xa000,
+    COL_BYELLOW = 0xb000,
+    COL_BBLUE = 0xc000,
+    COL_BMAGENTA = 0xd000,
+    COL_BCYAN = 0xe000,
+    COL_BWHITE = 0xf000,
+    COL_BTERM = 0x0000,
 
-#define CHMODE(c) ((c) & C_WHICHCHAR)
+    S_BCOLORED = 0xf000,
+
+    S_GRAPHICS = 0x10,
+
+    S_DIRTY = 0x20,
+};
+#define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
+#define M_CEOL (~(M_SPACE | C_WHICHCHAR))
+#define SPACE " "
+#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
+
+static enum CellProperty CHMODE(enum CellProperty c) { return ((c)&C_WHICHCHAR); }
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
 #define SETCH(var, ch, len) ((var) = New_Reuse(char, (var), (len) + 1), \
     strncpy((var), (ch), (len + 1)))
-
-/* Charactor Color */
-#define COL_FCOLOR 0xf00
-#define COL_FBLACK 0x800
-#define COL_FRED 0x900
-#define COL_FGREEN 0xa00
-#define COL_FYELLOW 0xb00
-#define COL_FBLUE 0xc00
-#define COL_FMAGENTA 0xd00
-#define COL_FCYAN 0xe00
-#define COL_FWHITE 0xf00
-#define COL_FTERM 0x000
-
-#define S_COLORED 0xf00
-
-/* Background Color */
-#define COL_BCOLOR 0xf000
-#define COL_BBLACK 0x8000
-#define COL_BRED 0x9000
-#define COL_BGREEN 0xa000
-#define COL_BYELLOW 0xb000
-#define COL_BBLUE 0xc000
-#define COL_BMAGENTA 0xd000
-#define COL_BCYAN 0xe000
-#define COL_BWHITE 0xf000
-#define COL_BTERM 0x0000
-
-#define S_BCOLORED 0xf000
-
-#define S_GRAPHICS 0x10
-
-#define S_DIRTY 0x20
-
 #define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
 
-/* Line status */
-#define L_DIRTY 0x01
-#define L_UNUSED 0x02
-#define L_NEED_CE 0x04
-#define L_CLRTOEOL 0x08
+enum LineFlags : uint16_t {
+    L_DIRTY = 0x01,
+    L_UNUSED = 0x02,
+    L_NEED_CE = 0x04,
+    L_CLRTOEOL = 0x08,
+};
 
-#define ISDIRTY(d) ((d) & L_DIRTY)
-#define ISUNUSED(d) ((d) & L_UNUSED)
-#define NEED_CE(d) ((d) & L_NEED_CE)
+typedef uint8_t* CellCharBytes;
 
-typedef unsigned short l_prop;
-
-typedef struct scline {
-    char** lineimage;
-    l_prop* lineprop;
-    short isdirty;
+struct ScreenLine {
+    CellCharBytes* cols;
+    enum CellProperty* props;
+    enum LineFlags isdirty;
     short eol;
-} Screen;
+};
 
-static TerminalMode d_ioval;
+static struct termios d_ioval;
 static int tty = -1;
 static FILE* ttyf = NULL;
 
@@ -335,8 +130,8 @@ char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
 static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
 static int CurLine, CurColumn;
-static Screen *ScreenElem = NULL, **ScreenImage = NULL;
-static l_prop CurrentMode = 0;
+static struct ScreenLine *ScreenElem = NULL, **ScreenImage = NULL;
+static enum CellProperty CurrentMode = 0;
 static int graph_enabled = 0;
 
 static char gcmap[96];
@@ -450,7 +245,7 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
     if (!url)
         return;
 
-    const char*type = guessContentType(url);
+    const char* type = guessContentType(url);
     t = 100; /* always convert to png for now. */
 
     if (!(type && !strcasecmp(type, "image/png"))) {
@@ -814,7 +609,7 @@ int set_tty(void)
         tty = 2;
     }
     ttyf = fdopen(tty, "w");
-    TerminalGet(tty, &d_ioval);
+    tcgetattr(tty, &d_ioval);
     if (displayTitleTerm != NULL) {
         struct w3m_term_info* p;
         for (p = w3m_term_info_list; p->term != NULL; p++) {
@@ -829,13 +624,13 @@ int set_tty(void)
 
 void ttymode_set(int mode, int imode)
 {
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
-    MODEFLAG(ioval) |= mode;
-    IMODEFLAG(ioval) |= imode;
+    tcgetattr(tty, &ioval);
+    ioval.c_lflag |= mode;
+    ioval.c_iflag |= imode;
 
-    while (TerminalSet(tty, &ioval) == -1) {
+    while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred while set %x: errno=%d\n", mode, errno);
@@ -845,13 +640,13 @@ void ttymode_set(int mode, int imode)
 
 void ttymode_reset(int mode, int imode)
 {
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
-    MODEFLAG(ioval) &= ~mode;
-    IMODEFLAG(ioval) &= ~imode;
+    tcgetattr(tty, &ioval);
+    ioval.c_lflag &= ~mode;
+    ioval.c_iflag &= ~imode;
 
-    while (TerminalSet(tty, &ioval) == -1) {
+    while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred while reset %x: errno=%d\n", mode, errno);
@@ -861,11 +656,11 @@ void ttymode_reset(int mode, int imode)
 
 void set_cc(int spec, int val)
 {
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
+    tcgetattr(tty, &ioval);
     ioval.c_cc[spec] = val;
-    while (TerminalSet(tty, &ioval) == -1) {
+    while (tcsetattr(tty, TCSANOW, &ioval) == -1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
         printf("Error occurred: errno=%d\n", errno);
@@ -896,7 +691,7 @@ void reset_tty(void)
     }
     writestr(T_se); /* reset terminal */
     flush_tty();
-    TerminalSet(tty, &d_ioval);
+    tcsetattr(tty, TCSANOW, &d_ioval);
     if (tty != 2)
         close_tty();
 }
@@ -1081,20 +876,20 @@ void setupscreen(void)
     if (LINES + 1 > max_LINES) {
         max_LINES = LINES + 1;
         max_COLS = 0;
-        ScreenElem = New_N(Screen, max_LINES);
-        ScreenImage = New_N(Screen*, max_LINES);
+        ScreenElem = New_N(struct ScreenLine, max_LINES);
+        ScreenImage = New_N(struct ScreenLine*, max_LINES);
     }
     if (COLS + 1 > max_COLS) {
         max_COLS = COLS + 1;
         for (i = 0; i < max_LINES; i++) {
-            ScreenElem[i].lineimage = New_N(char*, max_COLS);
-            memset((void*)ScreenElem[i].lineimage, 0, max_COLS * sizeof(char*));
-            ScreenElem[i].lineprop = New_N(l_prop, max_COLS);
+            ScreenElem[i].cols = New_N(char*, max_COLS);
+            memset((void*)ScreenElem[i].cols, 0, max_COLS * sizeof(char*));
+            ScreenElem[i].props = New_N(enum CellProperty, max_COLS);
         }
     }
     for (i = 0; i < LINES; i++) {
         ScreenImage[i] = &ScreenElem[i];
-        ScreenImage[i]->lineprop[0] = S_EOL;
+        ScreenImage[i]->props[0] = S_EOL;
         ScreenImage[i]->isdirty = 0;
     }
     for (; i < max_LINES; i++) {
@@ -1105,7 +900,7 @@ void setupscreen(void)
 }
 
 /*
- * Screen initialize
+ * struct ScreenLine initialize
  */
 int initscr(void)
 {
@@ -1142,10 +937,8 @@ void move(int line, int column)
         CurColumn = column;
 }
 
-#define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
-
 static int
-need_redraw(const char* c1, l_prop pr1, const char* c2, l_prop pr2)
+need_redraw(const char* c1, enum CellProperty pr1, const char* c2, enum CellProperty pr2)
 {
     if (!c1 || !c2 || strcmp(c1, c2))
         return 1;
@@ -1158,10 +951,6 @@ need_redraw(const char* c1, l_prop pr1, const char* c2, l_prop pr2)
     return 0;
 }
 
-#define M_CEOL (~(M_SPACE | C_WHICHCHAR))
-
-#define SPACE " "
-
 void addch(char c)
 {
     addmch(&c, 1);
@@ -1169,7 +958,7 @@ void addch(char c)
 
 void addmch(const char* pc, size_t len)
 {
-    l_prop* pr;
+    enum CellProperty* pr;
     int dest, i;
     static Str tmp = NULL;
     char** p;
@@ -1185,8 +974,8 @@ void addmch(const char* pc, size_t len)
         wrap();
     if (CurColumn >= COLS)
         return;
-    p = ScreenImage[CurLine]->lineimage;
-    pr = ScreenImage[CurLine]->lineprop;
+    p = ScreenImage[CurLine]->cols;
+    pr = ScreenImage[CurLine]->props;
 
     if (pr[CurColumn] & S_EOL) {
         if (c == ' ' && !(CurrentMode & M_SPACE)) {
@@ -1236,13 +1025,13 @@ void addmch(const char* pc, size_t len)
         wrap();
         if (CurColumn + width > COLS)
             return;
-        p = ScreenImage[CurLine]->lineimage;
-        pr = ScreenImage[CurLine]->lineprop;
+        p = ScreenImage[CurLine]->cols;
+        pr = ScreenImage[CurLine]->props;
     }
     if (CHMODE(pr[CurColumn]) == C_WCHAR2) {
         touch_line();
         for (i = CurColumn - 1; i >= 0; i--) {
-            l_prop l = CHMODE(pr[i]);
+            enum CellProperty l = CHMODE(pr[i]);
             SETCH(p[i], SPACE, 1);
             SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
             touch_column(i);
@@ -1275,8 +1064,8 @@ void addmch(const char* pc, size_t len)
             wrap();
             touch_line();
             dest = tab_step;
-            p = ScreenImage[CurLine]->lineimage;
-            pr = ScreenImage[CurLine]->lineprop;
+            p = ScreenImage[CurLine]->cols;
+            pr = ScreenImage[CurLine]->props;
         }
         for (i = CurColumn; i < dest; i++) {
             if (need_redraw(p[i], pr[i], SPACE, CurrentMode)) {
@@ -1309,7 +1098,7 @@ void wrap(void)
 void touch_column(int col)
 {
     if (col >= 0 && col < COLS)
-        ScreenImage[CurLine]->lineprop[col] |= S_DIRTY;
+        ScreenImage[CurLine]->props[col] |= S_DIRTY;
 }
 
 void touch_line(void)
@@ -1317,7 +1106,7 @@ void touch_line(void)
     if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
         int i;
         for (i = 0; i < COLS; i++)
-            ScreenImage[CurLine]->lineprop[i] &= ~S_DIRTY;
+            ScreenImage[CurLine]->props[i] &= ~S_DIRTY;
         ScreenImage[CurLine]->isdirty |= L_DIRTY;
     }
 }
@@ -1335,7 +1124,7 @@ void standend(void)
 void toggle_stand(void)
 {
     int i;
-    l_prop* pr = ScreenImage[CurLine]->lineprop;
+    enum CellProperty* pr = ScreenImage[CurLine]->props;
     pr[CurColumn] ^= S_STANDOUT;
     if (CHMODE(pr[CurColumn]) != C_WCHAR2) {
         for (i = CurColumn + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
@@ -1410,19 +1199,20 @@ bcolor_seq(int colmode)
     return seqbuf;
 }
 
-#define RF_NEED_TO_MOVE 0
-#define RF_CR_OK 1
-#define RF_NONEED_TO_MOVE 2
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
+enum MoveStatus {
+    RF_NEED_TO_MOVE = 0,
+    RF_CR_OK = 1,
+    RF_NONEED_TO_MOVE = 2,
+};
 void refresh(void)
 {
     int line, col, pcol;
     int pline = CurLine;
-    int moved = RF_NEED_TO_MOVE;
+    enum MoveStatus moved = RF_NEED_TO_MOVE;
     char** pc;
-    l_prop *pr, mode = 0;
-    l_prop color = COL_FTERM;
-    l_prop bcolor = COL_BTERM;
+    enum CellProperty *pr, mode = 0;
+    enum CellProperty color = COL_FTERM;
+    enum CellProperty bcolor = COL_BTERM;
     short* dirty;
 
     wc_putc_init(WcOption, InnerCharset, DisplayCharset);
@@ -1430,8 +1220,8 @@ void refresh(void)
         dirty = &ScreenImage[line]->isdirty;
         if (*dirty & L_DIRTY) {
             *dirty &= ~L_DIRTY;
-            pc = ScreenImage[line]->lineimage;
-            pr = ScreenImage[line]->lineprop;
+            pc = ScreenImage[line]->cols;
+            pr = ScreenImage[line]->props;
             for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
                 if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
                     if (need_redraw(pc[col], pr[col], SPACE, 0))
@@ -1572,12 +1362,12 @@ void refresh(void)
 void clear(void)
 {
     int i, j;
-    l_prop* p;
+    enum CellProperty* p;
     writestr(T_cl);
     move(0, 0);
     for (i = 0; i < LINES; i++) {
         ScreenImage[i]->isdirty = 0;
-        p = ScreenImage[i]->lineprop;
+        p = ScreenImage[i]->props;
         for (j = 0; j < COLS; j++) {
             p[j] = S_EOL;
         }
@@ -1589,7 +1379,7 @@ void clear(void)
 void clrtoeol(void)
 { /* Clear to the end of line */
     int i;
-    l_prop* lprop = ScreenImage[CurLine]->lineprop;
+    enum CellProperty* lprop = ScreenImage[CurLine]->props;
 
     if (lprop[CurColumn] & S_EOL)
         return;
@@ -1608,7 +1398,7 @@ static void
 clrtoeol_with_bcolor(void)
 {
     int i, cli, cco;
-    l_prop pr;
+    enum CellProperty pr;
 
     if (!(CurrentMode & S_BCOLORED)) {
         clrtoeol();
@@ -1723,12 +1513,9 @@ void term_noecho(void)
     ttymode_reset(ECHO, 0);
 }
 
-void term_raw(void)
-#ifdef IEXTEN
 #define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
-#else /* not IEXTEN */
-#define TTY_MODE ISIG | ICANON | ECHO
-#endif /* not IEXTEN */
+
+void term_raw(void)
 {
     ttymode_reset(TTY_MODE, IXON | IXOFF | INLCR | IGNCR | ICRNL);
     set_cc(VMIN, 1);
@@ -1794,9 +1581,9 @@ int sleep_till_anykey(int sec, int purge)
     fd_set rfd;
     struct timeval tim;
     int er, c, ret;
-    TerminalMode ioval;
+    struct termios ioval;
 
-    TerminalGet(tty, &ioval);
+    tcgetattr(tty, &ioval);
     term_raw();
 
     tim.tv_sec = sec;
@@ -1811,7 +1598,7 @@ int sleep_till_anykey(int sec, int purge)
         if (c == ESC_CODE)
             skip_escseq();
     }
-    er = TerminalSet(tty, &ioval);
+    er = tcsetattr(tty, TCSANOW, &ioval);
     if (er == -1) {
         printf("Error occurred: errno=%d\n", errno);
         reset_error_exit(SIGNAL_ARGLIST);
@@ -1831,11 +1618,11 @@ void touch_cursor(void)
     touch_line();
     for (i = CurColumn; i >= 0; i--) {
         touch_column(i);
-        if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
+        if (CHMODE(ScreenImage[CurLine]->props[i]) != C_WCHAR2)
             break;
     }
     for (i = CurColumn + 1; i < COLS; i++) {
-        if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
+        if (CHMODE(ScreenImage[CurLine]->props[i]) != C_WCHAR2)
             break;
         touch_column(i);
     }

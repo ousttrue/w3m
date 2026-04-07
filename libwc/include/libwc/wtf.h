@@ -15,7 +15,7 @@ void wtf_init(wc_ces ces1, wc_ces ces2);
 int wtf_width(struct wc_option opts, wc_uchar p);
 int wtf_strwidth(struct wc_option opts, const wc_uchar* p);
 size_t wtf_len1(wc_uchar* p);
-size_t wtf_len(wc_uchar* p);
+size_t wtf_len(const wc_uchar* p);
 int wtf_type(wc_uchar* p);
 // #define wtf_type(p) WTF_TYPE_MAP[(wc_uchar) * (p)]
 
