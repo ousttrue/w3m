@@ -1,4 +1,5 @@
 #include "display.h"
+#include "term_tty.h"
 #include "ctrlcode.h"
 #include "myctype.h"
 #include "terms.h"
@@ -401,7 +402,6 @@ void displayBuffer(struct Buffer* buf, int mode)
     standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     standend();
-    term_title(conv_to_system(buf->buffername));
     refresh();
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();

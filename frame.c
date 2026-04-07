@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "term_tty.h"
 #include "html_token.h"
 #include "html_feed_environ.h"
 #include "form.h"

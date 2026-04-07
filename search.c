@@ -1,4 +1,5 @@
 #include "search.h"
+#include "term_tty.h"
 #include "display.h"
 #include "terms.h"
 #include "setjmp_util.h"

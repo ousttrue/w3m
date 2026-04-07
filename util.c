@@ -1,8 +1,6 @@
 #include "util.h"
-
 #include "display.h"
-#include "terms.h"
-
+#include "term_tty.h"
 #include <stdio.h>
 #include <stdlib.h>
 

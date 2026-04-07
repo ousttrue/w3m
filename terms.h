@@ -7,20 +7,13 @@ void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int 
 void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
 void put_image_iterm2(const char* url, int x, int y, int w, int h);
 void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);
-int get_pixel_per_cell(int* ppc, int* ppl);
 
-char getch(void);
 void mouse_active();
 void mouse_inactive();
 void mouse_end();
-int set_tty(void);
-void set_cc(int spec, int val);
-void close_tty(void);
-char* ttyname_tty(void);
 void reset_tty(void);
 void set_int(void);
 void getTCstr(void);
-void setlinescols(void);
 void setupscreen(void);
 int initscr(void);
 void move(int line, int column);
@@ -49,16 +42,5 @@ void no_clrtoeol(void);
 void addstr(const char* s);
 void addnstr(const char* s, int n);
 void addnstr_sup(char* s, int n);
-void crmode(void);
-void nocrmode(void);
-void term_echo(void);
-void term_noecho(void);
-void term_raw(void);
-void term_cooked(void);
-void term_cbreak(void);
-void term_title(char* s);
-void flush_tty(void);
-void toggle_stand(void);
-void bell(void);
-int sleep_till_anykey(int sec, int purge);
+
 void touch_cursor(void);

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "term_tty.h"
 #include <w3m.h>
 #include "terms.h"
 #include "alloc.h"
@@ -1000,7 +1001,7 @@ void guess_menu_xy(Menu* parent, int width, int* x, int* y)
     *y = parent->y + parent->select - parent->offset;
 }
 
-void new_option_menu(Menu* menu, char** label, int* variable, const char* cmd)
+void new_option_menu(Menu* menu, const char** label, int* variable, const char* cmd)
 {
     int i, nitem;
     char** p;
@@ -1747,10 +1748,9 @@ smDelTab(char c)
 
 void optionMenu(int x, int y, const char** label, int* variable, int initial, const char* cmd)
 {
-    Menu menu;
-
     set_menu_frame();
 
+    Menu menu;
     new_option_menu(&menu, label, variable, cmd);
     menu.cursorX = COLS - 1;
     menu.cursorY = (LINES - 1);

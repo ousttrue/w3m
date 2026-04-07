@@ -1,4 +1,5 @@
 #include "proxy.h"
+#include "term_tty.h"
 #include "terms.h"
 #include "indep.h"
 #include "setjmp_util.h"

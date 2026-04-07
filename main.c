@@ -1,4 +1,5 @@
 #include "main.h"
+#include "term_tty.h"
 #include <strings.h>
 #include <w3m.h>
 #include "siteconf.h"
@@ -1412,7 +1413,6 @@ void _quitfm(int confirm)
         return;
     }
 
-    term_title(""); /* XXX */
     if (activeImage)
         termImage();
     fmTerm();

@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "term_tty.h"
 #include <w3m.h>
 #include "constants.h"
 #include "myctype.h"

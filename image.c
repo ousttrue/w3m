@@ -1,4 +1,5 @@
 #include "image.h"
+#include "term_tty.h"
 #include "constants.h"
 #include "textlist.h"
 #include "hash.h"
@@ -49,8 +50,6 @@ void initImage()
     if (getCharSize())
         activeImage = TRUE;
 }
-
-int get_pixel_per_cell(int* ppc, int* ppl);
 
 static int
 getCharSize(void)

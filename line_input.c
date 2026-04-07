@@ -1,4 +1,5 @@
 #include "line_input.h"
+#include "term_tty.h"
 #include "global.h"
 #include "ctrlcode.h"
 #include "form.h"

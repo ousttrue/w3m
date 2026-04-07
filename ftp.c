@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "term_tty.h"
 #include "terms.h"
 #include "istream.h"
 #include "signal_util.h"
@@ -327,8 +328,8 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
 {
     Str tmp;
     int status;
-    char* user = NULL;
-    char* pass = NULL;
+    const char* user = NULL;
+    const char* pass = NULL;
     Str uname = NULL;
     Str pwd = NULL;
     int add_auth_cookie_flag = FALSE;

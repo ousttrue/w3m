@@ -1,4 +1,5 @@
 #include "display.h"
+#include "term_tty.h"
 #include "siteconf.h"
 #include "html_token.h"
 #include "ctrlcode.h"
@@ -7506,7 +7507,7 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
     struct mailcap* mcap;
     int mc_stat;
     struct Buffer* buf = NULL;
-    char *header, *src = NULL, *ext = uf.ext;
+    const char *header, *src = NULL, *ext = uf.ext;
 
     if (!(mcap = searchExtViewer(type)))
         return NULL;

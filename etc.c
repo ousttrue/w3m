@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "term_tty.h"
 #include "constants.h"
 #include "ctrlcode.h"
 #include "istream.h"

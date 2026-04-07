@@ -1,4 +1,5 @@
 #include "terms.h"
+#include "term_tty.h"
 #include "html.h"
 #include "istream.h"
 #include "signal_util.h"
