@@ -136,8 +136,8 @@ pub fn build(b: *std.Build) void {
         exe.root_module.linkSystemLibrary(lib, .{});
     }
 
-    const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
-    b.getInstallStep().dependOn(&cdb.step);
+    // const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
+    // b.getInstallStep().dependOn(&cdb.step);
 }
 
 fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {

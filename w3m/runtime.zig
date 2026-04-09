@@ -2,6 +2,7 @@ const std = @import("std");
 const g = @import("global.zig");
 pub var io: std.Io = undefined;
 pub var allocator: std.mem.Allocator = undefined;
+pub var args: std.process.Args = undefined;
 pub var environ_map: *std.process.Environ.Map = undefined;
 
 const CONF_DIR = "/usr/etc/w3m";
@@ -9,6 +10,7 @@ const CONF_DIR = "/usr/etc/w3m";
 pub fn init(process_init: std.process.Init) void {
     io = process_init.io;
     allocator = process_init.gpa;
+    args = process_init.minimal.args;
     environ_map = process_init.environ_map;
 }
 

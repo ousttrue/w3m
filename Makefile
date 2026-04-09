@@ -1,3 +1,3 @@
 all:
 	#zig build --verbose-cc
-	zig build
+	zig build -freference-trace=7

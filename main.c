@@ -238,7 +238,7 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
                 i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
 
                 printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-                sleep_till_anykey(1, 1);
+                getch_timeout(1);
             }
 
             lock = 0;
@@ -301,8 +301,8 @@ bool w3m_args(int argc, const char** argv)
     struct Buffer* newbuf = NULL;
     int c, i;
     InputStream redin;
-    char* line_str = NULL;
-    char** load_argv;
+    const char* line_str = NULL;
+    const char** load_argv;
     struct Form* request;
     int load_argc = 0;
     int load_bookmark = FALSE;
@@ -3097,16 +3097,28 @@ void processResizeAndImage()
 {
     mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-        do {
+        while (true) {
             if (need_resize_screen)
                 resize_screen();
             loadImage(Currentbuf, IMG_FLAG_NEXT);
-        } while (sleep_till_anykey(1, 0) <= 0);
+
+            int ch = getch_timeout(1);
+            if (ch > 0) {
+                unget(ch);
+                break;
+            }
+        }
     } else {
-        do {
+        while (true) {
             if (need_resize_screen)
                 resize_screen();
-        } while (sleep_till_anykey(1, 0) <= 0);
+
+            int ch = getch_timeout(1);
+            if (ch > 0) {
+                unget(ch);
+                break;
+            }
+        }
     }
 }
 

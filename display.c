@@ -996,7 +996,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
             (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
         addstr(buf);
     } else
-        addmch(p, len);
+        addmch((const uint8_t*)p, len);
 }
 
 static GeneralList* message_list = NULL;
@@ -1065,7 +1065,10 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
     else
         message(s, (LINES - 1), 0);
     refresh();
-    sleep_till_anykey(sec, purge);
+    int ch = getch_timeout(sec);
+    if (!purge && ch > 0) {
+        unget(ch);
+    }
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
         displayBuffer(Currentbuf, B_NORMAL);
 }

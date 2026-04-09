@@ -18,8 +18,10 @@ var tty_writer: std.Io.File.Writer = undefined;
 var write_buf: [256]u8 = undefined;
 var tty_reader: std.Io.File.Reader = undefined;
 var read_buf: [16]u8 = undefined;
+var peek_queue: std.Deque(u8) = .initBuffer(&.{});
 
-var evented: std.Io.Evented = undefined;
+// var evented: std.Io.Evented = undefined;
+var evented: std.Io.Threaded = undefined;
 
 // var key_input_queue: std.Io.Queue(u8) = .init(&.{});
 // fn producer(
@@ -53,11 +55,13 @@ pub fn init(process_init: std.process.Init) void {
 
     tty_writer = std.Io.File.stdout().writer(process_init.io, &write_buf);
 
-    evented.init(runtime.allocator, .{
-        // .argv0 = .init(init.args),
-        // .environ = runtime.environ_map,
-        .backing_allocator_needs_mutex = false,
-    }) catch @panic("evented.init");
+    // not work
+    // evented.init(runtime.allocator, .{
+    //     .argv0 = .empty,
+    //     // .environ = runtime.environ_map,
+    //     .backing_allocator_needs_mutex = false,
+    // }) catch @panic("evented.init");
+    evented = .init(runtime.allocator, .{});
 
     tty_reader = std.Io.File.stdin().reader(evented.io(), &read_buf);
 }
@@ -65,8 +69,6 @@ pub fn init(process_init: std.process.Init) void {
 pub fn deinit() void {
     evented.deinit();
     flush_tty();
-    // keybind.deinit();
-    // tty.deinit();
     runtime.deinit();
 }
 
@@ -240,6 +242,15 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) c_int {
 
 export fn flush_tty() void {
     tty_writer.flush() catch {};
+}
+
+export fn clear_tty() void {
+    flush_tty();
+    tty.restore();
+}
+
+export fn bell() void {
+    putc(7) catch @panic("putc");
 }
 
 export fn writer(str: [*]const u8, len: usize) void {
@@ -603,46 +614,52 @@ pub export fn getch() u8 {
     var buf: [1]u8 = undefined;
     tty_reader.interface.readSliceAll(&buf) catch @panic("readSliceAll");
     return buf[0];
-    // return consumer(evented.io(), &key_input_queue) catch @panic("getch");
 }
 
-export fn sleep_till_anykey(sec: c_int, purge: c_int) c_int {
-    _ = sec;
-    _ = purge;
-    // fd_set rfd;
-    // struct timeval tim;
-    // int er, c, ret;
-    // struct termios ioval;
-    //
-    // tcgetattr(tty, &ioval);
-    // term_raw();
-    //
-    // tim.tv_sec = sec;
-    // tim.tv_usec = 0;
-    //
-    // FD_ZERO(&rfd);
-    // FD_SET(tty, &rfd);
-    //
-    // ret = select(tty + 1, &rfd, 0, 0, &tim);
-    // if (ret > 0 && purge) {
-    //     c = getch();
-    //     if (c == ESC_CODE)
-    //         skip_escseq();
-    // }
-    // er = tcsetattr(tty, TCSANOW, &ioval);
-    // if (er == -1) {
-    //     printf("Error occurred: errno=%d\n", errno);
-    //     reset_error_exit(SIGNAL_ARGLIST);
-    // }
-    // return ret;
-    return 1;
+fn getch_async(io: std.Io) u8 {
+    _ = io;
+
+    if (peek_queue.popFront()) |ch| {
+        return ch;
+    }
+
+    var buf: [1]u8 = undefined;
+    tty_reader.interface.readSliceAll(&buf) catch @panic("readSliceAll");
+    return buf[0];
 }
 
-export fn clear_tty() void {
-    flush_tty();
-    tty.restore();
+fn sleep_async(io: std.Io, duration: std.Io.Duration) void {
+    io.sleep(duration, .awake) catch {};
 }
 
-export fn bell() void {
-    putc(7) catch @panic("putc");
+/// return -1 if timeout
+export fn getch_timeout(sec: c_int) c_int {
+    if (peek_queue.popFront()) |ch| {
+        return ch;
+    }
+
+    const io = evented.io();
+
+    const InputOrTimeout = std.Io.Select(union(enum) {
+        input: u8,
+        timeout: void,
+    });
+    var buf: [1]InputOrTimeout.Union = undefined;
+    var select: InputOrTimeout = .init(io, &buf);
+
+    select.async(.input, getch_async, .{io});
+    select.async(.timeout, sleep_async, .{ io, std.Io.Duration.fromSeconds(@intCast(sec)) });
+
+    const winner = select.await() catch @panic("select.await");
+    defer select.cancelDiscard(); // cancel remaining, discard results
+    return switch (winner) {
+        .input => |ch| ch,
+        .timeout => -1,
+    };
+}
+
+export fn unget(ch: c_int) void {
+    if (ch > 0) {
+        peek_queue.pushBack(runtime.allocator, @intCast(ch)) catch @panic("peek_queue.pushBack");
+    }
 }
