@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "content_type.h"
 #include "term_tty.h"
 #include <w3m.h>
 #include "constants.h"
@@ -1904,7 +1905,7 @@ void setAlarm(struct CmdArgs args)
 
 void reinit(struct CmdArgs args)
 {
-    char* resource = searchKeyData();
+    const char* resource = searchKeyData();
 
     if (resource == NULL) {
         init_rc();

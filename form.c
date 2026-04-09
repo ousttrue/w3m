@@ -1,4 +1,5 @@
 #include "form.h"
+#include "content_type.h"
 #include "func.h"
 #include "istream.h"
 #include "global.h"

@@ -23,11 +23,6 @@
 #define MCSTAT_REPTYPE 0x02
 #define MCSTAT_REPPARAM 0x04
 
-struct table2 {
-    char* item1;
-    char* item2;
-};
-
 #define CMP_NOCOMPRESS 0
 #define CMP_COMPRESS 1
 #define CMP_GZIP 2

@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "content_type.h"
 #include "func.h"
 #include "menu.h"
 #include "indep.h"

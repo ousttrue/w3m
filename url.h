@@ -23,7 +23,7 @@ struct Url {
 struct Buffer;
 struct Url* baseURL(struct Buffer* buf);
 int openSocket(const char* hostname, const char* remoteport_name, unsigned short remoteport_num);
-struct Url parseURL(const char* url, struct Url* current);
+struct Url parseURL(const char* url, const struct Url* current);
 void copyParsedURL(struct Url* p, const struct Url* q);
 struct Url parseURL2(const char* url, const struct Url* current);
 Str parsedURL2Str(struct Url* pu);
@@ -58,4 +58,3 @@ wc_ces url_to_charset(const char* url, const struct Url* base, wc_ces doc_charse
 char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset);
 char* url_decode2(const char* url, const struct Buffer* buf);
 Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label);
-const char* guessContentType(const char* filename);

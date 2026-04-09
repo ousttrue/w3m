@@ -10,7 +10,7 @@ struct Hist;
 extern int main(int argc, char** argv);
 extern void pushEvent(const char* cmd, void* data);
 extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status,
-    const char* cmd, void* data);
+    const char* cmd, const void* data);
 
 struct Buffer;
 
@@ -87,7 +87,6 @@ extern void do_internal(char* action, char* data);
 
 extern struct Buffer* page_info_panel(struct Buffer* buf);
 
-extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 
 extern void loadPasswd(void);

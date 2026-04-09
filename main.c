@@ -2738,7 +2738,7 @@ SigAlarm(SIGNAL_ARG)
 }
 
 AlarmEvent*
-setAlarmEvent(AlarmEvent* event, int sec, short status, const char* cmd, void* data)
+setAlarmEvent(AlarmEvent* event, int sec, short status, const char* cmd, const void* data)
 {
     if (event == NULL)
         event = New(AlarmEvent);
