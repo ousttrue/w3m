@@ -19,7 +19,7 @@ typedef struct _DownloadList {
 bool checkAddDownloadList();
 void addDownloadList(pid_t pid, char* url, char* save, char* lock, int64_t size);
 void stopDownload(void);
-int checkDownloadList(void);
+bool checkDownloadList(void);
 struct parsed_tagarg;
 void download_action(struct parsed_tagarg* arg);
 void downloadListPanel();

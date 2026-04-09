@@ -2,7 +2,7 @@
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
-
+#define PREC_LIMIT 10000
 
 // #define CURRENT_VERSION = "w3m/0.5.3+git20230718";
 #define KEYMAP_FILE "keymap"

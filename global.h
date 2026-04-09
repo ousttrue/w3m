@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 
+extern int prec_num;
+extern int prev_key;
 extern int LINES;
 extern int COLS;
 extern int Tabstop;

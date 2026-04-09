@@ -540,7 +540,7 @@ export fn put_image_kitty(
     //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
-export fn getch() u8 {
+pub export fn getch() u8 {
     return tty.?.getch();
 }
 

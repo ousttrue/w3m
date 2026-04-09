@@ -55,18 +55,16 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, int64_t size)
     add_download_list = TRUE;
 }
 
-int checkDownloadList(void)
+bool checkDownloadList(void)
 {
-    DownloadList* d;
-    struct stat st;
-
-    if (!FirstDL)
-        return FALSE;
-    for (d = FirstDL; d != NULL; d = d->next) {
-        if (d->running && !stat(d->lock, &st))
-            return TRUE;
+    if (FirstDL) {
+        for (DownloadList* d = FirstDL; d != NULL; d = d->next) {
+            struct stat st;
+            if (d->running && !stat(d->lock, &st))
+                return true;
+        }
     }
-    return FALSE;
+    return false;
 }
 
 void downloadListPanel()

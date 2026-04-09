@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "main.h"
 #include "term_tty.h"
 #include "ctrlcode.h"
 #include "html.h"

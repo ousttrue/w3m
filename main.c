@@ -93,21 +93,17 @@ static MySignalHandler SigPipe(SIGNAL_ARG);
 
 static sigjmp_buf IntReturn;
 
-static void keyPressEventProc(int c);
 int show_params_p = 0;
 void show_params(FILE* fp);
 
 int display_ok = FALSE;
 static void do_dump(struct Buffer*);
-int prec_num = 0;
-int prev_key = -1;
 int on_target = 1;
 
 void set_buffer_environ(struct Buffer*);
 static void save_buffer_position(struct Buffer* buf);
 
 int check_target = TRUE;
-#define PREC_LIMIT 10000
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
@@ -262,18 +258,18 @@ sig_chld(int signo)
 }
 
 static Str
-make_optional_header_string(char* s)
+make_optional_header_string(const char* s)
 {
-    char* p;
-    Str hs;
-
     if (strchr(s, '\n') || strchr(s, '\r'))
         return NULL;
+
+    const char* p;
     for (p = s; *p && *p != ':'; p++)
         ;
     if (*p != ':' || p == s)
         return NULL;
-    hs = Strnew_size(strlen(s) + 3);
+
+    Str hs = Strnew_size(strlen(s) + 3);
     Strcopy_charp_n(hs, s, p - s);
     if (!Strcasecmp_charp(hs, "content-type"))
         override_content_type = TRUE;
@@ -300,10 +296,9 @@ die_oom(size_t bytes)
     return NULL;
 }
 
-int w3m_main(int argc, char** argv)
+bool w3m_args(int argc, const char** argv)
 {
     struct Buffer* newbuf = NULL;
-    char* p;
     int c, i;
     InputStream redin;
     char* line_str = NULL;
@@ -314,22 +309,14 @@ int w3m_main(int argc, char** argv)
     int visual_start = FALSE;
     int open_new_tab = FALSE;
     char search_header = FALSE;
-    char* default_type = NULL;
-    char* post_file = NULL;
     Str err_msg;
     char* Locale = NULL;
     wc_uint8 auto_detect;
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
         set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
     GC_INIT();
-#if (GC_VERSION_MAJOR > 7) || ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
     GC_set_oom_fn(die_oom);
-#else
-    GC_oom_fn = die_oom;
-#endif
-
     setlocale(LC_ALL, "");
-
     proxyInit();
     fileToDelete = newTextList();
 
@@ -338,10 +325,6 @@ int w3m_main(int argc, char** argv)
 
     CurrentDir = currentdir();
     CurrentPid = (int)getpid();
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    if (argv[0] && *argv[0])
-        MyProgramName = argv[0];
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
     BookmarkFile = NULL;
     config_file = NULL;
 
@@ -357,7 +340,7 @@ int w3m_main(int argc, char** argv)
         }
     }
 
-    /* argument search 1 */
+    // argument search 1
     for (i = 1; i < argc; i++) {
         if (*argv[i] == '-') {
             if (!strcmp("-config", argv[i])) {
@@ -393,6 +376,9 @@ int w3m_main(int argc, char** argv)
     auto_detect = WcOption.auto_detect;
     BookmarkCharset = DocumentCharset;
 
+    const char* p;
+    const char* default_type = NULL;
+    const char* post_file = NULL;
     if (!non_null(HTTP_proxy) && ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) || (p = getenv("HTTP_proxy"))))
         HTTP_proxy = p;
     if (!non_null(HTTPS_proxy) && ((p = getenv("HTTPS_PROXY")) || (p = getenv("https_proxy")) || (p = getenv("HTTPS_proxy"))))
@@ -431,16 +417,7 @@ int w3m_main(int argc, char** argv)
                     usage();
                 if (atoi(argv[i]) > 0)
                     PagerMax = atoi(argv[i]);
-            }
-#if 0 /* use -O{s|j|e} instead */
-	    else if (!strcmp("-s", argv[i]))
-		DisplayCharset = WC_CES_SHIFT_JIS;
-	    else if (!strcmp("-j", argv[i]))
-		DisplayCharset = WC_CES_ISO_2022_JP;
-	    else if (!strcmp("-e", argv[i]))
-		DisplayCharset = WC_CES_EUC_JP;
-#endif
-            else if (!strncmp("-I", argv[i], 2)) {
+            } else if (!strncmp("-I", argv[i], 2)) {
                 if (argv[i][2] != '\0')
                     p = argv[i] + 2;
                 else {
@@ -573,7 +550,7 @@ int w3m_main(int argc, char** argv)
                         Strcat(header_string, hs);
                 }
                 while (argv[i][0]) {
-                    argv[i][0] = '\0';
+                    ((char*)argv[i])[0] = '\0';
                     argv[i]++;
                 }
             } else if (!strcmp("-no-cookie", argv[i])) {
@@ -900,91 +877,7 @@ int w3m_main(int argc, char** argv)
     if (line_str) {
         _goLine(line_str);
     }
-    for (;;) {
-        if (checkDownloadList()) {
-            ldDL((struct CmdArgs) { 0 });
-        }
-        if (Currentbuf->submit) {
-            struct Anchor* a = Currentbuf->submit;
-            Currentbuf->submit = NULL;
-            gotoLine(Currentbuf, a->start.line);
-            Currentbuf->pos = a->start.pos;
-            _followForm(TRUE);
-            continue;
-        }
-        /* event processing */
-        if (CurrentEvent) {
-            CurrentKey = -1;
-            CurrentKeyData = NULL;
-            CurrentCmdData = (char*)CurrentEvent->data;
-            w3mFunc(CurrentEvent->cmd);
-            CurrentCmdData = NULL;
-            CurrentEvent = CurrentEvent->next;
-            continue;
-        }
-        /* get keypress event */
-        if (Currentbuf->event) {
-            if (Currentbuf->event->status != AL_UNSET) {
-                CurrentAlarm = Currentbuf->event;
-                if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-                    Currentbuf->event = NULL;
-                    CurrentKey = -1;
-                    CurrentKeyData = NULL;
-                    CurrentCmdData = (char*)CurrentAlarm->data;
-                    w3mFunc(CurrentAlarm->cmd);
-                    CurrentCmdData = NULL;
-                    continue;
-                }
-            } else
-                Currentbuf->event = NULL;
-        }
-        if (!Currentbuf->event)
-            CurrentAlarm = &DefaultAlarm;
-        if (CurrentAlarm->sec > 0) {
-            mySignal(SIGALRM, SigAlarm);
-            alarm(CurrentAlarm->sec);
-        }
-        mySignal(SIGWINCH, resize_hook);
-        if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-            do {
-                if (need_resize_screen)
-                    resize_screen();
-                loadImage(Currentbuf, IMG_FLAG_NEXT);
-            } while (sleep_till_anykey(1, 0) <= 0);
-        } else {
-            do {
-                if (need_resize_screen)
-                    resize_screen();
-            } while (sleep_till_anykey(1, 0) <= 0);
-        }
-        c = getch();
-        last_key = c;
-        if (CurrentAlarm->sec > 0) {
-            alarm(0);
-        }
-        if (IS_ASCII(c)) { /* Ascii */
-            if (('0' <= c) && (c <= '9') && (prec_num || 0 == strcmp(GlobalKeymap[c], "NOTHING"))) {
-                prec_num = prec_num * 10 + (int)(c - '0');
-                if (prec_num > PREC_LIMIT)
-                    prec_num = PREC_LIMIT;
-            } else {
-                set_buffer_environ(Currentbuf);
-                save_buffer_position(Currentbuf);
-                keyPressEventProc((int)c);
-                prec_num = 0;
-            }
-        }
-        prev_key = CurrentKey;
-        CurrentKey = -1;
-        CurrentKeyData = NULL;
-    }
-}
-
-static void
-keyPressEventProc(int c)
-{
-    CurrentKey = c;
-    w3mFunc(GlobalKeymap[c]);
+    return true;
 }
 
 void pushEvent(const char* cmd, void* data)
@@ -3144,4 +3037,81 @@ void resetPos(BufferPos* b)
     restorePosition(Currentbuf, &buf);
     Currentbuf->undo = b;
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+bool submitCurrentBuffer(void)
+{
+    if (!Currentbuf->submit) {
+        return false;
+    }
+    struct Anchor* a = Currentbuf->submit;
+    Currentbuf->submit = NULL;
+    gotoLine(Currentbuf, a->start.line);
+    Currentbuf->pos = a->start.pos;
+    _followForm(true);
+    return true;
+}
+
+bool processCurrentEvent(void)
+{
+    if (!CurrentEvent) {
+        return false;
+    }
+    CurrentKey = -1;
+    CurrentKeyData = NULL;
+    CurrentCmdData = (char*)CurrentEvent->data;
+    w3mFunc(CurrentEvent->cmd);
+    CurrentCmdData = NULL;
+    CurrentEvent = CurrentEvent->next;
+    return true;
+}
+
+bool processCurrentBufferEvent(void)
+{
+    if (Currentbuf->event) {
+        if (Currentbuf->event->status != AL_UNSET) {
+            CurrentAlarm = Currentbuf->event;
+            if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
+                Currentbuf->event = NULL;
+                CurrentKey = -1;
+                CurrentKeyData = NULL;
+                CurrentCmdData = (char*)CurrentAlarm->data;
+                w3mFunc(CurrentAlarm->cmd);
+                CurrentCmdData = NULL;
+                return true;
+            }
+        } else
+            Currentbuf->event = NULL;
+    }
+
+    if (!Currentbuf->event)
+        CurrentAlarm = &DefaultAlarm;
+    if (CurrentAlarm->sec > 0) {
+        mySignal(SIGALRM, SigAlarm);
+        alarm(CurrentAlarm->sec);
+    }
+    return false;
+}
+
+void processResizeAndImage()
+{
+    mySignal(SIGWINCH, resize_hook);
+    if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+        do {
+            if (need_resize_screen)
+                resize_screen();
+            loadImage(Currentbuf, IMG_FLAG_NEXT);
+        } while (sleep_till_anykey(1, 0) <= 0);
+    } else {
+        do {
+            if (need_resize_screen)
+                resize_screen();
+        } while (sleep_till_anykey(1, 0) <= 0);
+    }
+}
+
+void setupCurrentBuffer(void)
+{
+    set_buffer_environ(Currentbuf);
+    save_buffer_position(Currentbuf);
 }

@@ -22,7 +22,6 @@ typedef struct _AlarmEvent {
 extern AlarmEvent DefaultAlarm;
 
 extern int check_target;
-extern int prec_num;
 #define PREC_NUM (prec_num ? prec_num : 1)
 extern int prev_key;
 extern int display_ok;
@@ -36,8 +35,6 @@ extern int display_ok;
     do {               \
         (s)--;         \
     } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
-
-extern int prec_num;
 
 void escKeyProc(int c, int esc, const char* map[128]);
 void nscroll(int n, int mode);
