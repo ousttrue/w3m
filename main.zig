@@ -10,6 +10,9 @@ pub fn call_dummy() void {
 pub fn main(init: std.process.Init) !u8 {
     if (false) {}
 
+    w3m.init(init);
+    defer w3m.deinit();
+
     var argv = try init.minimal.args.toSlice(init.gpa);
     defer init.gpa.free(argv);
 

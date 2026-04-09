@@ -83,206 +83,206 @@ void reset_tty(void)
     clear_tty();
 }
 
-void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
-{
-    Str buf;
-    char* size;
+// void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
+// {
+//     Str buf;
+//     char* size;
+//
+//     if (w > 0 && h > 0)
+//         size = Sprintf("%dx%d", w, h)->ptr;
+//     else
+//         size = "";
+//
+//     MOVE(&write1, &terminfo, y, x);
+//     buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
+//     writestr(&write1, buf->ptr);
+//     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+// }
 
-    if (w > 0 && h > 0)
-        size = Sprintf("%dx%d", w, h)->ptr;
-    else
-        size = "";
+// void put_image_iterm2(const char* url, int x, int y, int w, int h)
+// {
+//     Str buf;
+//     char* cbuf;
+//     FILE* fp;
+//     int c, i;
+//     struct stat st;
+//
+//     if (stat(url, &st))
+//         return;
+//
+//     fp = fopen(url, "r");
+//     if (!fp)
+//         return;
+//
+//     buf = Sprintf("\x1b]1337;"
+//                   "File="
+//                   "name=%s;"
+//                   "size=%d;"
+//                   "width=%d;"
+//                   "height=%d;"
+//                   "preserveAspectRatio=0;"
+//                   "inline=1"
+//                   ":",
+//         url, st.st_size, w, h);
+//
+//     MOVE(&write1, &terminfo, y, x);
+//
+//     writestr(&write1, buf->ptr);
+//
+//     cbuf = GC_MALLOC_ATOMIC(3072);
+//     if (!cbuf)
+//         goto cleanup;
+//     i = 0;
+//     while ((c = fgetc(fp)) != EOF) {
+//         cbuf[i++] = c;
+//         if (i == 3072) {
+//             buf = base64_encode(cbuf, i);
+//             writestr(&write1, buf->ptr);
+//             i = 0;
+//         }
+//     }
+//
+//     if (i) {
+//         buf = base64_encode(cbuf, i);
+//         writestr(&write1, buf->ptr);
+//     }
+//
+// cleanup:
+//     fclose(fp);
+//     writestr(&write1, "\a");
+//     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+// }
 
-    MOVE(&write1, &terminfo, y, x);
-    buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
-    writestr(&write1, buf->ptr);
-    MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
-}
-
-void put_image_iterm2(const char* url, int x, int y, int w, int h)
-{
-    Str buf;
-    char* cbuf;
-    FILE* fp;
-    int c, i;
-    struct stat st;
-
-    if (stat(url, &st))
-        return;
-
-    fp = fopen(url, "r");
-    if (!fp)
-        return;
-
-    buf = Sprintf("\x1b]1337;"
-                  "File="
-                  "name=%s;"
-                  "size=%d;"
-                  "width=%d;"
-                  "height=%d;"
-                  "preserveAspectRatio=0;"
-                  "inline=1"
-                  ":",
-        url, st.st_size, w, h);
-
-    MOVE(&write1, &terminfo, y, x);
-
-    writestr(&write1, buf->ptr);
-
-    cbuf = GC_MALLOC_ATOMIC(3072);
-    if (!cbuf)
-        goto cleanup;
-    i = 0;
-    while ((c = fgetc(fp)) != EOF) {
-        cbuf[i++] = c;
-        if (i == 3072) {
-            buf = base64_encode(cbuf, i);
-            writestr(&write1, buf->ptr);
-            i = 0;
-        }
-    }
-
-    if (i) {
-        buf = base64_encode(cbuf, i);
-        writestr(&write1, buf->ptr);
-    }
-
-cleanup:
-    fclose(fp);
-    writestr(&write1, "\a");
-    MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
-}
-
-void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
-    int sh, int cols, int rows)
-{
-    Str buf, base64;
-    char *cbuf, *tmpf;
-    char* argv[4];
-    FILE* fp;
-    int c, i, j, m, t, is_anim;
-    struct stat st;
-    pid_t pid;
-    MySignalHandler (*volatile previntr)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
-
-    if (!url)
-        return;
-
-    const char* type = guessContentType(url);
-    t = 100; /* always convert to png for now. */
-
-    if (!(type && !strcasecmp(type, "image/png"))) {
-        tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(url))->ptr;
-
-        if (type && !strcasecmp(type, "image/gif")) {
-            is_anim = 1;
-        } else {
-            is_anim = 0;
-        }
-
-        /* convert only if png doesn't exist yet. */
-
-        if (stat(tmpf, &st)) {
-            if (stat(url, &st))
-                return;
-
-            flush_tty();
-
-            previntr = mySignal(SIGINT, SIG_IGN);
-            prevquit = mySignal(SIGQUIT, SIG_IGN);
-            prevstop = mySignal(SIGTSTP, SIG_IGN);
-
-            if ((pid = fork()) == 0) {
-                i = 0;
-
-                close(STDERR_FILENO); /* Don't output error message. */
-                ttymode_add(ISIG, 0);
-
-                if ((cbuf = getenv("W3M_KITTY_TO_PNG")))
-                    argv[i++] = cbuf;
-                else
-                    argv[i++] = "convert";
-
-                if (is_anim) {
-                    buf = Strnew_charp(url);
-                    Strcat_charp(buf, "[0]");
-                    argv[i++] = buf->ptr;
-                } else {
-                    argv[i++] = (char*)url;
-                }
-                argv[i++] = tmpf;
-                argv[i++] = NULL;
-                execvp(argv[0], argv);
-                exit(0);
-            } else if (pid > 0) {
-                waitpid(pid, &i, 0);
-                ttymode_remove(ISIG, 0);
-                mySignal(SIGINT, previntr);
-                mySignal(SIGQUIT, prevquit);
-                mySignal(SIGTSTP, prevstop);
-            }
-
-            addDeleteFile(tmpf);
-        }
-        url = tmpf;
-    }
-
-    if (stat(url, &st))
-        return;
-
-    fp = fopen(url, "r");
-    if (!fp)
-        return;
-
-    MOVE(&write1, &terminfo, y, x);
-
-    cbuf = GC_MALLOC_ATOMIC(3072); /* base64-encoded chunks of 4096 bytes */
-    if (!cbuf)
-        goto cleanup;
-    i = 0;
-
-    while (i < 3072 && (c = fgetc(fp)) != EOF)
-        cbuf[i++] = c;
-
-    base64 = base64_encode(cbuf, i);
-
-    if (c == EOF)
-        m = 0;
-    else
-        m = 1;
-    buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
-                  "%s\x1b\\",
-        t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
-    writestr(&write1, buf->ptr);
-
-    if (m) {
-        i = 0;
-        j = 0;
-        while ((c = fgetc(fp)) != EOF) {
-            if (j) {
-                base64 = base64_encode(cbuf, i);
-                buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
-                writestr(&write1, buf->ptr);
-                i = 0;
-                j = 0;
-            }
-            cbuf[i++] = c;
-            if (i == 3072)
-                j = 1;
-        }
-
-        if (i) {
-            base64 = base64_encode(cbuf, i);
-            buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
-            writestr(&write1, buf->ptr);
-        }
-    }
-cleanup:
-    fclose(fp);
-    MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
-}
+// void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
+//     int sh, int cols, int rows)
+// {
+//     Str buf, base64;
+//     char *cbuf, *tmpf;
+//     char* argv[4];
+//     FILE* fp;
+//     int c, i, j, m, t, is_anim;
+//     struct stat st;
+//     pid_t pid;
+//     MySignalHandler (*volatile previntr)(SIGNAL_ARG);
+//     MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
+//     MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
+//
+//     if (!url)
+//         return;
+//
+//     const char* type = guessContentType(url);
+//     t = 100; /* always convert to png for now. */
+//
+//     if (!(type && !strcasecmp(type, "image/png"))) {
+//         tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(url))->ptr;
+//
+//         if (type && !strcasecmp(type, "image/gif")) {
+//             is_anim = 1;
+//         } else {
+//             is_anim = 0;
+//         }
+//
+//         /* convert only if png doesn't exist yet. */
+//
+//         if (stat(tmpf, &st)) {
+//             if (stat(url, &st))
+//                 return;
+//
+//             flush_tty();
+//
+//             previntr = mySignal(SIGINT, SIG_IGN);
+//             prevquit = mySignal(SIGQUIT, SIG_IGN);
+//             prevstop = mySignal(SIGTSTP, SIG_IGN);
+//
+//             if ((pid = fork()) == 0) {
+//                 i = 0;
+//
+//                 close(STDERR_FILENO); /* Don't output error message. */
+//                 ttymode_add(ISIG, 0);
+//
+//                 if ((cbuf = getenv("W3M_KITTY_TO_PNG")))
+//                     argv[i++] = cbuf;
+//                 else
+//                     argv[i++] = "convert";
+//
+//                 if (is_anim) {
+//                     buf = Strnew_charp(url);
+//                     Strcat_charp(buf, "[0]");
+//                     argv[i++] = buf->ptr;
+//                 } else {
+//                     argv[i++] = (char*)url;
+//                 }
+//                 argv[i++] = tmpf;
+//                 argv[i++] = NULL;
+//                 execvp(argv[0], argv);
+//                 exit(0);
+//             } else if (pid > 0) {
+//                 waitpid(pid, &i, 0);
+//                 ttymode_remove(ISIG, 0);
+//                 mySignal(SIGINT, previntr);
+//                 mySignal(SIGQUIT, prevquit);
+//                 mySignal(SIGTSTP, prevstop);
+//             }
+//
+//             addDeleteFile(tmpf);
+//         }
+//         url = tmpf;
+//     }
+//
+//     if (stat(url, &st))
+//         return;
+//
+//     fp = fopen(url, "r");
+//     if (!fp)
+//         return;
+//
+//     MOVE(&write1, &terminfo, y, x);
+//
+//     cbuf = GC_MALLOC_ATOMIC(3072); /* base64-encoded chunks of 4096 bytes */
+//     if (!cbuf)
+//         goto cleanup;
+//     i = 0;
+//
+//     while (i < 3072 && (c = fgetc(fp)) != EOF)
+//         cbuf[i++] = c;
+//
+//     base64 = base64_encode(cbuf, i);
+//
+//     if (c == EOF)
+//         m = 0;
+//     else
+//         m = 1;
+//     buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
+//                   "%s\x1b\\",
+//         t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
+//     writestr(&write1, buf->ptr);
+//
+//     if (m) {
+//         i = 0;
+//         j = 0;
+//         while ((c = fgetc(fp)) != EOF) {
+//             if (j) {
+//                 base64 = base64_encode(cbuf, i);
+//                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
+//                 writestr(&write1, buf->ptr);
+//                 i = 0;
+//                 j = 0;
+//             }
+//             cbuf[i++] = c;
+//             if (i == 3072)
+//                 j = 1;
+//         }
+//
+//         if (i) {
+//             base64 = base64_encode(cbuf, i);
+//             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
+//             writestr(&write1, buf->ptr);
+//         }
+//     }
+// cleanup:
+//     fclose(fp);
+//     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+// }
 
 static void
 save_gif(const char* path, u_char* header, size_t header_size, u_char* body, size_t body_size)
@@ -373,87 +373,87 @@ save_first_animation_frame(const char* path)
     return NULL;
 }
 
-void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
-{
-    pid_t pid;
-    int do_anim;
-    MySignalHandler (*volatile previntr)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
-    MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
-
-    MOVE(&write1, &terminfo, y, x);
-    flush_tty();
-
-    do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
-
-    previntr = mySignal(SIGINT, SIG_IGN);
-    prevquit = mySignal(SIGQUIT, SIG_IGN);
-    prevstop = mySignal(SIGTSTP, SIG_IGN);
-
-    if ((pid = fork()) == 0) {
-        char* env;
-        int n = 0;
-        char* argv[20];
-        char digit[2][11 + 1];
-        char clip[44 + 3 + 1];
-        Str str_url;
-
-        close(STDERR_FILENO); /* Don't output error message. */
-        if (do_anim) {
-            writestr(&write1, "\x1b[?80h");
-        } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
-            url = str_url->ptr;
-        }
-        ttymode_add(ISIG, 0);
-
-        if ((env = getenv("W3M_IMG2SIXEL"))) {
-            char* p;
-            env = Strnew_charp(env)->ptr;
-            while (n < 8 && (p = strchr(env, ' '))) {
-                *p = '\0';
-                if (*env != '\0') {
-                    argv[n++] = env;
-                }
-                env = p + 1;
-            }
-            if (*env != '\0') {
-                argv[n++] = env;
-            }
-        } else {
-            argv[n++] = "img2sixel";
-        }
-        argv[n++] = "-l";
-        argv[n++] = do_anim ? "auto" : "disable";
-        argv[n++] = "-w";
-        sprintf(digit[0], "%d", w);
-        argv[n++] = digit[0];
-        argv[n++] = "-h";
-        sprintf(digit[1], "%d", h);
-        argv[n++] = digit[1];
-        argv[n++] = "-c";
-        sprintf(clip, "%dx%d+%d+%d", sw, sh, sx, sy);
-        argv[n++] = clip;
-        argv[n++] = (char*)url;
-        if (getenv("TERM") && strcmp(getenv("TERM"), "screen") == 0 && (!getenv("SCREEN_VARIANT") || strcmp(getenv("SCREEN_VARIANT"), "sixel") != 0)) {
-            argv[n++] = "-P";
-        }
-        argv[n++] = NULL;
-        execvp(argv[0], argv);
-        exit(0);
-    } else if (pid > 0) {
-        int status;
-        waitpid(pid, &status, 0);
-        ttymode_remove(ISIG, 0);
-        mySignal(SIGINT, previntr);
-        mySignal(SIGQUIT, prevquit);
-        mySignal(SIGTSTP, prevstop);
-        if (do_anim) {
-            writestr(&write1, "\x1b[?80l");
-        }
-    }
-
-    MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
-}
+// void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
+// {
+//     pid_t pid;
+//     int do_anim;
+//     MySignalHandler (*volatile previntr)(SIGNAL_ARG);
+//     MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
+//     MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
+//
+//     MOVE(&write1, &terminfo, y, x);
+//     flush_tty();
+//
+//     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
+//
+//     previntr = mySignal(SIGINT, SIG_IGN);
+//     prevquit = mySignal(SIGQUIT, SIG_IGN);
+//     prevstop = mySignal(SIGTSTP, SIG_IGN);
+//
+//     if ((pid = fork()) == 0) {
+//         char* env;
+//         int n = 0;
+//         char* argv[20];
+//         char digit[2][11 + 1];
+//         char clip[44 + 3 + 1];
+//         Str str_url;
+//
+//         close(STDERR_FILENO); /* Don't output error message. */
+//         if (do_anim) {
+//             writestr(&write1, "\x1b[?80h");
+//         } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
+//             url = str_url->ptr;
+//         }
+//         ttymode_add(ISIG, 0);
+//
+//         if ((env = getenv("W3M_IMG2SIXEL"))) {
+//             char* p;
+//             env = Strnew_charp(env)->ptr;
+//             while (n < 8 && (p = strchr(env, ' '))) {
+//                 *p = '\0';
+//                 if (*env != '\0') {
+//                     argv[n++] = env;
+//                 }
+//                 env = p + 1;
+//             }
+//             if (*env != '\0') {
+//                 argv[n++] = env;
+//             }
+//         } else {
+//             argv[n++] = "img2sixel";
+//         }
+//         argv[n++] = "-l";
+//         argv[n++] = do_anim ? "auto" : "disable";
+//         argv[n++] = "-w";
+//         sprintf(digit[0], "%d", w);
+//         argv[n++] = digit[0];
+//         argv[n++] = "-h";
+//         sprintf(digit[1], "%d", h);
+//         argv[n++] = digit[1];
+//         argv[n++] = "-c";
+//         sprintf(clip, "%dx%d+%d+%d", sw, sh, sx, sy);
+//         argv[n++] = clip;
+//         argv[n++] = (char*)url;
+//         if (getenv("TERM") && strcmp(getenv("TERM"), "screen") == 0 && (!getenv("SCREEN_VARIANT") || strcmp(getenv("SCREEN_VARIANT"), "sixel") != 0)) {
+//             argv[n++] = "-P";
+//         }
+//         argv[n++] = NULL;
+//         execvp(argv[0], argv);
+//         exit(0);
+//     } else if (pid > 0) {
+//         int status;
+//         waitpid(pid, &status, 0);
+//         ttymode_remove(ISIG, 0);
+//         mySignal(SIGINT, previntr);
+//         mySignal(SIGQUIT, prevquit);
+//         mySignal(SIGTSTP, prevstop);
+//         if (do_anim) {
+//             writestr(&write1, "\x1b[?80l");
+//         }
+//     }
+//
+//     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+// }
 
 static MySignalHandler
 reset_exit_with_value(SIGNAL_ARG, int rval)
@@ -535,8 +535,6 @@ void setupscreen(void)
  */
 int initscr(void)
 {
-    if (set_tty() < 0)
-        return -1;
     set_int();
     getTCstr(&terminfo);
     if (terminfo.T_ti && !Do_not_use_ti_te)
