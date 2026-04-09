@@ -15,6 +15,7 @@ pub fn main(init: std.process.Init) !void {
     std.log.debug("begin", .{});
     try w.interface.writeAll("#pragma once\n");
     try w.interface.writeAll("#include <stdint.h>\n");
+    try w.interface.writeAll("#include <stdbool.h>\n");
     try w.interface.writeAll("\n");
     inline for (@typeInfo(global).@"struct".decls) |d| {
         try write_field(&w.interface, d.name);
@@ -26,13 +27,15 @@ fn write_field(writer: *std.Io.Writer, comptime name: []const u8) !void {
     const T = @TypeOf(@field(global, name));
     if (T == c_int) {
         try writer.print("extern int {s};\n", .{name});
+    } else if (T == bool) {
+        try writer.print("extern bool {s};\n", .{name});
     } else if (T == u32) {
         try writer.print("extern uint32_t {s};\n", .{name});
     } else if (T == u8) {
         try writer.print("extern char {s};\n", .{name});
     } else if (T == f64) {
         try writer.print("extern double {s};\n", .{name});
-    // } else if (T == ?[*:0]const u8) {
+        // } else if (T == ?[*:0]const u8) {
     } else if (T == [*c]const u8) {
         try writer.print("extern const char* {s};\n", .{name});
     } else {

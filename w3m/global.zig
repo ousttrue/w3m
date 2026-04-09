@@ -2,6 +2,7 @@ const c = @cImport({
     @cInclude("constants.h");
 });
 
+pub export var is_running: bool = true;
 pub export var prec_num: c_int = 0;
 pub export var prev_key: c_int = 0;
 pub export var LINES: c_int = 0;

@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
 
+extern bool is_running;
 extern int prec_num;
 extern int prev_key;
 extern int LINES;
