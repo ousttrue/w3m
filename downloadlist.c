@@ -19,12 +19,12 @@
 
 static DownloadList* FirstDL = (NULL);
 static DownloadList* LastDL = (NULL);
-static bool add_download_list = FALSE;
+static bool add_download_list = false;
 
 bool checkAddDownloadList()
 {
     if (add_download_list) {
-        add_download_list = FALSE;
+        add_download_list = false;
         return true;
     }
     return false;
@@ -43,7 +43,7 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, int64_t size)
     d->lock = lock;
     d->size = size;
     d->time = time(0);
-    d->running = TRUE;
+    d->running = true;
     d->err = 0;
     d->next = NULL;
     d->prev = LastDL;
@@ -52,7 +52,7 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, int64_t size)
     else
         FirstDL = d;
     LastDL = d;
-    add_download_list = TRUE;
+    add_download_list = true;
 }
 
 bool checkDownloadList(void)
@@ -70,11 +70,11 @@ bool checkDownloadList(void)
 void downloadListPanel()
 {
     struct Buffer* buf;
-    int replace = FALSE, new_tab = FALSE;
+    int replace = false, new_tab = false;
     int reload;
 
     if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
-        replace = TRUE;
+        replace = true;
     if (!FirstDL) {
         if (replace) {
             if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == NULL) {
@@ -99,7 +99,7 @@ void downloadListPanel()
     }
     if (!replace && open_tab_dl_list) {
         _newT();
-        new_tab = TRUE;
+        new_tab = true;
     }
     pushBuffer(buf);
     if (replace || new_tab)
@@ -160,7 +160,7 @@ struct Buffer* DownloadListBuffer(void)
                        "<form method=internal action=download><hr>\n");
     for (d = LastDL; d != NULL; d = d->prev) {
         if (lstat(d->lock, &st))
-            d->running = FALSE;
+            d->running = false;
         Strcat_charp(src, "<pre>\n");
         Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url), html_quote(conv_from_system(d->save))));
         duration = cur_time - d->time;

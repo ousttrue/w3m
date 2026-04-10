@@ -175,7 +175,7 @@ Str loadLocalDir(const char* dname)
 }
 
 static int
-check_local_cgi(char* file, int status)
+check_local_cgi(const char* file, int status)
 {
     struct stat st;
 
@@ -236,7 +236,7 @@ checkPath(const char* fn, const char* path)
 }
 
 static int
-cgi_filename(char* uri, char** fn, char** name, char** path_info)
+cgi_filename(const char* uri, const char** fn, const char** name, const char** path_info)
 {
     Str tmp;
     int offset;
@@ -287,7 +287,7 @@ FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, con
     FILE *fr = NULL, *fw = NULL;
     int status;
     pid_t pid;
-    char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
+    const char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
 
     char* cgi_dir;
 
@@ -322,7 +322,7 @@ FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, con
         return fr;
     }
     /* child */
-    setup_child(TRUE, 2, fw ? fileno(fw) : -1);
+    setup_child(true, 2, fw ? fileno(fw) : -1);
 
     set_cgi_environ(name, file, uri);
     if (path_info)

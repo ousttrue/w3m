@@ -1,4 +1,5 @@
 #include "display.h"
+#include "quote.h"
 #include "content_type.h"
 #include "term_tty.h"
 #include "siteconf.h"

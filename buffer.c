@@ -263,14 +263,14 @@ void gotoLine(struct Buffer* buf, int n)
         set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
-            FALSE);
+            false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->linenumber >= n) {
             buf->currentLine = l;
             if (n < buf->topLine->linenumber || buf->topLine->linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, FALSE);
+                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
             break;
         }
     }
@@ -306,14 +306,14 @@ void gotoRealLine(struct Buffer* buf, int n)
         set_delayed_message(msg);
         buf->currentLine = l;
         buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
-            FALSE);
+            false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->real_linenumber >= n) {
             buf->currentLine = l;
             if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, FALSE);
+                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
             break;
         }
     }
@@ -480,7 +480,7 @@ void reshapeBuffer(struct Buffer* buf)
 
     if (!buf->need_reshape)
         return;
-    buf->need_reshape = FALSE;
+    buf->need_reshape = false;
     buf->width = INIT_BUFFER_WIDTH;
     if (buf->sourcefile == NULL)
         return;
@@ -514,22 +514,22 @@ void reshapeBuffer(struct Buffer* buf)
             init_stream(&h, SCM_LOCAL, NULL);
             examineFile(buf->header_source, &h);
             if (h.stream) {
-                readHeader(&h, buf, TRUE, NULL);
+                readHeader(&h, buf, true, NULL);
                 UFclose(&h);
             }
         } else if (buf->search_header) /* -m option */
-            readHeader(&f, buf, TRUE, NULL);
+            readHeader(&f, buf, true, NULL);
     }
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    UseContentCharset = FALSE;
+    UseContentCharset = false;
     if (is_html_type(buf->type))
         loadHTMLBuffer(&f, buf);
     else
         loadBuffer(&f, buf);
     UFclose(&f);
     WcOption.auto_detect = old_auto_detect;
-    UseContentCharset = TRUE;
+    UseContentCharset = true;
 
     buf->height = (LINES - 1) + 1;
     if (buf->firstLine && sbuf.firstLine) {
@@ -546,7 +546,7 @@ void reshapeBuffer(struct Buffer* buf)
         n = (buf->currentLine->linenumber - buf->topLine->linenumber)
             - (cur->linenumber - sbuf.topLine->linenumber);
         if (n) {
-            buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+            buf->topLine = lineSkip(buf, buf->topLine, n, false);
             if (cur->real_linenumber > 0)
                 gotoRealLine(buf, cur->real_linenumber);
             else

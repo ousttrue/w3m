@@ -124,7 +124,7 @@ void saveHistory(struct Hist* hist, size_t size)
     if (hist->mtime != (long long)st.st_mtime) {
         fhist = newHist();
         if (loadHistory(fhist) || mergeHistory(fhist, hist))
-            disp_err_message("Can't merge history", FALSE);
+            disp_err_message("Can't merge history", false);
         else
             hist = fhist;
     }
@@ -136,7 +136,7 @@ void saveHistory(struct Hist* hist, size_t size)
         item = item->next)
         size++;
     for (; item; item = item->next)
-        fprintf(f, "%s\n", item->ptr);
+        fprintf(f, "%s\n", (char*)item->ptr);
     if (fclose(f) == EOF)
         goto fail;
     rename_ret = rename(tmpf, rcFile(HISTORY_FILE));
@@ -146,7 +146,7 @@ void saveHistory(struct Hist* hist, size_t size)
     return;
 
 fail:
-    disp_err_message("Can't open history", FALSE);
+    disp_err_message("Can't open history", false);
     return;
 }
 

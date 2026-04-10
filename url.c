@@ -318,7 +318,7 @@ eend:
     disp_err_message(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
                          ERR_error_string(ERR_get_error(), NULL))
                          ->ptr,
-        FALSE);
+        false);
     return NULL;
 }
 
@@ -810,7 +810,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
             pu.file = file_quote(q);
     }
 
-    bool relative_uri = FALSE;
+    bool relative_uri = false;
     if (current && (pu.scheme == current->scheme || (pu.scheme == SCM_FTP && current->scheme == SCM_FTPDIR) || (pu.scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
         && pu.host == NULL) {
         /* Copy omitted element from the current URL */
@@ -834,7 +834,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
                     }
                     Strcat_charp(tmp, p);
                     pu.file = tmp->ptr;
-                    relative_uri = TRUE;
+                    relative_uri = true;
                 }
             } else if (pu.scheme == SCM_GOPHER && pu.file[0] == '/') {
                 p = pu.file;
@@ -963,12 +963,12 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
 
 Str parsedURL2Str(struct Url* pu)
 {
-    return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
+    return _parsedURL2Str(pu, false, true, true);
 }
 
 Str parsedURL2RefererStr(struct Url* pu)
 {
-    return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+    return _parsedURL2Str(pu, false, false, false);
 }
 
 void init_stream(struct URLFile* uf, int scheme, InputStream stream)
@@ -977,7 +977,7 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
     uf->stream = stream;
     uf->scheme = scheme;
     uf->encoding = ENC_7BIT;
-    uf->is_cgi = FALSE;
+    uf->is_cgi = false;
     uf->compression = CMP_NOCOMPRESS;
     uf->content_encoding = CMP_NOCOMPRESS;
     uf->guess_type = NULL;
@@ -1061,7 +1061,7 @@ retry:
                                           option->referer),
                 (void (*)())fclose);
         if (uf.stream) {
-            uf.is_cgi = TRUE;
+            uf.is_cgi = true;
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
             return uf;
         }
@@ -1311,7 +1311,7 @@ retry:
             *(char*)q = '\0';
             uf.encoding = ENC_BASE64;
         } else
-            tmp = Str_url_unquote(tmp, FALSE, FALSE);
+            tmp = Str_url_unquote(tmp, false, false);
         uf.stream = newStrStream(tmp);
         uf.guess_type = (*p != '\0') ? p : "text/plain";
         return uf;

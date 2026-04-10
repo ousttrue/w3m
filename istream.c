@@ -42,7 +42,7 @@ do_update(BaseStream base)
     base->stream.cur = base->stream.next = 0;
     len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
     if (len <= 0)
-        base->iseos = TRUE;
+        base->iseos = true;
     else
         base->stream.next += len;
 }
@@ -73,7 +73,7 @@ init_buffer(BaseStream base, char* buf, int bufsize)
     } else {
         sb->next = 0;
     }
-    base->iseos = FALSE;
+    base->iseos = false;
 }
 
 static void
@@ -298,7 +298,7 @@ int ISread_n(InputStream stream, char* dst, int count)
     if (MUST_BE_UPDATED(base)) {
         l = (*base->read)(base->handle, &dst[len], count - len);
         if (l <= 0) {
-            base->iseos = TRUE;
+            base->iseos = true;
         } else {
             len += l;
         }
@@ -343,7 +343,7 @@ void ssl_accept_this_site(const char* hostname)
 }
 
 static int
-ssl_match_cert_ident(char* ident, int ilen, char* hostname)
+ssl_match_cert_ident(const char* ident, int ilen, const char* hostname)
 {
     /* RFC2818 3.1.  Server Identity
      * Names may contain the wildcard
@@ -356,7 +356,7 @@ ssl_match_cert_ident(char* ident, int ilen, char* hostname)
 
     /* Is this an exact match? */
     if ((ilen == hlen) && strncasecmp(ident, hostname, hlen) == 0)
-        return TRUE;
+        return true;
 
     for (i = 0; i < ilen; i++) {
         if (ident[i] == '*' && ident[i + 1] == '.') {
@@ -366,18 +366,18 @@ ssl_match_cert_ident(char* ident, int ilen, char* hostname)
             i++;
         } else {
             if (ident[i] != *hostname++)
-                return FALSE;
+                return false;
         }
     }
     return *hostname == '\0';
 }
 
 static Str
-ssl_check_cert_ident(X509* x, char* hostname)
+ssl_check_cert_ident(X509* x, const char* hostname)
 {
     int i;
     Str ret = NULL;
-    int match_ident = FALSE;
+    int match_ident = false;
     /*
      * All we need to do here is check that the CN matches.
      *
@@ -441,7 +441,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
             X509V3_EXT_get(ex);
             sk_GENERAL_NAME_free(alt);
             if (i < n) /* Found a match */
-                match_ident = TRUE;
+                match_ident = true;
             else if (seen_dnsname)
                 /* FIXME: gettextize? */
                 ret = Sprintf("Bad cert ident from %s: dNSName=%s", hostname,
@@ -449,7 +449,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
         }
     }
 
-    if (match_ident == FALSE && ret == NULL) {
+    if (match_ident == false && ret == NULL) {
         X509_NAME* xn;
         char buf[2048];
         int slen;
@@ -509,12 +509,12 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation: no peer certificate";
-            disp_err_message(e, FALSE);
+            disp_err_message(e, false);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            disp_err_message(amsg->ptr, FALSE);
+            disp_err_message(amsg->ptr, false);
         ssl_accept_this_site(hostname);
         /* FIXME: gettextize? */
         s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -545,7 +545,7 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
             } else {
                 /* FIXME: gettextize? */
                 char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                disp_err_message(e, FALSE);
+                disp_err_message(e, false);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -571,13 +571,13 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation";
-            disp_err_message(e, FALSE);
+            disp_err_message(e, false);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        disp_err_message(amsg->ptr, FALSE);
+        disp_err_message(amsg->ptr, false);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -684,14 +684,14 @@ ens_read(struct ens_handle* handle, char* buf, int len)
         char* p;
         struct growbuf gbtmp;
 
-        ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+        ISgets_to_growbuf(handle->is, &handle->gb, true);
         if (handle->gb.length == 0)
             return 0;
         if (handle->encoding == ENC_BASE64)
             memchop(handle->gb.ptr, &handle->gb.length);
         else if (handle->encoding == ENC_UUENCODE) {
             if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-                ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+                ISgets_to_growbuf(handle->is, &handle->gb, true);
             memchop(handle->gb.ptr, &handle->gb.length);
         }
         growbuf_init_without_GC(&gbtmp);

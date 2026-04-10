@@ -1,4 +1,5 @@
 #include "html_tag.h"
+#include "quote.h"
 #include "myctype.h"
 #include "alloc.h"
 #include "indep.h"
@@ -173,7 +174,7 @@ parse_tag(char** s, int internal)
                 while (*q && *q != '"') {
                     Strcat_char(value_tmp, *q);
                     if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
+                        tag->need_reconstruct = true;
                     q++;
                 }
                 if (*q == '"')
@@ -183,7 +184,7 @@ parse_tag(char** s, int internal)
                 while (*q && *q != '\'') {
                     Strcat_char(value_tmp, *q);
                     if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
+                        tag->need_reconstruct = true;
                     q++;
                 }
                 if (*q == '\'')
@@ -192,7 +193,7 @@ parse_tag(char** s, int internal)
                 while (*q && !IS_SPACE(*q) && *q != '>') {
                     Strcat_char(value_tmp, *q);
                     if (!tag->need_reconstruct && is_html_quote(*q))
-                        tag->need_reconstruct = TRUE;
+                        tag->need_reconstruct = true;
                     q++;
                 }
             }
@@ -205,10 +206,10 @@ parse_tag(char** s, int internal)
         }
 
         if (value_tmp) {
-            int j, hidden = FALSE;
+            int j, hidden = false;
             for (j = 0; j < i; j++) {
                 if (tag->attrid[j] == ATTR_TYPE && tag->value[j] && strcmp("hidden", tag->value[j]) == 0) {
-                    hidden = TRUE;
+                    hidden = true;
                     break;
                 }
             }
@@ -226,7 +227,7 @@ parse_tag(char** s, int internal)
 
         if (i != nattr) {
             if (!internal && ((AttrMAP[attr_id].flag & AFLG_INT) || (value && AttrMAP[attr_id].vtype == VTYPE_METHOD && !strcasecmp(value->ptr, "internal")))) {
-                tag->need_reconstruct = TRUE;
+                tag->need_reconstruct = true;
                 continue;
             }
             tag->attrid[i] = attr_id;
@@ -235,7 +236,7 @@ parse_tag(char** s, int internal)
             else
                 tag->value[i] = NULL;
         } else {
-            tag->need_reconstruct = TRUE;
+            tag->need_reconstruct = true;
         }
     }
 
@@ -262,7 +263,7 @@ int parsedtag_set_value(struct HtmlTag* tag, int id, char* value)
         tag->value[i] = allocStr(value, -1);
     else
         tag->value[i] = NULL;
-    tag->need_reconstruct = TRUE;
+    tag->need_reconstruct = true;
     return 1;
 }
 

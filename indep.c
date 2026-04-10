@@ -1,4 +1,5 @@
 #include "global.h"
+#include "quote.h"
 #include <stdio.h>
 #include <pwd.h>
 #include <sys/param.h>
@@ -10,274 +11,6 @@
 #include <unistd.h>
 #include "myctype.h"
 #include "entity.h"
-
-unsigned char QUOTE_MAP[0x100] = {
-    /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    /* DLE DC1 DC2 DC3 DC4 NAK SYN ETB CAN  EM SUB ESC  FS  GS  RS  US */
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    /* SPC   !   "   #   $   %   &   '   (   )   *   +   ,   -   .   / */
-    24,
-    72,
-    76,
-    40,
-    8,
-    40,
-    41,
-    77,
-    72,
-    72,
-    72,
-    40,
-    72,
-    8,
-    0,
-    64,
-    /*   0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ? */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    32,
-    72,
-    74,
-    72,
-    75,
-    40,
-    /*   @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O */
-    72,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    /*   P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _ */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    72,
-    72,
-    72,
-    72,
-    0,
-    /*   `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o */
-    72,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    /*   p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~ DEL */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    72,
-    72,
-    72,
-    72,
-    24,
-
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-};
 
 char* HTML_QUOTE_MAP[] = {
     NULL,
@@ -366,11 +99,9 @@ char* currentdir()
 
 char* cleanupName(const char* name)
 {
-    char *buf, *p, *q;
-
-    buf = allocStr(name, -1);
-    p = buf;
-    q = name;
+    char* buf = allocStr(name, -1);
+    char* p = buf;
+    const char* q = name;
     while (*q != '\0') {
         if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
             if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
@@ -430,7 +161,7 @@ char* expandPath(const char* name)
     if (*p == '~') {
         p++;
         if (IS_ALPHA(*p)) {
-            char* q = strchr(p, '/');
+            const char* q = strchr(p, '/');
             if (q) { /* ~user/dir... */
                 passent = getpwnam(allocStr(p, q - p));
                 p = q;
@@ -579,13 +310,13 @@ char* remove_space(const char* str)
 bool non_null(const char* s)
 {
     if (s == NULL)
-        return FALSE;
+        return false;
     while (*s) {
         if (!IS_SPACE(*s))
-            return TRUE;
+            return true;
         s++;
     }
-    return FALSE;
+    return false;
 }
 
 void cleanup_line(Str s, int mode)
@@ -610,7 +341,7 @@ int getescapechar(char** str)
 {
     int dummy = -1;
     char *p = *str, *q;
-    int strict_entity = TRUE;
+    int strict_entity = true;
 
     if (*p == '&')
         p++;
@@ -658,7 +389,7 @@ int getescapechar(char** str)
          * is "=", it must be a part of query in an URL. So &lt=, &gt=, etc.
          * are not regarded as character entities.
          */
-        strict_entity = FALSE;
+        strict_entity = false;
     }
     if (*p == ';')
         p++;
@@ -690,10 +421,8 @@ char* getescapecmd(char** s)
 char* html_quote(const char* str)
 {
     Str tmp = NULL;
-    char *p, *q;
-
-    for (p = str; *p; p++) {
-        q = html_quote_char(*p);
+    for (const char* p = str; *p; p++) {
+        char* q = html_quote_char(*p);
         if (q) {
             if (tmp == NULL)
                 tmp = Strnew_charp_n(str, (int)(p - str));
@@ -705,13 +434,13 @@ char* html_quote(const char* str)
     }
     if (tmp)
         return tmp->ptr;
-    return str;
+    return allocStr(str, -1);
 }
 
 char* html_unquote(const char* str)
 {
     Str tmp = NULL;
-    char *p, *q;
+    const char *p, *q;
 
     for (p = str; *p;) {
         if (*p == '&') {

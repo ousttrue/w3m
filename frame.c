@@ -343,7 +343,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
     case SCM_LOCAL:
         b->flags = 0;
     default:
-        is_redisplay = TRUE;
+        is_redisplay = true;
         w3m_dump |= DUMP_FRAME;
         buf = loadGeneralFile(b->url,
             baseURL ? baseURL : currentURL,
@@ -352,7 +352,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
         if (buf && buf != NO_BUFFER)
             b->ssl_certificate = buf->ssl_certificate;
         w3m_dump &= ~DUMP_FRAME;
-        is_redisplay = FALSE;
+        is_redisplay = false;
         break;
     }
 
@@ -535,7 +535,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                     break;
                 }
                 do {
-                    int is_tag = FALSE;
+                    int is_tag = false;
                     char* q;
                     struct HtmlTag* tag;
 
@@ -556,7 +556,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
 
                     if (tok->ptr[0] == '<') {
                         if (tok->ptr[1] && REALLY_THE_BEGINNING_OF_A_TAG(tok->ptr))
-                            is_tag = TRUE;
+                            is_tag = true;
                         else if (!(pre_mode & (RB_PLAIN | RB_INTXTA | RB_SCRIPT | RB_STYLE))) {
                             p = Strnew_m_charp(tok->ptr + 1, p, NULL)->ptr;
                             tok = Strnew_charp("&lt;");
@@ -565,7 +565,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                     if (is_tag) {
                         if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_SCRIPT | RB_STYLE)) {
                             q = tok->ptr;
-                            if ((tag = parse_tag(&q, FALSE)) && tag->tagid == end_tag) {
+                            if ((tag = parse_tag(&q, false)) && tag->tagid == end_tag) {
                                 if (pre_mode & RB_PLAIN) {
                                     fputs("</PRE_PLAIN>", f1);
                                     pre_mode = 0;
@@ -581,10 +581,10 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                 p = Strnew_m_charp(q, p, NULL)->ptr;
                                 status = R_ST_NORMAL;
                             }
-                            is_tag = FALSE;
+                            is_tag = false;
                         } else if (pre_mode & RB_INSELECT) {
                             q = tok->ptr;
-                            if ((tag = parse_tag(&q, FALSE))) {
+                            if ((tag = parse_tag(&q, false))) {
                                 if ((tag->tagid == end_tag) || (tag->tagid == HTML_N_FORM)) {
                                     if (tag->tagid == HTML_N_FORM)
                                         fputs("</SELECT>", f1);
@@ -613,7 +613,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                         int j, a_target = 0;
                         struct Url url;
 
-                        if (!(tag = parse_tag(&q, FALSE)))
+                        if (!(tag = parse_tag(&q, false)))
                             goto token_end;
 
                         switch (tag->tagid) {
@@ -750,7 +750,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                     break;
                                 tag->value[j] = url_encode(remove_space(tag->value[j]),
                                     &base, charset);
-                                tag->need_reconstruct = TRUE;
+                                tag->need_reconstruct = true;
                                 url = parseURL2(tag->value[j], &base);
                                 if (url.scheme == SCM_UNKNOWN || url.scheme == SCM_MAILTO || url.scheme == SCM_MISSING)
                                     break;
