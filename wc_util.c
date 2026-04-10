@@ -1,5 +1,5 @@
 #include "wc_util.h"
-#include "indep.h"
+#include "url.h"
 #include "global.h"
 #include <libwc/wtf.h>
 

@@ -58,3 +58,7 @@ wc_ces url_to_charset(const char* url, const struct Url* base, wc_ces doc_charse
 char* url_encode(const char* url, const struct Url* base, wc_ces doc_charset);
 char* url_decode2(const char* url, const struct Buffer* buf);
 Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label);
+char* url_quote(const char* str);
+Str Str_url_unquote(Str x, int is_form, int safe);
+Str Str_form_quote(Str x);
+#define Str_form_unquote(x) Str_url_unquote((x), true, false)

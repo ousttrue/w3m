@@ -67,16 +67,12 @@ test "expandPath" {
     }
 }
 
-pub fn w3m_dir(name: []const u8, dft: []const u8) []const u8 {
+pub fn w3m_dir(name: []const u8, dft: [*c]const u8) [*c]const u8 {
     if (environ_map.get(name)) |env_value| {
-        return allocator.dupe(u8, env_value) catch @panic("OOM");
+        return env_value.ptr;
     } else {
-        return allocator.dupe(u8, dft) catch @panic("OOM");
+        return dft;
     }
-}
-
-pub fn w3m_conf_dir() []const u8 {
-    return w3m_dir("W3M_CONF_DIR", CONF_DIR);
 }
 
 pub fn confFile(base: []const u8, buf: []u8) []const u8 {
@@ -102,4 +98,21 @@ pub fn rcFile(base: []const u8, buf: []u8) []const u8 {
         @panic("confFile");
     };
     return expandPath(tmp2, buf);
+}
+
+export fn w3m_auxbin_dir() [*c]const u8 {
+    return w3m_dir("W3M_AUXBIN_DIR", g.AUXBIN_DIR);
+}
+
+export fn w3m_lib_dir() [*c]const u8 {
+    // FIXME: use W3M_CGIBIN_DIR?
+    return w3m_dir("W3M_LIB_DIR", g.CGIBIN_DIR);
+}
+
+export fn w3m_etc_dir() [*c]const u8 {
+    return w3m_dir("W3M_ETC_DIR", g.ETC_DIR);
+}
+
+export fn w3m_conf_dir() [*c]const u8 {
+    return w3m_dir("W3M_CONF_DIR", g.CONF_DIR);
 }

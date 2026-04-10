@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "w3m.h"
 #include "content_type.h"
 #include "func.h"
 #include "menu.h"

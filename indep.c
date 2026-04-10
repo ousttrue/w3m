@@ -1,53 +1,27 @@
-#include "global.h"
+#include "indep.h"
 #include "alloc.h"
 #include "quote.h"
+#include "myctype.h"
+#include "entity.h"
+#include "Str.h"
+
 #include <stdio.h>
 #include <pwd.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include "indep.h"
-#include "Str.h"
-#include <gc.h>
 #include <unistd.h>
-#include "myctype.h"
-#include "entity.h"
 
-int strCmp(const void* s1, const void* s2)
-{
-    return strcmp(*(const char**)s1, *(const char**)s2);
-}
-
-#define HAVE_GETCWD 1
-#define HAVE_GETWD 1
 char* currentdir()
 {
     char* path;
-#ifdef HAVE_GETCWD
 #ifdef MAXPATHLEN
     path = NewAtom_N(char, MAXPATHLEN);
     getcwd(path, MAXPATHLEN);
 #else
     path = getcwd(NULL, 0);
 #endif
-#else /* not HAVE_GETCWD */
-#ifdef HAVE_GETWD
-    path = NewAtom_N(char, 1024);
-    getwd(path);
-#else /* not HAVE_GETWD */
-    FILE* f;
-    char* p;
-    path = NewAtom_N(char, 1024);
-    f = popen("pwd", "r");
-    fgets(path, 1024, f);
-    pclose(f);
-    for (p = path; *p; p++)
-        if (*p == '\n') {
-            *p = '\0';
-            break;
-        }
-#endif /* not HAVE_GETWD */
-#endif /* not HAVE_GETCWD */
     return path;
 }
 
@@ -167,18 +141,6 @@ char* remove_space(const char* str)
     if (*q != '\0')
         return Strnew_charp_n(p, q - p)->ptr;
     return allocStr(p, -1);
-}
-
-bool non_null(const char* s)
-{
-    if (s == NULL)
-        return false;
-    while (*s) {
-        if (!IS_SPACE(*s))
-            return true;
-        s++;
-    }
-    return false;
 }
 
 int getescapechar(char** str)
@@ -457,31 +419,4 @@ char* shell_quote(const char* str)
     if (tmp)
         return tmp->ptr;
     return allocStr(str, -1);
-}
-
-static char* w3m_dir(const char* name, const char* dft)
-{
-    char* value = getenv(name);
-    return value ? value : (char*)dft;
-}
-
-char* w3m_auxbin_dir(void)
-{
-    return w3m_dir("W3M_AUXBIN_DIR", AUXBIN_DIR);
-}
-
-char* w3m_lib_dir(void)
-{
-    /* FIXME: use W3M_CGIBIN_DIR? */
-    return w3m_dir("W3M_LIB_DIR", CGIBIN_DIR);
-}
-
-char* w3m_etc_dir(void)
-{
-    return w3m_dir("W3M_ETC_DIR", ETC_DIR);
-}
-
-char* w3m_conf_dir(void)
-{
-    return w3m_dir("W3M_CONF_DIR", CONF_DIR);
 }

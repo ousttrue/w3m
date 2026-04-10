@@ -2,6 +2,8 @@
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE
 #endif
+
+#include "term_tty.h"
 #include <signal.h>
 #include <setjmp.h>
 

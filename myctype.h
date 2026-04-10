@@ -46,3 +46,5 @@ extern unsigned char MYCTYPE_DIGITMAP[];
 /* is this '<' really means the beginning of a tag? */
 #define REALLY_THE_BEGINNING_OF_A_TAG(p) \
     (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' || p[1] == '\0' || p[1] == '_')
+
+bool non_null(const char* s);
