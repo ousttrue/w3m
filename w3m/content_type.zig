@@ -107,7 +107,7 @@ fn guessContentTypeFromTable(table: []const ExtContentType, path: []const u8) ?[
     return null;
 }
 
-export fn guessContentType(_src: [*c]const u8) [*c]const u8 {
+pub export fn guessContentType(_src: [*c]const u8) [*c]const u8 {
     const src = std.mem.span(_src);
     if (src.len == 0)
         return null;

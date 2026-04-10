@@ -11,7 +11,7 @@ pub const runtime = @import("runtime.zig");
 pub const global = @import("global.zig");
 // pub const keybind = @import("keybind.zig");
 const TtyLinux = @import("TtyLinux.zig");
-const content_type = @import("content_type.zig");
+const guessContentType = @import("content_type.zig").guessContentType;
 
 var tty: TtyLinux = undefined;
 // blocking tty stdout
@@ -42,7 +42,7 @@ var evented: std.Io.Threaded = undefined;
 pub export fn _dummy_() void {
     // export symbols ?
     std.log.debug("{}", .{global});
-    std.log.debug("{}", .{content_type});
+    // std.log.debug("{}", .{content_type});
 }
 
 comptime {
@@ -472,7 +472,6 @@ export fn put_image_kitty(
     cols: c_int,
     rows: c_int,
 ) void {
-    _ = url;
     _ = x;
     _ = y;
     _ = w;
@@ -493,78 +492,75 @@ export fn put_image_kitty(
     //     MySignalHandler (*volatile previntr)(SIGNAL_ARG);
     //     MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
     //     MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
-    //
-    //     if (!url)
-    //         return;
-    //
-    //     const char* type = guessContentType(url);
-    //     t = 100; /* always convert to png for now. */
-    //
-    //     if (!(type && !strcasecmp(type, "image/png"))) {
-    //         tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(url))->ptr;
-    //
-    //         if (type && !strcasecmp(type, "image/gif")) {
-    //             is_anim = 1;
-    //         } else {
-    //             is_anim = 0;
-    //         }
-    //
-    //         /* convert only if png doesn't exist yet. */
-    //
-    //         if (stat(tmpf, &st)) {
-    //             if (stat(url, &st))
-    //                 return;
-    //
-    //             flush_tty();
-    //
-    //             previntr = mySignal(SIGINT, SIG_IGN);
-    //             prevquit = mySignal(SIGQUIT, SIG_IGN);
-    //             prevstop = mySignal(SIGTSTP, SIG_IGN);
-    //
-    //             if ((pid = fork()) == 0) {
-    //                 i = 0;
-    //
-    //                 close(STDERR_FILENO); /* Don't output error message. */
-    //                 ttymode_add_local_input(ISIG, 0);
-    //
-    //                 if ((cbuf = getenv("W3M_KITTY_TO_PNG")))
-    //                     argv[i++] = cbuf;
-    //                 else
-    //                     argv[i++] = "convert";
-    //
-    //                 if (is_anim) {
-    //                     buf = Strnew_charp(url);
-    //                     Strcat_charp(buf, "[0]");
-    //                     argv[i++] = buf->ptr;
-    //                 } else {
-    //                     argv[i++] = url;
-    //                 }
-    //                 argv[i++] = tmpf;
-    //                 argv[i++] = NULL;
-    //                 execvp(argv[0], argv);
-    //                 exit(0);
-    //             } else if (pid > 0) {
-    //                 waitpid(pid, &i, 0);
-    //                 ttymode_remove_local_input(ISIG, 0);
-    //                 mySignal(SIGINT, previntr);
-    //                 mySignal(SIGQUIT, prevquit);
-    //                 mySignal(SIGTSTP, prevstop);
-    //             }
-    //
-    //             pushText(fileToDelete, tmpf);
-    //         }
-    //         url = tmpf;
-    //     }
-    //
-    //     if (stat(url, &st))
-    //         return;
-    //
-    //     fp = fopen(url, "r");
-    //     if (!fp)
-    //         return;
-    //
-    //     MOVE(y, x);
-    //
+
+    const content_type = std.mem.span(guessContentType(url));
+    // const t = 100; // always convert to png for now.
+    const path = std.mem.span(url);
+
+    if (!std.ascii.eqlIgnoreCase(content_type, "image/png")) {
+        // conv to png
+        //         tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(path))->ptr;
+        //
+        //         if (type && !strcasecmp(type, "image/gif")) {
+        //             is_anim = 1;
+        //         } else {
+        //             is_anim = 0;
+        //         }
+        //
+        //         /* convert only if png doesn't exist yet. */
+        //
+        //         if (stat(tmpf, &st)) {
+        //             if (stat(path, &st))
+        //                 return;
+        //
+        //             flush_tty();
+        //
+        //             previntr = mySignal(SIGINT, SIG_IGN);
+        //             prevquit = mySignal(SIGQUIT, SIG_IGN);
+        //             prevstop = mySignal(SIGTSTP, SIG_IGN);
+        //
+        //             if ((pid = fork()) == 0) {
+        //                 i = 0;
+        //
+        //                 close(STDERR_FILENO); /* Don't output error message. */
+        //                 ttymode_add_local_input(ISIG, 0);
+        //
+        //                 if ((cbuf = getenv("W3M_KITTY_TO_PNG")))
+        //                     argv[i++] = cbuf;
+        //                 else
+        //                     argv[i++] = "convert";
+        //
+        //                 if (is_anim) {
+        //                     buf = Strnew_charp(path);
+        //                     Strcat_charp(buf, "[0]");
+        //                     argv[i++] = buf->ptr;
+        //                 } else {
+        //                     argv[i++] = path;
+        //                 }
+        //                 argv[i++] = tmpf;
+        //                 argv[i++] = NULL;
+        //                 execvp(argv[0], argv);
+        //                 exit(0);
+        //             } else if (pid > 0) {
+        //                 waitpid(pid, &i, 0);
+        //                 ttymode_remove_local_input(ISIG, 0);
+        //                 mySignal(SIGINT, previntr);
+        //                 mySignal(SIGQUIT, prevquit);
+        //                 mySignal(SIGTSTP, prevstop);
+        //             }
+        //
+        //             pushText(fileToDelete, tmpf);
+        //         }
+        //         path = tmpf;
+    }
+
+    const f = std.Io.Dir.cwd().openFile(runtime.io, path, .{}) catch {
+        return;
+    };
+    defer f.close(runtime.io);
+
+    // MOVE(y, x);
+
     //     cbuf = GC_MALLOC_ATOMIC(3072); /* base64-encoded chunks of 4096 bytes */
     //     if (!cbuf)
     //         goto cleanup;
