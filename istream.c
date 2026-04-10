@@ -1,11 +1,12 @@
 #include "global.h"
+#include "alloc.h"
 #include "html.h"
-#include "signal_util.h"
 #include "mimehead.h"
 #include "display.h"
 #include "proto.h"
 #include "myctype.h"
 #include "istream.h"
+#include <gc.h>
 #include <signal.h>
 #include <openssl/x509v3.h>
 #include <unistd.h>

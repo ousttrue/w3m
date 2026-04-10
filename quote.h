@@ -20,3 +20,5 @@ bool is_shell_unsafe(int c);
 bool is_url_quote(int c);
 bool is_file_quote(int c);
 bool is_url_unsafe(int c);
+
+const char* html_quote_char(int c);

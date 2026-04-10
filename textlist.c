@@ -1,4 +1,5 @@
 #include "textlist.h"
+#include "alloc.h"
 #include "indep.h"
 #include "Str.h"
 #include "myctype.h"

@@ -1,7 +1,7 @@
 #include "quote.h"
 
 // clang-format off
-uint8_t QUOTE_MAP[0x100] = {
+static uint8_t QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
     24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
     /* DLE DC1 DC2 DC3 DC4 NAK SYN ETB CAN  EM SUB ESC  FS  GS  RS  US */
@@ -36,3 +36,19 @@ bool is_shell_unsafe(int c) { return (GET_QUOTE_TYPE(c) & SHELL_UNSAFE_MASK); }
 bool is_url_quote(int c) { return (GET_QUOTE_TYPE(c) & URL_QUOTE_MASK); }
 bool is_file_quote(int c) { return (GET_QUOTE_TYPE(c) & FILE_QUOTE_MASK); }
 bool is_url_unsafe(int c) { return (GET_QUOTE_TYPE(c) & URL_UNSAFE_MASK); }
+
+static const char* HTML_QUOTE_MAP[] = {
+    0,
+    "&amp;",
+    "&lt;",
+    "&gt;",
+    "&quot;",
+    "&apos;",
+    0,
+    0,
+};
+
+const char* html_quote_char(int c)
+{
+    return HTML_QUOTE_MAP[is_html_quote(c)];
+}

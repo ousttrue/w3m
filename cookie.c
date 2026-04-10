@@ -8,6 +8,7 @@
  */
 
 #include "cookie.h"
+#include "alloc.h"
 #include "parsetag.h"
 #include "indep.h"
 #include "rc.h"

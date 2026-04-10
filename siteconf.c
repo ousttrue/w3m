@@ -151,6 +151,18 @@ void loadSiteconf(void)
     fclose(fp);
 }
 
+// To allow the maxlen to be negatie (infinity),
+// compare by "!=" instead of "<=".
+int strmatchlen(const char* s1, const char* s2, int maxlen)
+{
+    int i = 0;
+    for (; i != maxlen; ++i) {
+        if (!s1[i] || !s2[i] || s1[i] != s2[i])
+            break;
+    }
+    return i;
+}
+
 const void*
 querySiteconf(const struct Url* query_pu, int field)
 {

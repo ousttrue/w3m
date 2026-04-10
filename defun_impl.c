@@ -10,6 +10,7 @@
 #include "menu.h"
 #include "terms.h"
 #include "indep.h"
+#include "alloc.h"
 #include "anchor.h"
 #include "signal_util.h"
 #include "downloadlist.h"

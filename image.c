@@ -1,4 +1,5 @@
 #include "image.h"
+#include "alloc.h"
 #include "term_tty.h"
 #include "constants.h"
 #include "textlist.h"

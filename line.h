@@ -75,3 +75,12 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
 #define CP_FORCE 1
 
 int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, int mode);
+
+enum LineMode {
+    RAW_MODE = 0,
+    PAGER_MODE = 1,
+    HTML_MODE = 2,
+    HEADER_MODE = 3,
+};
+
+void cleanup_line(Str s, enum LineMode mode);

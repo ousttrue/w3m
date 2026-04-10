@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "alloc.h"
 #include "term_tty.h"
 #include "terms.h"
 #include "istream.h"

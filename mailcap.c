@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "alloc.h"
 #include "html.h"
 #include "hash.h"
 #include "indep.h"

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "alloc.h"
 #include "quote.h"
 #include <stdio.h>
 #include <pwd.h>
@@ -11,33 +12,6 @@
 #include <unistd.h>
 #include "myctype.h"
 #include "entity.h"
-
-char* HTML_QUOTE_MAP[] = {
-    NULL,
-    "&amp;",
-    "&lt;",
-    "&gt;",
-    "&quot;",
-    "&apos;",
-    NULL,
-    NULL,
-};
-
-int64_t
-strtoclen(const char* s)
-{
-#ifdef HAVE_STRTOLL
-    return strtoll(s, NULL, 10);
-#elif defined(HAVE_STRTOQ)
-    return strtoq(s, NULL, 10);
-#elif defined(HAVE_ATOLL)
-    return atoll(s);
-#elif defined(HAVE_ATOQ)
-    return atoq(s);
-#else
-    return atoi(s);
-#endif
-}
 
 char* allocStr(const char* s, int len)
 {
@@ -185,68 +159,6 @@ rest:
     return allocStr(name, -1);
 }
 
-#ifndef HAVE_STRCHR
-char* strchr(const char* s, int c)
-{
-    while (*s) {
-        if ((unsigned char)*s == c)
-            return (char*)s;
-        s++;
-    }
-    return NULL;
-}
-#endif /* not HAVE_STRCHR */
-
-#ifndef HAVE_STRCASECMP
-int strcasecmp(const char* s1, const char* s2)
-{
-    int x;
-    while (*s1) {
-        x = TOLOWER(*s1) - TOLOWER(*s2);
-        if (x != 0)
-            return x;
-        s1++;
-        s2++;
-    }
-    return -TOLOWER(*s2);
-}
-
-int strncasecmp(const char* s1, const char* s2, size_t n)
-{
-    int x;
-    while (*s1 && n) {
-        x = TOLOWER(*s1) - TOLOWER(*s2);
-        if (x != 0)
-            return x;
-        s1++;
-        s2++;
-        n--;
-    }
-    return n ? -TOLOWER(*s2) : 0;
-}
-#endif /* not HAVE_STRCASECMP */
-
-#ifndef HAVE_STRCASESTR
-/* string search using the simplest algorithm */
-char* strcasestr(const char* s1, const char* s2)
-{
-    int len1, len2;
-    if (s2 == NULL)
-        return (char*)s1;
-    if (*s2 == '\0')
-        return (char*)s1;
-    len1 = strlen(s1);
-    len2 = strlen(s2);
-    while (*s1 && len1 >= len2) {
-        if (strncasecmp(s1, s2, len2) == 0)
-            return (char*)s1;
-        s1++;
-        len1--;
-    }
-    return 0;
-}
-#endif
-
 static int
 strcasematch(char* s1, char* s2)
 {
@@ -261,36 +173,6 @@ strcasematch(char* s1, char* s2)
         s2++;
     }
     return (*s2 == '\0');
-}
-
-/* search multiple strings */
-int strcasemstr(char* str, char* srch[], char** ret_ptr)
-{
-    int i;
-    while (*str) {
-        for (i = 0; srch[i]; i++) {
-            if (strcasematch(str, srch[i])) {
-                if (ret_ptr)
-                    *ret_ptr = str;
-                return i;
-            }
-        }
-        str++;
-    }
-    return -1;
-}
-
-int strmatchlen(const char* s1, const char* s2, int maxlen)
-{
-    int i;
-
-    /* To allow the maxlen to be negatie (infinity),
-     * compare by "!=" instead of "<=". */
-    for (i = 0; i != maxlen; ++i) {
-        if (!s1[i] || !s2[i] || s1[i] != s2[i])
-            break;
-    }
-    return i;
 }
 
 char* remove_space(const char* str)
@@ -317,24 +199,6 @@ bool non_null(const char* s)
         s++;
     }
     return false;
-}
-
-void cleanup_line(Str s, int mode)
-{
-    if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
-        Strshrink(s, 2);
-        Strcat_char(s, '\n');
-    } else if (Strlastchar(s) == '\r')
-        s->ptr[s->length - 1] = '\n';
-    else if (Strlastchar(s) != '\n')
-        Strcat_char(s, '\n');
-    if (mode != PAGER_MODE) {
-        int i;
-        for (i = 0; i < s->length; i++) {
-            if (s->ptr[i] == '\0')
-                s->ptr[i] = ' ';
-        }
-    }
 }
 
 int getescapechar(char** str)
@@ -615,23 +479,6 @@ char* shell_quote(const char* str)
     return allocStr(str, -1);
 }
 
-void* xrealloc(void* ptr, size_t size)
-{
-    void* newptr = realloc(ptr, size);
-    if (newptr == NULL) {
-        fprintf(stderr, "Out of memory\n");
-        exit(-1);
-    }
-    return newptr;
-}
-
-/* Define this as a separate function in case the free() has
- * an incompatible prototype. */
-void xfree(void* ptr)
-{
-    free(ptr);
-}
-
 void* w3m_GC_realloc_atomic(void* ptr, size_t size)
 {
     return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
@@ -736,12 +583,3 @@ char* w3m_conf_dir(void)
 {
     return w3m_dir("W3M_CONF_DIR", CONF_DIR);
 }
-
-char* w3m_help_dir(void)
-{
-    return w3m_dir("W3M_HELP_DIR", HELP_DIR);
-}
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

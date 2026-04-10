@@ -1,4 +1,5 @@
 #include "display.h"
+#include "alloc.h"
 #include "quote.h"
 #include "content_type.h"
 #include "term_tty.h"
@@ -482,7 +483,7 @@ char* acceptableEncoding(void)
 /*
  * convert line
  */
-Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
+Str convertLine(struct URLFile* uf, Str line, enum LineMode mode, wc_ces* charset,
     wc_ces doc_charset)
 {
     line = Strnew_wc_output(wc_Str_conv_with_detect(WcOption, line->ptr, line->length, charset, doc_charset, InnerCharset));
@@ -1546,6 +1547,12 @@ checkRedirection(struct Url* pu)
 Str getLinkNumberStr(int correction)
 {
     return Sprintf("[%d]", cur_hseq + correction);
+}
+
+int64_t
+strtoclen(const char* s)
+{
+    return strtoll(s, NULL, 10);
 }
 
 /*

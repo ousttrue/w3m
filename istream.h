@@ -1,6 +1,7 @@
 #pragma once
 
 #include "indep.h"
+#include "line.h"
 
 #include <libwc/wc_types.h>
 
@@ -153,6 +154,8 @@ extern Str ssl_get_certificate(SSL* ssl, const char* hostname);
 #define openIS(path) newInputStream(open((path), O_RDONLY))
 
 void examineFile(const char* path, struct URLFile* uf);
-Str convertLine(struct URLFile* uf, Str line, int mode, wc_ces* charset,
+
+Str convertLine(struct URLFile* uf, Str line, enum LineMode mode, wc_ces* charset,
     wc_ces doc_charset);
+
 int checkSaveFile(InputStream stream, char* path);

@@ -1,4 +1,5 @@
 #include "main.h"
+#include "alloc.h"
 #include "term_tty.h"
 #include <strings.h>
 #include <w3m.h>
