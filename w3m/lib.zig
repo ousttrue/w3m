@@ -6,11 +6,12 @@ const c = @cImport({
     @cInclude("sys/ioctl.h");
     @cInclude("unistd.h");
 });
+const g = @import("global.zig");
 pub const runtime = @import("runtime.zig");
 pub const global = @import("global.zig");
 // pub const keybind = @import("keybind.zig");
 const TtyLinux = @import("TtyLinux.zig");
-const g = @import("global.zig");
+const content_type = @import("content_type.zig");
 
 var tty: TtyLinux = undefined;
 // blocking tty stdout
@@ -41,7 +42,7 @@ var evented: std.Io.Threaded = undefined;
 pub export fn _dummy_() void {
     // export symbols ?
     std.log.debug("{}", .{global});
-    // std.log.debug("{}", .{tty});
+    std.log.debug("{}", .{content_type});
 }
 
 comptime {
