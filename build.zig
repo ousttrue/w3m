@@ -8,7 +8,6 @@ const system_libs = [_][]const u8{
 const w3m_srcs = [_][]const u8{
     "wc_util.c",
     "keybind_mod.c",
-    "terminfo_entry.c",
     "defun_impl.c",
     "util.c",
     "downloadlist.c",

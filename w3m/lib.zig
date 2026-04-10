@@ -12,6 +12,7 @@ pub const global = @import("global.zig");
 // pub const keybind = @import("keybind.zig");
 const TtyLinux = @import("TtyLinux.zig");
 const guessContentType = @import("content_type.zig").guessContentType;
+const terminfo_entry = @import("terminfo_entry.zig");
 
 var tty: TtyLinux = undefined;
 // blocking tty stdout
@@ -42,7 +43,7 @@ var evented: std.Io.Threaded = undefined;
 pub export fn _dummy_() void {
     // export symbols ?
     std.log.debug("{}", .{global});
-    // std.log.debug("{}", .{content_type});
+    std.log.debug("{}", .{terminfo_entry});
 }
 
 comptime {

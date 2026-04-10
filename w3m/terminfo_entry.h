@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 struct TermInfo {
     char bp[1024];
@@ -59,36 +60,15 @@ struct TermInfo {
 
     char gcmap[96];
 };
-void getTCstr(struct TermInfo *ti);
+void getTCstr(struct TermInfo* ti);
 
 typedef int (*PutC)(int);
 
 extern int tputs(const char* str, int affcnt, int (*putc)(int));
 extern char* tgoto(const char* cm, int destcol, int destline);
 
-static inline void writestr(PutC f, const char* s)
-{
-    tputs(s, 1, f);
-}
+void writestr(PutC f, const char* s);
 
-static inline void terminfo_reset(PutC f, struct TermInfo* ti, bool do_not_use_ti_te)
-{
-    // turn off
-    writestr(f, ti->T_op);
-    writestr(f, ti->T_me);
-    if (!do_not_use_ti_te) {
-        if (ti->T_te && *ti->T_te)
-            writestr(f, ti->T_te);
-        else
-            writestr(f, ti->T_cl);
-    }
-    // reset terminal
-    writestr(f, ti->T_se);
-    // clear_tty();
-}
+void terminfo_reset(PutC f, struct TermInfo* ti, bool do_not_use_ti_te);
 
-static inline void MOVE(PutC f, struct TermInfo* ti, int line, int column)
-{
-    tputs(tgoto(ti->T_cm, column, line), 1, f);
-}
-
+void MOVE(PutC f, struct TermInfo* ti, int line, int column);
