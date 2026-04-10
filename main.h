@@ -95,3 +95,7 @@ void resetPos(struct _BufferPos* b);
 void w3m_exit(int i);
 void addDeleteFile(const char* file);
 const char* searchKeyData(void);
+
+void dump_extra(struct Buffer* buf);
+void dump_head(struct Buffer* buf);
+void dump_source(struct Buffer* buf);

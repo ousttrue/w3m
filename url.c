@@ -22,7 +22,6 @@
 #include "Str.h"
 #include "myctype.h"
 #include "regex.h"
-#include "setjmp_util.h"
 
 #include "wc_util.h"
 
@@ -379,7 +378,7 @@ int openSocket(const char* const hostname,
     struct addrinfo hints, *res0, *res;
     int error;
     const char* hname;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
 
     if (fmInitialized) {
         /* FIXME: gettextize? */
@@ -387,9 +386,6 @@ int openSocket(const char* const hostname,
         refresh();
     }
     if (SETJMP(AbortLoading) != 0) {
-#ifdef SOCK_DEBUG
-        sock_log("openSocket() failed. reason: user abort\n");
-#endif
         if (sock >= 0)
             close(sock);
         goto error;

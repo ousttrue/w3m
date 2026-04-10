@@ -312,10 +312,10 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    auto prevtrap = mySignal(SIGINT, intTrap);
+    auto prevtrap = signal(SIGINT, intTrap);
     crmode();
     buf = getshell(cmd);
-    mySignal(SIGINT, prevtrap);
+    signal(SIGINT, prevtrap);
     term_raw();
     if (buf == NULL) {
         /* FIXME: gettextize? */

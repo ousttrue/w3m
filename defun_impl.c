@@ -330,10 +330,10 @@ void readsh(struct CmdArgs args)
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    auto prevtrap = mySignal(SIGINT, intTrap);
+    auto prevtrap = signal(SIGINT, intTrap);
     crmode();
     struct Buffer* buf = getshell(cmd);
-    mySignal(SIGINT, prevtrap);
+    signal(SIGINT, prevtrap);
     term_raw();
     if (buf == NULL) {
         /* FIXME: gettextize? */

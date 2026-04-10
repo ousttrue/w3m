@@ -6,6 +6,7 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
+    "signal_util.c",
     "wc_util.c",
     "keybind_mod.c",
     "defun_impl.c",
@@ -13,7 +14,6 @@ const w3m_srcs = [_][]const u8{
     "downloadlist.c",
     "tab.c",
     "proxy.c",
-    "setjmp_util.c",
     "http_request.c",
     "url_scheme.c",
     "html.c",

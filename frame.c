@@ -17,7 +17,6 @@
 #include "global.h"
 #include "html_tag.h"
 #include "myctype.h"
-#include "setjmp_util.h"
 
 #include <libwc/charset.h>
 
@@ -408,7 +407,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
     wc_ces charset, doc_charset;
     const char *d_target, *p_target, *s_target, *t_target;
     struct Url *currentURL, base;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
     int flag;
 
     if (f == NULL)
@@ -753,9 +752,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                                     &base, charset);
                                 tag->need_reconstruct = TRUE;
                                 url = parseURL2(tag->value[j], &base);
-                                if (url.scheme == SCM_UNKNOWN ||
-                                    url.scheme == SCM_MAILTO ||
-                                    url.scheme == SCM_MISSING)
+                                if (url.scheme == SCM_UNKNOWN || url.scheme == SCM_MAILTO || url.scheme == SCM_MISSING)
                                     break;
                                 a_target |= 1;
                                 tag->value[j] = parsedURL2Str(&url)->ptr;

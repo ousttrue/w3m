@@ -12,7 +12,6 @@
 #include "html.h"
 #include "myctype.h"
 #include "line_input.h"
-#include "setjmp_util.h"
 
 #include "wc_util.h"
 
@@ -375,7 +374,7 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
             if (fmInitialized) {
                 term_raw();
                 pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
-                pwd = Strnew_charp(Str_conv_to_system(pwd->ptr, pwd->length));
+                pwd = Str_conv_to_system(pwd->ptr, pwd->length);
                 term_cbreak();
             } else {
                 pwd = Strnew_charp((char*)getpass("Password: "));
@@ -435,7 +434,7 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset)
     char *realpathname, *fn, *q;
     char** flist;
     int i, nfile, nfile_max;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
     wc_ces doc_charset = DocumentCharset;
 
     *charset = WC_CES_US_ASCII;

@@ -184,9 +184,9 @@ int ISclose(InputStream stream)
         if (stream->base.type & IST_UNCLOSE) {
             return -1;
         }
-        prevtrap = mySignal(SIGINT, SIG_IGN);
+        prevtrap = signal(SIGINT, SIG_IGN);
         stream->base.close(stream->base.handle);
-        mySignal(SIGINT, prevtrap);
+        signal(SIGINT, prevtrap);
     }
     xfree(stream->base.stream.buf);
     xfree(stream);

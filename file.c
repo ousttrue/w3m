@@ -13,7 +13,6 @@
 #include "anchor.h"
 #include "http_request.h"
 #include "proxy.h"
-#include "signal_util.h"
 #include "downloadlist.h"
 #include "main.h"
 #include "backend.h"
@@ -39,7 +38,7 @@
 #include "line_input.h"
 #include "proto.h"
 #include "myctype.h"
-#include "setjmp_util.h"
+#include "signal_util.h"
 #include "html.h"
 #include "html_tag.h"
 #include "local.h"
@@ -1564,7 +1563,7 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     struct Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = TRUE;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
     TextList* extra_header = newTextList();
     volatile Str uname = NULL;
     volatile Str pwd = NULL;
@@ -6636,7 +6635,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
     int volatile image_flag;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
 
     if (fmInitialized && graph_ok()) {
         symbol_width = symbol_width0 = 1;
@@ -6779,7 +6778,7 @@ struct Buffer*
 loadHTMLString(Str page)
 {
     struct URLFile f;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
     struct Buffer* newBuf;
 
     init_stream(&f, SCM_LOCAL, newStrStream(page));
@@ -6818,7 +6817,7 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
     Str lbuf, name, file, host, port, type;
     char* volatile p, * volatile q;
     int link, pre;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
     wc_ces doc_charset = DocumentCharset;
 
     tmp = parsedURL2Str(pu);
@@ -6969,7 +6968,7 @@ loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
     int64_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
 
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
@@ -7048,7 +7047,7 @@ loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf)
     Str tmp, tmpf;
     FILE* src = NULL;
     struct URLFile f;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
     struct stat st;
     const struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
 
@@ -7340,7 +7339,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     Lineprop* propBuffer = NULL;
 
     Linecolor* colorBuffer = NULL;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
 
     if (buf->pagerSource == NULL)
         return NULL;
@@ -7443,7 +7442,7 @@ int save2tmp(struct URLFile uf, const char* tmpf)
 {
     FILE* ff;
     int64_t linelen = 0, trbyte = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
     static sigjmp_buf env_bak;
     volatile int retval = 0;
     char* volatile buf = NULL;

@@ -1,15 +1,37 @@
 #pragma once
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE
+#endif
 #include <signal.h>
+#include <setjmp.h>
 
-typedef void MySignalHandler;
-#define SIGNAL_ARG int _dummy /* XXX */
-#define SIGNAL_ARGLIST 0 /* XXX */
-#define SIGNAL_RETURN return
+typedef void (*SignalFunc)(int);
 
-void (*mySignal(int signal_number, void (*action)(int)))(int);
+extern sigjmp_buf AbortLoading;
+extern sigjmp_buf IntReturn;
 
-MySignalHandler reset_exit(SIGNAL_ARG);
-MySignalHandler error_dump(SIGNAL_ARG);
-MySignalHandler reset_exit(SIGNAL_ARG);
-MySignalHandler error_dump(SIGNAL_ARG);
-MySignalHandler intTrap(SIGNAL_ARG);
+void reset_exit(int);
+void error_dump(int);
+void intTrap(int);
+
+#define SETJMP(env) sigsetjmp(env, 1)
+#define LONGJMP(env, val) siglongjmp(env, val)
+
+void KeyAbort(int _);
+
+#define TRAP_ON                              \
+    if (TrapSignal) {                        \
+        prevtrap = signal(SIGINT, KeyAbort); \
+        if (fmInitialized)                   \
+            term_cbreak();                   \
+    }
+#define TRAP_OFF                      \
+    if (TrapSignal) {                 \
+        if (fmInitialized)            \
+            term_raw();               \
+        if (prevtrap)                 \
+            signal(SIGINT, prevtrap); \
+    }
+
+struct Buffer;
+void do_dump(struct Buffer* buf);

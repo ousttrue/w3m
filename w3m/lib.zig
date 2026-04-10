@@ -299,9 +299,9 @@ export fn put_image_sixel(
     //
     //     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
     //
-    //     previntr = mySignal(SIGINT, SIG_IGN);
-    //     prevquit = mySignal(SIGQUIT, SIG_IGN);
-    //     prevstop = mySignal(SIGTSTP, SIG_IGN);
+    //     previntr = signal(SIGINT, SIG_IGN);
+    //     prevquit = signal(SIGQUIT, SIG_IGN);
+    //     prevstop = signal(SIGTSTP, SIG_IGN);
     //
     //     if ((pid = fork()) == 0) {
     //         char* env;
@@ -357,9 +357,9 @@ export fn put_image_sixel(
     //         int status;
     //         waitpid(pid, &status, 0);
     //         ttymode_remove_local_input(ISIG, 0);
-    //         mySignal(SIGINT, previntr);
-    //         mySignal(SIGQUIT, prevquit);
-    //         mySignal(SIGTSTP, prevstop);
+    //         signal(SIGINT, previntr);
+    //         signal(SIGQUIT, prevquit);
+    //         signal(SIGTSTP, prevstop);
     //         if (do_anim) {
     //             writestr("\x1b[?80l");
     //         }
@@ -516,9 +516,9 @@ export fn put_image_kitty(
         //
         //             flush_tty();
         //
-        //             previntr = mySignal(SIGINT, SIG_IGN);
-        //             prevquit = mySignal(SIGQUIT, SIG_IGN);
-        //             prevstop = mySignal(SIGTSTP, SIG_IGN);
+        //             previntr = signal(SIGINT, SIG_IGN);
+        //             prevquit = signal(SIGQUIT, SIG_IGN);
+        //             prevstop = signal(SIGTSTP, SIG_IGN);
         //
         //             if ((pid = fork()) == 0) {
         //                 i = 0;
@@ -545,9 +545,9 @@ export fn put_image_kitty(
         //             } else if (pid > 0) {
         //                 waitpid(pid, &i, 0);
         //                 ttymode_remove_local_input(ISIG, 0);
-        //                 mySignal(SIGINT, previntr);
-        //                 mySignal(SIGQUIT, prevquit);
-        //                 mySignal(SIGTSTP, prevstop);
+        //                 signal(SIGINT, previntr);
+        //                 signal(SIGQUIT, prevquit);
+        //                 signal(SIGTSTP, prevstop);
         //             }
         //
         //             pushText(fileToDelete, tmpf);

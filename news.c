@@ -11,7 +11,6 @@
 #include "url.h"
 #include "global.h"
 #include "myctype.h"
-#include "setjmp_util.h"
 #include "proto.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -302,7 +301,7 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset)
     char* volatile scheme, * volatile group, * volatile list;
     int status, i, first, last;
     volatile int flag = 0, start = 0, end = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
     wc_ces doc_charset = DocumentCharset, mime_charset;
 
     *charset = WC_CES_US_ASCII;

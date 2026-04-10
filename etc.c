@@ -563,12 +563,6 @@ char* strerror(int errno)
 }
 #endif /* not HAVE_STRERROR */
 
-
-
-
-
-
-
 /*
  * RFC2617: 1.2 Access Authentication Framework
  *
@@ -943,21 +937,21 @@ static void
 reset_signals(void)
 {
 #ifdef SIGHUP
-    mySignal(SIGHUP, SIG_DFL); /* terminate process */
+    signal(SIGHUP, SIG_DFL); /* terminate process */
 #endif
-    mySignal(SIGINT, SIG_DFL); /* terminate process */
+    signal(SIGINT, SIG_DFL); /* terminate process */
 #ifdef SIGQUIT
-    mySignal(SIGQUIT, SIG_DFL); /* terminate process */
+    signal(SIGQUIT, SIG_DFL); /* terminate process */
 #endif
-    mySignal(SIGTERM, SIG_DFL); /* terminate process */
-    mySignal(SIGILL, SIG_DFL); /* create core image */
-    mySignal(SIGIOT, SIG_DFL); /* create core image */
-    mySignal(SIGFPE, SIG_DFL); /* create core image */
+    signal(SIGTERM, SIG_DFL); /* terminate process */
+    signal(SIGILL, SIG_DFL); /* create core image */
+    signal(SIGIOT, SIG_DFL); /* create core image */
+    signal(SIGFPE, SIG_DFL); /* create core image */
 #ifdef SIGBUS
-    mySignal(SIGBUS, SIG_DFL); /* create core image */
+    signal(SIGBUS, SIG_DFL); /* create core image */
 #endif /* SIGBUS */
-    mySignal(SIGCHLD, SIG_IGN);
-    mySignal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 }
 
 #ifndef FOPEN_MAX
@@ -985,7 +979,7 @@ close_all_fds_except(int i, int f)
 void setup_child(int child, int i, int f)
 {
     reset_signals();
-    mySignal(SIGINT, SIG_IGN);
+    signal(SIGINT, SIG_IGN);
     if (!child)
         setpgrp();
     /*
@@ -1056,7 +1050,7 @@ err0:
 
 void myExec(const char* command)
 {
-    mySignal(SIGINT, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
     execl("/bin/sh", "sh", "-c", command, NULL);
     exit(127);
 }
@@ -1537,29 +1531,6 @@ const char* FQDN(const char* host)
     }
     /* all failed */
     return NULL;
-}
-
-void (*mySignal(int signal_number, void (*action)(int)))(int)
-{
-#ifdef SA_RESTART
-    struct sigaction new_action, old_action;
-
-    sigemptyset(&new_action.sa_mask);
-    new_action.sa_handler = action;
-    if (signal_number == SIGALRM) {
-#ifdef SA_INTERRUPT
-        new_action.sa_flags = SA_INTERRUPT;
-#else
-        new_action.sa_flags = 0;
-#endif
-    } else {
-        new_action.sa_flags = SA_RESTART;
-    }
-    sigaction(signal_number, &new_action, &old_action);
-    return (old_action.sa_handler);
-#else
-    return (signal(signal_number, action));
-#endif
 }
 
 static char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

@@ -2,7 +2,7 @@
 #include "term_tty.h"
 #include "terms.h"
 #include "indep.h"
-#include "setjmp_util.h"
+#include "signal_util.h"
 #include "global.h"
 #include "textlist.h"
 #include <strings.h>
@@ -57,8 +57,7 @@ static bool is_domain_match(const char* pat, const char* domain)
 bool check_no_proxy(const char* domain)
 {
     TextListItem* tl;
-    volatile int ret = 0;
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+    SignalFunc prevtrap = NULL;
 
     if (NO_proxy_domains == NULL || NO_proxy_domains->nitem == 0 || domain == NULL)
         return 0;
@@ -72,6 +71,7 @@ bool check_no_proxy(const char* domain)
     /*
      * to check noproxy by network addr
      */
+    int ret = 0;
     if (SETJMP(AbortLoading) != 0) {
         ret = 0;
         goto end;

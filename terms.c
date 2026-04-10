@@ -190,9 +190,9 @@ void reset_tty(void)
 //
 //             flush_tty();
 //
-//             previntr = mySignal(SIGINT, SIG_IGN);
-//             prevquit = mySignal(SIGQUIT, SIG_IGN);
-//             prevstop = mySignal(SIGTSTP, SIG_IGN);
+//             previntr = signal(SIGINT, SIG_IGN);
+//             prevquit = signal(SIGQUIT, SIG_IGN);
+//             prevstop = signal(SIGTSTP, SIG_IGN);
 //
 //             if ((pid = fork()) == 0) {
 //                 i = 0;
@@ -219,9 +219,9 @@ void reset_tty(void)
 //             } else if (pid > 0) {
 //                 waitpid(pid, &i, 0);
 //                 ttymode_remove(ISIG, 0);
-//                 mySignal(SIGINT, previntr);
-//                 mySignal(SIGQUIT, prevquit);
-//                 mySignal(SIGTSTP, prevstop);
+//                 signal(SIGINT, previntr);
+//                 signal(SIGQUIT, prevquit);
+//                 signal(SIGTSTP, prevstop);
 //             }
 //
 //             addDeleteFile(tmpf);
@@ -386,9 +386,9 @@ save_first_animation_frame(const char* path)
 //
 //     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
 //
-//     previntr = mySignal(SIGINT, SIG_IGN);
-//     prevquit = mySignal(SIGQUIT, SIG_IGN);
-//     prevstop = mySignal(SIGTSTP, SIG_IGN);
+//     previntr = signal(SIGINT, SIG_IGN);
+//     prevquit = signal(SIGQUIT, SIG_IGN);
+//     prevstop = signal(SIGTSTP, SIG_IGN);
 //
 //     if ((pid = fork()) == 0) {
 //         char* env;
@@ -444,9 +444,9 @@ save_first_animation_frame(const char* path)
 //         int status;
 //         waitpid(pid, &status, 0);
 //         ttymode_remove(ISIG, 0);
-//         mySignal(SIGINT, previntr);
-//         mySignal(SIGQUIT, prevquit);
-//         mySignal(SIGTSTP, prevstop);
+//         signal(SIGINT, previntr);
+//         signal(SIGQUIT, prevquit);
+//         signal(SIGTSTP, prevstop);
 //         if (do_anim) {
 //             writestr(&write1, "\x1b[?80l");
 //         }
@@ -455,48 +455,19 @@ save_first_animation_frame(const char* path)
 //     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 // }
 
-static MySignalHandler
-reset_exit_with_value(SIGNAL_ARG, int rval)
-{
-    reset_tty();
-    w3m_exit(rval);
-    SIGNAL_RETURN;
-}
-
-MySignalHandler
-reset_error_exit(SIGNAL_ARG)
-{
-    reset_exit_with_value(SIGNAL_ARGLIST, 1);
-}
-
-MySignalHandler
-reset_exit(SIGNAL_ARG)
-{
-    reset_exit_with_value(SIGNAL_ARGLIST, 0);
-}
-
-MySignalHandler
-error_dump(SIGNAL_ARG)
-{
-    mySignal(SIGIOT, SIG_DFL);
-    reset_tty();
-    abort();
-    SIGNAL_RETURN;
-}
-
 void set_int(void)
 {
-    mySignal(SIGHUP, reset_exit);
-    mySignal(SIGINT, reset_exit);
-    mySignal(SIGQUIT, reset_exit);
-    mySignal(SIGTERM, reset_exit);
-    mySignal(SIGILL, error_dump);
-    mySignal(SIGIOT, error_dump);
-    mySignal(SIGFPE, error_dump);
+    signal(SIGHUP, reset_exit);
+    signal(SIGINT, reset_exit);
+    signal(SIGQUIT, reset_exit);
+    signal(SIGTERM, reset_exit);
+    signal(SIGILL, error_dump);
+    signal(SIGIOT, error_dump);
+    signal(SIGFPE, error_dump);
 #ifdef SIGBUS
-    mySignal(SIGBUS, error_dump);
+    signal(SIGBUS, error_dump);
 #endif /* SIGBUS */
-    /* mySignal(SIGSEGV, error_dump); */
+    /* signal(SIGSEGV, error_dump); */
 }
 
 #define graphchar(c) (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? terminfo.gcmap[(c) - ' '] : (c))

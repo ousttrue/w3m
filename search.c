@@ -2,7 +2,7 @@
 #include "term_tty.h"
 #include "display.h"
 #include "terms.h"
-#include "setjmp_util.h"
+#include "signal_util.h"
 #include "line_input.h"
 #include "history.h"
 #include "main.h"
@@ -267,8 +267,6 @@ void srch(SrchFunc func, const char* prompt)
     searchRoutine = func;
 }
 
-sigjmp_buf IntReturn;
-
 // search by regular expression
 int srchcore(const char* str, SrchFunc func)
 {
@@ -280,7 +278,7 @@ int srchcore(const char* str, SrchFunc func)
         return SR_NOTFOUND;
 
     str = conv_search_string(SearchString, DisplayCharset);
-    auto prevtrap = mySignal(SIGINT, intTrap);
+    auto prevtrap = signal(SIGINT, intTrap);
     crmode();
     if (SETJMP(IntReturn) == 0) {
         for (i = 0; i < PREC_NUM; i++) {
@@ -289,7 +287,7 @@ int srchcore(const char* str, SrchFunc func)
                 clear_mark(Currentbuf->currentLine);
         }
     }
-    mySignal(SIGINT, prevtrap);
+    signal(SIGINT, prevtrap);
     term_raw();
     return result;
 }

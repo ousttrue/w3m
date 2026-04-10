@@ -654,7 +654,7 @@ wtf_is_hangul(wc_uchar* p)
     return WC_FALSE;
 }
 
-char* wtf_conv_fit(struct wc_option opts, char* s, wc_ces ces)
+char* wtf_conv_fit(struct wc_option opts, const char* s, wc_ces ces)
 {
     wc_uchar* p;
     struct wc_output os;

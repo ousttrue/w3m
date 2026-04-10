@@ -41,7 +41,7 @@
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
-#include "setjmp_util.h"
+#include "signal_util.h"
 
 #include <libwc/charset.h>
 #include <libwc/ucs.h>
@@ -83,21 +83,18 @@ AlarmEvent DefaultAlarm = {
     0, AL_UNSET, "NOTHING", NULL
 };
 static AlarmEvent* CurrentAlarm = &DefaultAlarm;
-static MySignalHandler SigAlarm(SIGNAL_ARG);
+static void SigAlarm(int _);
 
 static int need_resize_screen = FALSE;
-static MySignalHandler resize_hook(SIGNAL_ARG);
+static void resize_hook(int _);
 static void resize_screen(void);
 
-static MySignalHandler SigPipe(SIGNAL_ARG);
-
-static sigjmp_buf IntReturn;
+static void SigPipe(int _);
 
 int show_params_p = 0;
 void show_params(FILE* fp);
 
 int display_ok = FALSE;
-static void do_dump(struct Buffer*);
 int on_target = 1;
 
 void set_buffer_environ(struct Buffer*);
@@ -253,7 +250,7 @@ static void
 sig_chld(int signo)
 {
     exitDownloadList();
-    mySignal(SIGCHLD, sig_chld);
+    signal(SIGCHLD, sig_chld);
     return;
 }
 
@@ -641,7 +638,7 @@ bool w3m_args(int argc, const char** argv)
 
     if (!w3m_dump && !w3m_backend) {
         fmInit();
-        mySignal(SIGWINCH, resize_hook);
+        signal(SIGWINCH, resize_hook);
     } else if (w3m_halfdump && displayImage)
         activeImage = TRUE;
 
@@ -673,9 +670,9 @@ bool w3m_args(int argc, const char** argv)
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 
     if (w3m_dump)
-        mySignal(SIGINT, SIG_IGN);
-    mySignal(SIGCHLD, sig_chld);
-    mySignal(SIGPIPE, SigPipe);
+        signal(SIGINT, SIG_IGN);
+    signal(SIGCHLD, sig_chld);
+    signal(SIGPIPE, SigPipe);
 
 #if (GC_VERSION_MAJOR > 7) || ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
     orig_GC_warn_proc = GC_get_warn_proc();
@@ -895,8 +892,7 @@ void pushEvent(const char* cmd, void* data)
     LastEvent = event;
 }
 
-static void
-dump_source(struct Buffer* buf)
+void dump_source(struct Buffer* buf)
 {
     FILE* f;
     int c;
@@ -911,8 +907,7 @@ dump_source(struct Buffer* buf)
     fclose(f);
 }
 
-static void
-dump_head(struct Buffer* buf)
+void dump_head(struct Buffer* buf)
 {
     if (buf->document_header == NULL) {
         if (w3m_dump & DUMP_EXTRA)
@@ -925,8 +920,7 @@ dump_head(struct Buffer* buf)
     puts("");
 }
 
-static void
-dump_extra(struct Buffer* buf)
+void dump_extra(struct Buffer* buf)
 {
     printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
     if (buf->baseURL)
@@ -949,52 +943,6 @@ dump_extra(struct Buffer* buf)
             Strcat_char(tmp, '\n');
         printf("W3m-ssl-certificate: %s", tmp->ptr);
     }
-}
-
-static int
-cmp_anchor_hseq(const void* a, const void* b)
-{
-    return (*((const struct Anchor**)a))->hseq - (*((const struct Anchor**)b))->hseq;
-}
-
-static void
-do_dump(struct Buffer* buf)
-{
-    MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-
-    prevtrap = mySignal(SIGINT, intTrap);
-    if (SETJMP(IntReturn) != 0) {
-        mySignal(SIGINT, prevtrap);
-        return;
-    }
-    if (w3m_dump & DUMP_EXTRA)
-        dump_extra(buf);
-    if (w3m_dump & DUMP_HEAD)
-        dump_head(buf);
-    if (w3m_dump & DUMP_SOURCE)
-        dump_source(buf);
-    if (w3m_dump == DUMP_BUFFER) {
-        int i;
-        saveBuffer(buf, stdout, FALSE);
-        if (displayLinkNumber && buf->href) {
-            int nanchor = buf->href->nanchor;
-            printf("\nReferences:\n\n");
-            struct Anchor** in_order = New_N(struct Anchor*, buf->href->nanchor);
-            for (i = 0; i < nanchor; i++)
-                in_order[i] = buf->href->anchors + i;
-            qsort(in_order, nanchor, sizeof(struct Anchor*), cmp_anchor_hseq);
-            for (i = 0; i < nanchor; i++) {
-                struct Url pu;
-                char* url;
-                if (in_order[i]->slave)
-                    continue;
-                pu = parseURL2(in_order[i]->url, baseURL(buf));
-                url = url_decode2(parsedURL2Str(&pu)->ptr, Currentbuf);
-                printf("[%d] %s\n", in_order[i]->hseq + 1, url);
-            }
-        }
-    }
-    mySignal(SIGINT, prevtrap);
 }
 
 void pcmap(void)
@@ -1085,19 +1033,10 @@ void repBuffer(struct Buffer* oldbuf, struct Buffer* buf)
     Currentbuf = buf;
 }
 
-MySignalHandler
-intTrap(SIGNAL_ARG)
-{ /* Interrupt catcher */
-    LONGJMP(IntReturn, 0);
-    SIGNAL_RETURN;
-}
-
-static MySignalHandler
-resize_hook(SIGNAL_ARG)
+static void resize_hook(int _)
 {
     need_resize_screen = TRUE;
-    mySignal(SIGWINCH, resize_hook);
-    SIGNAL_RETURN;
+    signal(SIGWINCH, resize_hook);
 }
 
 static void
@@ -1110,11 +1049,9 @@ resize_screen(void)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-static MySignalHandler
-SigPipe(SIGNAL_ARG)
+static void SigPipe(int _)
 {
-    mySignal(SIGPIPE, SigPipe);
-    SIGNAL_RETURN;
+    signal(SIGPIPE, SigPipe);
 }
 
 /*
@@ -2706,8 +2643,7 @@ void w3m_exit(int i)
     exit(i);
 }
 
-static MySignalHandler
-SigAlarm(SIGNAL_ARG)
+static void SigAlarm(int _)
 {
     char* data;
 
@@ -2730,11 +2666,10 @@ SigAlarm(SIGNAL_ARG)
         if (!Currentbuf->event)
             CurrentAlarm = &DefaultAlarm;
         if (CurrentAlarm->sec > 0) {
-            mySignal(SIGALRM, SigAlarm);
+            signal(SIGALRM, SigAlarm);
             alarm(CurrentAlarm->sec);
         }
     }
-    SIGNAL_RETURN;
 }
 
 AlarmEvent*
@@ -3087,7 +3022,7 @@ bool processCurrentBufferEvent(void)
     if (!Currentbuf->event)
         CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
-        mySignal(SIGALRM, SigAlarm);
+        signal(SIGALRM, SigAlarm);
         alarm(CurrentAlarm->sec);
     }
     return false;
@@ -3095,7 +3030,7 @@ bool processCurrentBufferEvent(void)
 
 void processResizeAndImage()
 {
-    mySignal(SIGWINCH, resize_hook);
+    signal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         while (true) {
             if (need_resize_screen)
