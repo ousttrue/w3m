@@ -1,5 +1,5 @@
 #include "mimehead.h"
-#include "indep.h"
+#include "growbuf.h"
 #include "myctype.h"
 #include "Str.h"
 
@@ -60,10 +60,12 @@ ha2d(char x, char y)
 Str decodeB(char** ww)
 {
     struct growbuf gb;
-
     growbuf_init(&gb);
     decodeB_to_growbuf(&gb, ww);
-    return growbuf_to_Str(&gb);
+
+    Str s = Strnew_size(gb.length);
+    Strcat_charp_n(s, (const char*)gb.ptr, gb.length);
+    return s;
 }
 
 void decodeB_to_growbuf(struct growbuf* gb, char** ww)
@@ -119,10 +121,12 @@ last:
 Str decodeU(char** ww)
 {
     struct growbuf gb;
-
     growbuf_init(&gb);
     decodeU_to_growbuf(&gb, ww);
-    return growbuf_to_Str(&gb);
+
+    Str s = Strnew_size(gb.length);
+    Strcat_charp_n(s, (const char*)gb.ptr, gb.length);
+    return s;
 }
 
 void decodeU_to_growbuf(struct growbuf* gb, char** ww)
@@ -175,10 +179,12 @@ Str decodeQ(char** ww)
 Str decodeQP(char** ww)
 {
     struct growbuf gb;
-
     growbuf_init(&gb);
     decodeQP_to_growbuf(&gb, ww);
-    return growbuf_to_Str(&gb);
+
+    Str s = Strnew_size(gb.length);
+    Strcat_charp_n(s, (const char*)gb.ptr, gb.length);
+    return s;
 }
 
 void decodeQP_to_growbuf(struct growbuf* gb, char** ww)

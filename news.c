@@ -1,4 +1,6 @@
 #include "terms.h"
+#include "indep.h"
+#include "alloc.h"
 #include "quote.h"
 #include "term_tty.h"
 #include "html.h"
@@ -154,7 +156,7 @@ static char*
 html_quote_s(char* str)
 {
     Str tmp = NULL;
-    char *p, *q;
+    const char *p, *q;
     int space = true;
 
     for (p = str; *p; p++) {

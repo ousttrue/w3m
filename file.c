@@ -1,4 +1,5 @@
 #include "display.h"
+#include "indep.h"
 #include "alloc.h"
 #include "quote.h"
 #include "content_type.h"

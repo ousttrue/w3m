@@ -1,6 +1,5 @@
 #pragma once
-
-#include "indep.h"
+#include "growbuf.h"
 #include "line.h"
 
 #include <libwc/wc_types.h>

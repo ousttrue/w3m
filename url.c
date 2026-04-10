@@ -1,4 +1,5 @@
 #include "url.h"
+#include "alloc.h"
 #include "term_tty.h"
 #include "siteconf.h"
 #include "form.h"

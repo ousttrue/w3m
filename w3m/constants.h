@@ -1,5 +1,6 @@
 #pragma once
 
+#define STR_SIZE_MAX (INT_MAX / 32)
 #define MAX_LINE 200
 #define MAX_COLUMN 400
 #define PREC_LIMIT 10000

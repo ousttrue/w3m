@@ -220,13 +220,16 @@ int ISundogetc(InputStream stream)
 
 Str StrISgets2(InputStream stream, char crnl)
 {
-    struct growbuf gb;
-
     if (stream == NULL)
         return NULL;
+
+    struct growbuf gb;
     growbuf_init(&gb);
     ISgets_to_growbuf(stream, &gb, crnl);
-    return growbuf_to_Str(&gb);
+
+    Str s = Strnew_size(gb.length);
+    Strcat_charp_n(s, (const char*)gb.ptr, gb.length);
+    return s;
 }
 
 void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl)
