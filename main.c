@@ -3032,28 +3032,17 @@ bool processCurrentBufferEvent(void)
 void processResizeAndImage()
 {
     signal(SIGWINCH, resize_hook);
-    if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-        while (true) {
-            if (need_resize_screen)
-                resize_screen();
-            loadImage(Currentbuf, IMG_FLAG_NEXT);
-
-            int ch = getch_timeout(1);
-            if (ch > 0) {
-                unget(ch);
-                break;
-            }
+    while (true) {
+        if (need_resize_screen){
+            resize_screen();
         }
-    } else {
-        while (true) {
-            if (need_resize_screen)
-                resize_screen();
-
-            int ch = getch_timeout(1);
-            if (ch > 0) {
-                unget(ch);
-                break;
-            }
+        if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+            loadImage(Currentbuf, IMG_FLAG_NEXT);
+        }
+        int ch = getch_timeout(1);
+        if (ch > 0) {
+            unget(ch);
+            break;
         }
     }
 }

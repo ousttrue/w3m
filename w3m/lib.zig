@@ -19,8 +19,9 @@ var tty: TtyLinux = undefined;
 // blocking tty stdout
 var tty_writer: std.Io.File.Writer = undefined;
 var write_buf: [256]u8 = undefined;
-var tty_reader: std.Io.File.Reader = undefined;
-var read_buf: [16]u8 = undefined;
+var tty_in: std.Io.File = undefined;
+// var tty_reader: std.Io.File.Reader = undefined;
+// var read_buf: [16]u8 = undefined;
 var peek_queue: std.Deque(u8) = .initBuffer(&.{});
 
 // var evented: std.Io.Evented = undefined;
@@ -67,7 +68,8 @@ pub fn init(process_init: std.process.Init) void {
     // }) catch @panic("evented.init");
     evented = .init(runtime.allocator, .{});
 
-    tty_reader = std.Io.File.stdin().reader(evented.io(), &read_buf);
+    tty_in = std.Io.File.stdin();
+    // tty_reader = std.Io.File.stdin().reader(evented.io(), &read_buf);
 }
 
 pub fn deinit() void {
@@ -620,22 +622,22 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 // }
 
-pub export fn getch() u8 {
+fn getch_async(io: std.Io) u8 {
+    var reader_buf: [1]u8 = undefined;
+    var tty_reader = tty_in.reader(io, &reader_buf);
     var buf: [1]u8 = undefined;
-    tty_reader.interface.readSliceAll(&buf) catch @panic("readSliceAll");
-    return buf[0];
+    if (tty_reader.interface.readSliceAll(&buf)) {
+        return buf[0];
+    } else |_| {
+        // canceled ?
+        return 0;
+    }
 }
 
-fn getch_async(io: std.Io) u8 {
-    _ = io;
-
-    if (peek_queue.popFront()) |ch| {
-        return ch;
-    }
-
-    var buf: [1]u8 = undefined;
-    tty_reader.interface.readSliceAll(&buf) catch @panic("readSliceAll");
-    return buf[0];
+pub export fn getch() u8 {
+    const io = runtime.io;
+    var future = io.async(getch_async, .{io});
+    return future.await(io);
 }
 
 fn sleep_async(io: std.Io, duration: std.Io.Duration) void {
