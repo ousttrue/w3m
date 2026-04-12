@@ -250,7 +250,7 @@ done_parse_tag:
     return tag;
 }
 
-int parsedtag_set_value(struct HtmlTag* tag, int id, char* value)
+int parsedtag_set_value(struct HtmlTag* tag, int id, const char* value)
 {
     int i;
 

@@ -2,14 +2,14 @@
 #include <stdbool.h>
 
 struct CmdArgs {
-    void* p;
+    int ch;
 };
 
 typedef void (*CmdFunc)(struct CmdArgs);
 
 extern void w3mFunc(const char* cmd);
 
-extern bool w3m_args(int argc, const char** argv);
+extern bool w3m_args(struct CmdArgs args, int argc, const char** argv);
 extern int w3m_loop(void);
 
 extern char* w3m_auxbin_dir(void);

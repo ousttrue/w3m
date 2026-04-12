@@ -327,7 +327,8 @@ void resetFrameElement(union frameset_element* f_element,
 }
 
 static struct frameset*
-frame_download_source(struct frame_body* b, struct Url* currentURL,
+frame_download_source(struct CmdArgs args,
+    struct frame_body* b, struct Url* currentURL,
     struct Url* baseURL, int flag)
 {
     struct Buffer* buf;
@@ -345,7 +346,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
     default:
         is_redisplay = true;
         w3m_dump |= DUMP_FRAME;
-        buf = loadGeneralFile(b->url,
+        buf = loadGeneralFile(args, b->url,
             baseURL ? baseURL : currentURL,
             b->referer, flag | RG_FRAME_SRC, b->request);
         /* XXX certificate? */
@@ -399,7 +400,7 @@ frame_download_source(struct frame_body* b, struct Url* currentURL,
     case HTML_COL
 
 static int
-createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
+createFrameFile(struct CmdArgs args, struct frameset* f, FILE* f1, struct Buffer* current, int level,
     int force_reload)
 {
     int r, c, t_stack;
@@ -478,7 +479,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                     frame.body->name = Sprintf("%s_%d", f->name, i)->ptr;
                 }
                 fflush(f1);
-                f_frameset = frame_download_source(frame.body,
+                f_frameset = frame_download_source(args, frame.body,
                     currentURL,
                     current->baseURL, flag);
                 if (f_frameset) {
@@ -828,8 +829,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
                 if (!frame.set->name && f->name) {
                     frame.set->name = Sprintf("%s_%d", f->name, i)->ptr;
                 }
-                createFrameFile(frame.set, f1, current, level + 1,
-                    force_reload);
+                createFrameFile(args, frame.set, f1, current, level + 1, force_reload);
                 break;
             }
             fputs("</td>\n", f1);
@@ -846,7 +846,7 @@ createFrameFile(struct frameset* f, FILE* f1, struct Buffer* current, int level,
 }
 
 struct Buffer*
-renderFrame(struct Buffer* Cbuf, int force_reload)
+renderFrame(struct CmdArgs args, struct Buffer* Cbuf, int force_reload)
 {
     Str tmp;
     FILE* f;
@@ -862,7 +862,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     /*
      * if (Cbuf->frameQ != NULL) fset = Cbuf->frameQ->frameset; else */
     fset = Cbuf->frameset;
-    if (fset == NULL || createFrameFile(fset, f, Cbuf, 0, force_reload) < 0) {
+    if (fset == NULL || createFrameFile(args, fset, f, Cbuf, 0, force_reload) < 0) {
         fclose(f);
         return NULL;
     }
@@ -873,7 +873,7 @@ renderFrame(struct Buffer* Cbuf, int force_reload)
     renderFrameSet = Cbuf->frameset;
     flushFrameSet(renderFrameSet);
     DocumentCharset = InnerCharset;
-    buf = loadGeneralFile(tmp->ptr, NULL, NULL, flag, NULL);
+    buf = loadGeneralFile(args, tmp->ptr, NULL, NULL, flag, NULL);
     DocumentCharset = doc_charset;
     renderFrameSet = NULL;
     if (buf == NULL || buf == NO_BUFFER)

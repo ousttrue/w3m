@@ -24,6 +24,21 @@
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
 
+enum CompletionStatus {
+    CPL_OK = 0,
+    CPL_AMBIG = 1,
+    CPL_FAIL = 2,
+    CPL_MENU = 3,
+};
+
+enum CompletionFlags {
+    CPL_NEVER = 0x0,
+    CPL_OFF = 0x1,
+    CPL_ON = 0x2,
+    CPL_ALWAYS = 0x4,
+    CPL_URL = 0x8,
+};
+
 static Str strBuf;
 static Lineprop strProp[STR_LEN];
 
@@ -50,65 +65,22 @@ static void next_compl(int next);
 static void next_dcompl(int next);
 static Str doComplete(Str ifn, enum CompletionStatus* status, int next);
 
-/* *INDENT-OFF* */
+// clang-format off
 void (*InputKeymap[32])() = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
-    _compl,
-    _mvB,
-    _mvL,
-    _inbrk,
-    delC,
-    _mvE,
-    _mvR,
-    _inbrk,
+    _compl, _mvB, _mvL, _inbrk, delC, _mvE, _mvR, _inbrk,
     /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
-    _bs,
-    iself,
-    _enter,
-    killn,
-    iself,
-    _enter,
-    _next,
-    _editor,
+    _bs, iself, _enter, killn, iself, _enter, _next, _editor,
     /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w     */
-    _prev,
-    _quo,
-    _bsw,
-    iself,
-    _mvLw,
-    killb,
-    _quo,
-    _bsw,
+    _prev, _quo, _bsw, iself, _mvLw, killb, _quo, _bsw,
     /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
-    _tcompl,
-    _mvRw,
-    iself,
-    _esc,
-    iself,
-    iself,
-    iself,
-    iself,
+    _tcompl, _mvRw, iself, _esc, iself, iself, iself, iself,
 };
-/* *INDENT-ON* */
+// clang-format on
 
 static int setStrType(Str str, Lineprop* prop);
 static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
 static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
-
-enum CompletionStatus {
-    CPL_OK = 0,
-    CPL_AMBIG = 1,
-    CPL_FAIL = 2,
-    CPL_MENU = 3,
-};
-
-enum CompletionFlags {
-    CPL_NEVER = 0x0,
-    CPL_OFF = 0x1,
-    CPL_ON = 0x2,
-    CPL_ALWAYS = 0x4,
-    CPL_URL = 0x8,
-};
 
 static int CPos, CLen, offset;
 static int i_cont, i_broken, i_quote;
@@ -122,7 +94,7 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(const char* prompt, const char* def_str,
+char* inputLineHistSearch(struct CmdArgs args, const char* prompt, const char* def_str,
     enum InputLineFlags flag, struct Hist* hist, IncrFunc incrfunc)
 {
     int opos, x, y, lpos, rpos, epos;
@@ -1043,4 +1015,19 @@ _editor(void)
     CLen = CPos = setStrType(strBuf, strProp);
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+char* inputAnswer(struct CmdArgs args, const char* prompt)
+{
+    if (QuietMessage)
+        return "n";
+
+    if (fmInitialized) {
+        term_raw();
+        return inputChar(args, prompt);
+    } else {
+        printf("%s", prompt);
+        fflush(stdout);
+        return Strfgets(stdin)->ptr;
+    }
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include <w3m.h>
 #include <stdbool.h>
 
 struct BufferPoint {
@@ -58,8 +59,7 @@ struct Anchor* retrieveCurrentImg(struct Buffer* buf);
 struct Anchor* retrieveCurrentForm(struct Buffer* buf);
 struct Anchor* searchAnchor(struct AnchorList* al, const char* str);
 struct Anchor* searchURLLabel(struct Buffer* buf, const char* url);
-struct Anchor* accesskey_menu(struct Buffer* buf);
-struct Anchor* accesskey_menu(struct Buffer* buf);
+struct Anchor* accesskey_menu(struct CmdArgs, struct Buffer* buf);
 struct FormItem;
 void formRecheckRadio(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
 void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* form);
@@ -71,4 +71,4 @@ void addMultirowsImg(struct Buffer* buf, struct AnchorList* al);
 struct HmarkerList* putHmarker(struct HmarkerList* ml, int line, int pos, int seq);
 void shiftAnchorPosition(struct AnchorList* a, struct HmarkerList* hl, int line, int pos, int shift);
 const char* getAnchorText(struct Buffer* buf, struct AnchorList* al, struct Anchor* a);
-struct Anchor* list_menu(struct Buffer* buf);
+struct Anchor* list_menu(struct CmdArgs args, struct Buffer* buf);

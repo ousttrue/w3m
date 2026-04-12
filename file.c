@@ -85,7 +85,7 @@ static int frame_source = 0;
 static int need_number = 0;
 
 static const char* guess_filename(const char* file);
-static int _MoveFile(char* path1, char* path2);
+static int _MoveFile(const char* path1, const char* path2);
 static void uncompress_stream(struct URLFile* uf, const char** src);
 static FILE* lessopen_stream(const char* path);
 static struct Buffer* loadcmdout(const char* cmd,
@@ -376,7 +376,7 @@ uncompressed_file_type(const char* path, const char** ext)
 }
 
 static int
-setModtime(char* path, time_t modtime)
+setModtime(const char* path, time_t modtime)
 {
     struct utimbuf t;
     struct stat st;
@@ -530,7 +530,7 @@ int matchattr(const char* p, const char* attr, int len, Str* value)
     return 0;
 }
 
-void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
+void readHeader(struct CmdArgs args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
 {
     char *p, *q;
     char* emsg;
@@ -773,7 +773,7 @@ void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url*
                         if (msg->length > COLS - 10)
                             Strshrink(msg, msg->length - (COLS - 10));
                         Strcat_charp(msg, " (y/n)");
-                        ans = inputAnswer(msg->ptr);
+                        ans = inputAnswer(args, msg->ptr);
                     }
                     if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(pu, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
                         err = (err & ~COO_OVERRIDE_OK) - 1;
@@ -1391,7 +1391,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
 }
 
 static void
-getAuthCookie(struct http_auth* hauth, char* auth_header,
+getAuthCookie(struct CmdArgs args, struct http_auth* hauth, char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     struct Form* request,
     volatile Str* uname, volatile Str* pwd)
@@ -1447,12 +1447,12 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
             const char* pp;
             term_raw();
             /* FIXME: gettextize? */
-            if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr,
+            if ((pp = inputStr(args, Sprintf("Username for %s: ", realm)->ptr,
                      NULL))
                 == NULL)
                 return;
             *uname = Str_conv_to_system(pp, strlen(pp));
-            if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
+            if ((pp = inputLine(args, Sprintf("Password for %s: ", realm)->ptr, NULL,
                      IN_PASSWORD))
                 == NULL) {
                 *uname = NULL;
@@ -1562,7 +1562,7 @@ strtoclen(const char* s)
  */
 #define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
-loadGeneralFile(const char* path, struct Url* volatile current, const char* referer,
+loadGeneralFile(struct CmdArgs args, const char* path, struct Url* volatile current, const char* referer,
     int flag, struct Form* volatile request)
 {
     struct URLFile f, *volatile of = NULL;
@@ -1611,7 +1611,7 @@ load_doc: {
     TRAP_OFF;
     url_option.referer = referer;
     url_option.flag = flag;
-    f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
+    f = openURL(args, tpath, &pu, current, &url_option, request, extra_header, of,
         &hr, &status);
     of = NULL;
     content_charset = 0;
@@ -1625,8 +1625,7 @@ load_doc: {
                 if (UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         DirBufferCommand, pu.file);
-                    b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
-                        NULL);
+                    b = loadGeneralFile(args, cmd->ptr, NULL, NO_REFERER, 0, NULL);
                     if (b != NULL && b != NO_BUFFER) {
                         copyParsedURL(&b->currentURL, &pu);
                         b->filename = b->currentURL.real_file;
@@ -1644,7 +1643,7 @@ load_doc: {
             t = "ftp:directory";
             break;
         case SCM_NEWS_GROUP:
-            page = loadNewsgroup(&pu, &charset);
+            page = loadNewsgroup(args, &pu, &charset);
             t = "news:group";
             break;
         case SCM_UNKNOWN:
@@ -1695,7 +1694,7 @@ load_doc: {
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(&f, t_buf, FALSE, &pu);
+        readHeader(args, &f, t_buf, FALSE, &pu);
         if (((http_response_code >= 301 && http_response_code <= 303)
                 || http_response_code == 307)
             && (p = checkHeader(t_buf, "Location:")) != NULL
@@ -1734,7 +1733,7 @@ load_doc: {
             if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = &pu;
-                getAuthCookie(&hauth, "Authorization:", extra_header,
+                getAuthCookie(args, &hauth, "Authorization:", extra_header,
                     auth_pu, &hr, request, &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
@@ -1754,7 +1753,7 @@ load_doc: {
                     != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = schemeToProxy(pu.scheme);
-                getAuthCookie(&hauth, "Proxy-Authorization:",
+                getAuthCookie(args, &hauth, "Proxy-Authorization:",
                     extra_header, auth_pu, &hr, request,
                     &uname, &pwd);
                 if (uname == NULL) {
@@ -1780,7 +1779,7 @@ load_doc: {
     } else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(&f, t_buf, TRUE, &pu);
+        readHeader(args, &f, t_buf, TRUE, &pu);
         t = checkContentType(t_buf);
         if (t == NULL)
             t = "text/plain";
@@ -1849,7 +1848,7 @@ load_doc: {
         searchHeader = SearchHeader = FALSE;
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(&f, t_buf, searchHeader_through, &pu);
+        readHeader(args, &f, t_buf, searchHeader_through, &pu);
         if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(&pu)) {
             /* document moved */
             tpath = url_encode(remove_space(p), NULL, 0);
@@ -1923,7 +1922,7 @@ page_loaded:
                 file = Sprintf("%s.html", file)->ptr;
             if (f.scheme == SCM_NEWS_GROUP)
                 file = Sprintf("%s.html", file)->ptr;
-            doFileMove(tmp->ptr, file);
+            doFileMove(args, tmp->ptr, file);
             return NO_BUFFER;
         }
         b = loadHTMLString(page);
@@ -1958,7 +1957,7 @@ page_loaded:
             file = conv_from_system(guess_save_name(NULL, pu.real_file));
         } else
             file = guess_save_name(t_buf, pu.file);
-        if (doFileSave(f, file) == 0)
+        if (doFileSave(args, f, file) == 0)
             UFhalfclose(&f);
         else
             UFclose(&f);
@@ -2008,12 +2007,12 @@ page_loaded:
             TRAP_OFF;
             if (pu.scheme == SCM_LOCAL) {
                 UFclose(&f);
-                _doFileCopy(pu.real_file,
+                _doFileCopy(args, pu.real_file,
                     conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
             } else {
                 if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
                     f.stream = newEncodedStream(f.stream, f.encoding);
-                if (doFileSave(f, guess_save_name(t_buf, pu.file)) == 0)
+                if (doFileSave(args, f, guess_save_name(t_buf, pu.file)) == 0)
                     UFhalfclose(&f);
                 else
                     UFclose(&f);
@@ -2313,7 +2312,7 @@ push_tag(struct readbuffer* obuf, char* cmdname, int cmd)
 
 static void
 push_nchars(struct readbuffer* obuf, int width,
-    char* str, int len, Lineprop mode)
+    const char* str, int len, Lineprop mode)
 {
     append_tags(obuf);
     Strcat_charp_n(obuf->line, str, len);
@@ -2748,7 +2747,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
             Strcat_charp(tmp, html_quote(obuf->anchor.title));
         }
         if (obuf->anchor.accesskey) {
-            char* c = html_quote_char(obuf->anchor.accesskey);
+            const char* c = html_quote_char(obuf->anchor.accesskey);
             Strcat_charp(tmp, "\" ACCESSKEY=\"");
             if (c)
                 Strcat_charp(tmp, c);
@@ -6138,7 +6137,7 @@ table_start:
                         != 0);
                     str++;
                 } else if (obuf->flag & RB_PLAIN) {
-                    char* p = html_quote_char(*str);
+                    const char* p = html_quote_char(*str);
                     if (p) {
                         push_charp(obuf, 1, p, PC_ASCII);
                         str++;
@@ -7276,7 +7275,7 @@ openPagerBuffer(InputStream stream, struct Buffer* buf)
 }
 
 struct Buffer*
-openGeneralPagerBuffer(InputStream stream)
+openGeneralPagerBuffer(struct CmdArgs args, InputStream stream)
 {
     struct Buffer* buf;
     const char* t = "text/plain";
@@ -7291,7 +7290,7 @@ openGeneralPagerBuffer(InputStream stream)
     t_buf->currentURL.scheme = SCM_LOCAL;
     t_buf->currentURL.file = "-";
     if (SearchHeader) {
-        readHeader(&uf, t_buf, TRUE, NULL);
+        readHeader(args, &uf, t_buf, TRUE, NULL);
         t = checkContentType(t_buf);
         if (t == NULL)
             t = "text/plain";
@@ -7601,7 +7600,7 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 }
 
 static int
-_MoveFile(char* path1, char* path2)
+_MoveFile(const char* path1, const char* path2)
 {
     InputStream f1;
     FILE* f2;
@@ -7640,11 +7639,11 @@ _MoveFile(char* path1, char* path2)
     return 0;
 }
 
-int _doFileCopy(const char* tmpf, const char* defstr, int download)
+int _doFileCopy(struct CmdArgs args, const char* tmpf, const char* defstr, int download)
 {
     Str msg;
     Str filen;
-    char *p, *q = NULL;
+    const char *p, *q = NULL;
     pid_t pid;
     char* lock;
     struct stat st;
@@ -7655,8 +7654,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
-            q = inputLineHist("(Download)Save file to: ",
-                defstr, IN_COMMAND, SaveHist);
+            q = inputLineHist(args, "(Download)Save file to: ", defstr, IN_COMMAND, SaveHist);
             if (q == NULL || *q == '\0')
                 return FALSE;
             p = conv_to_system(q);
@@ -7669,7 +7667,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
                 p = conv_to_system(p);
             }
             p = expandPath(p);
-            if (checkOverWrite(p) < 0)
+            if (checkOverWrite(args, p) < 0)
                 return -1;
         }
         if (checkCopyFile(tmpf, p) < 0) {
@@ -7714,7 +7712,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         }
         for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
             ;
-        *(p + 1) = '\0';
+        ((char*)p)[1] = '\0';
         if (*q == '\0')
             return -1;
         p = q;
@@ -7722,7 +7720,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
             is_pipe = TRUE;
         else {
             p = expandPath(p);
-            if (checkOverWrite(p) < 0)
+            if (checkOverWrite(args, p) < 0)
                 return -1;
         }
         if (checkCopyFile(tmpf, p) < 0) {
@@ -7741,33 +7739,33 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
     return 0;
 }
 
-int doFileMove(const char* tmpf, const char* defstr)
+int doFileMove(struct CmdArgs args, const char* tmpf, const char* defstr)
 {
-    int ret = doFileCopy(tmpf, defstr);
+    int ret = doFileCopy(args, tmpf, defstr);
     unlink(tmpf);
     return ret;
 }
 
-int doFileSave(struct URLFile uf, const char* defstr)
+int doFileSave(struct CmdArgs args, struct URLFile uf, const char* defstr)
 {
     Str msg;
     Str filen;
-    char *p, *q;
+    const char *p, *q;
     pid_t pid;
     char* lock;
-    char* tmpf = NULL;
+    const char* tmpf = NULL;
 
     if (fmInitialized) {
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
-            p = inputLineHist("(Download)Save file to: ",
+            p = inputLineHist(args, "(Download)Save file to: ",
                 defstr, IN_FILENAME, SaveHist);
             if (p == NULL || *p == '\0')
                 return -1;
             p = conv_to_system(p);
         }
-        if (checkOverWrite(p) < 0)
+        if (checkOverWrite(args, p) < 0)
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
             /* FIXME: gettextize? */
@@ -7818,11 +7816,11 @@ int doFileSave(struct URLFile uf, const char* defstr)
         }
         for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
             ;
-        *(p + 1) = '\0';
+        ((char*)p)[1] = '\0';
         if (*q == '\0')
             return -1;
         p = expandPath(q);
-        if (checkOverWrite(p) < 0)
+        if (checkOverWrite(args, p) < 0)
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
             /* FIXME: gettextize? */
@@ -7845,7 +7843,7 @@ int doFileSave(struct URLFile uf, const char* defstr)
     return 0;
 }
 
-int checkCopyFile(char* path1, char* path2)
+int checkCopyFile(const char* path1, const char* path2)
 {
     struct stat st1, st2;
 
@@ -7857,7 +7855,7 @@ int checkCopyFile(char* path1, char* path2)
     return 0;
 }
 
-int checkSaveFile(InputStream stream, char* path2)
+int checkSaveFile(InputStream stream, const char* path2)
 {
     struct stat st1, st2;
     int des = ISfileno(stream);
@@ -7872,36 +7870,18 @@ int checkSaveFile(InputStream stream, char* path2)
     return 0;
 }
 
-int checkOverWrite(const char* path)
+int checkOverWrite(struct CmdArgs args, const char* path)
 {
     struct stat st;
-    char* ans;
-
     if (stat(path, &st) < 0)
         return 0;
+
     /* FIXME: gettextize? */
-    ans = inputAnswer("File exists. Overwrite? (y/n)");
+    char* ans = inputAnswer(args, "File exists. Overwrite? (y/n)");
     if (ans && TOLOWER(*ans) == 'y')
         return 0;
     else
         return -1;
-}
-
-char* inputAnswer(char* prompt)
-{
-    char* ans;
-
-    if (QuietMessage)
-        return "n";
-    if (fmInitialized) {
-        term_raw();
-        ans = inputChar(prompt);
-    } else {
-        printf("%s", prompt);
-        fflush(stdout);
-        ans = Strfgets(stdin)->ptr;
-    }
-    return ans;
 }
 
 static void

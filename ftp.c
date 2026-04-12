@@ -326,7 +326,7 @@ void closeFTP(void)
 }
 
 InputStream
-openFTPStream(struct Url* pu, struct URLFile* uf)
+openFTPStream(struct CmdArgs args, struct Url* pu, struct URLFile* uf)
 {
     Str tmp;
     int status;
@@ -376,11 +376,11 @@ openFTPStream(struct Url* pu, struct URLFile* uf)
         if (pwd == NULL) {
             if (fmInitialized) {
                 term_raw();
-                pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
+                pwd = Strnew_charp(inputLine(args, "Password: ", NULL, IN_PASSWORD));
                 pwd = Str_conv_to_system(pwd->ptr, pwd->length);
                 term_cbreak();
             } else {
-                pwd = Strnew_charp((char*)getpass("Password: "));
+                pwd = Strnew_charp(getpass("Password: "));
             }
             add_auth_cookie_flag = true;
         }

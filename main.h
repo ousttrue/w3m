@@ -1,6 +1,7 @@
 #pragma once
-#include <stdint.h>
+#include <w3m.h>
 #include "Str.h"
+#include <stdint.h>
 
 #define DUMP_BUFFER 0x01
 #define DUMP_HEAD 0x02
@@ -16,7 +17,7 @@ typedef struct _AlarmEvent {
     int sec;
     short status;
     const char* cmd;
-    void* data;
+    const void* data;
 } AlarmEvent;
 
 extern AlarmEvent DefaultAlarm;
@@ -42,10 +43,10 @@ int searchKeyNum(void);
 struct Buffer;
 void shiftvisualpos(struct Buffer* buf, int shift);
 void pushBuffer(struct Buffer* buf);
-void cmd_loadfile(const char* fn);
+void cmd_loadfile(struct CmdArgs args, const char* fn);
 struct Url;
 struct Form;
-void cmd_loadURL(const char* url, struct Url* current, char* referer, struct Form* request);
+void cmd_loadURL(struct CmdArgs args, const char* url, struct Url* current, char* referer, struct Form* request);
 void _movL(int n);
 void _movD(int n);
 void _movU(int n);
@@ -55,24 +56,25 @@ int prev_nonnull_line(struct Line* line);
 int is_wordchar(uint32_t c);
 uint32_t getChar(char* p);
 int next_nonnull_line(struct Line* line);
-void _quitfm(int confirm);
+void _quitfm(struct CmdArgs args, int confirm);
 void delBuffer(struct Buffer* buf);
 void _goLine(const char* l);
 int cur_real_linenumber(struct Buffer* buf);
-void _followForm(int submit);
+void _followForm(struct CmdArgs args, int submit);
 void gotoLabel(const char* label);
 int handleMailto(const char* url);
 void _newT(void);
-struct Buffer* loadLink(const char* url, const char* target, const char* referer, struct Form* request);
+struct Buffer* loadLink(struct CmdArgs args, const char* url, const char* target, const char* referer, struct Form* request);
 void _nextA(int visited);
 void _prevA(int visited);
 void nextX(int d, int dy);
 void nextY(int d);
 int checkBackBuffer(struct Buffer* buf);
-void goURL0(char* prompt, int relative);
+void goURL0(struct CmdArgs args, char* prompt, int relative);
 void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid);
 struct Anchor;
-void anchorMn(struct Anchor* (*menu_func)(struct Buffer*), int go);
+typedef struct Anchor* (*AnchorFunc)(struct CmdArgs args, struct Buffer*);
+void anchorMn(struct CmdArgs args, AnchorFunc menu_func, int go);
 void _peekURL(int only_img);
 Str currentURL(void);
 struct FormItem;
@@ -80,14 +82,14 @@ void query_from_followform(Str* query, struct FormItem* fi, int multipart);
 void repBuffer(struct Buffer* oldbuf, struct Buffer* buf);
 void _docCSet(uint32_t charset);
 char* getCurWord(struct Buffer* buf, int* spos, int* epos);
-void invoke_browser(char* url);
+void invoke_browser(struct CmdArgs args, const char* url);
 void process_mouse(int btn, int x, int y);
 struct _TabBuffer* posTab(int x, int y);
-void execdict(char* word);
+void execdict(struct CmdArgs args, const char* word);
 char* GetWord(struct Buffer* buf);
 struct _TabBuffer* numTab(int n);
 void followTab(struct _TabBuffer* tab);
-void tabURL0(struct _TabBuffer* tab, char* prompt, int relative);
+void tabURL0(struct CmdArgs args, struct _TabBuffer* tab, char* prompt, int relative);
 void moveTab(struct _TabBuffer* t, struct _TabBuffer* t2, int right);
 struct Buffer* DownloadListBuffer(void);
 struct _BufferPos;

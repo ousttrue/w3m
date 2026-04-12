@@ -34,11 +34,14 @@ extern int max_textarea;
 extern struct FormSelectOption* select_option;
 extern int max_select;
 
-/* *INDENT-OFF* */
-struct {
-    char* action;
-    void (*rout)(struct parsed_tagarg*);
-} internal_action[] = {
+typedef void (*FormActionFunc)(struct CmdArgs args, struct parsed_tagarg*);
+
+struct FormAction {
+    const char* action;
+    FormActionFunc rout;
+};
+
+struct FormAction internal_action[] = {
     { "map", follow_map },
     { "option", panel_set_option },
     { "cookie", set_cookie_flag },
@@ -47,7 +50,6 @@ struct {
     { "none", NULL },
     { NULL, NULL },
 };
-/* *INDENT-ON* */
 
 struct Form*
 newFormList(char* action, char* method, char* charset, char* enctype,
@@ -419,8 +421,7 @@ void formUpdateBuffer(struct Anchor* a, struct Buffer* buf, struct FormItem* for
         if (form->type == FORM_SELECT) {
             p = form->label->ptr;
             updateSelectOption(form, form->select_option);
-        } else
-        {
+        } else {
             if (!form->value)
                 break;
             p = form->value->ptr;
@@ -582,14 +583,12 @@ input_end:
     unlink(tmpf);
 }
 
-void do_internal(char* action, char* data)
+void do_internal(struct CmdArgs args, char* action, char* data)
 {
-    int i;
-
-    for (i = 0; internal_action[i].action; i++) {
+    for (int i = 0; internal_action[i].action; i++) {
         if (strcasecmp(internal_action[i].action, action) == 0) {
             if (internal_action[i].rout)
-                internal_action[i].rout(cgistr2tagarg(data));
+                internal_action[i].rout(args, cgistr2tagarg(data));
             return;
         }
     }
@@ -653,7 +652,7 @@ void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
     }
 }
 
-int formChooseOptionByMenu(struct FormItem* fi, int x, int y)
+int formChooseOptionByMenu(struct CmdArgs args, struct FormItem* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     struct FormSelectOptionItem* opt;
@@ -661,12 +660,13 @@ int formChooseOptionByMenu(struct FormItem* fi, int x, int y)
     for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next)
         ;
 
-    const char** label; label = New_N(char*, n + 1);
+    const char** label;
+    label = New_N(char*, n + 1);
     for (i = 0, opt = fi->select_option; opt != NULL; i++, opt = opt->next)
         label[i] = opt->label->ptr;
     label[n] = NULL;
 
-    optionMenu(x, y, label, &selected, init_select, NULL);
+    optionMenu(args, x, y, label, &selected, init_select, NULL);
 
     if (selected < 0)
         return 0;

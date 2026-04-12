@@ -294,7 +294,7 @@ openNewsStream(struct Url* pu)
     return NULL;
 }
 
-Str loadNewsgroup(struct Url* pu, wc_ces* charset)
+Str loadNewsgroup(struct CmdArgs args, struct Url* pu, wc_ces* charset)
 {
     volatile Str page;
     Str tmp;
@@ -422,7 +422,7 @@ Str loadNewsgroup(struct Url* pu, wc_ces* charset)
                 &status);
             if (status != 221)
                 continue;
-            readHeader(&f, buf, false, NULL);
+            readHeader(args, &f, buf, false, NULL);
             if (!(p = checkHeader(buf, "Message-ID:")))
                 continue;
             if (*p == '<')

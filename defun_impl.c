@@ -146,22 +146,22 @@ void rdrwSc(struct CmdArgs args)
 
 void srchfor(struct CmdArgs args)
 {
-    srch(forwardSearch, "Forward: ");
+    srch(args, forwardSearch, "Forward: ");
 }
 
 void isrchfor(struct CmdArgs args)
 {
-    isrch(forwardSearch, "I-search: ");
+    isrch(args, forwardSearch, "I-search: ");
 }
 
 void srchbak(struct CmdArgs args)
 {
-    srch(backwardSearch, "Backward: ");
+    srch(args, backwardSearch, "Backward: ");
 }
 
 void isrchbak(struct CmdArgs args)
 {
-    isrch(backwardSearch, "I-search backward: ");
+    isrch(args, backwardSearch, "I-search backward: ");
 }
 
 void srchnxt(struct CmdArgs args)
@@ -240,7 +240,7 @@ void setEnv(struct CmdArgs args)
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
-        env = inputStrHist("Set environ: ", env, TextHist);
+        env = inputStrHist(args, "Set environ: ", env, TextHist);
         if (env == NULL || *env == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -260,7 +260,7 @@ void pipeBuf(struct CmdArgs args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(args, "Pipe buffer to: ", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -297,7 +297,7 @@ void pipesh(struct CmdArgs args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(args, "(read shell[pipe])!", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -323,7 +323,7 @@ void readsh(struct CmdArgs args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(args, "(read shell)!", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -354,7 +354,7 @@ void execsh(struct CmdArgs args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(args, "(exec shell)!", "", IN_COMMAND, ShellHist);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -376,7 +376,7 @@ void ldfile(struct CmdArgs args)
     const char* fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
         /* FIXME: gettextize? */
-        fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
+        fn = inputFilenameHist(args, "(Load)Filename? ", NULL, LoadHist);
     }
     if (fn != NULL)
         fn = conv_to_system(fn);
@@ -384,7 +384,7 @@ void ldfile(struct CmdArgs args)
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    cmd_loadfile(fn);
+    cmd_loadfile(args, fn);
 }
 
 void ldhelp(struct CmdArgs args)
@@ -394,7 +394,7 @@ void ldhelp(struct CmdArgs args)
     Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
         Str_form_quote(Strnew_charp(w3m_version))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-    cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
+    cmd_loadURL(args, tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
 void movL(struct CmdArgs args)
@@ -534,13 +534,13 @@ end:
 /* Quit */
 void quitfm(struct CmdArgs args)
 {
-    _quitfm(FALSE);
+    _quitfm(args, FALSE);
 }
 
 /* Question and Quit */
 void qquitfm(struct CmdArgs args)
 {
-    _quitfm(confirm_on_quit);
+    _quitfm(args, confirm_on_quit);
 }
 
 /* Select buffer */
@@ -617,7 +617,7 @@ void goLine(struct CmdArgs args)
         _goLine(str);
     else
         /* FIXME: gettextize? */
-        _goLine(inputStr("Goto line: ", ""));
+        _goLine(inputStr(args, "Goto line: ", ""));
 }
 
 void goLineF(struct CmdArgs args)
@@ -790,7 +790,7 @@ void reMark(struct CmdArgs args)
         return;
     const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist("(Mark)Regexp: ", MarkString, TextHist);
+        str = inputStrHist(args, "(Mark)Regexp: ", MarkString, TextHist);
         if (str == NULL || *str == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -828,7 +828,7 @@ void followA(struct CmdArgs args)
 
     struct Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
-        _followForm(FALSE);
+        _followForm(args, FALSE);
         return;
     }
     if (a && a->image && a->image->ismap) {
@@ -837,7 +837,7 @@ void followA(struct CmdArgs args)
     }
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
-        _followForm(FALSE);
+        _followForm(args, FALSE);
         return;
     }
     if (*a->url == '#') { /* index within this buffer */
@@ -863,7 +863,7 @@ void followA(struct CmdArgs args)
 
         _newT();
         buf = Currentbuf;
-        loadLink(url, a->target, a->referer, NULL);
+        loadLink(args, url, a->target, a->referer, NULL);
         if (buf != Currentbuf)
             delBuffer(buf);
         else
@@ -871,7 +871,7 @@ void followA(struct CmdArgs args)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
         return;
     }
-    loadLink(url, a->target, a->referer, NULL);
+    loadLink(args, url, a->target, a->referer, NULL);
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -890,7 +890,7 @@ void followI(struct CmdArgs args)
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
     refresh();
-    buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
+    buf = loadGeneralFile(args, a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -904,7 +904,7 @@ void followI(struct CmdArgs args)
 /* submit form */
 void submitForm(struct CmdArgs args)
 {
-    _followForm(TRUE);
+    _followForm(args, TRUE);
 }
 
 /* go to the top anchor */
@@ -1157,7 +1157,7 @@ void deletePrevBuf(struct CmdArgs args)
 
 void goURL(struct CmdArgs args)
 {
-    goURL0("Goto URL: ", FALSE);
+    goURL0(args, "Goto URL: ", FALSE);
 }
 
 void goHome(struct CmdArgs args)
@@ -1170,7 +1170,7 @@ void goHome(struct CmdArgs args)
         url = url_encode(url, NULL, 0);
         p_url = parseURL2(url, NULL);
         pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-        cmd_loadURL(url, NULL, NULL, NULL);
+        cmd_loadURL(args, url, NULL, NULL, NULL);
         if (Currentbuf != cur_buf) /* success */
             pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
     }
@@ -1178,33 +1178,29 @@ void goHome(struct CmdArgs args)
 
 void gorURL(struct CmdArgs args)
 {
-    goURL0("Goto relative URL: ", TRUE);
+    goURL0(args, "Goto relative URL: ", TRUE);
 }
 
 /* load bookmark */
 void ldBmark(struct CmdArgs args)
 {
-    cmd_loadURL(BookmarkFile, NULL, NO_REFERER, NULL);
+    cmd_loadURL(args, BookmarkFile, NULL, NO_REFERER, NULL);
 }
 
 /* Add current to bookmark */
 void adBmark(struct CmdArgs args)
 {
-    Str tmp;
-    struct Form* request;
-
-    tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-                  "&charset=%s",
+    Str tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
+                      "&charset=%s",
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
         (Str_form_quote(Strnew_wc_output(wc_conv_strict(WcOption, Currentbuf->buffername, InnerCharset, BookmarkCharset))))->ptr,
         wc_ces_to_charset(BookmarkCharset));
-    request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+    struct Form* request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
-    cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER,
-        request);
+    cmd_loadURL(args, "file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER, request);
 }
 
 /* option setting */
@@ -1223,7 +1219,7 @@ void setOpt(struct CmdArgs args)
             char* v = get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
-        opt = inputStrHist("Set option: ", opt, TextHist);
+        opt = inputStrHist(args, "Set option: ", opt, TextHist);
         if (opt == NULL || *opt == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -1259,36 +1255,36 @@ void pginfo(struct CmdArgs args)
 /* link menu */
 void linkMn(struct CmdArgs args)
 {
-    struct LinkList* l = link_menu(Currentbuf);
-    struct Url p_url;
-
+    struct LinkList* l = link_menu(args, Currentbuf);
     if (!l || !l->url)
         return;
+
     if (*(l->url) == '#') {
         gotoLabel(l->url + 1);
         return;
     }
-    p_url = parseURL2(l->url, baseURL(Currentbuf));
+
+    struct Url p_url = parseURL2(l->url, baseURL(Currentbuf));
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(l->url, baseURL(Currentbuf),
+    cmd_loadURL(args, l->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
 }
 
 /* accesskey */
 void accessKey(struct CmdArgs args)
 {
-    anchorMn(accesskey_menu, TRUE);
+    anchorMn(args, accesskey_menu, TRUE);
 }
 
 /* list menu */
 void listMn(struct CmdArgs args)
 {
-    anchorMn(list_menu, TRUE);
+    anchorMn(args, list_menu, TRUE);
 }
 
 void movlistMn(struct CmdArgs args)
 {
-    anchorMn(list_menu, FALSE);
+    anchorMn(args, list_menu, FALSE);
 }
 
 /* link,anchor,image list */
@@ -1349,7 +1345,7 @@ void svBuf(struct CmdArgs args)
     file = searchKeyData();
     if (file == NULL || *file == '\0') {
         /* FIXME: gettextize? */
-        qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, SaveHist);
+        qfile = inputLineHist(args, "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
         if (qfile == NULL || *qfile == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -1365,7 +1361,7 @@ void svBuf(struct CmdArgs args)
             file = conv_to_system(file);
         }
         file = expandPath(file);
-        if (checkOverWrite(file) < 0) {
+        if (checkOverWrite(args, file) < 0) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
         }
@@ -1399,7 +1395,7 @@ void svSrc(struct CmdArgs args)
             Currentbuf->currentURL.real_file));
     else
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
-    doFileCopy(Currentbuf->sourcefile, file);
+    doFileCopy(args, Currentbuf->sourcefile, file);
     PermitSaveToPipe = FALSE;
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1520,7 +1516,7 @@ void vwSrc(struct CmdArgs args)
     (*buf->clone)++;
 
     buf->need_reshape = TRUE;
-    reshapeBuffer(buf);
+    reshapeBuffer(args, buf);
     pushBuffer(buf);
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1555,7 +1551,7 @@ void reload(struct CmdArgs args)
             message("Rendering frame", 0, 0);
             refresh();
         }
-        if (!(buf = renderFrame(fbuf, 1))) {
+        if (!(buf = renderFrame(args, fbuf, 1))) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
         }
@@ -1600,7 +1596,7 @@ void reload(struct CmdArgs args)
         DocumentCharset = Currentbuf->document_charset;
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
-    buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
+    buf = loadGeneralFile(args, url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
     DocumentCharset = old_charset;
     SearchHeader = FALSE;
     DefaultType = NULL;
@@ -1636,7 +1632,7 @@ void reload(struct CmdArgs args)
 void reshape(struct CmdArgs args)
 {
     Currentbuf->need_reshape = TRUE;
-    reshapeBuffer(Currentbuf);
+    reshapeBuffer(args, Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -1645,7 +1641,7 @@ void docCSet(struct CmdArgs args)
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
-        cs = inputStr("Document charset: ",
+        cs = inputStr(args, "Document charset: ",
             wc_ces_to_charset(Currentbuf->document_charset));
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
@@ -1660,7 +1656,7 @@ void defCSet(struct CmdArgs args)
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         /* FIXME: gettextize? */
-        cs = inputStr("Default document charset: ",
+        cs = inputStr(args, "Default document charset: ",
             wc_ces_to_charset(DocumentCharset));
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
@@ -1712,7 +1708,7 @@ void rFrame(struct CmdArgs args)
         message("Rendering frame", 0, 0);
         refresh();
     }
-    buf = renderFrame(Currentbuf, 0);
+    buf = renderFrame(args, Currentbuf, 0);
     if (buf == NULL) {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -1737,7 +1733,7 @@ void extbrz(struct CmdArgs args)
         disp_err_message("Can't browse stdin", TRUE);
         return;
     }
-    invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
+    invoke_browser(args, parsedURL2Str(&Currentbuf->currentURL)->ptr);
 }
 
 void linkbrz(struct CmdArgs args)
@@ -1750,7 +1746,7 @@ void linkbrz(struct CmdArgs args)
         return;
 
     struct Url pu = parseURL2(a->url, baseURL(Currentbuf));
-    invoke_browser(parsedURL2Str(&pu)->ptr);
+    invoke_browser(args, parsedURL2Str(&pu)->ptr);
 }
 
 /* show current line number and number of lines in the entire document */
@@ -1832,12 +1828,12 @@ void wrapToggle(struct CmdArgs args)
 
 void dictword(struct CmdArgs args)
 {
-    execdict(inputStr("(dictionary)!", ""));
+    execdict(args, inputStr(args, "(dictionary)!", ""));
 }
 
 void dictwordat(struct CmdArgs args)
 {
-    execdict(GetWord(Currentbuf));
+    execdict(args, GetWord(Currentbuf));
 }
 
 void execCmd(struct CmdArgs args)
@@ -1845,7 +1841,7 @@ void execCmd(struct CmdArgs args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("command [; ...]: ", "", TextHist);
+        data = inputStrHist(args, "command [; ...]: ", "", TextHist);
         if (data == NULL) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -1880,7 +1876,7 @@ void setAlarm(struct CmdArgs args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("(Alarm)sec command: ", "", TextHist);
+        data = inputStrHist(args, "(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -1953,12 +1949,10 @@ void reinit(struct CmdArgs args)
 
 void defKey(struct CmdArgs args)
 {
-    char* data;
-
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
-    data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("Key definition: ", "", TextHist);
+        data = inputStrHist(args, "Key definition: ", "", TextHist);
         if (data == NULL || *data == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -2026,13 +2020,13 @@ void tabA(struct CmdArgs args)
 
 void tabURL(struct CmdArgs args)
 {
-    tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
+    tabURL0(args, prec_num ? numTab(PREC_NUM) : NULL,
         "Goto URL on new tab: ", FALSE);
 }
 
 void tabrURL(struct CmdArgs args)
 {
-    tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
+    tabURL0(args, prec_num ? numTab(PREC_NUM) : NULL,
         "Goto relative URL on new tab: ", TRUE);
 }
 
@@ -2060,7 +2054,7 @@ void tabL(struct CmdArgs args)
 
 void ldDL(struct CmdArgs args)
 {
-    downloadListPanel();
+    downloadListPanel(args);
 }
 
 void undoPos(struct CmdArgs args)
@@ -2128,33 +2122,31 @@ void cursorBottom(struct CmdArgs args)
 void mainMn(struct CmdArgs args)
 {
     Menu* menu = &MainMenu;
-    char* data;
-    int n;
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
+    int x = Currentbuf->cursorX + Currentbuf->rootX;
+    int y = Currentbuf->cursorY + Currentbuf->rootY;
 
-    data = searchKeyData();
+    const char* data = searchKeyData();
     if (data != NULL) {
-        n = getMenuN(w3mMenuList, data);
+        int n = getMenuN(w3mMenuList, data);
         if (n < 0)
             return;
         menu = w3mMenuList[n].menu;
     }
-    popupMenu(x, y, menu);
+    popupMenu(args, x, y, menu);
 }
 
 void selMn(struct CmdArgs args)
 {
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
+    int x = Currentbuf->cursorX + Currentbuf->rootX;
+    int y = Currentbuf->cursorY + Currentbuf->rootY;
 
-    popupMenu(x, y, &SelectMenu);
+    popupMenu(args, x, y, &SelectMenu);
 }
 
 void tabMn(struct CmdArgs args)
 {
-    int x = Currentbuf->cursorX + Currentbuf->rootX,
-        y = Currentbuf->cursorY + Currentbuf->rootY;
+    int x = Currentbuf->cursorX + Currentbuf->rootX;
+    int y = Currentbuf->cursorY + Currentbuf->rootY;
 
-    popupMenu(x, y, &SelTabMenu);
+    popupMenu(args, x, y, &SelTabMenu);
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include <w3m.h>
 #include "line.h"
 #include "Str.h"
 #include <libwc/wc_types.h>
@@ -14,8 +15,8 @@ int forwardSearch(struct Buffer* buf, const char* str);
 int backwardSearch(struct Buffer* buf, const char* str);
 
 typedef int (*SrchFunc)(struct Buffer*, const char*);
-void srch(SrchFunc func, const char* prompt);
-void isrch(SrchFunc func, const char* prompt);
+void srch(struct CmdArgs args, SrchFunc func, const char* prompt);
+void isrch(struct CmdArgs args, SrchFunc func, const char* prompt);
 void srch_nxtprv(int reverse);
 int srchcore(const char* str, SrchFunc func);
 int dispincsrch(int ch, Str buf, Lineprop* prop);

@@ -472,7 +472,7 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(struct Buffer* buf)
+void reshapeBuffer(struct CmdArgs args, struct Buffer* buf)
 {
     struct URLFile f;
     struct Buffer sbuf;
@@ -514,11 +514,11 @@ void reshapeBuffer(struct Buffer* buf)
             init_stream(&h, SCM_LOCAL, NULL);
             examineFile(buf->header_source, &h);
             if (h.stream) {
-                readHeader(&h, buf, true, NULL);
+                readHeader(args, &h, buf, true, NULL);
                 UFclose(&h);
             }
         } else if (buf->search_header) /* -m option */
-            readHeader(&f, buf, true, NULL);
+            readHeader(args, &f, buf, true, NULL);
     }
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;

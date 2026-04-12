@@ -1,4 +1,5 @@
 #include "global.h"
+#include "line_input.h"
 #include "alloc.h"
 #include "html.h"
 #include "mimehead.h"
@@ -481,7 +482,7 @@ ssl_check_cert_ident(X509* x, const char* hostname)
     return ret;
 }
 
-Str ssl_get_certificate(SSL* ssl, const char* hostname)
+Str ssl_get_certificate(struct CmdArgs args, SSL* ssl, const char* hostname)
 {
     BIO* bp;
     X509* x;
@@ -504,7 +505,7 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
         else {
             /* FIXME: gettextize? */
             emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
-            ans = inputAnswer(emsg->ptr);
+            ans = inputAnswer(args, emsg->ptr);
         }
         if (ans && TOLOWER(*ans) == 'y')
             /* FIXME: gettextize? */
@@ -539,7 +540,7 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
             else {
                 /* FIXME: gettextize? */
                 emsg = Sprintf("%s: accept? (y/n)", em);
-                ans = inputAnswer(emsg->ptr);
+                ans = inputAnswer(args, emsg->ptr);
             }
             if (ans && TOLOWER(*ans) == 'y') {
                 /* FIXME: gettextize? */
@@ -565,7 +566,7 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
             if (ep->length > COLS - 16)
                 Strshrink(ep, ep->length - (COLS - 16));
             Strcat_charp(ep, ": accept? (y/n)");
-            ans = inputAnswer(ep->ptr);
+            ans = inputAnswer(args, ep->ptr);
         }
         if (ans && TOLOWER(*ans) == 'y') {
             /* FIXME: gettextize? */

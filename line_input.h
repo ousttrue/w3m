@@ -1,4 +1,5 @@
 #pragma once
+#include "defun_impl.h"
 #include "Str.h"
 #include "line.h"
 
@@ -15,34 +16,36 @@ struct Hist;
 
 typedef int (*IncrFunc)(int ch, Str buf, Lineprop* prop);
 
-char* inputLineHistSearch(const char* prompt, const char* def_str,
+char* inputLineHistSearch(struct CmdArgs args, const char* prompt, const char* def_str,
     enum InputLineFlags flag, struct Hist* hist, IncrFunc incfunc);
 
-inline static char* inputLineHist(const char* p, const char* d, enum InputLineFlags f, struct Hist* h)
+inline static char* inputLineHist(struct CmdArgs args, const char* p, const char* d, enum InputLineFlags f, struct Hist* h)
 {
-    return inputLineHistSearch(p, d, f, h, NULL);
+    return inputLineHistSearch(args, p, d, f, h, NULL);
 }
-inline static char* inputLine(const char* p, const char* d, enum InputLineFlags f)
+inline static char* inputLine(struct CmdArgs args, const char* p, const char* d, enum InputLineFlags f)
 {
-    return inputLineHist(p, d, f, NULL);
+    return inputLineHist(args, p, d, f, NULL);
 }
-inline static char* inputStr(const char* p, const char* d)
+inline static char* inputStr(struct CmdArgs args, const char* p, const char* d)
 {
-    return inputLine(p, d, IN_STRING);
+    return inputLine(args, p, d, IN_STRING);
 }
-inline static char* inputStrHist(const char* p, const char* d, struct Hist* h)
+inline static char* inputStrHist(struct CmdArgs args, const char* p, const char* d, struct Hist* h)
 {
-    return inputLineHist(p, d, IN_STRING, h);
+    return inputLineHist(args, p, d, IN_STRING, h);
 }
-inline static char* inputFilename(const char* p, const char* d)
+inline static char* inputFilename(struct CmdArgs args, const char* p, const char* d)
 {
-    return inputLine(p, d, IN_FILENAME);
+    return inputLine(args, p, d, IN_FILENAME);
 }
-inline static char* inputFilenameHist(const char* p, const char* d, struct Hist* h)
+inline static char* inputFilenameHist(struct CmdArgs args, const char* p, const char* d, struct Hist* h)
 {
-    return inputLineHist(p, d, IN_FILENAME, h);
+    return inputLineHist(args, p, d, IN_FILENAME, h);
 }
-inline static char* inputChar(const char* p)
+inline static char* inputChar(struct CmdArgs args, const char* p)
 {
-    return inputLine(p, "", IN_CHAR);
+    return inputLine(args, p, "", IN_CHAR);
 }
+
+char* inputAnswer(struct CmdArgs args, const char* prompt);

@@ -88,7 +88,7 @@ fn puts(str: []const u8) !void {
 }
 
 extern fn checkDownloadList() bool;
-extern fn submitCurrentBuffer() bool;
+extern fn submitCurrentBuffer(args: c.CmdArgs) bool;
 extern fn processCurrentEvent() bool;
 extern fn processCurrentBufferEvent() bool;
 extern fn processResizeAndImage() void;
@@ -109,7 +109,7 @@ fn run() !void {
         if (checkDownloadList()) {
             c.ldDL(.{});
         }
-        if (submitCurrentBuffer()) {
+        if (submitCurrentBuffer(.{})) {
             continue;
         }
         if (processCurrentEvent()) {

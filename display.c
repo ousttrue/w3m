@@ -339,7 +339,7 @@ void displayBuffer(struct Buffer* buf, int mode)
     if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = true;
-        reshapeBuffer(buf);
+        reshapeBuffer((struct CmdArgs) { }, buf);
     }
     if (showLineNum) {
         if (buf->lastLine && buf->lastLine->real_linenumber > 0)

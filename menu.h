@@ -1,4 +1,5 @@
 #pragma once
+#include <w3m.h>
 
 #define MENU_END 0
 #define MENU_NOP 1
@@ -12,7 +13,7 @@
 
 typedef struct _MenuItem {
     int type;
-    char* label;
+    const char* label;
     int* variable;
     int value;
     const char* cmd;
@@ -20,6 +21,8 @@ typedef struct _MenuItem {
     char* keys;
     char* data;
 } MenuItem;
+
+typedef int (*MenuFunc)(struct CmdArgs args);
 
 typedef struct _Menu {
     struct _Menu* parent;
@@ -35,7 +38,7 @@ typedef struct _Menu {
     int select;
     int offset;
     int active;
-    int (*keymap[128])(char c);
+    MenuFunc keymap[128];
     int keyselect[128];
 } Menu;
 
@@ -62,7 +65,7 @@ struct LinkList {
     struct LinkList* next;
 };
 struct Buffer;
-struct LinkList* link_menu(struct Buffer* buf);
+struct LinkList* link_menu(struct CmdArgs args, struct Buffer* buf);
 
 void new_menu(Menu* menu, MenuItem* item);
 void geom_menu(Menu* menu, int x, int y, int mselect);
@@ -73,14 +76,14 @@ int select_menu(Menu* menu, int mselect);
 void goto_menu(Menu* menu, int mselect, int down);
 void up_menu(Menu* menu, int n);
 void down_menu(Menu* menu, int n);
-int action_menu(Menu* menu);
-void popup_menu(Menu* parent, Menu* menu);
+int action_menu(struct CmdArgs args, Menu* menu);
+void popup_menu(struct CmdArgs args, Menu* parent, Menu* menu);
 void guess_menu_xy(Menu* menu, int width, int* x, int* y);
 void new_option_menu(Menu* menu, const char** label, int* variable, const char* cmd);
 int setMenuItem(MenuItem* item, const char* type, const char* line);
 int addMenuList(MenuList** list, char* id);
-int getMenuN(MenuList* list, char* id);
-void popupMenu(int x, int y, Menu* menu);
-void mainMenu(int x, int y);
-void optionMenu(int x, int y, const char** label, int* variable, int initial, const char* cmd);
+int getMenuN(MenuList* list, const char* id);
+void popupMenu(struct CmdArgs args, int x, int y, Menu* menu);
+void mainMenu(struct CmdArgs args, int x, int y);
+void optionMenu(struct CmdArgs args, int x, int y, const char** label, int* variable, int initial, const char* cmd);
 void initMenu(void);

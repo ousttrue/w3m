@@ -106,6 +106,6 @@ void clrtobotx(void);
 void no_clrtoeol(void);
 void addstr(const char* s);
 void addnstr(const char* s, int n);
-void addnstr_sup(char* s, int n);
+void addnstr_sup(const char* s, int n);
 
 void touch_cursor(void);

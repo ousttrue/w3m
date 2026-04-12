@@ -30,7 +30,7 @@ bool checkAddDownloadList()
     return false;
 }
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, int64_t size)
+void addDownloadList(pid_t pid, const char* url, const char* save, const char* lock, int64_t size)
 {
     DownloadList* d;
 
@@ -67,7 +67,7 @@ bool checkDownloadList(void)
     return false;
 }
 
-void downloadListPanel()
+void downloadListPanel(struct CmdArgs args)
 {
     struct Buffer* buf;
     int replace = false, new_tab = false;
@@ -225,7 +225,7 @@ struct Buffer* DownloadListBuffer(void)
     return loadHTMLString(src);
 }
 
-void download_action(struct parsed_tagarg* arg)
+void download_action(struct CmdArgs args, struct parsed_tagarg* arg)
 {
     DownloadList* d;
     pid_t pid;

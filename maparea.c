@@ -202,7 +202,7 @@ retrieveCurrentMap(struct Buffer* buf)
 }
 
 struct MapArea*
-follow_map_menu(struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y)
+follow_map_menu(struct CmdArgs args, struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y)
 {
     ListItem* al;
     int i, selected = -1;
@@ -231,7 +231,7 @@ follow_map_menu(struct Buffer* buf, const char* name, struct Anchor* a_img, int 
     }
     label[ml->area->nitem] = NULL;
 
-    optionMenu(x, y, label, &selected, initial, NULL);
+    optionMenu(args, x, y, label, &selected, initial, NULL);
 
 map_end:
     if (selected >= 0) {

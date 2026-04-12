@@ -1015,7 +1015,7 @@ void addnstr(const char* s, int n)
     }
 }
 
-void addnstr_sup(char* s, int n)
+void addnstr_sup(const char* s, int n)
 {
     int i = 0;
     for (; *s != '\0';) {

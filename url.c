@@ -171,7 +171,7 @@ str_to_ssl_version(const char* name)
 #endif /* SSL_CTX_set_min_proto_version */
 
 static SSL*
-openSSLHandle(int sock, const char* hostname, const char** p_cert)
+openSSLHandle(struct CmdArgs args, int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static const char* old_ssl_forbid_method = NULL;
@@ -302,7 +302,7 @@ openSSLHandle(int sock, const char* hostname, const char** p_cert)
     SSL_set_tlsext_host_name(handle, hostname);
 #endif /* (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT) */
     if (SSL_connect(handle) > 0) {
-        Str serv_cert = ssl_get_certificate(handle, hostname);
+        Str serv_cert = ssl_get_certificate(args, handle, hostname);
         if (serv_cert) {
             *p_cert = serv_cert->ptr;
             return handle;
@@ -987,7 +987,7 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 }
 
 struct URLFile
-openURL(const char* url, struct Url* pu, struct Url* current,
+openURL(struct CmdArgs args, const char* url, struct Url* pu, struct Url* current,
     struct URLOption* option, struct Form* request, TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
@@ -1118,7 +1118,7 @@ retry:
             tmp = HTTPrequest(pu, current, hr, extra_header);
             write(sock, tmp->ptr, tmp->length);
         } else {
-            uf.stream = openFTPStream(pu, &uf);
+            uf.stream = openFTPStream(args, pu, &uf);
             uf.scheme = pu->scheme;
             return uf;
         }
@@ -1137,7 +1137,7 @@ retry:
             hr->flag |= HR_FLAG_PROXY;
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
                 sock = ssl_socket_of(ouf->stream);
-                if (!(sslh = openSSLHandle(sock, pu->host,
+                if (!(sslh = openSSLHandle(args, sock, pu->host,
                           &uf.ssl_certificate))) {
                     *status = HTST_MISSING;
                     return uf;
@@ -1180,7 +1180,7 @@ retry:
                 return uf;
             }
             if (pu->scheme == SCM_HTTPS) {
-                if (!(sslh = openSSLHandle(sock, pu->host,
+                if (!(sslh = openSSLHandle(args, sock, pu->host,
                           &uf.ssl_certificate))) {
                     *status = HTST_MISSING;
                     return uf;

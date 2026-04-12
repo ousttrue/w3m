@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <gc.h>
 
@@ -27,24 +28,28 @@ TextLineList* backend_halfdump_buf = NULL;
 #else /* ! HAVE_READLINE */
 static char* readline(char*);
 #endif /* ! HAVE_READLINE */
-static TextList* split(char*);
+static TextList* split(const char*);
 
 /* Prototype declaration of command functions */
-static void get(TextList*);
-static void post(TextList*);
-static void set(TextList*);
-static void show(TextList*);
-static void quit(TextList*);
-static void help(TextList*);
+static void get(struct CmdArgs args, TextList*);
+static void post(struct CmdArgs args, TextList*);
+static void set(struct CmdArgs args, TextList*);
+static void show(struct CmdArgs args, TextList*);
+static void quit(struct CmdArgs args, TextList*);
+static void help(struct CmdArgs args, TextList*);
 
-/* *INDENT-OFF* */
-/* Table of command functions */
-struct {
+typedef void (*BackendFunc)(struct CmdArgs args, TextList*);
+
+struct BackendCommand {
     const char* name;
     const char* option_string;
     const char* help;
-    void (*func)(TextList*);
-} command_table[] = {
+    BackendFunc func;
+};
+
+/* *INDENT-OFF* */
+/* Table of command functions */
+struct BackendCommand command_table[] = {
     { "get", "[-download_only] URL", "Retrieve URL.", get },
     { "post", "[-download_only] [-target TARGET] [-charset CHARSET]"
               " [-enctype ENCTYPE] [-body BODY] [-boundary BOUNDARY] [-length LEN] URL",
@@ -93,13 +98,13 @@ print_headers(struct Buffer* buf, int len)
 }
 
 static void
-internal_get(char* url, int flag, struct Form* request)
+internal_get(struct CmdArgs args, const char* url, int flag, struct Form* request)
 {
     struct Buffer* buf;
 
     backend_halfdump_buf = NULL;
     do_download = flag;
-    buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+    buf = loadGeneralFile(args, url, NULL, NO_REFERER, 0, request);
     do_download = FALSE;
     if (buf != NULL && buf != NO_BUFFER) {
         if (is_html_type(buf->type) && backend_halfdump_buf) {
@@ -140,7 +145,7 @@ internal_get(char* url, int flag, struct Form* request)
 
 /* Command: get */
 static void
-get(TextList* argv)
+get(struct CmdArgs args, TextList* argv)
 {
     char *p, *url = NULL;
     int flag = FALSE;
@@ -152,13 +157,13 @@ get(TextList* argv)
             url = p;
     }
     if (url) {
-        internal_get(url, flag, NULL);
+        internal_get(args, url, flag, NULL);
     }
 }
 
 /* Command: post */
 static void
-post(TextList* argv)
+post(struct CmdArgs args, TextList* argv)
 {
     struct Form* request;
     char *p, *target = NULL, *charset = NULL,
@@ -188,13 +193,13 @@ post(TextList* argv)
         request->body = body;
         request->boundary = boundary;
         request->length = (length > 0) ? length : (body ? strlen(body) : 0);
-        internal_get(url, flag, request);
+        internal_get(args, url, flag, request);
     }
 }
 
 /* Command: set */
 static void
-set(TextList* argv)
+set(struct CmdArgs args, TextList* argv)
 {
     if (argv->nitem > 1) {
         int i;
@@ -211,7 +216,7 @@ set(TextList* argv)
 
 /* Command: show */
 static void
-show(TextList* argv)
+show(struct CmdArgs args, TextList* argv)
 {
     if (argv->nitem >= 1) {
         int i;
@@ -228,7 +233,7 @@ show(TextList* argv)
 
 /* Command: quit */
 static void
-quit(TextList* argv)
+quit(struct CmdArgs args, TextList* argv)
 {
     save_cookies();
     w3m_exit(0);
@@ -236,7 +241,7 @@ quit(TextList* argv)
 
 /* Command: help */
 static void
-help(TextList* argv)
+help(struct CmdArgs args, TextList* argv)
 {
     int i;
     for (i = 0; command_table[i].name; i++)
@@ -263,7 +268,7 @@ show_column(TextList* argv)
 
 /* Call appropriate command function based on given string */
 static void
-call_command_function(char* str)
+call_command_function(struct CmdArgs args, const char* str)
 {
     int i;
     TextList* argv = split(str);
@@ -272,7 +277,7 @@ call_command_function(char* str)
             if (!strcasecmp(command_table[i].name, argv->first->ptr)) {
                 popText(argv);
                 if (command_table[i].func)
-                    command_table[i].func(argv);
+                    command_table[i].func(args, argv);
                 break;
             }
         }
@@ -280,22 +285,21 @@ call_command_function(char* str)
 }
 
 /* Main function */
-int backend(void)
+int backend(struct CmdArgs args)
 {
-    char* str;
-
     w3m_dump = 0;
     if (COLS == 0)
         COLS = DEFAULT_COLS;
 
+    const char* str;
     if (backend_batch_commands) {
         while ((str = popText(backend_batch_commands)))
-            call_command_function(str);
+            call_command_function(args, str);
     } else {
         while ((str = readline("w3m> ")))
-            call_command_function(str);
+            call_command_function(args, str);
     }
-    quit(NULL);
+    quit(args, NULL);
     return 0;
 }
 
@@ -317,7 +321,7 @@ readline(char* prompt)
 
 /* Splits a string into a list of tokens and returns that list. */
 static TextList*
-split(char* p)
+split(const char* p)
 {
     int in_double_quote = FALSE, in_single_quote = FALSE;
     Str s = Strnew();

@@ -1,4 +1,5 @@
 #pragma once
+#include <w3m.h>
 #include "Str.h"
 #include <libwc/wc_types.h>
 
@@ -81,6 +82,6 @@ struct FormSelectOption {
 void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk);
 void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
 void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
-int formChooseOptionByMenu(struct FormItem* fi, int x, int y);
+int formChooseOptionByMenu(struct CmdArgs args, struct FormItem* fi, int x, int y);
 void form_write_data(FILE* f, const char* boundary, const char* name, const char* value);
 void form_write_from_file(FILE* f, const char* boundary, const char* name, const char* filename, char* file);

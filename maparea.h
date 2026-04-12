@@ -1,4 +1,5 @@
 #pragma once
+#include <w3m.h>
 #include "Str.h"
 #include "textlist.h"
 
@@ -30,9 +31,9 @@ typedef struct _MapList {
 struct Buffer;
 MapList* searchMapList(struct Buffer* buf, const char* name);
 struct parsed_tagarg;
-void follow_map(struct parsed_tagarg* arg);
+void follow_map(struct CmdArgs args, struct parsed_tagarg* arg);
 struct Anchor;
-struct MapArea* follow_map_menu(struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y);
+struct MapArea* follow_map_menu(struct CmdArgs args, struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y);
 int getMapXY(struct Buffer* buf, struct Anchor* a, int* x, int* y);
 struct MapArea* retrieveCurrentMapArea(struct Buffer* buf);
 struct Anchor* retrieveCurrentMap(struct Buffer* buf);

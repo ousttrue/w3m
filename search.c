@@ -236,7 +236,7 @@ disp_srchresult(int result, const char* prompt, const char* str)
         disp_message(Sprintf("%s%s", prompt, str)->ptr, true);
 }
 
-void srch(SrchFunc func, const char* prompt)
+void srch(struct CmdArgs args, SrchFunc func, const char* prompt)
 {
     int result;
     int disp = false;
@@ -244,7 +244,7 @@ void srch(SrchFunc func, const char* prompt)
 
     const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist(prompt, NULL, TextHist);
+        str = inputStrHist(args, prompt, NULL, TextHist);
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
@@ -346,7 +346,7 @@ int dispincsrch(int ch, Str buf, Lineprop* prop)
     return -1;
 }
 
-void isrch(SrchFunc func, const char* prompt)
+void isrch(struct CmdArgs args, SrchFunc func, const char* prompt)
 {
     const char* str;
     struct Buffer sbuf;
@@ -354,7 +354,7 @@ void isrch(SrchFunc func, const char* prompt)
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    str = inputLineHistSearch(args, prompt, NULL, IN_STRING, TextHist, dispincsrch);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }

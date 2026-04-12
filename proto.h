@@ -4,6 +4,7 @@
  *
  *   Created: Wed Feb 10 12:47:03 1999
  */
+#include <w3m.h>
 #include <libwc/wc_types.h>
 
 struct Hist;
@@ -19,7 +20,7 @@ extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
 struct Form;
 struct Url;
-extern struct Buffer* loadGeneralFile(const char* path, struct Url* current, const char* referer,
+extern struct Buffer* loadGeneralFile(struct CmdArgs args, const char* path, struct Url* current, const char* referer,
     int flag, struct Form* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -54,15 +55,14 @@ extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 
 extern int save2tmp(struct URLFile uf, const char* tmpf);
-extern int _doFileCopy(const char* tmpf, const char* defstr, int download);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
-extern int doFileMove(const char* tmpf, const char* defstr);
-extern int doFileSave(struct URLFile uf, const char* defstr);
-extern int checkCopyFile(char* path1, char* path2);
-extern int checkOverWrite(const char* path);
-extern char* inputAnswer(char* prompt);
+extern int _doFileCopy(struct CmdArgs args, const char* tmpf, const char* defstr, int download);
+#define doFileCopy(args, tmpf, defstr) _doFileCopy(args, tmpf, defstr, FALSE);
+extern int doFileMove(struct CmdArgs args, const char* tmpf, const char* defstr);
+extern int doFileSave(struct CmdArgs args, struct URLFile uf, const char* defstr);
+extern int checkCopyFile(const char* path1, const char* path2);
+extern int checkOverWrite(struct CmdArgs args, const char* path);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
-extern void readHeader(struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
+extern void readHeader(struct CmdArgs args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(struct Buffer* buf, char* field);
 
 extern void escdmap(char c);
@@ -83,7 +83,7 @@ extern int formtype(char* typestr);
 extern void preFormUpdateBuffer(struct Buffer* buf);
 extern Str textfieldrep(Str s, int width);
 extern void input_textarea(struct FormItem* fi);
-extern void do_internal(char* action, char* data);
+extern void do_internal(struct CmdArgs args, char* action, char* data);
 
 extern struct Buffer* page_info_panel(struct Buffer* buf);
 
@@ -104,8 +104,7 @@ extern void mySystem(char* command, int background);
 extern char* url_unquote_conv(const char* url, wc_ces charset);
 extern char* expandName(char* name);
 struct parsed_tagarg;
-extern void change_charset(struct parsed_tagarg* arg);
-
+extern void change_charset(struct CmdArgs args, struct parsed_tagarg* arg);
 
 extern const char* guess_save_name(struct Buffer* buf, const char* file);
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <w3m.h>
 #include "growbuf.h"
 #include "line.h"
 
@@ -132,7 +133,7 @@ int ISread_n(InputStream stream, char* dst, int bufsize);
 extern int ISfileno(InputStream stream);
 extern int ISeos(InputStream stream);
 extern void ssl_accept_this_site(const char* hostname);
-extern Str ssl_get_certificate(SSL* ssl, const char* hostname);
+extern Str ssl_get_certificate(struct CmdArgs args, SSL* ssl, const char* hostname);
 
 #define IST_BASIC 0
 #define IST_FILE 1
@@ -157,4 +158,4 @@ void examineFile(const char* path, struct URLFile* uf);
 Str convertLine(struct URLFile* uf, Str line, enum LineMode mode, wc_ces* charset,
     wc_ces doc_charset);
 
-int checkSaveFile(InputStream stream, char* path);
+int checkSaveFile(InputStream stream, const char* path);
