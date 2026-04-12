@@ -48,7 +48,7 @@ static int terminated(unsigned char c);
 
 static void next_compl(int next);
 static void next_dcompl(int next);
-static Str doComplete(Str ifn, int* status, int next);
+static Str doComplete(Str ifn, enum CompletionStatus* status, int next);
 
 /* *INDENT-OFF* */
 void (*InputKeymap[32])() = {
@@ -95,9 +95,25 @@ static int setStrType(Str str, Lineprop* prop);
 static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
 static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
 
+enum CompletionStatus {
+    CPL_OK = 0,
+    CPL_AMBIG = 1,
+    CPL_FAIL = 2,
+    CPL_MENU = 3,
+};
+
+enum CompletionFlags {
+    CPL_NEVER = 0x0,
+    CPL_OFF = 0x1,
+    CPL_ON = 0x2,
+    CPL_ALWAYS = 0x4,
+    CPL_URL = 0x8,
+};
+
 static int CPos, CLen, offset;
 static int i_cont, i_broken, i_quote;
-static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
+static int cm_next, cm_clear, cm_disp_next, cm_disp_clear;
+static enum CompletionFlags cm_mode = 0;
 static int need_redraw, is_passwd;
 static int move_word;
 
@@ -106,8 +122,8 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(Str str);
 
-char* inputLineHistSearch(const char* prompt, const char* def_str, int flag, struct Hist* hist,
-    int (*incrfunc)(int ch, Str str, Lineprop* prop))
+char* inputLineHistSearch(const char* prompt, const char* def_str,
+    enum InputLineFlags flag, struct Hist* hist, IncrFunc incrfunc)
 {
     int opos, x, y, lpos, rpos, epos;
     unsigned char c;
@@ -174,14 +190,14 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, int flag, str
             else
                 offset = 0;
         }
-        move((LINES-1), 0);
+        move((LINES - 1), 0);
         addstr(prompt);
         if (is_passwd)
             addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         else
             addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         clrtoeolx();
-        move((LINES-1), opos + x - offset);
+        move((LINES - 1), opos + x - offset);
         refresh();
 
     next_char:
@@ -242,7 +258,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str, int flag, str
     if (i_broken)
         return NULL;
 
-    move((LINES-1), 0);
+    move((LINES - 1), 0);
     refresh();
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -575,7 +591,7 @@ _tcompl(void)
 static void
 next_compl(int next)
 {
-    int status;
+    enum CompletionStatus status;
     int b, a;
     Str buf;
     Str s;
@@ -645,12 +661,12 @@ next_dcompl(int next)
     cm_disp_clear = false;
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    if ((LINES-1) >= 3) {
+    if ((LINES - 1) >= 3) {
         comment = true;
-        nline = (LINES-1) - 2;
-    } else if ((LINES-1)) {
+        nline = (LINES - 1) - 2;
+    } else if ((LINES - 1)) {
         comment = false;
-        nline = (LINES-1);
+        nline = (LINES - 1);
     } else {
         return;
     }
@@ -743,7 +759,7 @@ disp_next:
         }
         y++;
     }
-    if (comment && y == (LINES-1) - 1) {
+    if (comment && y == (LINES - 1) - 1) {
         move(y, 0);
         clrtoeolx();
         bold();
@@ -801,7 +817,7 @@ Str unescape_spaces(Str s)
 }
 
 static Str
-doComplete(Str ifn, int* status, int next)
+doComplete(Str ifn, enum CompletionStatus* status, int next)
 {
     int fl, i;
     char *fn, *p;
