@@ -2,7 +2,6 @@ const std = @import("std");
 const c = @cImport({
     @cInclude("defun_impl.h");
     @cInclude("constants.h");
-    @cInclude("w3m.h");
     @cInclude("sys/ioctl.h");
     @cInclude("unistd.h");
 });

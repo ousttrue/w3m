@@ -1,14 +1,9 @@
 #pragma once
+#include "w3m/w3m.h"
 
 #define CGI_EXTENSION ".cgi"
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
 #define HELP_CGI "w3mhelp"
-
-struct CmdArgs {
-    void* p;
-};
-
-typedef void (*CmdFunc)(struct CmdArgs);
 
 void nulcmd(struct CmdArgs args);
 void escmap(struct CmdArgs args);

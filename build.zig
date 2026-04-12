@@ -139,81 +139,10 @@ pub fn build(b: *std.Build) void {
         exe.root_module.linkSystemLibrary(lib, .{});
     }
 
+    const co = build_coroutine(b, target, optimize);
+    exe.root_module.addImport("co", co);
     // const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
     // b.getInstallStep().dependOn(&cdb.step);
-}
-
-fn gen_functable(b: *std.Build) *std.Build.Step.WriteFile {
-    const wf = b.addWriteFiles();
-
-    const funcname_tab = gen_funcname_tab(b);
-    _ = wf.addCopyFile(funcname_tab.output, "funcname.tab");
-
-    const funcname_c = gen_funcname(b, funcname_tab.output, b.path("funcname0.awk"));
-    _ = wf.addCopyFile(funcname_c.output, "funcname.c");
-
-    const funcname1_h = gen_funcname(b, funcname_tab.output, b.path("funcname1.awk"));
-    _ = wf.addCopyFile(funcname1_h.output, "funcname1.h");
-
-    const funcname2_h = gen_funcname(b, funcname_tab.output, b.path("funcname2.awk"));
-    _ = wf.addCopyFile(funcname2_h.output, "funcname2.h");
-
-    const functable_tab = gen_funcname(b, funcname_tab.output, b.path("functable.awk"));
-    _ = wf.addCopyFile(functable_tab.output, "functable.tab");
-
-    return wf;
-}
-
-fn build_mktable(
-    b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-    libs: []const []const u8,
-) *std.Build.Step.Compile {
-    const mod = b.addModule("mktable", .{
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    const exe = b.addExecutable(.{
-        .name = "mktable",
-        .root_module = mod,
-    });
-    exe.root_module.addCSourceFiles(.{
-        .files = &.{
-            "mktable.c", "entity.c", "Str.c", "hash.c", "myctype.c",
-        },
-        .flags = &.{
-            "-DDUMMY",
-        },
-    });
-    for (libs) |lib| {
-        exe.root_module.linkSystemLibrary(lib, .{});
-    }
-    return exe;
-}
-
-fn gen_funcname(
-    b: *std.Build,
-    src: std.Build.LazyPath,
-    awk_script: std.Build.LazyPath,
-) struct {
-    step: *std.Build.Step.Run,
-    output: std.Build.LazyPath,
-} {
-    var sort = b.addSystemCommand(&.{"sort"});
-    sort.addFileArg(src);
-
-    var awk = b.addSystemCommand(&.{ "awk", "-f" });
-    awk.addFileArg(awk_script);
-    awk.setStdIn(.{
-        .lazy_path = sort.captureStdOut(.{}),
-    });
-
-    return .{
-        .step = awk,
-        .output = awk.captureStdOut(.{}),
-    };
 }
 
 fn gen_funcname_tab(b: *std.Build) struct {
@@ -254,4 +183,26 @@ fn gen_funcname_tab(b: *std.Build) struct {
         .step = awk,
         .output = awk.captureStdOut(.{}),
     };
+}
+
+fn build_coroutine(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Module {
+    const coroutine_dep = b.dependency("coroutine", .{});
+    const coroutine_t = b.addTranslateC(.{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = coroutine_dep.path("coroutine.h"),
+    });
+    coroutine_t.addIncludePath(coroutine_dep.path(""));
+    const coroutine_mod = coroutine_t.createModule();
+    coroutine_mod.addCSourceFiles(.{
+        .root = coroutine_dep.path(""),
+        .files = &.{
+            "coroutine.c",
+        },
+    });
+    return coroutine_mod;
 }

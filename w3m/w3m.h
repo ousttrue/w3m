@@ -1,6 +1,12 @@
 #pragma once
 #include <stdbool.h>
 
+struct CmdArgs {
+    void* p;
+};
+
+typedef void (*CmdFunc)(struct CmdArgs);
+
 extern void w3mFunc(const char* cmd);
 
 extern bool w3m_args(int argc, const char** argv);
