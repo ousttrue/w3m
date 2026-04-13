@@ -10,7 +10,11 @@
             "request": "launch",
             "program": "${workspaceRoot}/zig-out/bin/w3m",
             "args": [],
-            "cwd": "${workspaceRoot}"
+            "cwd": "${workspaceRoot}",
+            "initCommands": [
+                // https://www.eightbitraptor.com/2022/06/16/signal-handling-in-lldb/
+                "process handle -p true -s false -n true SIGIO",
+            ]
         }
     ]
 }
