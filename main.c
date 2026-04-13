@@ -205,47 +205,47 @@ fusage(FILE* f, int err)
 static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
 
-static void
-wrap_GC_warn_proc(char* msg, GC_word arg)
-{
-    if (fmInitialized) {
-        /* *INDENT-OFF* */
-        static struct {
-            char* msg;
-            GC_word arg;
-        } msg_ring[GC_WARN_KEEP_MAX];
-        /* *INDENT-ON* */
-        static int i = 0;
-        static int n = 0;
-        static int lock = 0;
-        int j;
-
-        j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
-        msg_ring[j].msg = msg;
-        msg_ring[j].arg = arg;
-
-        if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
-            ++n;
-        else
-            ++i;
-
-        if (!lock) {
-            lock = 1;
-
-            for (; n > 0; --n, ++i) {
-                i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
-
-                printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-                getch_timeout(1);
-            }
-
-            lock = 0;
-        }
-    } else if (orig_GC_warn_proc)
-        orig_GC_warn_proc(msg, arg);
-    else
-        fprintf(stderr, msg, (unsigned long)arg);
-}
+// static void
+// wrap_GC_warn_proc(char* msg, GC_word arg)
+// {
+//     if (fmInitialized) {
+//         /* *INDENT-OFF* */
+//         static struct {
+//             char* msg;
+//             GC_word arg;
+//         } msg_ring[GC_WARN_KEEP_MAX];
+//         /* *INDENT-ON* */
+//         static int i = 0;
+//         static int n = 0;
+//         static int lock = 0;
+//         int j;
+//
+//         j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
+//         msg_ring[j].msg = msg;
+//         msg_ring[j].arg = arg;
+//
+//         if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
+//             ++n;
+//         else
+//             ++i;
+//
+//         if (!lock) {
+//             lock = 1;
+//
+//             for (; n > 0; --n, ++i) {
+//                 i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
+//
+//                 printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
+//                 getch_timeout(1);
+//             }
+//
+//             lock = 0;
+//         }
+//     } else if (orig_GC_warn_proc)
+//         orig_GC_warn_proc(msg, arg);
+//     else
+//         fprintf(stderr, msg, (unsigned long)arg);
+// }
 
 static void
 sig_chld(int signo)
@@ -675,12 +675,12 @@ bool w3m_args(struct CmdArgs args, int argc, const char** argv)
     signal(SIGCHLD, sig_chld);
     signal(SIGPIPE, SigPipe);
 
-#if (GC_VERSION_MAJOR > 7) || ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
-    orig_GC_warn_proc = GC_get_warn_proc();
-    GC_set_warn_proc(wrap_GC_warn_proc);
-#else
-    orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
-#endif
+    // #if (GC_VERSION_MAJOR > 7) || ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
+    //     orig_GC_warn_proc = GC_get_warn_proc();
+    //     GC_set_warn_proc(wrap_GC_warn_proc);
+    // #else
+    //     orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
+    // #endif
     err_msg = Strnew();
     if (load_argc == 0) {
         /* no URL specified */
@@ -950,7 +950,7 @@ void pcmap(void)
 {
 }
 
-void escKeyProc(int c, int esc, const char* map[128])
+void escKeyProc(struct CmdArgs args, int esc, const char* map[128])
 {
     if (CurrentKey >= 0 && CurrentKey & K_MULTI) {
         const char*** mmap = (const char***)getKeyData(MULTI_KEY(CurrentKey));
@@ -972,22 +972,21 @@ void escKeyProc(int c, int esc, const char* map[128])
         }
         esc |= (CurrentKey & ~0xFFFF);
     }
-    CurrentKey = esc | c;
+    CurrentKey = esc | args.ch;
     if (map)
-        w3mFunc(map[c]);
+        w3mFunc(map[args.ch]);
 }
 
-void escdmap(char c)
+void escdmap(struct CmdArgs args)
 {
-    int d;
-    d = (int)c - (int)'0';
-    c = getch();
-    if (IS_DIGIT(c)) {
-        d = d * 10 + (int)c - (int)'0';
-        c = getch();
+    int d = args.ch - (int)'0';
+    args.ch = getch(args);
+    if (IS_DIGIT(args.ch)) {
+        d = d * 10 + args.ch - (int)'0';
+        args.ch = getch(args);
     }
-    if (c == '~')
-        escKeyProc((int)d, K_ESCD, EscDKeymap);
+    if (args.ch == '~')
+        escKeyProc(args, K_ESCD, EscDKeymap);
 }
 
 void tmpClearBuffer(struct Buffer* buf)
@@ -1419,7 +1418,7 @@ void gotoLabel(const char* label)
     return;
 }
 
-int handleMailto(const char* url)
+int handleMailto(struct CmdArgs args, const char* url)
 {
     Str to;
     char* pos;
@@ -1440,9 +1439,7 @@ int handleMailto(const char* url)
         if ((pos = strchr(to->ptr, '?')) != NULL)
             Strtruncate(to, pos - to->ptr);
     }
-    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)),
-        FALSE)
-            ->ptr);
+    exec_cmd(args, myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     pushHashHist(URLHist, url);
     return 1;
@@ -1720,7 +1717,7 @@ void _followForm(struct CmdArgs args, int submit)
         if (fi->readonly)
             /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-        input_textarea(fi);
+        input_textarea(args, fi);
         formUpdateBuffer(a, Currentbuf, fi);
         break;
     case FORM_INPUT_RADIO:
@@ -2114,7 +2111,7 @@ int checkBackBuffer(struct Buffer* buf)
 
 void cmd_loadURL(struct CmdArgs args, const char* url, struct Url* current, char* referer, struct Form* request)
 {
-    if (handleMailto(url))
+    if (handleMailto(args, url))
         return;
 
     refresh();
@@ -3035,7 +3032,7 @@ void processResizeAndImage()
         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
             loadImage(Currentbuf, IMG_FLAG_NEXT);
         }
-        int ch = getch_timeout(1);
+        int ch = getch_timeout(1, (struct CmdArgs) { });
         if (ch > 0) {
             unget(ch);
             break;

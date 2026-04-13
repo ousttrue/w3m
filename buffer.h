@@ -149,7 +149,7 @@ extern struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf,
 extern struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 extern void gotoRealLine(struct Buffer* buf, int n);
 extern void gotoLine(struct Buffer* buf, int n);
-extern struct Buffer* selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf,
+extern struct Buffer* selectBuffer(struct CmdArgs args, struct Buffer* firstbuf, struct Buffer* currentbuf,
     char* selectchar);
 extern void reshapeBuffer(struct CmdArgs args, struct Buffer* buf);
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);

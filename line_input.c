@@ -51,22 +51,43 @@ static char** CFileBuf = NULL;
 static int NCFileBuf;
 static int NCFileOffset;
 
-static void insertself(char c),
-    _mvR(void), _mvL(void), _mvRw(void), _mvLw(void), delC(void), insC(void),
-    _mvB(void), _mvE(void), _enter(void), _quo(void), _bs(void), _bsw(void),
-    killn(void), killb(void), _inbrk(void), _esc(void), _editor(void),
-    _prev(void), _next(void), _compl(void), _tcompl(void),
-    _dcompl(void), _rdcompl(void), _rcompl(void);
+// static void insertself(char c),
 
+typedef int (*InputFunc)(struct CmdArgs args);
+static int iself(struct CmdArgs args);
+static int _mvR(struct CmdArgs args);
+static int _mvL(struct CmdArgs args);
+static int _mvRw(struct CmdArgs args);
+static int _mvLw(struct CmdArgs args);
+static int delC(struct CmdArgs args);
+static int insC(struct CmdArgs args);
+static int _mvB(struct CmdArgs args);
+static int _mvE(struct CmdArgs args);
+static int _enter(struct CmdArgs args);
+static int _quo(struct CmdArgs args);
+static int _bs(struct CmdArgs args);
+static int _bsw(struct CmdArgs args);
+static int killn(struct CmdArgs args);
+static int killb(struct CmdArgs args);
+static int _inbrk(struct CmdArgs args);
+static int _esc(struct CmdArgs args);
+static int _editor(struct CmdArgs args);
+static int _prev(struct CmdArgs args);
+static int _next(struct CmdArgs args);
+static int _compl(struct CmdArgs args);
+static int _tcompl(struct CmdArgs args);
+static int _dcompl(struct CmdArgs args);
+static int _rdcompl(struct CmdArgs args);
+static int _rcompl(struct CmdArgs args);
+;
 static int terminated(unsigned char c);
-#define iself ((void (*)())insertself)
 
 static void next_compl(int next);
 static void next_dcompl(int next);
 static Str doComplete(Str ifn, enum CompletionStatus* status, int next);
 
 // clang-format off
-void (*InputKeymap[32])() = {
+InputFunc InputKeymap[32] = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
     _compl, _mvB, _mvL, _inbrk, delC, _mvE, _mvR, _inbrk,
     /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
@@ -81,6 +102,7 @@ void (*InputKeymap[32])() = {
 static int setStrType(Str str, Lineprop* prop);
 static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
 static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
+static void ins_char(struct CmdArgs args, Str str);
 
 static int CPos, CLen, offset;
 static int i_cont, i_broken, i_quote;
@@ -92,7 +114,6 @@ static int move_word;
 static struct Hist* CurrentHist;
 static Str strCurrentBuf;
 static int use_hist;
-static void ins_char(Str str);
 
 char* inputLineHistSearch(struct CmdArgs args, const char* prompt, const char* def_str,
     enum InputLineFlags flag, struct Hist* hist, IncrFunc incrfunc)
@@ -173,24 +194,24 @@ char* inputLineHistSearch(struct CmdArgs args, const char* prompt, const char* d
         refresh();
 
     next_char:
-        c = getch();
+        c = getch(args);
         cm_clear = true;
         cm_disp_clear = true;
         if (!i_quote && (((cm_mode & CPL_ALWAYS) && (c == CTRL_I || (space_autocomplete && c == ' '))) || ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
             if (emacs_like_lineedit && cm_next) {
-                _dcompl();
+                _dcompl(args);
                 need_redraw = true;
             } else {
-                _compl();
+                _compl(args);
                 cm_disp_next = -1;
             }
         } else if (!i_quote && CLen == CPos && (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
             if (!emacs_like_lineedit) {
-                _dcompl();
+                _dcompl(args);
                 need_redraw = true;
             }
         } else if (!i_quote && c == DEL_CODE) {
-            _bs();
+            _bs(args);
             cm_next = false;
             cm_disp_next = -1;
         } else if (!i_quote && c < 0x20) { /* Control code */
@@ -214,7 +235,7 @@ char* inputLineHistSearch(struct CmdArgs args, const char* prompt, const char* d
             cm_disp_next = -1;
             if (CLen + tmp->length > STR_LEN || !tmp->length)
                 goto next_char;
-            ins_char(tmp);
+            ins_char(args, tmp);
             if (incrfunc)
                 incrfunc(-1, strBuf, strProp);
         }
@@ -300,7 +321,7 @@ addStr(char* p, Lineprop* pr, int len, int offset, int limit)
 }
 
 static void
-ins_char(Str str)
+ins_char(struct CmdArgs args, Str str)
 {
     char *p = str->ptr, *ep = p + str->length;
     Lineprop ctype;
@@ -317,14 +338,14 @@ ins_char(Str str)
             if (ctype & PC_UNKNOWN)
                 ctype = PC_WCHAR1;
         }
-        insC();
+        insC(args);
         strBuf->ptr[CPos] = *(p++);
         strProp[CPos] = ctype;
         CPos++;
         if (--len) {
             ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
             while (len--) {
-                insC();
+                insC(args);
                 strBuf->ptr[CPos] = *(p++);
                 strProp[CPos] = ctype;
                 CPos++;
@@ -333,81 +354,78 @@ ins_char(Str str)
     }
 }
 
-static void
-_esc(void)
+static int _esc(struct CmdArgs args)
 {
-    char c;
-
-    switch (c = getch()) {
+    args.ch = getch(args);
+    switch (args.ch) {
     case '[':
     case 'O':
-        switch (c = getch()) {
+        switch (args.ch = getch(args)) {
         case 'A':
-            _prev();
+            _prev(args);
             break;
         case 'B':
-            _next();
+            _next(args);
             break;
         case 'C':
-            _mvR();
+            _mvR(args);
             break;
         case 'D':
-            _mvL();
+            _mvL(args);
             break;
         }
         break;
     case CTRL_I:
     case ' ':
         if (emacs_like_lineedit) {
-            _rdcompl();
+            _rdcompl(args);
             cm_clear = false;
             need_redraw = true;
         } else
-            _rcompl();
+            _rcompl(args);
         break;
     case CTRL_D:
         if (!emacs_like_lineedit)
-            _rdcompl();
+            _rdcompl(args);
         need_redraw = true;
         break;
     case 'f':
         if (emacs_like_lineedit)
-            _mvRw();
+            _mvRw(args);
         break;
     case 'b':
         if (emacs_like_lineedit)
-            _mvLw();
+            _mvLw(args);
         break;
     case CTRL_H:
         if (emacs_like_lineedit)
-            _bsw();
+            _bsw(args);
         break;
     default:
-        if (wc_char_conv(WcOption, ESC_CODE).data == NULL && wc_char_conv(WcOption, c).data == NULL)
+        if (wc_char_conv(WcOption, ESC_CODE).data == NULL && wc_char_conv(WcOption, args.ch).data == NULL)
             i_quote = true;
     }
+
+    return 0;
 }
 
-static void
-insC(void)
+static int insC(struct CmdArgs args)
 {
-    int i;
-
     Strinsert_char(strBuf, CPos, ' ');
     CLen = strBuf->length;
-    for (i = CLen; i > CPos; i--) {
+    for (int i = CLen; i > CPos; i--) {
         strProp[i] = strProp[i - 1];
     }
+    return 0;
 }
 
-static void
-delC(void)
+static int delC(struct CmdArgs args)
 {
+    if (CLen == CPos)
+        return 0;
+
     int i = CPos;
     int delta = 1;
-
-    if (CLen == CPos)
-        return;
     while (i + delta < CLen && strProp[i + delta] & PC_WCHAR2)
         delta++;
     for (i = CPos; i < CLen; i++) {
@@ -415,19 +433,19 @@ delC(void)
     }
     Strdelete(strBuf, CPos, delta);
     CLen -= delta;
+    return 0;
 }
 
-static void
-_mvL(void)
+static int _mvL(struct CmdArgs args)
 {
     if (CPos > 0)
         CPos--;
     while (CPos > 0 && strProp[CPos] & PC_WCHAR2)
         CPos--;
+    return 0;
 }
 
-static void
-_mvLw(void)
+static int _mvLw(struct CmdArgs args)
 {
     int first = 1;
     while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
@@ -438,10 +456,10 @@ _mvLw(void)
         if (!move_word)
             break;
     }
+    return 0;
 }
 
-static void
-_mvRw(void)
+static int _mvRw(struct CmdArgs args)
 {
     int first = 1;
     while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
@@ -452,112 +470,113 @@ _mvRw(void)
         if (!move_word)
             break;
     }
+    return 0;
 }
 
-static void
-_mvR(void)
+static int _mvR(struct CmdArgs args)
 {
     if (CPos < CLen)
         CPos++;
     while (CPos < CLen && strProp[CPos] & PC_WCHAR2)
         CPos++;
+    return 0;
 }
 
-static void
-_bs(void)
+static int _bs(struct CmdArgs args)
 {
     if (CPos > 0) {
-        _mvL();
-        delC();
+        _mvL(args);
+        delC(args);
     }
+    return 0;
 }
 
-static void
-_bsw(void)
+static int _bsw(struct CmdArgs args)
 {
     int t = 0;
     while (CPos > 0 && !t) {
-        _mvL();
+        _mvL(args);
         t = (move_word && terminated(strBuf->ptr[CPos - 1]));
-        delC();
+        delC(args);
     }
+    return 0;
 }
 
-static void
-_enter(void)
+static int _enter(struct CmdArgs args)
 {
     i_cont = false;
+    return 0;
 }
 
-static void
-insertself(char c)
+static int iself(struct CmdArgs args)
 {
     if (CLen >= STR_LEN)
-        return;
-    insC();
-    strBuf->ptr[CPos] = c;
+        return 0;
+    insC(args);
+    strBuf->ptr[CPos] = args.ch;
     strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
     CPos++;
+    return 0;
 }
 
-static void
-_quo(void)
+static int _quo(struct CmdArgs args)
 {
     i_quote = true;
+    return 0;
 }
 
-static void
-_mvB(void)
+static int _mvB(struct CmdArgs args)
 {
     CPos = 0;
+    return 0;
 }
 
-static void
-_mvE(void)
+static int _mvE(struct CmdArgs args)
 {
     CPos = CLen;
+    return 0;
 }
 
-static void
-killn(void)
+static int killn(struct CmdArgs args)
 {
     CLen = CPos;
     Strtruncate(strBuf, CLen);
+    return 0;
 }
 
-static void
-killb(void)
+static int killb(struct CmdArgs args)
 {
     while (CPos > 0)
-        _bs();
+        _bs(args);
+    return 0;
 }
 
-static void
-_inbrk(void)
+static int _inbrk(struct CmdArgs args)
 {
     i_cont = false;
     i_broken = true;
+    return 0;
 }
 
-static void
-_compl(void)
+static int _compl(struct CmdArgs args)
 {
     next_compl(1);
+    return 0;
 }
 
-static void
-_rcompl(void)
+static int _rcompl(struct CmdArgs args)
 {
     next_compl(-1);
+    return 0;
 }
 
-static void
-_tcompl(void)
+static int _tcompl(struct CmdArgs args)
 {
     if (cm_mode & CPL_OFF)
         cm_mode = CPL_ON;
     else if (cm_mode & CPL_ON)
         cm_mode = CPL_OFF;
+    return 0;
 }
 
 static void
@@ -604,16 +623,16 @@ next_compl(int next)
         CPos = CLen;
 }
 
-static void
-_dcompl(void)
+static int _dcompl(struct CmdArgs args)
 {
     next_dcompl(1);
+    return 0;
 }
 
-static void
-_rdcompl(void)
+static int _rdcompl(struct CmdArgs args)
 {
     next_dcompl(-1);
+    return 0;
 }
 
 static void
@@ -899,21 +918,20 @@ doComplete(Str ifn, enum CompletionStatus* status, int next)
     return Str_conv_from_system(CompleteBuf->ptr, CompleteBuf->length);
 }
 
-static void
-_prev(void)
+static int _prev(struct CmdArgs args)
 {
     struct Hist* hist = CurrentHist;
     if (!use_hist)
-        return;
+        return 0;
     const char* p;
     if (strCurrentBuf) {
         p = prevHist(hist);
         if (p == NULL)
-            return;
+            return 0;
     } else {
         p = lastHist(hist);
         if (p == NULL)
-            return;
+            return 0;
         strCurrentBuf = strBuf;
     }
     if (DecodeURL && (cm_mode & CPL_URL))
@@ -921,18 +939,18 @@ _prev(void)
     strBuf = Strnew_charp(p);
     CLen = CPos = setStrType(strBuf, strProp);
     offset = 0;
+    return 0;
 }
 
-static void
-_next(void)
+static int _next(struct CmdArgs args)
 {
     struct Hist* hist = CurrentHist;
 
     if (!use_hist)
-        return;
+        return 0;
 
     if (strCurrentBuf == NULL)
-        return;
+        return 0;
 
     const char* p = nextHist(hist);
     if (p) {
@@ -945,6 +963,7 @@ _next(void)
     }
     CLen = CPos = setStrType(strBuf, strProp);
     offset = 0;
+    return 0;
 }
 
 static int
@@ -991,23 +1010,20 @@ terminated(unsigned char c)
     return 0;
 }
 
-static void
-_editor(void)
+static int _editor(struct CmdArgs args)
 {
-    struct FormItem fi;
-    char* p;
-
     if (is_passwd)
-        return;
+        return 0;
 
+    struct FormItem fi;
     fi.readonly = false;
     fi.value = Strdup(strBuf);
     Strcat_char(fi.value, '\n');
 
-    input_textarea(&fi);
+    input_textarea(args, &fi);
 
     strBuf = Strnew();
-    for (p = fi.value->ptr; *p; p++) {
+    for (char* p = fi.value->ptr; *p; p++) {
         if (*p == '\r' || *p == '\n')
             continue;
         Strcat_char(strBuf, *p);
@@ -1015,6 +1031,7 @@ _editor(void)
     CLen = CPos = setStrType(strBuf, strProp);
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    return 0;
 }
 
 char* inputAnswer(struct CmdArgs args, const char* prompt)

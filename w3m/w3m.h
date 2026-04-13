@@ -1,11 +1,21 @@
 #pragma once
 #include <stdbool.h>
+#include <stdint.h>
 
 struct CmdArgs {
     int ch;
 };
 
 typedef void (*CmdFunc)(struct CmdArgs);
+
+int getch_timeout(uint32_t ms, struct CmdArgs args);
+
+static inline int getch(struct CmdArgs args)
+{
+    return getch_timeout(0, args);
+}
+
+void unget(int ch);
 
 extern void w3mFunc(const char* cmd);
 

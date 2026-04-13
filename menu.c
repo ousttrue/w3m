@@ -483,7 +483,7 @@ int action_menu(struct CmdArgs args, Menu* menu)
     select_menu(menu, menu->select);
 
     while (1) {
-        args.ch = getch();
+        args.ch = getch(args);
         if (IS_ASCII(args.ch)) { /* Ascii */
             mselect = (*menu->keymap[args.ch])(args);
             if (mselect != MENU_NOTHING)
@@ -663,14 +663,14 @@ struct LinkList* link_menu(struct CmdArgs args, struct Buffer* buf)
 static int
 mEsc(struct CmdArgs args)
 {
-    args.ch = getch();
+    args.ch = getch(args);
     return (MenuEscKeymap[args.ch](args));
 }
 
 static int
 mEscB(struct CmdArgs args)
 {
-    args.ch = getch();
+    args.ch = getch(args);
     if (IS_DIGIT(args.ch))
         return (mEscD(args));
     else
@@ -681,10 +681,10 @@ static int
 mEscD(struct CmdArgs args)
 {
     int d = args.ch - (int)'0';
-    args.ch = getch();
+    args.ch = getch(args);
     if (IS_DIGIT(args.ch)) {
         d = d * 10 + args.ch - (int)'0';
-        args.ch = getch();
+        args.ch = getch(args);
     }
     if (args.ch == '~')
         return (MenuEscDKeymap[d](args));

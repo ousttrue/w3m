@@ -24,6 +24,3 @@ void flush_tty(void);
 bool get_pixel_per_cell(int* ppc, int* ppl);
 void writer(const uint8_t* str, size_t len);
 int write1(int c);
-uint8_t getch(void);
-int getch_timeout(int sec);
-void unget(int ch);

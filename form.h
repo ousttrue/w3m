@@ -85,3 +85,29 @@ void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
 int formChooseOptionByMenu(struct CmdArgs args, struct FormItem* fi, int x, int y);
 void form_write_data(FILE* f, const char* boundary, const char* name, const char* value);
 void form_write_from_file(FILE* f, const char* boundary, const char* name, const char* filename, char* file);
+struct Form* newFormList(char* action, char* method, char* charset,
+    char* enctype, char* target, char* name,
+    struct Form* _next);
+struct HtmlTag;
+struct FormItem* formList_addInput(struct Form* fl,
+    struct HtmlTag* tag);
+char* form2str(struct FormItem* fi);
+int formtype(char* typestr);
+struct Buffer;
+void preFormUpdateBuffer(struct Buffer* buf);
+Str textfieldrep(Str s, int width);
+void input_textarea(struct CmdArgs args, struct FormItem* fi);
+void do_internal(struct CmdArgs args, char* action, char* data);
+struct Buffer* page_info_panel(struct Buffer* buf);
+void loadPreForm(void);
+struct Url;
+char* last_modified(struct Buffer* buf);
+Str romanNumeral(int n);
+Str romanAlphabet(int n);
+void mySystem(char* command, int background);
+char* url_unquote_conv(const char* url, wc_ces charset);
+char* expandName(char* name);
+struct parsed_tagarg;
+void change_charset(struct CmdArgs args, struct parsed_tagarg* arg);
+const char* guess_save_name(struct Buffer* buf, const char* file);
+Str getLinkNumberStr(int correction);

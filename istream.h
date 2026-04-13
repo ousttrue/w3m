@@ -159,3 +159,4 @@ Str convertLine(struct URLFile* uf, Str line, enum LineMode mode, wc_ces* charse
     wc_ces doc_charset);
 
 int checkSaveFile(InputStream stream, const char* path);
+void free_ssl_ctx(void);

@@ -1,3 +1,4 @@
+#include "istream.h"
 #include "global.h"
 #include "line_input.h"
 #include "alloc.h"
@@ -6,7 +7,6 @@
 #include "display.h"
 #include "proto.h"
 #include "myctype.h"
-#include "istream.h"
 #include <gc.h>
 #include <signal.h>
 #include <openssl/x509v3.h>

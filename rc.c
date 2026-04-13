@@ -1,4 +1,6 @@
 #include "rc.h"
+#include "form.h"
+#include "auth.h"
 #include "w3m.h"
 #include "content_type.h"
 #include "func.h"
@@ -1084,6 +1086,11 @@ do_recursive_mkdir(const char* dir)
 }
 
 void loadSiteconf(void);
+
+
+
+
+
 
 void sync_with_option(void)
 {

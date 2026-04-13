@@ -37,7 +37,7 @@ extern int display_ok;
         (s)--;         \
     } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
 
-void escKeyProc(int c, int esc, const char* map[128]);
+void escKeyProc(struct CmdArgs args, int esc, const char* map[128]);
 void nscroll(int n, int mode);
 int searchKeyNum(void);
 struct Buffer;
@@ -62,7 +62,7 @@ void _goLine(const char* l);
 int cur_real_linenumber(struct Buffer* buf);
 void _followForm(struct CmdArgs args, int submit);
 void gotoLabel(const char* label);
-int handleMailto(const char* url);
+int handleMailto(struct CmdArgs args, const char* url);
 void _newT(void);
 struct Buffer* loadLink(struct CmdArgs args, const char* url, const char* target, const char* referer, struct Form* request);
 void _nextA(int visited);
@@ -101,3 +101,4 @@ const char* searchKeyData(void);
 void dump_extra(struct Buffer* buf);
 void dump_head(struct Buffer* buf);
 void dump_source(struct Buffer* buf);
+void escdmap(struct CmdArgs args);

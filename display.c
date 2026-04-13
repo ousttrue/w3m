@@ -1066,7 +1066,7 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
     else
         message(s, (LINES - 1), 0);
     refresh();
-    int ch = getch_timeout(sec);
+    int ch = getch_timeout(sec, (struct CmdArgs){});
     if (!purge && ch > 0) {
         unget(ch);
     }

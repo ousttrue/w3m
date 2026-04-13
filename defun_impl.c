@@ -48,30 +48,28 @@ void nulcmd(struct CmdArgs args)
 
 void escmap(struct CmdArgs args)
 {
-    char c = getch();
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESC, EscKeymap);
+    args.ch = getch(args);
+    if (IS_ASCII(args.ch))
+        escKeyProc(args, K_ESC, EscKeymap);
 }
 
 void escbmap(struct CmdArgs args)
 {
-    char c;
-    c = getch();
-    if (IS_DIGIT(c)) {
-        escdmap(c);
+    args.ch = getch(args);
+    if (IS_DIGIT(args.ch)) {
+        escdmap(args);
         return;
     }
-    if (IS_ASCII(c))
-        escKeyProc((int)c, K_ESCB, EscBKeymap);
+    if (IS_ASCII(args.ch))
+        escKeyProc(args, K_ESCB, EscBKeymap);
 }
 
 void multimap(struct CmdArgs args)
 {
-    char c;
-    c = getch();
-    if (IS_ASCII(c)) {
-        CurrentKey = K_MULTI | (CurrentKey << 16) | c;
-        escKeyProc((int)c, 0, NULL);
+    args.ch = getch(args);
+    if (IS_ASCII(args.ch)) {
+        CurrentKey = K_MULTI | (CurrentKey << 16) | args.ch;
+        escKeyProc(args, 0, NULL);
     }
 }
 
@@ -366,7 +364,7 @@ void execsh(struct CmdArgs args)
         printf("\n[Hit any key]");
         fflush(stdout);
         fmInit();
-        getch();
+        getch(args);
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -552,7 +550,7 @@ void selBuf(struct CmdArgs args)
 
     ok = FALSE;
     do {
-        buf = selectBuffer(Firstbuf, Currentbuf, &cmd);
+        buf = selectBuffer(args, Firstbuf, Currentbuf, &cmd);
         switch (cmd) {
         case 'B':
             ok = TRUE;
@@ -674,7 +672,7 @@ void editBf(struct CmdArgs args)
     else
         cmd = myEditor(Editor, shell_quote(fn),
             cur_real_linenumber(Currentbuf));
-    exec_cmd(cmd->ptr);
+    exec_cmd(args, cmd->ptr);
 
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     reload((struct CmdArgs) { 0 });
@@ -692,9 +690,7 @@ void editScr(struct CmdArgs args)
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    exec_cmd(myEditor(Editor, shell_quote(tmpf),
-        cur_real_linenumber(Currentbuf))
-            ->ptr);
+    exec_cmd(args, myEditor(Editor, shell_quote(tmpf), cur_real_linenumber(Currentbuf))->ptr);
     unlink(tmpf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -852,7 +848,7 @@ void followA(struct CmdArgs args)
             return;
         }
     }
-    if (handleMailto(a->url))
+    if (handleMailto(args, a->url))
         return;
     const char* url = a->url;
     if (map)

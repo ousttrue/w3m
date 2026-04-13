@@ -6,7 +6,6 @@
 #define DEV_NULL_PATH "/dev/null"
 
 pid_t open_pipe_rw(FILE** fr, FILE** fw);
-FILE* openSecretFile(const char* fname);
 char* lastFileName(const char* path);
 
 #define TMPF_DFL 0

@@ -1,4 +1,5 @@
 #include "table.h"
+#include "form.h"
 #include "html_token.h"
 #include "indep.h"
 #include "html_feed_environ.h"

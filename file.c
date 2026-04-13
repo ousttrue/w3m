@@ -1,4 +1,5 @@
 #include "display.h"
+#include "auth.h"
 #include "w3m.h"
 #include "indep.h"
 #include "alloc.h"

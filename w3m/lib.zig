@@ -1,5 +1,6 @@
 const std = @import("std");
 const c = @cImport({
+    // @cInclude("w3m.h");
     @cInclude("defun_impl.h");
     @cInclude("constants.h");
     @cInclude("sys/ioctl.h");
@@ -121,7 +122,7 @@ fn run() !void {
 
         processResizeAndImage();
 
-        const ch = getch();
+        const ch = _getch_internal();
         //         last_key = c;
         //         if (CurrentAlarm->sec > 0) {
         //             alarm(0);
@@ -633,7 +634,11 @@ fn getch_async(io: std.Io) u8 {
     }
 }
 
-pub export fn getch() u8 {
+fn _getch_internal() u8 {
+    if (peek_queue.popFront()) |ch| {
+        return ch;
+    }
+
     const io = runtime.io;
     var future = io.async(getch_async, .{io});
     return future.await(io);
@@ -644,7 +649,9 @@ fn sleep_async(io: std.Io, duration: std.Io.Duration) void {
 }
 
 /// return -1 if timeout
-export fn getch_timeout(sec: c_int) c_int {
+export fn getch_timeout(ms: u32, args: c.CmdArgs) c_int {
+    _ = args;
+
     if (peek_queue.popFront()) |ch| {
         return ch;
     }
@@ -659,7 +666,7 @@ export fn getch_timeout(sec: c_int) c_int {
     var select: InputOrTimeout = .init(io, &buf);
 
     select.async(.input, getch_async, .{io});
-    select.async(.timeout, sleep_async, .{ io, std.Io.Duration.fromSeconds(@intCast(sec)) });
+    select.async(.timeout, sleep_async, .{ io, std.Io.Duration.fromMilliseconds(ms) });
 
     const winner = select.await() catch @panic("select.await");
     defer select.cancelDiscard(); // cancel remaining, discard results

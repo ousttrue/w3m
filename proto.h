@@ -65,47 +65,9 @@ extern int matchattr(const char* p, const char* attr, int len, Str* value);
 extern void readHeader(struct CmdArgs args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(struct Buffer* buf, char* field);
 
-extern void escdmap(char c);
 extern Str unescape_spaces(Str s);
 extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
 extern int visible_length(char* str);
 
-extern struct Form* newFormList(char* action, char* method, char* charset,
-    char* enctype, char* target, char* name,
-    struct Form* _next);
-extern struct FormItem* formList_addInput(struct Form* fl,
-    struct HtmlTag* tag);
-struct FormItem;
-extern char* form2str(struct FormItem* fi);
-extern int formtype(char* typestr);
-extern void preFormUpdateBuffer(struct Buffer* buf);
-extern Str textfieldrep(Str s, int width);
-extern void input_textarea(struct FormItem* fi);
-extern void do_internal(struct CmdArgs args, char* action, char* data);
-
-extern struct Buffer* page_info_panel(struct Buffer* buf);
-
-extern void free_ssl_ctx(void);
-
-extern void loadPasswd(void);
-extern void loadPreForm(void);
-extern int find_auth_user_passwd(struct Url* pu, char* realm,
-    Str* uname, Str* pwd, int is_proxy);
-extern void add_auth_user_passwd(struct Url* pu, char* realm,
-    Str uname, Str pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(struct Url* pu, char* realm,
-    Str uname, Str pwd, int is_proxy);
-extern char* last_modified(struct Buffer* buf);
-extern Str romanNumeral(int n);
-extern Str romanAlphabet(int n);
-extern void mySystem(char* command, int background);
-extern char* url_unquote_conv(const char* url, wc_ces charset);
-extern char* expandName(char* name);
-struct parsed_tagarg;
-extern void change_charset(struct CmdArgs args, struct parsed_tagarg* arg);
-
-extern const char* guess_save_name(struct Buffer* buf, const char* file);
-
-extern Str getLinkNumberStr(int correction);

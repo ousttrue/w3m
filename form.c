@@ -1,9 +1,9 @@
 #include "form.h"
+#include "auth.h"
 #include "content_type.h"
 #include "func.h"
 #include "istream.h"
 #include "global.h"
-#include "indep.h"
 #include "alloc.h"
 #include "anchor.h"
 #include "downloadlist.h"
@@ -534,7 +534,7 @@ form_fputs_decode(Str s, FILE* f)
     Strfputs(z, f);
 }
 
-void input_textarea(struct FormItem* fi)
+void input_textarea(struct CmdArgs args, struct FormItem* fi)
 {
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
@@ -552,7 +552,7 @@ void input_textarea(struct FormItem* fi)
         form_fputs_decode(fi->value, f);
     fclose(f);
 
-    if (exec_cmd(myEditor(Editor, tmpf, 1)->ptr))
+    if (exec_cmd(args, myEditor(Editor, tmpf, 1)->ptr))
         goto input_end;
 
     if (fi->readonly)
@@ -801,17 +801,17 @@ add_pre_form_item(struct pre_form* pf, struct pre_form_item* prev, int type,
 
 void loadPreForm(void)
 {
-    FILE* fp;
+    PreForm = NULL;
+
+    FILE* fp = openSecretFile(pre_form_file);
+    if (fp == NULL)
+        return;
+
     Str line = NULL, textarea = NULL;
     struct pre_form* pf = NULL;
     struct pre_form_item* pi = NULL;
     int type = -1;
     char* name = NULL;
-
-    PreForm = NULL;
-    fp = openSecretFile(pre_form_file);
-    if (fp == NULL)
-        return;
     while (1) {
         const char *p, *s, *arg;
         Regex* re_arg;

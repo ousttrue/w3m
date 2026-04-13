@@ -367,7 +367,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
  * Select buffer visually
  */
 struct Buffer*
-selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
+selectBuffer(struct CmdArgs args, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
 {
     int i, cpoint, /* Current struct Buffer Number */
         spoint, /* Current Line on Screen */
@@ -394,9 +394,9 @@ selectBuffer(struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectcha
     listBuffer(topbuf, currentbuf);
 
     for (;;) {
-        if ((c = getch()) == ESC_CODE) {
-            if ((c = getch()) == '[' || c == 'O') {
-                switch (c = getch()) {
+        if ((c = getch(args)) == ESC_CODE) {
+            if ((c = getch(args)) == '[' || c == 'O') {
+                switch (c = getch(args)) {
                 case 'A':
                     c = 'k';
                     break;
