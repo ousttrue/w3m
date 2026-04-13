@@ -644,7 +644,7 @@ openSocket(char *const hostname,
     if (regexMatch(hostname, -1, 1)) {
 	sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
 	adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
-	memmove((void *)&hostaddr.sin_addr, (void *)&adr, sizeof(long));
+	memmove(&hostaddr.sin_addr, &adr, sizeof(in_addr_t));
 	hostaddr.sin_family = AF_INET;
 	hostaddr.sin_port = s_port;
 	if (fmInitialized) {
