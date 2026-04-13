@@ -17,7 +17,7 @@ pub fn main(init: std.process.Init) !u8 {
     var argv: []const [:0]const u8 = try init.minimal.args.toSlice(init.gpa);
     defer init.gpa.free(argv);
 
-    if (!c.w3m_args(.{}, @intCast(argv.len), @ptrCast(@constCast(&argv[0])))) {
+    if (!c.w3m_args(null, @intCast(argv.len), @ptrCast(@constCast(&argv[0])))) {
         return 0;
     }
 

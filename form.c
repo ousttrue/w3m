@@ -34,7 +34,7 @@ extern int max_textarea;
 extern struct FormSelectOption* select_option;
 extern int max_select;
 
-typedef void (*FormActionFunc)(struct CmdArgs args, struct parsed_tagarg*);
+typedef void (*FormActionFunc)(struct CmdArgs *args, struct parsed_tagarg*);
 
 struct FormAction {
     const char* action;
@@ -534,7 +534,7 @@ form_fputs_decode(Str s, FILE* f)
     Strfputs(z, f);
 }
 
-void input_textarea(struct CmdArgs args, struct FormItem* fi)
+void input_textarea(struct CmdArgs *args, struct FormItem* fi)
 {
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
@@ -583,7 +583,7 @@ input_end:
     unlink(tmpf);
 }
 
-void do_internal(struct CmdArgs args, char* action, char* data)
+void do_internal(struct CmdArgs *args, char* action, char* data)
 {
     for (int i = 0; internal_action[i].action; i++) {
         if (strcasecmp(internal_action[i].action, action) == 0) {
@@ -652,7 +652,7 @@ void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
     }
 }
 
-int formChooseOptionByMenu(struct CmdArgs args, struct FormItem* fi, int x, int y)
+int formChooseOptionByMenu(struct CmdArgs *args, struct FormItem* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     struct FormSelectOptionItem* opt;

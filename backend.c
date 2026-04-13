@@ -31,14 +31,14 @@ static char* readline(char*);
 static TextList* split(const char*);
 
 /* Prototype declaration of command functions */
-static void get(struct CmdArgs args, TextList*);
-static void post(struct CmdArgs args, TextList*);
-static void set(struct CmdArgs args, TextList*);
-static void show(struct CmdArgs args, TextList*);
-static void quit(struct CmdArgs args, TextList*);
-static void help(struct CmdArgs args, TextList*);
+static void get(struct CmdArgs *args, TextList*);
+static void post(struct CmdArgs *args, TextList*);
+static void set(struct CmdArgs *args, TextList*);
+static void show(struct CmdArgs *args, TextList*);
+static void quit(struct CmdArgs *args, TextList*);
+static void help(struct CmdArgs *args, TextList*);
 
-typedef void (*BackendFunc)(struct CmdArgs args, TextList*);
+typedef void (*BackendFunc)(struct CmdArgs *args, TextList*);
 
 struct BackendCommand {
     const char* name;
@@ -98,7 +98,7 @@ print_headers(struct Buffer* buf, int len)
 }
 
 static void
-internal_get(struct CmdArgs args, const char* url, int flag, struct Form* request)
+internal_get(struct CmdArgs *args, const char* url, int flag, struct Form* request)
 {
     struct Buffer* buf;
 
@@ -145,7 +145,7 @@ internal_get(struct CmdArgs args, const char* url, int flag, struct Form* reques
 
 /* Command: get */
 static void
-get(struct CmdArgs args, TextList* argv)
+get(struct CmdArgs *args, TextList* argv)
 {
     char *p, *url = NULL;
     int flag = FALSE;
@@ -163,7 +163,7 @@ get(struct CmdArgs args, TextList* argv)
 
 /* Command: post */
 static void
-post(struct CmdArgs args, TextList* argv)
+post(struct CmdArgs *args, TextList* argv)
 {
     struct Form* request;
     char *p, *target = NULL, *charset = NULL,
@@ -199,7 +199,7 @@ post(struct CmdArgs args, TextList* argv)
 
 /* Command: set */
 static void
-set(struct CmdArgs args, TextList* argv)
+set(struct CmdArgs *args, TextList* argv)
 {
     if (argv->nitem > 1) {
         int i;
@@ -216,7 +216,7 @@ set(struct CmdArgs args, TextList* argv)
 
 /* Command: show */
 static void
-show(struct CmdArgs args, TextList* argv)
+show(struct CmdArgs *args, TextList* argv)
 {
     if (argv->nitem >= 1) {
         int i;
@@ -233,7 +233,7 @@ show(struct CmdArgs args, TextList* argv)
 
 /* Command: quit */
 static void
-quit(struct CmdArgs args, TextList* argv)
+quit(struct CmdArgs *args, TextList* argv)
 {
     save_cookies();
     w3m_exit(0);
@@ -241,7 +241,7 @@ quit(struct CmdArgs args, TextList* argv)
 
 /* Command: help */
 static void
-help(struct CmdArgs args, TextList* argv)
+help(struct CmdArgs *args, TextList* argv)
 {
     int i;
     for (i = 0; command_table[i].name; i++)
@@ -268,7 +268,7 @@ show_column(TextList* argv)
 
 /* Call appropriate command function based on given string */
 static void
-call_command_function(struct CmdArgs args, const char* str)
+call_command_function(struct CmdArgs *args, const char* str)
 {
     int i;
     TextList* argv = split(str);
@@ -285,7 +285,7 @@ call_command_function(struct CmdArgs args, const char* str)
 }
 
 /* Main function */
-int backend(struct CmdArgs args)
+int backend(struct CmdArgs *args)
 {
     w3m_dump = 0;
     if (COLS == 0)

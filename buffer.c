@@ -367,7 +367,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
  * Select buffer visually
  */
 struct Buffer*
-selectBuffer(struct CmdArgs args, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
+selectBuffer(struct CmdArgs *args, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
 {
     int i, cpoint, /* Current struct Buffer Number */
         spoint, /* Current Line on Screen */
@@ -472,7 +472,7 @@ selectBuffer(struct CmdArgs args, struct Buffer* firstbuf, struct Buffer* curren
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(struct CmdArgs args, struct Buffer* buf)
+void reshapeBuffer(struct CmdArgs *args, struct Buffer* buf)
 {
     struct URLFile f;
     struct Buffer sbuf;

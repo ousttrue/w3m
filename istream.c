@@ -482,7 +482,7 @@ ssl_check_cert_ident(X509* x, const char* hostname)
     return ret;
 }
 
-Str ssl_get_certificate(struct CmdArgs args, SSL* ssl, const char* hostname)
+Str ssl_get_certificate(struct CmdArgs *args, SSL* ssl, const char* hostname)
 {
     BIO* bp;
     X509* x;

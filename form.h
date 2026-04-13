@@ -82,7 +82,7 @@ struct FormSelectOption {
 void addSelectOption(struct FormSelectOption* fso, Str value, Str label, int chk);
 void chooseSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
 void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item);
-int formChooseOptionByMenu(struct CmdArgs args, struct FormItem* fi, int x, int y);
+int formChooseOptionByMenu(struct CmdArgs *args, struct FormItem* fi, int x, int y);
 void form_write_data(FILE* f, const char* boundary, const char* name, const char* value);
 void form_write_from_file(FILE* f, const char* boundary, const char* name, const char* filename, char* file);
 struct Form* newFormList(char* action, char* method, char* charset,
@@ -96,8 +96,8 @@ int formtype(char* typestr);
 struct Buffer;
 void preFormUpdateBuffer(struct Buffer* buf);
 Str textfieldrep(Str s, int width);
-void input_textarea(struct CmdArgs args, struct FormItem* fi);
-void do_internal(struct CmdArgs args, char* action, char* data);
+void input_textarea(struct CmdArgs *args, struct FormItem* fi);
+void do_internal(struct CmdArgs *args, char* action, char* data);
 struct Buffer* page_info_panel(struct Buffer* buf);
 void loadPreForm(void);
 struct Url;
@@ -108,6 +108,6 @@ void mySystem(char* command, int background);
 char* url_unquote_conv(const char* url, wc_ces charset);
 char* expandName(char* name);
 struct parsed_tagarg;
-void change_charset(struct CmdArgs args, struct parsed_tagarg* arg);
+void change_charset(struct CmdArgs *args, struct parsed_tagarg* arg);
 const char* guess_save_name(struct Buffer* buf, const char* file);
 Str getLinkNumberStr(int correction);

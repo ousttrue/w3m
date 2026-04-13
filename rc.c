@@ -1371,7 +1371,7 @@ load_option_panel(void)
     return buf;
 }
 
-void panel_set_option(struct CmdArgs args, struct parsed_tagarg* arg)
+void panel_set_option(struct CmdArgs *args, struct parsed_tagarg* arg)
 {
     FILE* f = NULL;
     char* p;
@@ -1402,7 +1402,7 @@ void panel_set_option(struct CmdArgs args, struct parsed_tagarg* arg)
         fclose(f);
     }
     sync_with_option();
-    backBf((struct CmdArgs) { 0 });
+    backBf(args);
 }
 
 char* rcFile(const char* base)

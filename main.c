@@ -294,7 +294,7 @@ die_oom(size_t bytes)
     return NULL;
 }
 
-bool w3m_args(struct CmdArgs args, int argc, const char** argv)
+bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
 {
     struct Buffer* newbuf = NULL;
     int c, i;
@@ -842,14 +842,14 @@ bool w3m_args(struct CmdArgs args, int argc, const char** argv)
             Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
         } else
             Currentbuf = Firstbuf;
-        ldDL((struct CmdArgs) { 0 });
+        ldDL(args);
     } else
         CurrentTab = FirstTab;
     if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
         if (newbuf == NO_BUFFER) {
             if (fmInitialized)
                 /* FIXME: gettextize? */
-                inputChar((struct CmdArgs) { }, "Hit any key to quit w3m:");
+                inputChar(args, "Hit any key to quit w3m:");
         }
         if (fmInitialized)
             fmTerm();
@@ -950,7 +950,7 @@ void pcmap(void)
 {
 }
 
-void escKeyProc(struct CmdArgs args, int esc, const char* map[128])
+void escKeyProc(struct CmdArgs* args, int esc, const char* map[128])
 {
     if (CurrentKey >= 0 && CurrentKey & K_MULTI) {
         const char*** mmap = (const char***)getKeyData(MULTI_KEY(CurrentKey));
@@ -972,20 +972,20 @@ void escKeyProc(struct CmdArgs args, int esc, const char* map[128])
         }
         esc |= (CurrentKey & ~0xFFFF);
     }
-    CurrentKey = esc | args.ch;
+    CurrentKey = esc | args->ch;
     if (map)
-        w3mFunc(map[args.ch]);
+        w3mFunc(map[args->ch]);
 }
 
-void escdmap(struct CmdArgs args)
+void escdmap(struct CmdArgs* args)
 {
-    int d = args.ch - (int)'0';
-    args.ch = getch(args);
-    if (IS_DIGIT(args.ch)) {
-        d = d * 10 + args.ch - (int)'0';
-        args.ch = getch(args);
+    int d = args->ch - (int)'0';
+    args->ch = getch(args);
+    if (IS_DIGIT(args->ch)) {
+        d = d * 10 + args->ch - (int)'0';
+        args->ch = getch(args);
     }
-    if (args.ch == '~')
+    if (args->ch == '~')
         escKeyProc(args, K_ESCD, EscDKeymap);
 }
 
@@ -1119,7 +1119,7 @@ void shiftvisualpos(struct Buffer* buf, int shift)
         buf->visualpos = l->bwidth;
 }
 
-void cmd_loadfile(struct CmdArgs args, const char* fn)
+void cmd_loadfile(struct CmdArgs* args, const char* fn)
 {
     struct Buffer* buf = loadGeneralFile(args, file_to_url(fn), NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
@@ -1129,7 +1129,7 @@ void cmd_loadfile(struct CmdArgs args, const char* fn)
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
-            rFrame((struct CmdArgs) { 0 });
+            rFrame(args);
     }
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1225,7 +1225,7 @@ int next_nonnull_line(struct Line* line)
     return 0;
 }
 
-void _quitfm(struct CmdArgs args, int confirm)
+void _quitfm(struct CmdArgs* args, int confirm)
 {
     char* ans = "y";
 
@@ -1288,15 +1288,15 @@ int cur_real_linenumber(struct Buffer* buf)
 }
 
 static struct Buffer*
-loadNormalBuf(struct Buffer* buf, int renderframe)
+loadNormalBuf(struct CmdArgs* args, struct Buffer* buf, int renderframe)
 {
     pushBuffer(buf);
     if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
-        rFrame((struct CmdArgs) { 0 });
+        rFrame(args);
     return buf;
 }
 
-struct Buffer* loadLink(struct CmdArgs args, const char* url, const char* target, const char* referer, struct Form* request)
+struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* target, const char* referer, struct Form* request)
 {
     struct Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
@@ -1327,27 +1327,27 @@ struct Buffer* loadLink(struct CmdArgs args, const char* url, const char* target
         return NULL;
     }
     if (!on_target) /* open link as an indivisual page */
-        return loadNormalBuf(buf, TRUE);
+        return loadNormalBuf(args, buf, TRUE);
 
     if (do_download) /* download (thus no need to render frames) */
-        return loadNormalBuf(buf, FALSE);
+        return loadNormalBuf(args, buf, FALSE);
 
     if (target == NULL || /* no target specified (that means this page is not a frame page) */
         !strcmp(target, "_top") || /* this link is specified to be opened as an indivisual * page */
         !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
     ) {
-        return loadNormalBuf(buf, TRUE);
+        return loadNormalBuf(args, buf, TRUE);
     }
     nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
     if (nfbuf == NULL) {
         /* original page (that contains <frameset> tag) doesn't exist */
-        return loadNormalBuf(buf, TRUE);
+        return loadNormalBuf(args, buf, TRUE);
     }
 
     f_element = search_frame(nfbuf->frameset, target);
     if (f_element == NULL) {
         /* specified target doesn't exist in this frameset */
-        return loadNormalBuf(buf, TRUE);
+        return loadNormalBuf(args, buf, TRUE);
     }
 
     /* frame page */
@@ -1360,7 +1360,7 @@ struct Buffer* loadLink(struct CmdArgs args, const char* url, const char* target
     /* nfbuf->frameset = copyFrameSet(nfbuf->frameset); */
     resetFrameElement(f_element, buf, referer, request);
     discardBuffer(buf);
-    rFrame((struct CmdArgs) { 0 });
+    rFrame(args);
     {
         const char* label = pu.label;
 
@@ -1418,7 +1418,7 @@ void gotoLabel(const char* label)
     return;
 }
 
-int handleMailto(struct CmdArgs args, const char* url)
+int handleMailto(struct CmdArgs* args, const char* url)
 {
     Str to;
     char* pos;
@@ -1446,10 +1446,10 @@ int handleMailto(struct CmdArgs args, const char* url)
 }
 
 /* follow HREF link in the buffer */
-void bufferA(void)
+static void bufferA(struct CmdArgs *args)
 {
     on_target = FALSE;
-    followA((struct CmdArgs) { 0 });
+    followA(args);
     on_target = TRUE;
 }
 
@@ -1641,12 +1641,12 @@ void query_from_followform(Str* query, struct FormItem* fi, int multipart)
 }
 
 /* process form */
-static void followForm(struct CmdArgs args)
+static void followForm(struct CmdArgs* args)
 {
     _followForm(args, FALSE);
 }
 
-void _followForm(struct CmdArgs args, int submit)
+void _followForm(struct CmdArgs* args, int submit)
 {
     struct Anchor *a, *a2;
     char* p;
@@ -2109,7 +2109,7 @@ int checkBackBuffer(struct Buffer* buf)
     return FALSE;
 }
 
-void cmd_loadURL(struct CmdArgs args, const char* url, struct Url* current, char* referer, struct Form* request)
+void cmd_loadURL(struct CmdArgs* args, const char* url, struct Url* current, char* referer, struct Form* request)
 {
     if (handleMailto(args, url))
         return;
@@ -2123,13 +2123,13 @@ void cmd_loadURL(struct CmdArgs args, const char* url, struct Url* current, char
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
-            rFrame((struct CmdArgs) { 0 });
+            rFrame(args);
     }
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to specified URL */
-void goURL0(struct CmdArgs args, char* prompt, int relative)
+void goURL0(struct CmdArgs* args, char* prompt, int relative)
 {
     char* referer;
     struct Url p_url, *current;
@@ -2207,7 +2207,7 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void follow_map(struct CmdArgs args, struct parsed_tagarg* arg)
+void follow_map(struct CmdArgs* args, struct parsed_tagarg* arg)
 {
     const char* name = tag_get_value(arg, "link");
     struct Anchor* an = retrieveCurrentImg(Currentbuf);
@@ -2241,7 +2241,7 @@ void follow_map(struct CmdArgs args, struct parsed_tagarg* arg)
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
 }
 
-void anchorMn(struct CmdArgs args, AnchorFunc menu_func, int go)
+void anchorMn(struct CmdArgs* args, AnchorFunc menu_func, int go)
 {
     if (!Currentbuf->href || !Currentbuf->hmarklist)
         return;
@@ -2254,7 +2254,7 @@ void anchorMn(struct CmdArgs args, AnchorFunc menu_func, int go)
     arrangeCursor(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
     if (go)
-        followA((struct CmdArgs) { 0 });
+        followA(args);
 }
 
 void _peekURL(int only_img)
@@ -2328,7 +2328,7 @@ void _docCSet(wc_ces charset)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void change_charset(struct CmdArgs args, struct parsed_tagarg* arg)
+void change_charset(struct CmdArgs* args, struct parsed_tagarg* arg)
 {
     struct Buffer* buf = Currentbuf->linkBuffer[LB_N_INFO];
     wc_ces charset;
@@ -2384,7 +2384,7 @@ void chkNMIDBuffer(struct Buffer* buf)
 }
 
 /* spawn external browser */
-void invoke_browser(struct CmdArgs args, const char* url)
+void invoke_browser(struct CmdArgs* args, const char* url)
 {
     Str cmd;
     const char* browser = NULL;
@@ -2491,7 +2491,7 @@ char* GetWord(struct Buffer* buf)
 }
 
 #define DICTBUFFERNAME "*dictionary*"
-void execdict(struct CmdArgs args, const char* word)
+void execdict(struct CmdArgs* args, const char* word)
 {
     char *w, *dictcmd;
     struct Buffer* buf;
@@ -2816,7 +2816,7 @@ deleteTab(TabBuffer* tab)
     return FirstTab;
 }
 
-void followTab(TabBuffer* tab)
+void followTab(struct CmdArgs *args, TabBuffer* tab)
 {
     struct Buffer* buf;
     struct Anchor* a;
@@ -2829,14 +2829,14 @@ void followTab(TabBuffer* tab)
 
     if (tab == CurrentTab) {
         check_target = FALSE;
-        followA((struct CmdArgs) { 0 });
+        followA(args);
         check_target = TRUE;
         return;
     }
     _newT();
     buf = Currentbuf;
     check_target = FALSE;
-    followA((struct CmdArgs) { 0 });
+    followA(args);
     check_target = TRUE;
     if (tab == NULL) {
         if (buf != Currentbuf)
@@ -2861,7 +2861,7 @@ void followTab(TabBuffer* tab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void tabURL0(struct CmdArgs args, TabBuffer* tab, char* prompt, int relative)
+void tabURL0(struct CmdArgs* args, TabBuffer* tab, char* prompt, int relative)
 {
     if (tab == CurrentTab) {
         goURL0(args, prompt, relative);
@@ -2968,7 +2968,7 @@ void resetPos(BufferPos* b)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-bool submitCurrentBuffer(struct CmdArgs args)
+bool submitCurrentBuffer(struct CmdArgs* args)
 {
     if (!Currentbuf->submit) {
         return false;
@@ -3032,7 +3032,7 @@ void processResizeAndImage()
         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
             loadImage(Currentbuf, IMG_FLAG_NEXT);
         }
-        int ch = getch_timeout(1, (struct CmdArgs) { });
+        int ch = getch_timeout(1, 0);
         if (ch > 0) {
             unget(ch);
             break;

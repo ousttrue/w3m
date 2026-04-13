@@ -56,5 +56,5 @@ void load_cookies(void);
 void initCookie(void);
 struct Buffer* cookie_list_panel(void);
 struct parsed_tagarg;
-void set_cookie_flag(struct CmdArgs args, struct parsed_tagarg* arg);
+void set_cookie_flag(struct CmdArgs *args, struct parsed_tagarg* arg);
 int check_cookie_accept_domain(const char* domain);

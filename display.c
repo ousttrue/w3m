@@ -339,7 +339,7 @@ void displayBuffer(struct Buffer* buf, int mode)
     if ((buf->width != INIT_BUFFER_WIDTH && (is_html_type(buf->type) || FoldLine))
         || buf->need_reshape) {
         buf->need_reshape = true;
-        reshapeBuffer((struct CmdArgs) { }, buf);
+        reshapeBuffer(0, buf);
     }
     if (showLineNum) {
         if (buf->lastLine && buf->lastLine->real_linenumber > 0)
@@ -1066,7 +1066,7 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
     else
         message(s, (LINES - 1), 0);
     refresh();
-    int ch = getch_timeout(sec, (struct CmdArgs){});
+    int ch = getch_timeout(sec, 0);
     if (!purge && ch > 0) {
         unget(ch);
     }

@@ -70,5 +70,5 @@ void pushFrameTree(struct frameset_queue** fqpp, struct frameset* fs, struct Buf
 struct frameset* popFrameTree(struct frameset_queue** fqpp);
 struct Form;
 void resetFrameElement(union frameset_element* f_element, struct Buffer* buf, const char* referer, struct Form* request);
-struct Buffer* renderFrame(struct CmdArgs args, struct Buffer* Cbuf, int force_reload);
+struct Buffer* renderFrame(struct CmdArgs *args, struct Buffer* Cbuf, int force_reload);
 union frameset_element* search_frame(struct frameset* fset, const char* name);

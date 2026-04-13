@@ -20,7 +20,7 @@ extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
 struct Form;
 struct Url;
-extern struct Buffer* loadGeneralFile(struct CmdArgs args, const char* path, struct Url* current, const char* referer,
+extern struct Buffer* loadGeneralFile(struct CmdArgs *args, const char* path, struct Url* current, const char* referer,
     int flag, struct Form* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -55,14 +55,14 @@ extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 
 extern int save2tmp(struct URLFile uf, const char* tmpf);
-extern int _doFileCopy(struct CmdArgs args, const char* tmpf, const char* defstr, int download);
+extern int _doFileCopy(struct CmdArgs *args, const char* tmpf, const char* defstr, int download);
 #define doFileCopy(args, tmpf, defstr) _doFileCopy(args, tmpf, defstr, FALSE);
-extern int doFileMove(struct CmdArgs args, const char* tmpf, const char* defstr);
-extern int doFileSave(struct CmdArgs args, struct URLFile uf, const char* defstr);
+extern int doFileMove(struct CmdArgs *args, const char* tmpf, const char* defstr);
+extern int doFileSave(struct CmdArgs *args, struct URLFile uf, const char* defstr);
 extern int checkCopyFile(const char* path1, const char* path2);
-extern int checkOverWrite(struct CmdArgs args, const char* path);
+extern int checkOverWrite(struct CmdArgs *args, const char* path);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
-extern void readHeader(struct CmdArgs args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
+extern void readHeader(struct CmdArgs *args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(struct Buffer* buf, char* field);
 
 extern Str unescape_spaces(Str s);

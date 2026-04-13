@@ -327,7 +327,7 @@ void closeFTP(void)
 }
 
 InputStream
-openFTPStream(struct CmdArgs args, struct Url* pu, struct URLFile* uf)
+openFTPStream(struct CmdArgs *args, struct Url* pu, struct URLFile* uf)
 {
     Str tmp;
     int status;

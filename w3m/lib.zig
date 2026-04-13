@@ -10,6 +10,7 @@ const guessContentType = content_type.guessContentType;
 const terminfo_entry = @import("terminfo_entry.zig");
 const defun = @import("defun.zig");
 const co = @import("co");
+const Epoll = @import("Epoll.zig");
 
 var tty: TtyLinux = undefined;
 // blocking tty stdout
@@ -25,6 +26,7 @@ var evented: std.Io.Threaded = undefined;
 
 var S: *co.schedule = undefined;
 var co_current: ?c_int = null;
+var epoll: Epoll = undefined;
 
 // var key_input_queue: std.Io.Queue(u8) = .init(&.{});
 // fn producer(
@@ -73,6 +75,9 @@ pub fn init(process_init: std.process.Init) void {
     S = co.coroutine_open() orelse {
         @panic("coroutine_open");
     };
+
+    epoll = .init();
+    epoll.add_fd(tty_in.handle);
 }
 
 pub fn deinit() void {
@@ -113,7 +118,7 @@ export fn w3m_loop() c_int {
 fn run() !void {
     while (g.is_running) {
         if (checkDownloadList()) {
-            c.ldDL(.{});
+            c.ldDL(null);
         }
         if (submitCurrentBuffer(.{})) {
             continue;
@@ -163,7 +168,7 @@ const W3mTask = struct {
     export fn coroutine(_S: ?*co.schedule, p: ?*anyopaque) void {
         _ = _S;
         var this: *@This() = @ptrCast(@alignCast(p));
-        this.func.func(this.args);
+        this.func.func(&this.args);
     }
 };
 var task: ?W3mTask = null;
@@ -701,7 +706,7 @@ fn sleep_async(io: std.Io, duration: std.Io.Duration) void {
 }
 
 /// return -1 if timeout
-export fn getch_timeout(ms: u32, args: c.CmdArgs) c_int {
+export fn getch_timeout(ms: u32, args: ?*c.CmdArgs) c_int {
     _ = args;
 
     if (peek_queue.popFront()) |ch| {

@@ -48,7 +48,7 @@ struct URLOption {
     const char* referer;
     enum UrlOptionFlags flag;
 };
-struct URLFile openURL(struct CmdArgs args, const char* url, struct Url* pu, struct Url* current,
+struct URLFile openURL(struct CmdArgs *args, const char* url, struct Url* pu, struct Url* current,
     struct URLOption* option, struct Form* request,
     struct _textlist* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);

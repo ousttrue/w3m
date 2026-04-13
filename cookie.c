@@ -673,7 +673,7 @@ cookie_list_panel(void)
     return loadHTMLString(src);
 }
 
-void set_cookie_flag(struct CmdArgs args, struct parsed_tagarg* arg)
+void set_cookie_flag(struct CmdArgs *args, struct parsed_tagarg* arg)
 {
     int n, v;
     struct cookie* p;
@@ -693,7 +693,7 @@ void set_cookie_flag(struct CmdArgs args, struct parsed_tagarg* arg)
         }
         arg = arg->next;
     }
-    backBf((struct CmdArgs) { 0 });
+    backBf(args);
 }
 
 int check_cookie_accept_domain(const char* domain)

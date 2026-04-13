@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int exec_cmd(struct CmdArgs args, const char* cmd)
+int exec_cmd(struct CmdArgs *args, const char* cmd)
 {
     fmTerm();
     int rv = system(cmd);

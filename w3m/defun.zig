@@ -2,7 +2,7 @@ const std = @import("std");
 const c = @import("c.zig").c;
 
 pub const CmdFunc = struct {
-    func: *const fn (args: c.CmdArgs) callconv(.c) void,
+    func: *const fn (args: ?*c.CmdArgs) callconv(.c) void,
     desc: []const u8,
 };
 

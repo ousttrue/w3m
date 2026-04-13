@@ -531,7 +531,7 @@ int matchattr(const char* p, const char* attr, int len, Str* value)
     return 0;
 }
 
-void readHeader(struct CmdArgs args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
+void readHeader(struct CmdArgs *args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
 {
     char *p, *q;
     char* emsg;
@@ -1392,7 +1392,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
 }
 
 static void
-getAuthCookie(struct CmdArgs args, struct http_auth* hauth, char* auth_header,
+getAuthCookie(struct CmdArgs *args, struct http_auth* hauth, char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     struct Form* request,
     volatile Str* uname, volatile Str* pwd)
@@ -1563,7 +1563,7 @@ strtoclen(const char* s)
  */
 #define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
-loadGeneralFile(struct CmdArgs args, const char* path, struct Url* volatile current, const char* referer,
+loadGeneralFile(struct CmdArgs *args, const char* path, struct Url* volatile current, const char* referer,
     int flag, struct Form* volatile request)
 {
     struct URLFile f, *volatile of = NULL;
@@ -7276,7 +7276,7 @@ openPagerBuffer(InputStream stream, struct Buffer* buf)
 }
 
 struct Buffer*
-openGeneralPagerBuffer(struct CmdArgs args, InputStream stream)
+openGeneralPagerBuffer(struct CmdArgs *args, InputStream stream)
 {
     struct Buffer* buf;
     const char* t = "text/plain";
@@ -7640,7 +7640,7 @@ _MoveFile(const char* path1, const char* path2)
     return 0;
 }
 
-int _doFileCopy(struct CmdArgs args, const char* tmpf, const char* defstr, int download)
+int _doFileCopy(struct CmdArgs *args, const char* tmpf, const char* defstr, int download)
 {
     Str msg;
     Str filen;
@@ -7740,14 +7740,14 @@ int _doFileCopy(struct CmdArgs args, const char* tmpf, const char* defstr, int d
     return 0;
 }
 
-int doFileMove(struct CmdArgs args, const char* tmpf, const char* defstr)
+int doFileMove(struct CmdArgs *args, const char* tmpf, const char* defstr)
 {
     int ret = doFileCopy(args, tmpf, defstr);
     unlink(tmpf);
     return ret;
 }
 
-int doFileSave(struct CmdArgs args, struct URLFile uf, const char* defstr)
+int doFileSave(struct CmdArgs *args, struct URLFile uf, const char* defstr)
 {
     Str msg;
     Str filen;
@@ -7871,7 +7871,7 @@ int checkSaveFile(InputStream stream, const char* path2)
     return 0;
 }
 
-int checkOverWrite(struct CmdArgs args, const char* path)
+int checkOverWrite(struct CmdArgs *args, const char* path)
 {
     struct stat st;
     if (stat(path, &st) < 0)

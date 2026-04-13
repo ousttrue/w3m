@@ -149,9 +149,9 @@ extern struct Buffer* replaceBuffer(struct Buffer* first, struct Buffer* delbuf,
 extern struct Buffer* nthBuffer(struct Buffer* firstbuf, int n);
 extern void gotoRealLine(struct Buffer* buf, int n);
 extern void gotoLine(struct Buffer* buf, int n);
-extern struct Buffer* selectBuffer(struct CmdArgs args, struct Buffer* firstbuf, struct Buffer* currentbuf,
+extern struct Buffer* selectBuffer(struct CmdArgs *args, struct Buffer* firstbuf, struct Buffer* currentbuf,
     char* selectchar);
-extern void reshapeBuffer(struct CmdArgs args, struct Buffer* buf);
+extern void reshapeBuffer(struct CmdArgs *args, struct Buffer* buf);
 extern void copyBuffer(struct Buffer* a, struct Buffer* b);
 extern struct Buffer* prevBuffer(struct Buffer* first, struct Buffer* buf);
 extern int writeBufferCache(struct Buffer* buf);
@@ -165,7 +165,7 @@ extern struct Buffer* getshell(const char* cmd);
 extern struct Buffer* getpipe(const char* cmd);
 typedef union input_stream* InputStream;
 extern struct Buffer* openPagerBuffer(InputStream stream, struct Buffer* buf);
-extern struct Buffer* openGeneralPagerBuffer(struct CmdArgs args, InputStream stream);
+extern struct Buffer* openGeneralPagerBuffer(struct CmdArgs *args, InputStream stream);
 extern struct Line* getNextPage(struct Buffer* buf, int plen);
 extern struct Buffer* doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf);
 extern void cursorUp0(struct Buffer* buf, int n);

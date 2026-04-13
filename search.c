@@ -236,7 +236,7 @@ disp_srchresult(int result, const char* prompt, const char* str)
         disp_message(Sprintf("%s%s", prompt, str)->ptr, true);
 }
 
-void srch(struct CmdArgs args, SrchFunc func, const char* prompt)
+void srch(struct CmdArgs *args, SrchFunc func, const char* prompt)
 {
     int result;
     int disp = false;
@@ -346,7 +346,7 @@ int dispincsrch(int ch, Str buf, Lineprop* prop)
     return -1;
 }
 
-void isrch(struct CmdArgs args, SrchFunc func, const char* prompt)
+void isrch(struct CmdArgs *args, SrchFunc func, const char* prompt)
 {
     const char* str;
     struct Buffer sbuf;

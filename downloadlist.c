@@ -67,7 +67,7 @@ bool checkDownloadList(void)
     return false;
 }
 
-void downloadListPanel(struct CmdArgs args)
+void downloadListPanel(struct CmdArgs *args)
 {
     struct Buffer* buf;
     int replace = false, new_tab = false;
@@ -103,7 +103,7 @@ void downloadListPanel(struct CmdArgs args)
     }
     pushBuffer(buf);
     if (replace || new_tab)
-        deletePrevBuf((struct CmdArgs) { 0 });
+        deletePrevBuf(args);
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             "RELOAD", NULL);
@@ -225,7 +225,7 @@ struct Buffer* DownloadListBuffer(void)
     return loadHTMLString(src);
 }
 
-void download_action(struct CmdArgs args, struct parsed_tagarg* arg)
+void download_action(struct CmdArgs *args, struct parsed_tagarg* arg)
 {
     DownloadList* d;
     pid_t pid;
@@ -253,7 +253,7 @@ void download_action(struct CmdArgs args, struct parsed_tagarg* arg)
             }
         }
     }
-    ldDL((struct CmdArgs) { 0 });
+    ldDL(args);
 }
 
 void stopDownload(void)

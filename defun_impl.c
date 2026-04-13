@@ -42,38 +42,38 @@
 #include <signal.h>
 #include <unistd.h>
 
-void nulcmd(struct CmdArgs args)
+void nulcmd(struct CmdArgs* args)
 { /* do nothing */
 }
 
-void escmap(struct CmdArgs args)
+void escmap(struct CmdArgs* args)
 {
-    args.ch = getch(args);
-    if (IS_ASCII(args.ch))
+    args->ch = getch(args);
+    if (IS_ASCII(args->ch))
         escKeyProc(args, K_ESC, EscKeymap);
 }
 
-void escbmap(struct CmdArgs args)
+void escbmap(struct CmdArgs* args)
 {
-    args.ch = getch(args);
-    if (IS_DIGIT(args.ch)) {
+    args->ch = getch(args);
+    if (IS_DIGIT(args->ch)) {
         escdmap(args);
         return;
     }
-    if (IS_ASCII(args.ch))
+    if (IS_ASCII(args->ch))
         escKeyProc(args, K_ESCB, EscBKeymap);
 }
 
-void multimap(struct CmdArgs args)
+void multimap(struct CmdArgs* args)
 {
-    args.ch = getch(args);
-    if (IS_ASCII(args.ch)) {
-        CurrentKey = K_MULTI | (CurrentKey << 16) | args.ch;
+    args->ch = getch(args);
+    if (IS_ASCII(args->ch)) {
+        CurrentKey = K_MULTI | (CurrentKey << 16) | args->ch;
         escKeyProc(args, 0, NULL);
     }
 }
 
-void pgFore(struct CmdArgs args)
+void pgFore(struct CmdArgs* args)
 {
     if (vi_prec_num)
         nscroll(searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
@@ -81,7 +81,7 @@ void pgFore(struct CmdArgs args)
         nscroll(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1), prec_num ? B_SCROLL : B_NORMAL);
 }
 
-void pgBack(struct CmdArgs args)
+void pgBack(struct CmdArgs* args)
 {
     if (vi_prec_num)
         nscroll(-searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
@@ -89,27 +89,27 @@ void pgBack(struct CmdArgs args)
         nscroll(-(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)), prec_num ? B_SCROLL : B_NORMAL);
 }
 
-void hpgFore(struct CmdArgs args)
+void hpgFore(struct CmdArgs* args)
 {
     nscroll(searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
 }
 
-void hpgBack(struct CmdArgs args)
+void hpgBack(struct CmdArgs* args)
 {
     nscroll(-searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
 }
 
-void lup1(struct CmdArgs args)
+void lup1(struct CmdArgs* args)
 {
     nscroll(searchKeyNum(), B_SCROLL);
 }
 
-void ldown1(struct CmdArgs args)
+void ldown1(struct CmdArgs* args)
 {
     nscroll(-searchKeyNum(), B_SCROLL);
 }
 
-void ctrCsrV(struct CmdArgs args)
+void ctrCsrV(struct CmdArgs* args)
 {
     int offsety;
     if (Currentbuf->firstLine == NULL)
@@ -122,7 +122,7 @@ void ctrCsrV(struct CmdArgs args)
     }
 }
 
-void ctrCsrH(struct CmdArgs args)
+void ctrCsrH(struct CmdArgs* args)
 {
     int offsetx;
     if (Currentbuf->firstLine == NULL)
@@ -135,44 +135,44 @@ void ctrCsrH(struct CmdArgs args)
     }
 }
 
-void rdrwSc(struct CmdArgs args)
+void rdrwSc(struct CmdArgs* args)
 {
     clear();
     arrangeCursor(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void srchfor(struct CmdArgs args)
+void srchfor(struct CmdArgs* args)
 {
     srch(args, forwardSearch, "Forward: ");
 }
 
-void isrchfor(struct CmdArgs args)
+void isrchfor(struct CmdArgs* args)
 {
     isrch(args, forwardSearch, "I-search: ");
 }
 
-void srchbak(struct CmdArgs args)
+void srchbak(struct CmdArgs* args)
 {
     srch(args, backwardSearch, "Backward: ");
 }
 
-void isrchbak(struct CmdArgs args)
+void isrchbak(struct CmdArgs* args)
 {
     isrch(args, backwardSearch, "I-search backward: ");
 }
 
-void srchnxt(struct CmdArgs args)
+void srchnxt(struct CmdArgs* args)
 {
     srch_nxtprv(0);
 }
 
-void srchprv(struct CmdArgs args)
+void srchprv(struct CmdArgs* args)
 {
     srch_nxtprv(1);
 }
 
-void shiftl(struct CmdArgs args)
+void shiftl(struct CmdArgs* args)
 {
     int column;
 
@@ -184,7 +184,7 @@ void shiftl(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void shiftr(struct CmdArgs args)
+void shiftr(struct CmdArgs* args)
 {
     int column;
 
@@ -196,7 +196,7 @@ void shiftr(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void col1R(struct CmdArgs args)
+void col1R(struct CmdArgs* args)
 {
     struct Buffer* buf = Currentbuf;
     struct Line* l = buf->currentLine;
@@ -214,7 +214,7 @@ void col1R(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void col1L(struct CmdArgs args)
+void col1L(struct CmdArgs* args)
 {
     struct Buffer* buf = Currentbuf;
     struct Line* l = buf->currentLine;
@@ -231,7 +231,7 @@ void col1L(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void setEnv(struct CmdArgs args)
+void setEnv(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* env = searchKeyData();
@@ -253,7 +253,7 @@ void setEnv(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void pipeBuf(struct CmdArgs args)
+void pipeBuf(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
@@ -290,7 +290,7 @@ void pipeBuf(struct CmdArgs args)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void pipesh(struct CmdArgs args)
+void pipesh(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
@@ -316,7 +316,7 @@ void pipesh(struct CmdArgs args)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void readsh(struct CmdArgs args)
+void readsh(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
@@ -347,7 +347,7 @@ void readsh(struct CmdArgs args)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void execsh(struct CmdArgs args)
+void execsh(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
@@ -369,7 +369,7 @@ void execsh(struct CmdArgs args)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void ldfile(struct CmdArgs args)
+void ldfile(struct CmdArgs* args)
 {
     const char* fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
@@ -385,7 +385,7 @@ void ldfile(struct CmdArgs args)
     cmd_loadfile(args, fn);
 }
 
-void ldhelp(struct CmdArgs args)
+void ldhelp(struct CmdArgs* args)
 {
     const char* lang = AcceptLang;
     int n = strcspn(lang, ";, \t");
@@ -395,47 +395,47 @@ void ldhelp(struct CmdArgs args)
     cmd_loadURL(args, tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
-void movL(struct CmdArgs args)
+void movL(struct CmdArgs* args)
 {
     _movL(Currentbuf->COLS / 2);
 }
 
-void movL1(struct CmdArgs args)
+void movL1(struct CmdArgs* args)
 {
     _movL(1);
 }
 
-void movD(struct CmdArgs args)
+void movD(struct CmdArgs* args)
 {
     _movD((Currentbuf->LINES + 1) / 2);
 }
 
-void movD1(struct CmdArgs args)
+void movD1(struct CmdArgs* args)
 {
     _movD(1);
 }
 
-void movU(struct CmdArgs args)
+void movU(struct CmdArgs* args)
 {
     _movU((Currentbuf->LINES + 1) / 2);
 }
 
-void movU1(struct CmdArgs args)
+void movU1(struct CmdArgs* args)
 {
     _movU(1);
 }
 
-void movR(struct CmdArgs args)
+void movR(struct CmdArgs* args)
 {
     _movR(Currentbuf->COLS / 2);
 }
 
-void movR1(struct CmdArgs args)
+void movR1(struct CmdArgs* args)
 {
     _movR(1);
 }
 
-void movLW(struct CmdArgs args)
+void movLW(struct CmdArgs* args)
 {
     char* lb;
     struct Line *pline, *l;
@@ -487,7 +487,7 @@ end:
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void movRW(struct CmdArgs args)
+void movRW(struct CmdArgs* args)
 {
     char* lb;
     struct Line *pline, *l;
@@ -530,19 +530,19 @@ end:
 }
 
 /* Quit */
-void quitfm(struct CmdArgs args)
+void quitfm(struct CmdArgs* args)
 {
     _quitfm(args, FALSE);
 }
 
 /* Question and Quit */
-void qquitfm(struct CmdArgs args)
+void qquitfm(struct CmdArgs* args)
 {
     _quitfm(args, confirm_on_quit);
 }
 
 /* Select buffer */
-void selBuf(struct CmdArgs args)
+void selBuf(struct CmdArgs* args)
 {
     struct Buffer* buf;
     int ok;
@@ -569,10 +569,10 @@ void selBuf(struct CmdArgs args)
             }
             break;
         case 'q':
-            qquitfm((struct CmdArgs) { 0 });
+            qquitfm(args);
             break;
         case 'Q':
-            quitfm((struct CmdArgs) { 0 });
+            quitfm(args);
             break;
         }
     } while (!ok);
@@ -588,7 +588,7 @@ void selBuf(struct CmdArgs args)
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
-void susp(struct CmdArgs args)
+void susp(struct CmdArgs* args)
 {
     move((LINES - 1), 0);
     clrtoeolx();
@@ -606,7 +606,7 @@ void susp(struct CmdArgs args)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void goLine(struct CmdArgs args)
+void goLine(struct CmdArgs* args)
 {
     const char* str = searchKeyData();
     if (prec_num)
@@ -618,18 +618,18 @@ void goLine(struct CmdArgs args)
         _goLine(inputStr(args, "Goto line: ", ""));
 }
 
-void goLineF(struct CmdArgs args)
+void goLineF(struct CmdArgs* args)
 {
     _goLine("^");
 }
 
-void goLineL(struct CmdArgs args)
+void goLineL(struct CmdArgs* args)
 {
     _goLine("$");
 }
 
 /* Go to the beginning of the line */
-void linbeg(struct CmdArgs args)
+void linbeg(struct CmdArgs* args)
 {
     if (Currentbuf->firstLine == NULL)
         return;
@@ -641,7 +641,7 @@ void linbeg(struct CmdArgs args)
 }
 
 /* Go to the bottom of the line */
-void linend(struct CmdArgs args)
+void linend(struct CmdArgs* args)
 {
     if (Currentbuf->firstLine == NULL)
         return;
@@ -654,7 +654,7 @@ void linend(struct CmdArgs args)
 }
 
 /* Run editor on the current buffer */
-void editBf(struct CmdArgs args)
+void editBf(struct CmdArgs* args)
 {
     const char* fn = Currentbuf->filename;
     Str cmd;
@@ -675,11 +675,11 @@ void editBf(struct CmdArgs args)
     exec_cmd(args, cmd->ptr);
 
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    reload((struct CmdArgs) { 0 });
+    reload(args);
 }
 
 /* Run editor on the current screen */
-void editScr(struct CmdArgs args)
+void editScr(struct CmdArgs* args)
 {
     const char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     FILE* f = fopen(tmpf, "w");
@@ -696,7 +696,7 @@ void editScr(struct CmdArgs args)
 }
 
 /* Set / unset mark */
-void _mark(struct CmdArgs args)
+void _mark(struct CmdArgs* args)
 {
     struct Line* l;
     if (!use_mark)
@@ -709,7 +709,7 @@ void _mark(struct CmdArgs args)
 }
 
 /* Go to next mark */
-void nextMk(struct CmdArgs args)
+void nextMk(struct CmdArgs* args)
 {
     struct Line* l;
     int i;
@@ -742,7 +742,7 @@ void nextMk(struct CmdArgs args)
 }
 
 /* Go to previous mark */
-void prevMk(struct CmdArgs args)
+void prevMk(struct CmdArgs* args)
 {
     struct Line* l;
     int i;
@@ -777,7 +777,7 @@ void prevMk(struct CmdArgs args)
 }
 
 /* Mark place to which the regular expression matches */
-void reMark(struct CmdArgs args)
+void reMark(struct CmdArgs* args)
 {
     struct Line* l;
     const char *p, *p1, *p2;
@@ -814,7 +814,7 @@ void reMark(struct CmdArgs args)
 }
 
 /* follow HREF link */
-void followA(struct CmdArgs args)
+void followA(struct CmdArgs* args)
 {
     struct Url u;
     int x = 0, y = 0, map = 0;
@@ -872,7 +872,7 @@ void followA(struct CmdArgs args)
 }
 
 /* view inline image */
-void followI(struct CmdArgs args)
+void followI(struct CmdArgs* args)
 {
     struct Anchor* a;
     struct Buffer* buf;
@@ -898,13 +898,13 @@ void followI(struct CmdArgs args)
 }
 
 /* submit form */
-void submitForm(struct CmdArgs args)
+void submitForm(struct CmdArgs* args)
 {
     _followForm(args, TRUE);
 }
 
 /* go to the top anchor */
-void topA(struct CmdArgs args)
+void topA(struct CmdArgs* args)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
@@ -937,7 +937,7 @@ void topA(struct CmdArgs args)
 }
 
 /* go to the last anchor */
-void lastA(struct CmdArgs args)
+void lastA(struct CmdArgs* args)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
@@ -972,7 +972,7 @@ void lastA(struct CmdArgs args)
 }
 
 /* go to the nth anchor */
-void nthA(struct CmdArgs args)
+void nthA(struct CmdArgs* args)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
@@ -1001,67 +1001,67 @@ void nthA(struct CmdArgs args)
 }
 
 /* go to the next anchor */
-void nextA(struct CmdArgs args)
+void nextA(struct CmdArgs* args)
 {
     _nextA(FALSE);
 }
 
 /* go to the previous anchor */
-void prevA(struct CmdArgs args)
+void prevA(struct CmdArgs* args)
 {
     _prevA(FALSE);
 }
 
 /* go to the next visited anchor */
-void nextVA(struct CmdArgs args)
+void nextVA(struct CmdArgs* args)
 {
     _nextA(TRUE);
 }
 
 /* go to the previous visited anchor */
-void prevVA(struct CmdArgs args)
+void prevVA(struct CmdArgs* args)
 {
     _prevA(TRUE);
 }
 
 /* go to the next left anchor */
-void nextL(struct CmdArgs args)
+void nextL(struct CmdArgs* args)
 {
     nextX(-1, 0);
 }
 
 /* go to the next left-up anchor */
-void nextLU(struct CmdArgs args)
+void nextLU(struct CmdArgs* args)
 {
     nextX(-1, -1);
 }
 
 /* go to the next right anchor */
-void nextR(struct CmdArgs args)
+void nextR(struct CmdArgs* args)
 {
     nextX(1, 0);
 }
 
 /* go to the next right-down anchor */
-void nextRD(struct CmdArgs args)
+void nextRD(struct CmdArgs* args)
 {
     nextX(1, 1);
 }
 
 /* go to the next downward anchor */
-void nextD(struct CmdArgs args)
+void nextD(struct CmdArgs* args)
 {
     nextY(1);
 }
 
 /* go to the next upward anchor */
-void nextU(struct CmdArgs args)
+void nextU(struct CmdArgs* args)
 {
     nextY(-1);
 }
 
 /* go to the next bufferr */
-void nextBf(struct CmdArgs args)
+void nextBf(struct CmdArgs* args)
 {
     struct Buffer* buf;
     int i;
@@ -1079,7 +1079,7 @@ void nextBf(struct CmdArgs args)
 }
 
 /* go to the previous bufferr */
-void prevBf(struct CmdArgs args)
+void prevBf(struct CmdArgs* args)
 {
     struct Buffer* buf;
     int i;
@@ -1097,7 +1097,7 @@ void prevBf(struct CmdArgs args)
 }
 
 /* delete current buffer and back to the previous buffer */
-void backBf(struct CmdArgs args)
+void backBf(struct CmdArgs* args)
 {
     struct Buffer* buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
@@ -1127,7 +1127,7 @@ void backBf(struct CmdArgs args)
             buf->frameset = fs;
 
             if (buf == Currentbuf) {
-                rFrame((struct CmdArgs) { 0 });
+                rFrame(args);
                 Currentbuf->topLine = lineSkip(Currentbuf,
                     Currentbuf->firstLine, top - 1,
                     FALSE);
@@ -1144,19 +1144,19 @@ void backBf(struct CmdArgs args)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void deletePrevBuf(struct CmdArgs args)
+void deletePrevBuf(struct CmdArgs* args)
 {
     struct Buffer* buf = Currentbuf->nextBuffer;
     if (buf)
         delBuffer(buf);
 }
 
-void goURL(struct CmdArgs args)
+void goURL(struct CmdArgs* args)
 {
     goURL0(args, "Goto URL: ", FALSE);
 }
 
-void goHome(struct CmdArgs args)
+void goHome(struct CmdArgs* args)
 {
     char* url;
     if ((url = getenv("HTTP_HOME")) != NULL || (url = getenv("WWW_HOME")) != NULL) {
@@ -1172,19 +1172,19 @@ void goHome(struct CmdArgs args)
     }
 }
 
-void gorURL(struct CmdArgs args)
+void gorURL(struct CmdArgs* args)
 {
     goURL0(args, "Goto relative URL: ", TRUE);
 }
 
 /* load bookmark */
-void ldBmark(struct CmdArgs args)
+void ldBmark(struct CmdArgs* args)
 {
     cmd_loadURL(args, BookmarkFile, NULL, NO_REFERER, NULL);
 }
 
 /* Add current to bookmark */
-void adBmark(struct CmdArgs args)
+void adBmark(struct CmdArgs* args)
 {
     Str tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
                       "&charset=%s",
@@ -1200,13 +1200,13 @@ void adBmark(struct CmdArgs args)
 }
 
 /* option setting */
-void ldOpt(struct CmdArgs args)
+void ldOpt(struct CmdArgs* args)
 {
     cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
 }
 
 /* set an option */
-void setOpt(struct CmdArgs args)
+void setOpt(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* opt = searchKeyData();
@@ -1227,13 +1227,13 @@ void setOpt(struct CmdArgs args)
 }
 
 /* error message list */
-void msgs(struct CmdArgs args)
+void msgs(struct CmdArgs* args)
 {
     cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
 }
 
 /* page info */
-void pginfo(struct CmdArgs args)
+void pginfo(struct CmdArgs* args)
 {
     struct Buffer* buf;
 
@@ -1249,7 +1249,7 @@ void pginfo(struct CmdArgs args)
 }
 
 /* link menu */
-void linkMn(struct CmdArgs args)
+void linkMn(struct CmdArgs* args)
 {
     struct LinkList* l = link_menu(args, Currentbuf);
     if (!l || !l->url)
@@ -1267,24 +1267,24 @@ void linkMn(struct CmdArgs args)
 }
 
 /* accesskey */
-void accessKey(struct CmdArgs args)
+void accessKey(struct CmdArgs* args)
 {
     anchorMn(args, accesskey_menu, TRUE);
 }
 
 /* list menu */
-void listMn(struct CmdArgs args)
+void listMn(struct CmdArgs* args)
 {
     anchorMn(args, list_menu, TRUE);
 }
 
-void movlistMn(struct CmdArgs args)
+void movlistMn(struct CmdArgs* args)
 {
     anchorMn(args, list_menu, FALSE);
 }
 
 /* link,anchor,image list */
-void linkLst(struct CmdArgs args)
+void linkLst(struct CmdArgs* args)
 {
     struct Buffer* buf;
 
@@ -1296,7 +1296,7 @@ void linkLst(struct CmdArgs args)
 }
 
 /* cookie list */
-void cooLst(struct CmdArgs args)
+void cooLst(struct CmdArgs* args)
 {
     struct Buffer* buf;
 
@@ -1306,32 +1306,32 @@ void cooLst(struct CmdArgs args)
 }
 
 /* History page */
-void ldHist(struct CmdArgs args)
+void ldHist(struct CmdArgs* args)
 {
     Str html = historyBuffer(URLHist);
     cmd_loadBuffer(loadHTMLString(html), BP_NO_URL, LB_NOLINK);
 }
 
 /* download HREF link */
-void svA(struct CmdArgs args)
+void svA(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     do_download = TRUE;
-    followA((struct CmdArgs) { 0 });
+    followA(args);
     do_download = FALSE;
 }
 
 /* download IMG link */
-void svI(struct CmdArgs args)
+void svI(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     do_download = TRUE;
-    followI((struct CmdArgs) { 0 });
+    followI(args);
     do_download = FALSE;
 }
 
 /* save buffer */
-void svBuf(struct CmdArgs args)
+void svBuf(struct CmdArgs* args)
 {
     const char *qfile = NULL, *file;
     FILE* f;
@@ -1379,7 +1379,7 @@ void svBuf(struct CmdArgs args)
 }
 
 /* save source */
-void svSrc(struct CmdArgs args)
+void svSrc(struct CmdArgs* args)
 {
     if (Currentbuf->sourcefile == NULL)
         return;
@@ -1397,18 +1397,18 @@ void svSrc(struct CmdArgs args)
 }
 
 /* peek URL */
-void peekURL(struct CmdArgs args)
+void peekURL(struct CmdArgs* args)
 {
     _peekURL(0);
 }
 
 /* peek URL of image */
-void peekIMG(struct CmdArgs args)
+void peekIMG(struct CmdArgs* args)
 {
     _peekURL(1);
 }
 
-void curURL(struct CmdArgs args)
+void curURL(struct CmdArgs* args)
 {
     static Str s = NULL;
     static Lineprop* p = NULL;
@@ -1440,7 +1440,7 @@ void curURL(struct CmdArgs args)
 }
 /* view HTML source */
 
-void vwSrc(struct CmdArgs args)
+void vwSrc(struct CmdArgs* args)
 {
     struct Buffer* buf;
 
@@ -1518,7 +1518,7 @@ void vwSrc(struct CmdArgs args)
 }
 
 /* reload */
-void reload(struct CmdArgs args)
+void reload(struct CmdArgs* args)
 {
     struct Buffer *buf, *fbuf = NULL, sbuf;
     wc_ces old_charset;
@@ -1528,7 +1528,7 @@ void reload(struct CmdArgs args)
 
     if (Currentbuf->bufferprop & BP_INTERNAL) {
         if (0 == strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
-            ldDL((struct CmdArgs) { 0 });
+            ldDL(args);
             return;
         }
         /* FIXME: gettextize? */
@@ -1611,7 +1611,7 @@ void reload(struct CmdArgs args)
         Firstbuf = deleteBuffer(Firstbuf, fbuf);
     repBuffer(Currentbuf, buf);
     if ((buf->type != NULL) && (sbuf.type != NULL) && ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf.type)) || (is_html_type(buf->type) && !strcasecmp(sbuf.type, "text/plain")))) {
-        vwSrc((struct CmdArgs) { 0 });
+        vwSrc(args);
         if (Currentbuf != buf)
             Firstbuf = deleteBuffer(Firstbuf, buf);
     }
@@ -1625,14 +1625,14 @@ void reload(struct CmdArgs args)
 }
 
 /* reshape */
-void reshape(struct CmdArgs args)
+void reshape(struct CmdArgs* args)
 {
     Currentbuf->need_reshape = TRUE;
     reshapeBuffer(args, Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void docCSet(struct CmdArgs args)
+void docCSet(struct CmdArgs* args)
 {
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
@@ -1647,7 +1647,7 @@ void docCSet(struct CmdArgs args)
     _docCSet(charset);
 }
 
-void defCSet(struct CmdArgs args)
+void defCSet(struct CmdArgs* args)
 {
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
@@ -1660,13 +1660,13 @@ void defCSet(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void chkURL(struct CmdArgs args)
+void chkURL(struct CmdArgs* args)
 {
     chkURLBuffer(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void chkWORD(struct CmdArgs args)
+void chkWORD(struct CmdArgs* args)
 {
     char* p;
     int spos, epos;
@@ -1677,14 +1677,14 @@ void chkWORD(struct CmdArgs args)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void chkNMID(struct CmdArgs args)
+void chkNMID(struct CmdArgs* args)
 {
     chkNMIDBuffer(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* render frames */
-void rFrame(struct CmdArgs args)
+void rFrame(struct CmdArgs* args)
 {
     struct Buffer* buf;
 
@@ -1716,7 +1716,7 @@ void rFrame(struct CmdArgs args)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void extbrz(struct CmdArgs args)
+void extbrz(struct CmdArgs* args)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL) {
         /* FIXME: gettextize? */
@@ -1732,7 +1732,7 @@ void extbrz(struct CmdArgs args)
     invoke_browser(args, parsedURL2Str(&Currentbuf->currentURL)->ptr);
 }
 
-void linkbrz(struct CmdArgs args)
+void linkbrz(struct CmdArgs* args)
 {
     if (Currentbuf->firstLine == NULL)
         return;
@@ -1746,7 +1746,7 @@ void linkbrz(struct CmdArgs args)
 }
 
 /* show current line number and number of lines in the entire document */
-void curlno(struct CmdArgs args)
+void curlno(struct CmdArgs* args)
 {
     struct Line* l = Currentbuf->currentLine;
     Str tmp;
@@ -1776,7 +1776,7 @@ void curlno(struct CmdArgs args)
     disp_message(tmp->ptr, FALSE);
 }
 
-void dispI(struct CmdArgs args)
+void dispI(struct CmdArgs* args)
 {
     if (!displayImage)
         initImage();
@@ -1792,7 +1792,7 @@ void dispI(struct CmdArgs args)
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-void stopI(struct CmdArgs args)
+void stopI(struct CmdArgs* args)
 {
     if (!activeImage)
         return;
@@ -1804,12 +1804,12 @@ void stopI(struct CmdArgs args)
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-void dispVer(struct CmdArgs args)
+void dispVer(struct CmdArgs* args)
 {
     disp_message(Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
 }
 
-void wrapToggle(struct CmdArgs args)
+void wrapToggle(struct CmdArgs* args)
 {
     if (WrapSearch) {
         WrapSearch = FALSE;
@@ -1822,17 +1822,17 @@ void wrapToggle(struct CmdArgs args)
     }
 }
 
-void dictword(struct CmdArgs args)
+void dictword(struct CmdArgs* args)
 {
     execdict(args, inputStr(args, "(dictionary)!", ""));
 }
 
-void dictwordat(struct CmdArgs args)
+void dictwordat(struct CmdArgs* args)
 {
     execdict(args, GetWord(Currentbuf));
 }
 
-void execCmd(struct CmdArgs args)
+void execCmd(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
@@ -1864,7 +1864,7 @@ void execCmd(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void setAlarm(struct CmdArgs args)
+void setAlarm(struct CmdArgs* args)
 {
     int sec = 0;
     const char* cmd = 0;
@@ -1896,7 +1896,7 @@ void setAlarm(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void reinit(struct CmdArgs args)
+void reinit(struct CmdArgs* args)
 {
     const char* resource = searchKeyData();
 
@@ -1943,7 +1943,7 @@ void reinit(struct CmdArgs args)
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }
 
-void defKey(struct CmdArgs args)
+void defKey(struct CmdArgs* args)
 {
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
@@ -1958,13 +1958,13 @@ void defKey(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void newT(struct CmdArgs args)
+void newT(struct CmdArgs* args)
 {
     _newT();
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-void closeT(struct CmdArgs args)
+void closeT(struct CmdArgs* args)
 {
     TabBuffer* tab;
 
@@ -1979,7 +1979,7 @@ void closeT(struct CmdArgs args)
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-void nextT(struct CmdArgs args)
+void nextT(struct CmdArgs* args)
 {
     int i;
 
@@ -1994,7 +1994,7 @@ void nextT(struct CmdArgs args)
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-void prevT(struct CmdArgs args)
+void prevT(struct CmdArgs* args)
 {
     int i;
 
@@ -2009,24 +2009,24 @@ void prevT(struct CmdArgs args)
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-void tabA(struct CmdArgs args)
+void tabA(struct CmdArgs* args)
 {
-    followTab(prec_num ? numTab(PREC_NUM) : NULL);
+    followTab(args, prec_num ? numTab(PREC_NUM) : NULL);
 }
 
-void tabURL(struct CmdArgs args)
+void tabURL(struct CmdArgs* args)
 {
     tabURL0(args, prec_num ? numTab(PREC_NUM) : NULL,
         "Goto URL on new tab: ", FALSE);
 }
 
-void tabrURL(struct CmdArgs args)
+void tabrURL(struct CmdArgs* args)
 {
     tabURL0(args, prec_num ? numTab(PREC_NUM) : NULL,
         "Goto relative URL on new tab: ", TRUE);
 }
 
-void tabR(struct CmdArgs args)
+void tabR(struct CmdArgs* args)
 {
     TabBuffer* tab;
     int i;
@@ -2037,7 +2037,7 @@ void tabR(struct CmdArgs args)
     moveTab(CurrentTab, tab ? tab : LastTab, TRUE);
 }
 
-void tabL(struct CmdArgs args)
+void tabL(struct CmdArgs* args)
 {
     TabBuffer* tab;
     int i;
@@ -2048,12 +2048,12 @@ void tabL(struct CmdArgs args)
     moveTab(CurrentTab, tab ? tab : FirstTab, FALSE);
 }
 
-void ldDL(struct CmdArgs args)
+void ldDL(struct CmdArgs* args)
 {
     downloadListPanel(args);
 }
 
-void undoPos(struct CmdArgs args)
+void undoPos(struct CmdArgs* args)
 {
     BufferPos* b = Currentbuf->undo;
     int i;
@@ -2067,7 +2067,7 @@ void undoPos(struct CmdArgs args)
     resetPos(b);
 }
 
-void redoPos(struct CmdArgs args)
+void redoPos(struct CmdArgs* args)
 {
     BufferPos* b = Currentbuf->undo;
     int i;
@@ -2081,7 +2081,7 @@ void redoPos(struct CmdArgs args)
     resetPos(b);
 }
 
-void cursorTop(struct CmdArgs args)
+void cursorTop(struct CmdArgs* args)
 {
     if (Currentbuf->firstLine == NULL)
         return;
@@ -2091,7 +2091,7 @@ void cursorTop(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void cursorMiddle(struct CmdArgs args)
+void cursorMiddle(struct CmdArgs* args)
 {
     int offsety;
     if (Currentbuf->firstLine == NULL)
@@ -2103,7 +2103,7 @@ void cursorMiddle(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void cursorBottom(struct CmdArgs args)
+void cursorBottom(struct CmdArgs* args)
 {
     int offsety;
     if (Currentbuf->firstLine == NULL)
@@ -2115,7 +2115,7 @@ void cursorBottom(struct CmdArgs args)
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-void mainMn(struct CmdArgs args)
+void mainMn(struct CmdArgs* args)
 {
     Menu* menu = &MainMenu;
     int x = Currentbuf->cursorX + Currentbuf->rootX;
@@ -2131,7 +2131,7 @@ void mainMn(struct CmdArgs args)
     popupMenu(args, x, y, menu);
 }
 
-void selMn(struct CmdArgs args)
+void selMn(struct CmdArgs* args)
 {
     int x = Currentbuf->cursorX + Currentbuf->rootX;
     int y = Currentbuf->cursorY + Currentbuf->rootY;
@@ -2139,7 +2139,7 @@ void selMn(struct CmdArgs args)
     popupMenu(args, x, y, &SelectMenu);
 }
 
-void tabMn(struct CmdArgs args)
+void tabMn(struct CmdArgs* args)
 {
     int x = Currentbuf->cursorX + Currentbuf->rootX;
     int y = Currentbuf->cursorY + Currentbuf->rootY;

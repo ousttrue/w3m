@@ -53,32 +53,32 @@ static int NCFileOffset;
 
 // static void insertself(char c),
 
-typedef int (*InputFunc)(struct CmdArgs args);
-static int iself(struct CmdArgs args);
-static int _mvR(struct CmdArgs args);
-static int _mvL(struct CmdArgs args);
-static int _mvRw(struct CmdArgs args);
-static int _mvLw(struct CmdArgs args);
-static int delC(struct CmdArgs args);
-static int insC(struct CmdArgs args);
-static int _mvB(struct CmdArgs args);
-static int _mvE(struct CmdArgs args);
-static int _enter(struct CmdArgs args);
-static int _quo(struct CmdArgs args);
-static int _bs(struct CmdArgs args);
-static int _bsw(struct CmdArgs args);
-static int killn(struct CmdArgs args);
-static int killb(struct CmdArgs args);
-static int _inbrk(struct CmdArgs args);
-static int _esc(struct CmdArgs args);
-static int _editor(struct CmdArgs args);
-static int _prev(struct CmdArgs args);
-static int _next(struct CmdArgs args);
-static int _compl(struct CmdArgs args);
-static int _tcompl(struct CmdArgs args);
-static int _dcompl(struct CmdArgs args);
-static int _rdcompl(struct CmdArgs args);
-static int _rcompl(struct CmdArgs args);
+typedef int (*InputFunc)(struct CmdArgs *args);
+static int iself(struct CmdArgs *args);
+static int _mvR(struct CmdArgs *args);
+static int _mvL(struct CmdArgs *args);
+static int _mvRw(struct CmdArgs *args);
+static int _mvLw(struct CmdArgs *args);
+static int delC(struct CmdArgs *args);
+static int insC(struct CmdArgs *args);
+static int _mvB(struct CmdArgs *args);
+static int _mvE(struct CmdArgs *args);
+static int _enter(struct CmdArgs *args);
+static int _quo(struct CmdArgs *args);
+static int _bs(struct CmdArgs *args);
+static int _bsw(struct CmdArgs *args);
+static int killn(struct CmdArgs *args);
+static int killb(struct CmdArgs *args);
+static int _inbrk(struct CmdArgs *args);
+static int _esc(struct CmdArgs *args);
+static int _editor(struct CmdArgs *args);
+static int _prev(struct CmdArgs *args);
+static int _next(struct CmdArgs *args);
+static int _compl(struct CmdArgs *args);
+static int _tcompl(struct CmdArgs *args);
+static int _dcompl(struct CmdArgs *args);
+static int _rdcompl(struct CmdArgs *args);
+static int _rcompl(struct CmdArgs *args);
 ;
 static int terminated(unsigned char c);
 
@@ -102,7 +102,7 @@ InputFunc InputKeymap[32] = {
 static int setStrType(Str str, Lineprop* prop);
 static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
 static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
-static void ins_char(struct CmdArgs args, Str str);
+static void ins_char(struct CmdArgs *args, Str str);
 
 static int CPos, CLen, offset;
 static int i_cont, i_broken, i_quote;
@@ -115,7 +115,7 @@ static struct Hist* CurrentHist;
 static Str strCurrentBuf;
 static int use_hist;
 
-char* inputLineHistSearch(struct CmdArgs args, const char* prompt, const char* def_str,
+char* inputLineHistSearch(struct CmdArgs *args, const char* prompt, const char* def_str,
     enum InputLineFlags flag, struct Hist* hist, IncrFunc incrfunc)
 {
     int opos, x, y, lpos, rpos, epos;
@@ -321,7 +321,7 @@ addStr(char* p, Lineprop* pr, int len, int offset, int limit)
 }
 
 static void
-ins_char(struct CmdArgs args, Str str)
+ins_char(struct CmdArgs *args, Str str)
 {
     char *p = str->ptr, *ep = p + str->length;
     Lineprop ctype;
@@ -354,13 +354,13 @@ ins_char(struct CmdArgs args, Str str)
     }
 }
 
-static int _esc(struct CmdArgs args)
+static int _esc(struct CmdArgs *args)
 {
-    args.ch = getch(args);
-    switch (args.ch) {
+    args->ch = getch(args);
+    switch (args->ch) {
     case '[':
     case 'O':
-        switch (args.ch = getch(args)) {
+        switch (args->ch = getch(args)) {
         case 'A':
             _prev(args);
             break;
@@ -402,14 +402,14 @@ static int _esc(struct CmdArgs args)
             _bsw(args);
         break;
     default:
-        if (wc_char_conv(WcOption, ESC_CODE).data == NULL && wc_char_conv(WcOption, args.ch).data == NULL)
+        if (wc_char_conv(WcOption, ESC_CODE).data == NULL && wc_char_conv(WcOption, args->ch).data == NULL)
             i_quote = true;
     }
 
     return 0;
 }
 
-static int insC(struct CmdArgs args)
+static int insC(struct CmdArgs *args)
 {
     Strinsert_char(strBuf, CPos, ' ');
     CLen = strBuf->length;
@@ -419,7 +419,7 @@ static int insC(struct CmdArgs args)
     return 0;
 }
 
-static int delC(struct CmdArgs args)
+static int delC(struct CmdArgs *args)
 {
     if (CLen == CPos)
         return 0;
@@ -436,7 +436,7 @@ static int delC(struct CmdArgs args)
     return 0;
 }
 
-static int _mvL(struct CmdArgs args)
+static int _mvL(struct CmdArgs *args)
 {
     if (CPos > 0)
         CPos--;
@@ -445,7 +445,7 @@ static int _mvL(struct CmdArgs args)
     return 0;
 }
 
-static int _mvLw(struct CmdArgs args)
+static int _mvLw(struct CmdArgs *args)
 {
     int first = 1;
     while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
@@ -459,7 +459,7 @@ static int _mvLw(struct CmdArgs args)
     return 0;
 }
 
-static int _mvRw(struct CmdArgs args)
+static int _mvRw(struct CmdArgs *args)
 {
     int first = 1;
     while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
@@ -473,7 +473,7 @@ static int _mvRw(struct CmdArgs args)
     return 0;
 }
 
-static int _mvR(struct CmdArgs args)
+static int _mvR(struct CmdArgs *args)
 {
     if (CPos < CLen)
         CPos++;
@@ -482,7 +482,7 @@ static int _mvR(struct CmdArgs args)
     return 0;
 }
 
-static int _bs(struct CmdArgs args)
+static int _bs(struct CmdArgs *args)
 {
     if (CPos > 0) {
         _mvL(args);
@@ -491,7 +491,7 @@ static int _bs(struct CmdArgs args)
     return 0;
 }
 
-static int _bsw(struct CmdArgs args)
+static int _bsw(struct CmdArgs *args)
 {
     int t = 0;
     while (CPos > 0 && !t) {
@@ -502,75 +502,75 @@ static int _bsw(struct CmdArgs args)
     return 0;
 }
 
-static int _enter(struct CmdArgs args)
+static int _enter(struct CmdArgs *args)
 {
     i_cont = false;
     return 0;
 }
 
-static int iself(struct CmdArgs args)
+static int iself(struct CmdArgs *args)
 {
     if (CLen >= STR_LEN)
         return 0;
     insC(args);
-    strBuf->ptr[CPos] = args.ch;
+    strBuf->ptr[CPos] = args->ch;
     strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
     CPos++;
     return 0;
 }
 
-static int _quo(struct CmdArgs args)
+static int _quo(struct CmdArgs *args)
 {
     i_quote = true;
     return 0;
 }
 
-static int _mvB(struct CmdArgs args)
+static int _mvB(struct CmdArgs *args)
 {
     CPos = 0;
     return 0;
 }
 
-static int _mvE(struct CmdArgs args)
+static int _mvE(struct CmdArgs *args)
 {
     CPos = CLen;
     return 0;
 }
 
-static int killn(struct CmdArgs args)
+static int killn(struct CmdArgs *args)
 {
     CLen = CPos;
     Strtruncate(strBuf, CLen);
     return 0;
 }
 
-static int killb(struct CmdArgs args)
+static int killb(struct CmdArgs *args)
 {
     while (CPos > 0)
         _bs(args);
     return 0;
 }
 
-static int _inbrk(struct CmdArgs args)
+static int _inbrk(struct CmdArgs *args)
 {
     i_cont = false;
     i_broken = true;
     return 0;
 }
 
-static int _compl(struct CmdArgs args)
+static int _compl(struct CmdArgs *args)
 {
     next_compl(1);
     return 0;
 }
 
-static int _rcompl(struct CmdArgs args)
+static int _rcompl(struct CmdArgs *args)
 {
     next_compl(-1);
     return 0;
 }
 
-static int _tcompl(struct CmdArgs args)
+static int _tcompl(struct CmdArgs *args)
 {
     if (cm_mode & CPL_OFF)
         cm_mode = CPL_ON;
@@ -623,13 +623,13 @@ next_compl(int next)
         CPos = CLen;
 }
 
-static int _dcompl(struct CmdArgs args)
+static int _dcompl(struct CmdArgs *args)
 {
     next_dcompl(1);
     return 0;
 }
 
-static int _rdcompl(struct CmdArgs args)
+static int _rdcompl(struct CmdArgs *args)
 {
     next_dcompl(-1);
     return 0;
@@ -918,7 +918,7 @@ doComplete(Str ifn, enum CompletionStatus* status, int next)
     return Str_conv_from_system(CompleteBuf->ptr, CompleteBuf->length);
 }
 
-static int _prev(struct CmdArgs args)
+static int _prev(struct CmdArgs *args)
 {
     struct Hist* hist = CurrentHist;
     if (!use_hist)
@@ -942,7 +942,7 @@ static int _prev(struct CmdArgs args)
     return 0;
 }
 
-static int _next(struct CmdArgs args)
+static int _next(struct CmdArgs *args)
 {
     struct Hist* hist = CurrentHist;
 
@@ -1010,7 +1010,7 @@ terminated(unsigned char c)
     return 0;
 }
 
-static int _editor(struct CmdArgs args)
+static int _editor(struct CmdArgs *args)
 {
     if (is_passwd)
         return 0;
@@ -1034,7 +1034,7 @@ static int _editor(struct CmdArgs args)
     return 0;
 }
 
-char* inputAnswer(struct CmdArgs args, const char* prompt)
+char* inputAnswer(struct CmdArgs *args, const char* prompt)
 {
     if (QuietMessage)
         return "n";

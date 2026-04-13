@@ -294,7 +294,7 @@ openNewsStream(struct Url* pu)
     return NULL;
 }
 
-Str loadNewsgroup(struct CmdArgs args, struct Url* pu, wc_ces* charset)
+Str loadNewsgroup(struct CmdArgs *args, struct Url* pu, wc_ces* charset)
 {
     volatile Str page;
     Str tmp;

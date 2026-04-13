@@ -327,7 +327,7 @@ void resetFrameElement(union frameset_element* f_element,
 }
 
 static struct frameset*
-frame_download_source(struct CmdArgs args,
+frame_download_source(struct CmdArgs *args,
     struct frame_body* b, struct Url* currentURL,
     struct Url* baseURL, int flag)
 {
@@ -400,7 +400,7 @@ frame_download_source(struct CmdArgs args,
     case HTML_COL
 
 static int
-createFrameFile(struct CmdArgs args, struct frameset* f, FILE* f1, struct Buffer* current, int level,
+createFrameFile(struct CmdArgs *args, struct frameset* f, FILE* f1, struct Buffer* current, int level,
     int force_reload)
 {
     int r, c, t_stack;
@@ -846,7 +846,7 @@ createFrameFile(struct CmdArgs args, struct frameset* f, FILE* f1, struct Buffer
 }
 
 struct Buffer*
-renderFrame(struct CmdArgs args, struct Buffer* Cbuf, int force_reload)
+renderFrame(struct CmdArgs *args, struct Buffer* Cbuf, int force_reload)
 {
     Str tmp;
     FILE* f;
