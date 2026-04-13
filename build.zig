@@ -97,19 +97,6 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
     exe.root_module.addIncludePath(b.path("."));
 
-    const defun_mod = b.addModule("defun", .{
-        .target = target,
-        .optimize = optimize,
-        .root_source_file = b.path("defun.zig"),
-        .link_libc = true,
-    });
-    defun_mod.addIncludePath(b.path(""));
-    const defun_lib = b.addLibrary(.{
-        .name = "defun",
-        .root_module = defun_mod,
-    });
-    exe.root_module.linkLibrary(defun_lib);
-
     const w3m_dep = b.dependency("w3m", .{
         .target = target,
         .optimize = optimize,
@@ -140,8 +127,6 @@ pub fn build(b: *std.Build) void {
         exe.root_module.linkSystemLibrary(lib, .{});
     }
 
-    const co = build_coroutine(b, target, optimize);
-    exe.root_module.addImport("co", co);
     // const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
     // b.getInstallStep().dependOn(&cdb.step);
 }
@@ -184,26 +169,4 @@ fn gen_funcname_tab(b: *std.Build) struct {
         .step = awk,
         .output = awk.captureStdOut(.{}),
     };
-}
-
-fn build_coroutine(
-    b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-) *std.Build.Module {
-    const coroutine_dep = b.dependency("coroutine", .{});
-    const coroutine_t = b.addTranslateC(.{
-        .target = target,
-        .optimize = optimize,
-        .root_source_file = coroutine_dep.path("coroutine.h"),
-    });
-    coroutine_t.addIncludePath(coroutine_dep.path(""));
-    const coroutine_mod = coroutine_t.createModule();
-    coroutine_mod.addCSourceFiles(.{
-        .root = coroutine_dep.path(""),
-        .files = &.{
-            "coroutine.c",
-        },
-    });
-    return coroutine_mod;
 }

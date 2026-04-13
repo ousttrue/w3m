@@ -1,7 +1,5 @@
 const std = @import("std");
-const c = @cImport({
-    @cInclude("termios.h");
-});
+const c = @import("c.zig").c;
 
 stdin: std.Io.File,
 termios: std.posix.termios,

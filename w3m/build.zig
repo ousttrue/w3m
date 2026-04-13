@@ -38,6 +38,9 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
 
+    const co = build_coroutine(b, target, optimize);
+    mod.addImport("co", co);
+
     b.installArtifact(lib);
 
     // const gcstr_dep = b.dependency("gcstr", .{
@@ -55,33 +58,24 @@ pub fn build(b: *std.Build) void {
     b.step("test", "test").dependOn(&test_run.step);
 }
 
-// const global_lib = build_lib(b, target, optimize, "global");
-//
-// const util_lib = build_lib(b, target, optimize, "util");
-//
-// const keybind_lib = build_lib(b, target, optimize, "keybind");
-// mod.addImport("keybind", keybind_lib.root_module);
-// keybind_lib.root_module.addImport("global", global_lib.root_module);
-// keybind_lib.root_module.addImport("util", util_lib.root_module);
-
-// fn build_lib(
-//     b: *std.Build,
-//     target: std.Build.ResolvedTarget,
-//     optimize: std.builtin.OptimizeMode,
-//     comptime name: []const u8,
-// ) *std.Build.Step.Compile {
-//     const mod = b.addModule(name, .{
-//         .target = target,
-//         .optimize = optimize,
-//         .root_source_file = b.path(name ++ ".zig"),
-//         .link_libc = true,
-//     });
-//     mod.addIncludePath(b.path(""));
-//     const lib = b.addLibrary(.{
-//         .name = "gloabl",
-//         .root_module = mod,
-//         // for break point
-//         .use_llvm = true,
-//     });
-//     return lib;
-// }
+fn build_coroutine(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Module {
+    const coroutine_dep = b.dependency("coroutine", .{});
+    const coroutine_t = b.addTranslateC(.{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = coroutine_dep.path("coroutine.h"),
+    });
+    coroutine_t.addIncludePath(coroutine_dep.path(""));
+    const coroutine_mod = coroutine_t.createModule();
+    coroutine_mod.addCSourceFiles(.{
+        .root = coroutine_dep.path(""),
+        .files = &.{
+            "coroutine.c",
+        },
+    });
+    return coroutine_mod;
+}

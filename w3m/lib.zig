@@ -1,11 +1,5 @@
 const std = @import("std");
-const c = @cImport({
-    // @cInclude("w3m.h");
-    @cInclude("defun_impl.h");
-    @cInclude("constants.h");
-    @cInclude("sys/ioctl.h");
-    @cInclude("unistd.h");
-});
+const c = @import("c.zig").c;
 const g = @import("global.zig");
 pub const runtime = @import("runtime.zig");
 pub const global = @import("global.zig");
@@ -14,6 +8,8 @@ const TtyLinux = @import("TtyLinux.zig");
 const content_type = @import("content_type.zig");
 const guessContentType = content_type.guessContentType;
 const terminfo_entry = @import("terminfo_entry.zig");
+const defun = @import("defun.zig");
+const co = @import("co");
 
 var tty: TtyLinux = undefined;
 // blocking tty stdout
@@ -26,6 +22,9 @@ var peek_queue: std.Deque(u8) = .initBuffer(&.{});
 
 // var evented: std.Io.Evented = undefined;
 var evented: std.Io.Threaded = undefined;
+
+var S: *co.schedule = undefined;
+var co_current: ?c_int = null;
 
 // var key_input_queue: std.Io.Queue(u8) = .init(&.{});
 // fn producer(
@@ -70,9 +69,15 @@ pub fn init(process_init: std.process.Init) void {
 
     tty_in = std.Io.File.stdin();
     // tty_reader = std.Io.File.stdin().reader(evented.io(), &read_buf);
+
+    S = co.coroutine_open() orelse {
+        @panic("coroutine_open");
+    };
 }
 
 pub fn deinit() void {
+    co.coroutine_close(S);
+
     evented.deinit();
     flush_tty();
     runtime.deinit();
@@ -135,7 +140,7 @@ fn run() !void {
             } else {
                 setupCurrentBuffer();
                 g.CurrentKey = ch;
-                c.w3mFunc(GlobalKeymap[ch]);
+                w3mFunc(GlobalKeymap[ch]);
 
                 g.prec_num = 0;
             }
@@ -146,9 +151,56 @@ fn run() !void {
     }
 }
 
-fn app(io: std.Io) !void {
-    try std.Io.File.stdout().writeStreamingAll(io, "Hello, World!\n");
-    while (true) {}
+// const args = struct {
+//     n: c_int,
+// };
+
+const W3mTask = struct {
+    func: defun.CmdFunc,
+    args: c.CmdArgs,
+    co_id: c_int,
+
+    export fn coroutine(_S: ?*co.schedule, p: ?*anyopaque) void {
+        _ = _S;
+        var this: *@This() = @ptrCast(@alignCast(p));
+        this.func.func(this.args);
+    }
+};
+var task: ?W3mTask = null;
+
+// export fn foo(S: ?*co.schedule, ud: ?*anyopaque) void {
+//     const arg: *CmdArgs = @ptrCast(@alignCast(ud));
+//     const start = arg.n;
+//     for (0..5) |i| {
+//         std.debug.print("coroutine {} : {} + {}\n", .{ co.coroutine_running(S), start, i });
+//         co.coroutine_yield(S);
+//     }
+// }
+
+//
+// new task
+//
+export fn w3mFunc(cmd: [*c]const u8) void {
+    if (task != null) {
+        @panic("w3mFunc");
+    }
+
+    if (defun.getFunc(std.mem.span(cmd))) |found| {
+        task = .{
+            .func = found,
+            .args = .{},
+            .co_id = -1,
+        };
+
+        if (task) |*t| {
+            t.co_id = co.coroutine_new(S, &W3mTask.coroutine, t);
+            co.coroutine_resume(S, t.co_id);
+            std.debug.assert(co.coroutine_status(S, t.co_id) == 0);
+            task = null;
+        }
+    } else {
+        std.log.warn("{s} not found", .{cmd});
+    }
 }
 
 export fn ttyname_tty() [*c]const u8 {

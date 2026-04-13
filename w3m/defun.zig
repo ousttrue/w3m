@@ -1,9 +1,7 @@
 const std = @import("std");
-const c = @cImport({
-    @cInclude("defun_impl.h");
-});
+const c = @import("c.zig").c;
 
-const CmdFunc = struct {
+pub const CmdFunc = struct {
     func: *const fn (args: c.CmdArgs) callconv(.c) void,
     desc: []const u8,
 };
@@ -167,14 +165,6 @@ const funcMap: std.StaticStringMap(CmdFunc) = .initComptime(blk: {
     break :blk map_kvs;
 });
 
-export fn w3mFunc(_cmd: [*c]const u8) void {
-    if (_cmd) |cmd| {
-        if (funcMap.get(std.mem.span(cmd))) |found| {
-            found.func(.{});
-        } else {
-            std.log.warn("{s} not found", .{cmd});
-        }
-    } else {
-        std.log.warn("null cmd", .{});
-    }
+pub fn getFunc(cmd: []const u8) ?CmdFunc {
+    return funcMap.get(cmd);
 }
