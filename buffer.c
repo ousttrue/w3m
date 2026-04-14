@@ -524,9 +524,9 @@ void reshapeBuffer(struct CmdArgs *args, struct Buffer* buf)
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
     UseContentCharset = false;
     if (is_html_type(buf->type))
-        loadHTMLBuffer(&f, buf);
+        loadHTMLBuffer(args, &f, buf);
     else
-        loadBuffer(&f, buf);
+        loadBuffer(args, &f, buf);
     UFclose(&f);
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = true;

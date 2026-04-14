@@ -17,6 +17,6 @@ int backwardSearch(struct Buffer* buf, const char* str);
 typedef int (*SrchFunc)(struct Buffer*, const char*);
 void srch(struct CmdArgs *args, SrchFunc func, const char* prompt);
 void isrch(struct CmdArgs *args, SrchFunc func, const char* prompt);
-void srch_nxtprv(int reverse);
+void srch_nxtprv(struct CmdArgs *args, int reverse);
 int srchcore(const char* str, SrchFunc func);
-int dispincsrch(int ch, Str buf, Lineprop* prop);
+int dispincsrch(struct CmdArgs *args, Str buf, Lineprop* prop);

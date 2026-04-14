@@ -10,8 +10,9 @@
 #define K_MULTI 0x10000000
 #define MULTI_KEY(c) (((c) >> 16) & 0x77F)
 
-void setKeymap(char* p, int lineno, int verbose);
-void initKeymap(int force);
+struct CmdArgs;
+void setKeymap(struct CmdArgs *args, const char* p, int lineno, int verbose);
+void initKeymap(struct CmdArgs *args, int force);
 int getKey(char* s);
 char* getKeyData(int key);
 char* getWord(const char** str);

@@ -1087,12 +1087,7 @@ do_recursive_mkdir(const char* dir)
 
 void loadSiteconf(void);
 
-
-
-
-
-
-void sync_with_option(void)
+void sync_with_option(struct CmdArgs* args)
 {
     init_tmp();
     if (PagerMax < LINES)
@@ -1123,7 +1118,7 @@ void sync_with_option(void)
     update_utf8_symbol();
     wtf_init(DocumentCharset, DisplayCharset);
     if (fmInitialized) {
-        initKeymap(FALSE);
+        initKeymap(args, FALSE);
         initMenu();
     }
 }
@@ -1371,18 +1366,18 @@ load_option_panel(void)
     return buf;
 }
 
-void panel_set_option(struct CmdArgs *args, struct parsed_tagarg* arg)
+void panel_set_option(struct CmdArgs* args, struct parsed_tagarg* arg)
 {
     FILE* f = NULL;
     char* p;
     Str s = Strnew(), tmp;
 
     if (config_file == NULL) {
-        disp_message("There's no config file... config not saved", FALSE);
+        disp_message(args, "There's no config file... config not saved", FALSE);
     } else {
         f = fopen(config_file, "wt");
         if (f == NULL) {
-            disp_message("Can't write option!", FALSE);
+            disp_message(args, "Can't write option!", FALSE);
         }
     }
     while (arg) {
@@ -1401,7 +1396,7 @@ void panel_set_option(struct CmdArgs *args, struct parsed_tagarg* arg)
         fputs(s->ptr, f);
         fclose(f);
     }
-    sync_with_option();
+    sync_with_option(args);
     backBf(args);
 }
 

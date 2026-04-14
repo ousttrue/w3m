@@ -88,7 +88,7 @@ static void SigAlarm(int _);
 
 static int need_resize_screen = FALSE;
 static void resize_hook(int _);
-static void resize_screen(void);
+static void resize_screen(struct CmdArgs* args);
 
 static void SigPipe(int _);
 
@@ -643,7 +643,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     } else if (w3m_halfdump && displayImage)
         activeImage = TRUE;
 
-    sync_with_option();
+    sync_with_option(args);
     initCookie();
     if (UseHistory)
         loadHistory(URLHist);
@@ -863,7 +863,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
         w3m_exit(2);
     }
     if (err_msg->length)
-        disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
+        disp_message_nsec(args, err_msg->ptr, false, 1, true, false);
 
     SearchHeader = FALSE;
     DefaultType = NULL;
@@ -871,9 +871,9 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
     if (line_str) {
-        _goLine(line_str);
+        _goLine(args, line_str);
     }
     return true;
 }
@@ -999,7 +999,7 @@ void tmpClearBuffer(struct Buffer* buf)
     }
 }
 
-void pushBuffer(struct Buffer* buf)
+void pushBuffer(struct CmdArgs* args, struct Buffer* buf)
 {
     struct Buffer* b;
 
@@ -1040,13 +1040,13 @@ static void resize_hook(int _)
 }
 
 static void
-resize_screen(void)
+resize_screen(struct CmdArgs* args)
 {
     need_resize_screen = FALSE;
     setlinescols();
     setupscreen();
     if (CurrentTab)
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 static void SigPipe(int _)
@@ -1058,7 +1058,7 @@ static void SigPipe(int _)
  * Command functions: These functions are called with a keystroke.
  */
 
-void nscroll(int n, int mode)
+void nscroll(struct CmdArgs* args, int n, int mode)
 {
     struct Buffer* buf = Currentbuf;
     struct Line *top = buf->topLine, *cur = buf->currentLine;
@@ -1103,7 +1103,7 @@ void nscroll(int n, int mode)
                 cursorUp0(buf, 1);
         }
     }
-    displayBuffer(buf, mode);
+    displayBuffer(args, buf, mode);
 }
 
 void shiftvisualpos(struct Buffer* buf, int shift)
@@ -1125,57 +1125,57 @@ void cmd_loadfile(struct CmdArgs* args, const char* fn)
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
-        disp_err_message(emsg, FALSE);
+        disp_err_message(args, emsg, FALSE);
     } else if (buf != NO_BUFFER) {
-        pushBuffer(buf);
+        pushBuffer(args, buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
             rFrame(args);
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* Move cursor left */
-void _movL(int n)
+void _movL(struct CmdArgs* args, int n)
 {
     int i, m = searchKeyNum();
     if (Currentbuf->firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
         cursorLeft(Currentbuf, n);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* Move cursor downward */
-void _movD(int n)
+void _movD(struct CmdArgs* args, int n)
 {
     int i, m = searchKeyNum();
     if (Currentbuf->firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
         cursorDown(Currentbuf, n);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* move cursor upward */
-void _movU(int n)
+void _movU(struct CmdArgs* args, int n)
 {
     int i, m = searchKeyNum();
     if (Currentbuf->firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
         cursorUp(Currentbuf, n);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* Move cursor right */
-void _movR(int n)
+void _movR(struct CmdArgs* args, int n)
 {
     int i, m = searchKeyNum();
     if (Currentbuf->firstLine == NULL)
         return;
     for (i = 0; i < m; i++)
         cursorRight(Currentbuf, n);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* movLW, movRW */
@@ -1237,7 +1237,7 @@ void _quitfm(struct CmdArgs* args, int confirm)
         /* FIXME: gettextize? */
         ans = inputChar(args, "Do you want to exit w3m? (y/n)");
     if (!(ans && TOLOWER(*ans) == 'y')) {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
 
@@ -1246,15 +1246,15 @@ void _quitfm(struct CmdArgs* args, int confirm)
     fmTerm();
     save_cookies();
     if (UseHistory && SaveURLHist)
-        saveHistory(URLHist, URLHistSize);
+        saveHistory(args, URLHist, URLHistSize);
     w3m_exit(0);
 }
 
 /* Go to specified line */
-void _goLine(const char* l)
+void _goLine(struct CmdArgs* args, const char* l)
 {
     if (l == NULL || *l == '\0' || Currentbuf->currentLine == NULL) {
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
         return;
     }
     Currentbuf->pos = 0;
@@ -1269,7 +1269,7 @@ void _goLine(const char* l)
     } else
         gotoRealLine(Currentbuf, atoi(l));
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 int cur_real_linenumber(struct Buffer* buf)
@@ -1290,7 +1290,7 @@ int cur_real_linenumber(struct Buffer* buf)
 static struct Buffer*
 loadNormalBuf(struct CmdArgs* args, struct Buffer* buf, int renderframe)
 {
-    pushBuffer(buf);
+    pushBuffer(args, buf);
     if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
         rFrame(args);
     return buf;
@@ -1316,7 +1316,7 @@ struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* targe
     buf = loadGeneralFile(args, url, baseURL(Currentbuf), referer, flag, request);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
-        disp_err_message(emsg, FALSE);
+        disp_err_message(args, emsg, FALSE);
         return NULL;
     }
 
@@ -1382,11 +1382,11 @@ struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* targe
             arrangeCursor(Currentbuf);
         }
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
     return buf;
 }
 
-void gotoLabel(const char* label)
+void gotoLabel(struct CmdArgs* args, const char* label)
 {
     struct Buffer* buf;
     struct Anchor* al;
@@ -1395,7 +1395,7 @@ void gotoLabel(const char* label)
     al = searchURLLabel(Currentbuf, label);
     if (al == NULL) {
         /* FIXME: gettextize? */
-        disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
+        disp_message(args, Sprintf("%s is not found", label)->ptr, TRUE);
         return;
     }
     buf = newBuffer(Currentbuf->width);
@@ -1405,7 +1405,7 @@ void gotoLabel(const char* label)
     buf->currentURL.label = allocStr(label, -1);
     pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
     (*buf->clone)++;
-    pushBuffer(buf);
+    pushBuffer(args, buf);
     gotoLine(Currentbuf, al->start.line);
     if (label_topline)
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
@@ -1414,39 +1414,38 @@ void gotoLabel(const char* label)
             FALSE);
     Currentbuf->pos = al->start.pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
     return;
 }
 
 int handleMailto(struct CmdArgs* args, const char* url)
 {
-    Str to;
-    char* pos;
-
     if (strncasecmp(url, "mailto:", 7))
         return 0;
     if (!non_null(Mailer)) {
         /* FIXME: gettextize? */
-        disp_err_message("no mailer is specified", TRUE);
+        disp_err_message(args, "no mailer is specified", TRUE);
         return 1;
     }
 
     /* invoke external mailer */
+    Str to;
     if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
         to = Strnew_charp(html_unquote(url));
     } else {
         to = Strnew_charp(url + 7);
+        char* pos;
         if ((pos = strchr(to->ptr, '?')) != NULL)
             Strtruncate(to, pos - to->ptr);
     }
     exec_cmd(args, myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
     pushHashHist(URLHist, url);
     return 1;
 }
 
 /* follow HREF link in the buffer */
-static void bufferA(struct CmdArgs *args)
+static void bufferA(struct CmdArgs* args)
 {
     on_target = FALSE;
     followA(args);
@@ -1667,7 +1666,7 @@ void _followForm(struct CmdArgs* args, int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
         p = inputStrHist(args, "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
         if (p == NULL || fi->readonly)
@@ -1682,7 +1681,7 @@ void _followForm(struct CmdArgs* args, int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
         p = inputFilenameHist(args, "Filename:", fi->value ? fi->value->ptr : NULL,
             NULL);
@@ -1698,7 +1697,7 @@ void _followForm(struct CmdArgs* args, int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
         /* FIXME: gettextize? */
@@ -1716,7 +1715,7 @@ void _followForm(struct CmdArgs* args, int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
         input_textarea(args, fi);
         formUpdateBuffer(a, Currentbuf, fi);
         break;
@@ -1725,7 +1724,7 @@ void _followForm(struct CmdArgs* args, int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
         formRecheckRadio(a, Currentbuf, fi);
@@ -1735,7 +1734,7 @@ void _followForm(struct CmdArgs* args, int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
             break;
         }
         fi->checked = !fi->checked;
@@ -1798,8 +1797,7 @@ void _followForm(struct CmdArgs* args, int submit)
         } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
             do_internal(args, tmp2->ptr, tmp->ptr);
         } else {
-            disp_err_message("Can't send form because of illegal method.",
-                FALSE);
+            disp_err_message(args, "Can't send form because of illegal method.", false);
         }
         break;
     case FORM_INPUT_RESET:
@@ -1819,11 +1817,11 @@ void _followForm(struct CmdArgs* args, int submit)
     default:
         break;
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* go to the next [visited] anchor */
-void _nextA(int visited)
+void _nextA(struct CmdArgs* args, bool visited)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
@@ -1901,11 +1899,11 @@ _end:
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* go to the previous anchor */
-void _prevA(int visited)
+void _prevA(struct CmdArgs* args, bool visited)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct BufferPoint* po;
@@ -1983,11 +1981,11 @@ _end:
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* go to the next left/right anchor */
-void nextX(int d, int dy)
+void nextX(struct CmdArgs* args, int d, int dy)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct Anchor *an, *pan;
@@ -2038,11 +2036,11 @@ void nextX(int d, int dy)
     gotoLine(Currentbuf, y);
     Currentbuf->pos = pan->start.pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* go to the next downward/upward anchor */
-void nextY(int d)
+void nextY(struct CmdArgs* args, int d)
 {
     struct HmarkerList* hl = Currentbuf->hmarklist;
     struct Anchor *an, *pan;
@@ -2083,7 +2081,7 @@ void nextY(int d)
         return;
     gotoLine(Currentbuf, pan->start.line);
     arrangeLine(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 int checkBackBuffer(struct Buffer* buf)
@@ -2119,13 +2117,13 @@ void cmd_loadURL(struct CmdArgs* args, const char* url, struct Url* current, cha
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        disp_err_message(emsg, FALSE);
+        disp_err_message(args, emsg, FALSE);
     } else if (buf != NO_BUFFER) {
-        pushBuffer(buf);
+        pushBuffer(args, buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
             rFrame(args);
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* go to specified URL */
@@ -2176,11 +2174,11 @@ void goURL0(struct CmdArgs* args, char* prompt, int relative)
         url = url_encode(url, NULL, 0);
     }
     if (url == NULL || *url == '\0') {
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
         return;
     }
     if (*url == '#') {
-        gotoLabel(url + 1);
+        gotoLabel(args, url + 1);
         return;
     }
     p_url = parseURL2(url, current);
@@ -2190,10 +2188,10 @@ void goURL0(struct CmdArgs* args, char* prompt, int relative)
         pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
 }
 
-void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid)
+void cmd_loadBuffer(struct CmdArgs* args, struct Buffer* buf, int prop, int linkid)
 {
     if (buf == NULL) {
-        disp_err_message("Can't load string", FALSE);
+        disp_err_message(args, "Can't load string", FALSE);
     } else if (buf != NO_BUFFER) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
@@ -2202,9 +2200,9 @@ void cmd_loadBuffer(struct Buffer* buf, int prop, int linkid)
             buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
             Currentbuf->linkBuffer[linkid] = buf;
         }
-        pushBuffer(buf);
+        pushBuffer(args, buf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void follow_map(struct CmdArgs* args, struct parsed_tagarg* arg)
@@ -2218,7 +2216,7 @@ void follow_map(struct CmdArgs* args, struct parsed_tagarg* arg)
         return;
     }
     if (*(a->url) == '#') {
-        gotoLabel(a->url + 1);
+        gotoLabel(args, a->url + 1);
         return;
     }
     struct Url p_url = parseURL2(a->url, baseURL(Currentbuf));
@@ -2234,7 +2232,7 @@ void follow_map(struct CmdArgs* args, struct parsed_tagarg* arg)
             delBuffer(buf);
         else
             deleteTab(CurrentTab);
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
         return;
     }
     cmd_loadURL(args, a->url, baseURL(Currentbuf),
@@ -2252,12 +2250,12 @@ void anchorMn(struct CmdArgs* args, AnchorFunc menu_func, int go)
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
     if (go)
         followA(args);
 }
 
-void _peekURL(int only_img)
+void _peekURL(struct CmdArgs* args, int only_img)
 {
 
     struct Anchor* a;
@@ -2304,7 +2302,7 @@ disp:
         offset = (n - 1) * (COLS - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-    disp_message_nomouse(&s->ptr[offset], TRUE);
+    disp_message_nomouse(args, &s->ptr[offset], TRUE);
 }
 
 /* show current URL */
@@ -2315,17 +2313,17 @@ Str currentURL(void)
     return parsedURL2Str(&Currentbuf->currentURL);
 }
 
-void _docCSet(wc_ces charset)
+void _docCSet(struct CmdArgs* args, wc_ces charset)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
     if (Currentbuf->sourcefile == NULL) {
-        disp_message("Can't reload...", FALSE);
+        disp_message(args, "Can't reload...", FALSE);
         return;
     }
     Currentbuf->document_charset = charset;
     Currentbuf->need_reshape = TRUE;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void change_charset(struct CmdArgs* args, struct parsed_tagarg* arg)
@@ -2344,7 +2342,7 @@ void change_charset(struct CmdArgs* args, struct parsed_tagarg* arg)
         if (!strcmp(arg->arg, "charset"))
             charset = atoi(arg->value);
     }
-    _docCSet(charset);
+    _docCSet(args, charset);
 }
 
 /* mark URL-like patterns as anchors */
@@ -2432,7 +2430,7 @@ void invoke_browser(struct CmdArgs* args, const char* url)
         browser = conv_to_system(browser);
     }
     if (browser == NULL || *browser == '\0') {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
 
@@ -2445,7 +2443,7 @@ void invoke_browser(struct CmdArgs* args, const char* url)
     fmTerm();
     mySystem(cmd->ptr, bg);
     fmInit();
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 char* getCurWord(struct Buffer* buf, int* spos, int* epos)
@@ -2497,12 +2495,12 @@ void execdict(struct CmdArgs* args, const char* word)
     struct Buffer* buf;
 
     if (!UseDictCommand || word == NULL || *word == '\0') {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     w = conv_to_system(word);
     if (*w == '\0') {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     dictcmd = Sprintf("%s?%s", DictCommand,
@@ -2510,16 +2508,16 @@ void execdict(struct CmdArgs* args, const char* word)
                   ->ptr;
     buf = loadGeneralFile(args, dictcmd, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        disp_message(args, "Execution failed", TRUE);
         return;
     } else if (buf != NO_BUFFER) {
         buf->filename = w;
         buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
         if (buf->type == NULL)
             buf->type = "text/plain";
-        pushBuffer(buf);
+        pushBuffer(args, buf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void set_buffer_environ(struct Buffer* buf)
@@ -2816,7 +2814,7 @@ deleteTab(TabBuffer* tab)
     return FirstTab;
 }
 
-void followTab(struct CmdArgs *args, TabBuffer* tab)
+void followTab(struct CmdArgs* args, TabBuffer* tab)
 {
     struct Buffer* buf;
     struct Anchor* a;
@@ -2855,10 +2853,10 @@ void followTab(struct CmdArgs *args, TabBuffer* tab)
         CurrentTab = tab;
         for (buf = p; buf; buf = p) {
             p = prevBuffer(c, buf);
-            pushBuffer(buf);
+            pushBuffer(args, buf);
         }
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void tabURL0(struct CmdArgs* args, TabBuffer* tab, char* prompt, int relative)
@@ -2887,13 +2885,13 @@ void tabURL0(struct CmdArgs* args, TabBuffer* tab, char* prompt, int relative)
         CurrentTab = tab;
         for (buf = p; buf; buf = p) {
             p = prevBuffer(c, buf);
-            pushBuffer(buf);
+            pushBuffer(args, buf);
         }
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
-void moveTab(TabBuffer* t, TabBuffer* t2, int right)
+void moveTab(struct CmdArgs* args, TabBuffer* t, TabBuffer* t2, int right)
 {
     if (t2 == NO_TABBUFFER)
         t2 = FirstTab;
@@ -2926,7 +2924,7 @@ void moveTab(TabBuffer* t, TabBuffer* t2, int right)
             FirstTab = t;
         t2->prevTab = t;
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 static void
@@ -2951,7 +2949,7 @@ save_buffer_position(struct Buffer* buf)
     buf->undo = b;
 }
 
-void resetPos(BufferPos* b)
+void resetPos(struct CmdArgs* args, BufferPos* b)
 {
     struct Buffer buf;
     struct Line top, cur;
@@ -2965,7 +2963,7 @@ void resetPos(BufferPos* b)
     buf.currentColumn = b->currentColumn;
     restorePosition(Currentbuf, &buf);
     Currentbuf->undo = b;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 bool submitCurrentBuffer(struct CmdArgs* args)
@@ -3022,17 +3020,17 @@ bool processCurrentBufferEvent(void)
     return false;
 }
 
-void processResizeAndImage()
+void processResizeAndImage(struct CmdArgs* args)
 {
     signal(SIGWINCH, resize_hook);
     while (true) {
         if (need_resize_screen) {
-            resize_screen();
+            resize_screen(args);
         }
         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
             loadImage(Currentbuf, IMG_FLAG_NEXT);
         }
-        int ch = getch_timeout(1, 0);
+        int ch = getch_timeout(1, args);
         if (ch > 0) {
             unget(ch);
             break;

@@ -321,7 +321,7 @@ make_lastline_message(struct Buffer* buf)
     return msg;
 }
 
-void displayBuffer(struct Buffer* buf, int mode)
+void displayBuffer(struct CmdArgs *args, struct Buffer* buf, int mode)
 {
     Str msg;
     int ny = 0;
@@ -385,7 +385,7 @@ void displayBuffer(struct Buffer* buf, int mode)
         buf->topLine = buf->firstLine;
 
     if (buf->need_reshape) {
-        displayBuffer(buf, B_FORCE_REDRAW);
+        displayBuffer(args, buf, B_FORCE_REDRAW);
         return;
     }
 
@@ -397,7 +397,7 @@ void displayBuffer(struct Buffer* buf, int mode)
         Strcat_charp(msg, "\tNo Line");
     }
     if (delayed_msg != NULL) {
-        disp_message(delayed_msg, false);
+        disp_message(args, delayed_msg, false);
         delayed_msg = NULL;
         refresh();
     }
@@ -410,7 +410,7 @@ void displayBuffer(struct Buffer* buf, int mode)
     }
     if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
         chkURLBuffer(buf);
-        displayBuffer(buf, B_NORMAL);
+        displayBuffer(args, buf, B_NORMAL);
     }
 }
 
@@ -1002,7 +1002,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
 
 static GeneralList* message_list = NULL;
 
-void record_err_message(char* s)
+void record_err_message(const char* s)
 {
     if (fmInitialized) {
         if (!message_list)
@@ -1046,13 +1046,13 @@ void message(const char* s, int return_x, int return_y)
     move(return_y, return_x);
 }
 
-void disp_err_message(char* s, int redraw_current)
+void disp_err_message(struct CmdArgs *args, const char* s, int redraw_current)
 {
     record_err_message(s);
-    disp_message(s, redraw_current);
+    disp_message(args, s, redraw_current);
 }
 
-void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, int mouse)
+void disp_message_nsec(struct CmdArgs *args, const char* s, int redraw_current, int sec, int purge, int mouse)
 {
     if (QuietMessage)
         return;
@@ -1066,17 +1066,12 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
     else
         message(s, (LINES - 1), 0);
     refresh();
-    int ch = getch_timeout(sec, 0);
+    int ch = getch_timeout(sec, args);
     if (!purge && ch > 0) {
         unget(ch);
     }
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
-        displayBuffer(Currentbuf, B_NORMAL);
-}
-
-void disp_message(const char* s, int redraw_current)
-{
-    disp_message_nsec(s, redraw_current, 10, false, true);
+        displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void set_delayed_message(char* s)

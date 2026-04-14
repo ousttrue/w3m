@@ -30,5 +30,6 @@ const char* lastHist(struct Hist* hist);
 const char* nextHist(struct Hist* hist);
 const char* prevHist(struct Hist* hist);
 int loadHistory(struct Hist* hist);
-void saveHistory(struct Hist* hist, size_t size);
+struct CmdArgs;
+void saveHistory(struct CmdArgs *args, struct Hist* hist, size_t size);
 Str historyBuffer(struct Hist* hist);

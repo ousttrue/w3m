@@ -171,7 +171,7 @@ str_to_ssl_version(const char* name)
 #endif /* SSL_CTX_set_min_proto_version */
 
 static SSL*
-openSSLHandle(struct CmdArgs *args, int sock, const char* hostname, const char** p_cert)
+openSSLHandle(struct CmdArgs* args, int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static const char* old_ssl_forbid_method = NULL;
@@ -316,9 +316,10 @@ eend:
     if (handle)
         SSL_free(handle);
     /* FIXME: gettextize? */
-    disp_err_message(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
-                         ERR_error_string(ERR_get_error(), NULL))
-                         ->ptr,
+    disp_err_message(args,
+        Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
+            ERR_error_string(ERR_get_error(), NULL))
+            ->ptr,
         false);
     return NULL;
 }
@@ -987,7 +988,7 @@ void init_stream(struct URLFile* uf, int scheme, InputStream stream)
 }
 
 struct URLFile
-openURL(struct CmdArgs *args, const char* url, struct Url* pu, struct Url* current,
+openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* current,
     struct URLOption* option, struct Form* request, TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {

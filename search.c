@@ -224,19 +224,19 @@ clear_mark(struct Line* l)
 }
 
 static void
-disp_srchresult(int result, const char* prompt, const char* str)
+disp_srchresult(struct CmdArgs* args, int result, const char* prompt, const char* str)
 {
     if (str == NULL)
         str = "";
     if (result & SR_NOTFOUND)
-        disp_message(Sprintf("Not found: %s", str)->ptr, true);
+        disp_message(args, Sprintf("Not found: %s", str)->ptr, true);
     else if (result & SR_WRAPPED)
-        disp_message(Sprintf("Search wrapped: %s", str)->ptr, true);
+        disp_message(args, Sprintf("Search wrapped: %s", str)->ptr, true);
     else if (show_srch_str)
-        disp_message(Sprintf("%s%s", prompt, str)->ptr, true);
+        disp_message(args, Sprintf("%s%s", prompt, str)->ptr, true);
 }
 
-void srch(struct CmdArgs *args, SrchFunc func, const char* prompt)
+void srch(struct CmdArgs* args, SrchFunc func, const char* prompt)
 {
     int result;
     int disp = false;
@@ -248,7 +248,7 @@ void srch(struct CmdArgs *args, SrchFunc func, const char* prompt)
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
         disp = true;
@@ -261,9 +261,9 @@ void srch(struct CmdArgs *args, SrchFunc func, const char* prompt)
         clear_mark(Currentbuf->currentLine);
     else
         Currentbuf->pos = pos;
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
     if (disp)
-        disp_srchresult(result, prompt, str);
+        disp_srchresult(args, result, prompt, str);
     searchRoutine = func;
 }
 
@@ -292,19 +292,18 @@ int srchcore(const char* str, SrchFunc func)
     return result;
 }
 
-int dispincsrch(int ch, Str buf, Lineprop* prop)
+int dispincsrch(struct CmdArgs* args, Str buf, Lineprop* prop)
 {
     static struct Buffer sbuf;
-    const char* str;
     bool do_next_search = false;
 
-    if (ch == 0 && buf == NULL) {
+    if (args->ch == 0 && buf == NULL) {
         SAVE_BUFPOSITION(&sbuf); /* search starting point */
         return -1;
     }
 
-    str = buf->ptr;
-    switch (ch) {
+    const char* str = buf->ptr;
+    switch (args->ch) {
     case 022: /* C-r */
         searchRoutine = backwardSearch;
         do_next_search = true;
@@ -315,8 +314,8 @@ int dispincsrch(int ch, Str buf, Lineprop* prop)
         break;
 
     default:
-        if (ch >= 0)
-            return ch; /* use InputKeymap */
+        if (args->ch >= 0)
+            return args->ch; /* use InputKeymap */
     }
 
     if (do_next_search) {
@@ -330,7 +329,7 @@ int dispincsrch(int ch, Str buf, Lineprop* prop)
                 SAVE_BUFPOSITION(&sbuf);
             }
             arrangeCursor(Currentbuf);
-            displayBuffer(Currentbuf, B_FORCE_REDRAW);
+            displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
             clear_mark(Currentbuf->currentLine);
             return -1;
         } else
@@ -341,27 +340,26 @@ int dispincsrch(int ch, Str buf, Lineprop* prop)
         srchcore(str, searchRoutine);
         arrangeCursor(Currentbuf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
     clear_mark(Currentbuf->currentLine);
     return -1;
 }
 
-void isrch(struct CmdArgs *args, SrchFunc func, const char* prompt)
+void isrch(struct CmdArgs* args, SrchFunc func, const char* prompt)
 {
-    const char* str;
     struct Buffer sbuf;
     SAVE_BUFPOSITION(&sbuf);
-    dispincsrch(0, NULL, NULL); /* initialize incremental search state */
+    dispincsrch(args, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    str = inputLineHistSearch(args, prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    const char* str = inputLineHistSearch(args, prompt, NULL, IN_STRING, TextHist, dispincsrch);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
-void srch_nxtprv(int reverse)
+void srch_nxtprv(struct CmdArgs *args, int reverse)
 {
     static SrchFunc routine[2] = {
         forwardSearch, backwardSearch
@@ -369,7 +367,7 @@ void srch_nxtprv(int reverse)
 
     if (searchRoutine == NULL) {
         /* FIXME: gettextize? */
-        disp_message("No previous regular expression", true);
+        disp_message(args, "No previous regular expression", true);
         return;
     }
     if (reverse != 0)
@@ -386,7 +384,7 @@ void srch_nxtprv(int reverse)
         if (reverse == 0)
             Currentbuf->pos -= 1;
     }
-    displayBuffer(Currentbuf, B_NORMAL);
-    disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
+    displayBuffer(args, Currentbuf, B_NORMAL);
+    disp_srchresult(args, result, (reverse ? "Backward: " : "Forward: "),
         SearchString);
 }

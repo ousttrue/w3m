@@ -76,37 +76,37 @@ void multimap(struct CmdArgs* args)
 void pgFore(struct CmdArgs* args)
 {
     if (vi_prec_num)
-        nscroll(searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
+        nscroll(args, searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
     else
-        nscroll(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1), prec_num ? B_SCROLL : B_NORMAL);
+        nscroll(args, prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1), prec_num ? B_SCROLL : B_NORMAL);
 }
 
 void pgBack(struct CmdArgs* args)
 {
     if (vi_prec_num)
-        nscroll(-searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
+        nscroll(args, -searchKeyNum() * (Currentbuf->LINES - 1), B_NORMAL);
     else
-        nscroll(-(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)), prec_num ? B_SCROLL : B_NORMAL);
+        nscroll(args, -(prec_num ? searchKeyNum() : searchKeyNum() * (Currentbuf->LINES - 1)), prec_num ? B_SCROLL : B_NORMAL);
 }
 
 void hpgFore(struct CmdArgs* args)
 {
-    nscroll(searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
+    nscroll(args, searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
 }
 
 void hpgBack(struct CmdArgs* args)
 {
-    nscroll(-searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
+    nscroll(args, -searchKeyNum() * (Currentbuf->LINES / 2 - 1), B_NORMAL);
 }
 
 void lup1(struct CmdArgs* args)
 {
-    nscroll(searchKeyNum(), B_SCROLL);
+    nscroll(args, searchKeyNum(), B_SCROLL);
 }
 
 void ldown1(struct CmdArgs* args)
 {
-    nscroll(-searchKeyNum(), B_SCROLL);
+    nscroll(args, -searchKeyNum(), B_SCROLL);
 }
 
 void ctrCsrV(struct CmdArgs* args)
@@ -118,7 +118,7 @@ void ctrCsrV(struct CmdArgs* args)
     if (offsety != 0) {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, FALSE);
         arrangeLine(Currentbuf);
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
     }
 }
 
@@ -131,7 +131,7 @@ void ctrCsrH(struct CmdArgs* args)
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
     }
 }
 
@@ -139,7 +139,7 @@ void rdrwSc(struct CmdArgs* args)
 {
     clear();
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void srchfor(struct CmdArgs* args)
@@ -164,12 +164,12 @@ void isrchbak(struct CmdArgs* args)
 
 void srchnxt(struct CmdArgs* args)
 {
-    srch_nxtprv(0);
+    srch_nxtprv(args, 0);
 }
 
 void srchprv(struct CmdArgs* args)
 {
-    srch_nxtprv(1);
+    srch_nxtprv(args, 1);
 }
 
 void shiftl(struct CmdArgs* args)
@@ -181,7 +181,7 @@ void shiftl(struct CmdArgs* args)
     column = Currentbuf->currentColumn;
     columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->COLS + 1) + 1);
     shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void shiftr(struct CmdArgs* args)
@@ -193,7 +193,7 @@ void shiftr(struct CmdArgs* args)
     column = Currentbuf->currentColumn;
     columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->COLS - 1) - 1);
     shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void col1R(struct CmdArgs* args)
@@ -211,7 +211,7 @@ void col1R(struct CmdArgs* args)
             break;
         shiftvisualpos(Currentbuf, 1);
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void col1L(struct CmdArgs* args)
@@ -228,7 +228,7 @@ void col1L(struct CmdArgs* args)
         columnSkip(Currentbuf, -1);
         shiftvisualpos(Currentbuf, -1);
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void setEnv(struct CmdArgs* args)
@@ -240,7 +240,7 @@ void setEnv(struct CmdArgs* args)
             env = Sprintf("%s=", env)->ptr;
         env = inputStrHist(args, "Set environ: ", env, TextHist);
         if (env == NULL || *env == '\0') {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
     }
@@ -250,7 +250,7 @@ void setEnv(struct CmdArgs* args)
         value++;
         set_environ(var, value);
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void pipeBuf(struct CmdArgs* args)
@@ -263,20 +263,20 @@ void pipeBuf(struct CmdArgs* args)
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd == NULL || *cmd == '\0') {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
-        disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
+        disp_message(args, Sprintf("Can't save buffer to %s", cmd)->ptr, true);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
     struct Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        disp_message(args, "Execution failed", TRUE);
         return;
     } else {
         buf->filename = cmd;
@@ -285,9 +285,9 @@ void pipeBuf(struct CmdArgs* args)
         if (buf->type == NULL)
             buf->type = "text/plain";
         buf->currentURL.file = "-";
-        pushBuffer(buf);
+        pushBuffer(args, buf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void pipesh(struct CmdArgs* args)
@@ -300,20 +300,20 @@ void pipesh(struct CmdArgs* args)
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd == NULL || *cmd == '\0') {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     struct Buffer* buf = getpipe(cmd);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        disp_message(args, "Execution failed", true);
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         if (buf->type == NULL)
             buf->type = "text/plain";
-        pushBuffer(buf);
+        pushBuffer(args, buf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void readsh(struct CmdArgs* args)
@@ -326,25 +326,25 @@ void readsh(struct CmdArgs* args)
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd == NULL || *cmd == '\0') {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     auto prevtrap = signal(SIGINT, intTrap);
     crmode();
-    struct Buffer* buf = getshell(cmd);
+    struct Buffer* buf = getshell(args, cmd);
     signal(SIGINT, prevtrap);
     term_raw();
     if (buf == NULL) {
         /* FIXME: gettextize? */
-        disp_message("Execution failed", TRUE);
+        disp_message(args, "Execution failed", true);
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         if (buf->type == NULL)
             buf->type = "text/plain";
-        pushBuffer(buf);
+        pushBuffer(args, buf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void execsh(struct CmdArgs* args)
@@ -366,7 +366,7 @@ void execsh(struct CmdArgs* args)
         fmInit();
         getch(args);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void ldfile(struct CmdArgs* args)
@@ -379,7 +379,7 @@ void ldfile(struct CmdArgs* args)
     if (fn != NULL)
         fn = conv_to_system(fn);
     if (fn == NULL || *fn == '\0') {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     cmd_loadfile(args, fn);
@@ -397,42 +397,42 @@ void ldhelp(struct CmdArgs* args)
 
 void movL(struct CmdArgs* args)
 {
-    _movL(Currentbuf->COLS / 2);
+    _movL(args, Currentbuf->COLS / 2);
 }
 
 void movL1(struct CmdArgs* args)
 {
-    _movL(1);
+    _movL(args, 1);
 }
 
 void movD(struct CmdArgs* args)
 {
-    _movD((Currentbuf->LINES + 1) / 2);
+    _movD(args, (Currentbuf->LINES + 1) / 2);
 }
 
 void movD1(struct CmdArgs* args)
 {
-    _movD(1);
+    _movD(args, 1);
 }
 
 void movU(struct CmdArgs* args)
 {
-    _movU((Currentbuf->LINES + 1) / 2);
+    _movU(args, (Currentbuf->LINES + 1) / 2);
 }
 
 void movU1(struct CmdArgs* args)
 {
-    _movU(1);
+    _movU(args, 1);
 }
 
 void movR(struct CmdArgs* args)
 {
-    _movR(Currentbuf->COLS / 2);
+    _movR(args, Currentbuf->COLS / 2);
 }
 
 void movR1(struct CmdArgs* args)
 {
-    _movR(1);
+    _movR(args, 1);
 }
 
 void movLW(struct CmdArgs* args)
@@ -484,7 +484,7 @@ void movLW(struct CmdArgs* args)
     }
 end:
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void movRW(struct CmdArgs* args)
@@ -526,7 +526,7 @@ void movRW(struct CmdArgs* args)
     }
 end:
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* Quit */
@@ -584,7 +584,7 @@ void selBuf(struct CmdArgs* args)
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
@@ -603,29 +603,29 @@ void susp(struct CmdArgs* args)
     kill(0, SIGTSTP); /* stop whole job, not a single process */
 
     fmInit();
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void goLine(struct CmdArgs* args)
 {
     const char* str = searchKeyData();
     if (prec_num)
-        _goLine("^");
+        _goLine(args, "^");
     else if (str)
-        _goLine(str);
+        _goLine(args, str);
     else
         /* FIXME: gettextize? */
-        _goLine(inputStr(args, "Goto line: ", ""));
+        _goLine(args, inputStr(args, "Goto line: ", ""));
 }
 
 void goLineF(struct CmdArgs* args)
 {
-    _goLine("^");
+    _goLine(args, "^");
 }
 
 void goLineL(struct CmdArgs* args)
 {
-    _goLine("$");
+    _goLine(args, "$");
 }
 
 /* Go to the beginning of the line */
@@ -637,7 +637,7 @@ void linbeg(struct CmdArgs* args)
         cursorUp0(Currentbuf, 1);
     Currentbuf->pos = 0;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* Go to the bottom of the line */
@@ -650,7 +650,7 @@ void linend(struct CmdArgs* args)
         cursorDown0(Currentbuf, 1);
     Currentbuf->pos = Currentbuf->currentLine->len - 1;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* Run editor on the current buffer */
@@ -663,7 +663,7 @@ void editBf(struct CmdArgs* args)
         (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
         Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
         Currentbuf->bufferprop & BP_FRAME) { /* Frame */
-        disp_err_message("Can't edit other than local file", TRUE);
+        disp_err_message(args, "Can't edit other than local file", TRUE);
         return;
     }
     if (Currentbuf->edit)
@@ -674,7 +674,7 @@ void editBf(struct CmdArgs* args)
             cur_real_linenumber(Currentbuf));
     exec_cmd(args, cmd->ptr);
 
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
     reload(args);
 }
 
@@ -685,14 +685,14 @@ void editScr(struct CmdArgs* args)
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
+        disp_err_message(args, Sprintf("Can't open %s", tmpf)->ptr, TRUE);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
     exec_cmd(args, myEditor(Editor, shell_quote(tmpf), cur_real_linenumber(Currentbuf))->ptr);
     unlink(tmpf);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* Set / unset mark */
@@ -705,7 +705,7 @@ void _mark(struct CmdArgs* args)
         return;
     l = Currentbuf->currentLine;
     l->propBuf[Currentbuf->pos] ^= PE_MARK;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* Go to next mark */
@@ -730,7 +730,7 @@ void nextMk(struct CmdArgs* args)
                 Currentbuf->currentLine = l;
                 Currentbuf->pos = i;
                 arrangeCursor(Currentbuf);
-                displayBuffer(Currentbuf, B_NORMAL);
+                displayBuffer(args, Currentbuf, B_NORMAL);
                 return;
             }
         }
@@ -738,7 +738,7 @@ void nextMk(struct CmdArgs* args)
         i = 0;
     }
     /* FIXME: gettextize? */
-    disp_message("No mark exist after here", TRUE);
+    disp_message(args, "No mark exist after here", true);
 }
 
 /* Go to previous mark */
@@ -764,7 +764,7 @@ void prevMk(struct CmdArgs* args)
                 Currentbuf->currentLine = l;
                 Currentbuf->pos = i;
                 arrangeCursor(Currentbuf);
-                displayBuffer(Currentbuf, B_NORMAL);
+                displayBuffer(args, Currentbuf, B_NORMAL);
                 return;
             }
         }
@@ -773,7 +773,7 @@ void prevMk(struct CmdArgs* args)
             i = l->len - 1;
     }
     /* FIXME: gettextize? */
-    disp_message("No mark exist before here", TRUE);
+    disp_message(args, "No mark exist before here", TRUE);
 }
 
 /* Mark place to which the regular expression matches */
@@ -788,13 +788,13 @@ void reMark(struct CmdArgs* args)
     if (str == NULL || *str == '\0') {
         str = inputStrHist(args, "(Mark)Regexp: ", MarkString, TextHist);
         if (str == NULL || *str == '\0') {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
     }
     str = conv_search_string(str, DisplayCharset);
     if ((str = regexCompile(str, 1)) != NULL) {
-        disp_message(str, TRUE);
+        disp_message(args, str, TRUE);
         return;
     }
     MarkString = str;
@@ -810,7 +810,7 @@ void reMark(struct CmdArgs* args)
         }
     }
 
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* follow HREF link */
@@ -837,14 +837,14 @@ void followA(struct CmdArgs* args)
         return;
     }
     if (*a->url == '#') { /* index within this buffer */
-        gotoLabel(a->url + 1);
+        gotoLabel(args, a->url + 1);
         return;
     }
     u = parseURL2(a->url, baseURL(Currentbuf));
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
         /* index within this buffer */
         if (u.label) {
-            gotoLabel(u.label);
+            gotoLabel(args, u.label);
             return;
         }
     }
@@ -864,11 +864,11 @@ void followA(struct CmdArgs* args)
             delBuffer(buf);
         else
             deleteTab(CurrentTab);
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
         return;
     }
     loadLink(args, url, a->target, a->referer, NULL);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* view inline image */
@@ -890,11 +890,11 @@ void followI(struct CmdArgs* args)
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
-        disp_err_message(emsg, FALSE);
+        disp_err_message(args, emsg, FALSE);
     } else if (buf != NO_BUFFER) {
-        pushBuffer(buf);
+        pushBuffer(args, buf);
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* submit form */
@@ -933,7 +933,7 @@ void topA(struct CmdArgs* args)
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* go to the last anchor */
@@ -968,7 +968,7 @@ void lastA(struct CmdArgs* args)
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* go to the nth anchor */
@@ -997,67 +997,67 @@ void nthA(struct CmdArgs* args)
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* go to the next anchor */
 void nextA(struct CmdArgs* args)
 {
-    _nextA(FALSE);
+    _nextA(args, false);
 }
 
 /* go to the previous anchor */
 void prevA(struct CmdArgs* args)
 {
-    _prevA(FALSE);
+    _prevA(args, false);
 }
 
 /* go to the next visited anchor */
 void nextVA(struct CmdArgs* args)
 {
-    _nextA(TRUE);
+    _nextA(args, true);
 }
 
 /* go to the previous visited anchor */
 void prevVA(struct CmdArgs* args)
 {
-    _prevA(TRUE);
+    _prevA(args, true);
 }
 
 /* go to the next left anchor */
 void nextL(struct CmdArgs* args)
 {
-    nextX(-1, 0);
+    nextX(args, -1, 0);
 }
 
 /* go to the next left-up anchor */
 void nextLU(struct CmdArgs* args)
 {
-    nextX(-1, -1);
+    nextX(args, -1, -1);
 }
 
 /* go to the next right anchor */
 void nextR(struct CmdArgs* args)
 {
-    nextX(1, 0);
+    nextX(args, 1, 0);
 }
 
 /* go to the next right-down anchor */
 void nextRD(struct CmdArgs* args)
 {
-    nextX(1, 1);
+    nextX(args, 1, 1);
 }
 
 /* go to the next downward anchor */
 void nextD(struct CmdArgs* args)
 {
-    nextY(1);
+    nextY(args, 1);
 }
 
 /* go to the next upward anchor */
 void nextU(struct CmdArgs* args)
 {
-    nextY(-1);
+    nextY(args, -1);
 }
 
 /* go to the next bufferr */
@@ -1075,7 +1075,7 @@ void nextBf(struct CmdArgs* args)
         }
         Currentbuf = buf;
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* go to the previous bufferr */
@@ -1093,7 +1093,7 @@ void prevBf(struct CmdArgs* args)
         }
         Currentbuf = buf;
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* delete current buffer and back to the previous buffer */
@@ -1104,10 +1104,10 @@ void backBf(struct CmdArgs* args)
     if (!checkBackBuffer(Currentbuf)) {
         if (close_tab_back && nTab >= 1) {
             deleteTab(CurrentTab);
-            displayBuffer(Currentbuf, B_FORCE_REDRAW);
+            displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
         } else
             /* FIXME: gettextize? */
-            disp_message("Can't go back...", TRUE);
+            disp_message(args, "Can't go back...", TRUE);
         return;
     }
 
@@ -1141,7 +1141,7 @@ void backBf(struct CmdArgs* args)
             delBuffer(Currentbuf);
         }
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void deletePrevBuf(struct CmdArgs* args)
@@ -1202,7 +1202,7 @@ void adBmark(struct CmdArgs* args)
 /* option setting */
 void ldOpt(struct CmdArgs* args)
 {
-    cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
+    cmd_loadBuffer(args, load_option_panel(), BP_NO_URL, LB_NOLINK);
 }
 
 /* set an option */
@@ -1217,19 +1217,19 @@ void setOpt(struct CmdArgs* args)
         }
         opt = inputStrHist(args, "Set option: ", opt, TextHist);
         if (opt == NULL || *opt == '\0') {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
     }
     if (set_param_option(opt))
-        sync_with_option();
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+        sync_with_option(args);
+    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
 }
 
 /* error message list */
 void msgs(struct CmdArgs* args)
 {
-    cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
+    cmd_loadBuffer(args, message_list_panel(), BP_NO_URL, LB_NOLINK);
 }
 
 /* page info */
@@ -1239,13 +1239,13 @@ void pginfo(struct CmdArgs* args)
 
     if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != NULL) {
         Currentbuf = buf;
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     if ((buf = Currentbuf->linkBuffer[LB_INFO]) != NULL)
         delBuffer(buf);
     buf = page_info_panel(Currentbuf);
-    cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
+    cmd_loadBuffer(args, buf, BP_NORMAL, LB_INFO);
 }
 
 /* link menu */
@@ -1256,7 +1256,7 @@ void linkMn(struct CmdArgs* args)
         return;
 
     if (*(l->url) == '#') {
-        gotoLabel(l->url + 1);
+        gotoLabel(args, l->url + 1);
         return;
     }
 
@@ -1286,30 +1286,26 @@ void movlistMn(struct CmdArgs* args)
 /* link,anchor,image list */
 void linkLst(struct CmdArgs* args)
 {
-    struct Buffer* buf;
-
-    buf = link_list_panel(Currentbuf);
+    struct Buffer* buf = link_list_panel(Currentbuf);
     if (buf != NULL) {
         buf->document_charset = Currentbuf->document_charset;
-        cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
+        cmd_loadBuffer(args, buf, BP_NORMAL, LB_NOLINK);
     }
 }
 
 /* cookie list */
 void cooLst(struct CmdArgs* args)
 {
-    struct Buffer* buf;
-
-    buf = cookie_list_panel();
+    struct Buffer* buf = cookie_list_panel();
     if (buf != NULL)
-        cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
+        cmd_loadBuffer(args, buf, BP_NO_URL, LB_NOLINK);
 }
 
 /* History page */
 void ldHist(struct CmdArgs* args)
 {
     Str html = historyBuffer(URLHist);
-    cmd_loadBuffer(loadHTMLString(html), BP_NO_URL, LB_NOLINK);
+    cmd_loadBuffer(args, loadHTMLString(html), BP_NO_URL, LB_NOLINK);
 }
 
 /* download HREF link */
@@ -1343,7 +1339,7 @@ void svBuf(struct CmdArgs* args)
         /* FIXME: gettextize? */
         qfile = inputLineHist(args, "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
         if (qfile == NULL || *qfile == '\0') {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
     }
@@ -1358,7 +1354,7 @@ void svBuf(struct CmdArgs* args)
         }
         file = expandPath(file);
         if (checkOverWrite(args, file) < 0) {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
         f = fopen(file, "w");
@@ -1367,7 +1363,7 @@ void svBuf(struct CmdArgs* args)
     if (f == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
-        disp_err_message(emsg, TRUE);
+        disp_err_message(args, emsg, TRUE);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
@@ -1375,7 +1371,7 @@ void svBuf(struct CmdArgs* args)
         pclose(f);
     else
         fclose(f);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* save source */
@@ -1393,19 +1389,19 @@ void svSrc(struct CmdArgs* args)
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
     doFileCopy(args, Currentbuf->sourcefile, file);
     PermitSaveToPipe = FALSE;
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* peek URL */
 void peekURL(struct CmdArgs* args)
 {
-    _peekURL(0);
+    _peekURL(args, 0);
 }
 
 /* peek URL of image */
 void peekIMG(struct CmdArgs* args)
 {
-    _peekURL(1);
+    _peekURL(args, 1);
 }
 
 void curURL(struct CmdArgs* args)
@@ -1436,7 +1432,7 @@ void curURL(struct CmdArgs* args)
         offset = (n - 1) * (COLS - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-    disp_message_nomouse(&s->ptr[offset], TRUE);
+    disp_message_nomouse(args, &s->ptr[offset], TRUE);
 }
 /* view HTML source */
 
@@ -1448,7 +1444,7 @@ void vwSrc(struct CmdArgs* args)
         return;
     if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL || (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
         Currentbuf = buf;
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     if (Currentbuf->sourcefile == NULL) {
@@ -1513,8 +1509,8 @@ void vwSrc(struct CmdArgs* args)
 
     buf->need_reshape = TRUE;
     reshapeBuffer(args, buf);
-    pushBuffer(buf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    pushBuffer(args, buf);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 /* reload */
@@ -1532,13 +1528,13 @@ void reload(struct CmdArgs* args)
             return;
         }
         /* FIXME: gettextize? */
-        disp_err_message("Can't reload...", TRUE);
+        disp_err_message(args, "Can't reload...", TRUE);
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
-        disp_err_message("Can't reload stdin", TRUE);
+        disp_err_message(args, "Can't reload stdin", TRUE);
         return;
     }
     copyBuffer(&sbuf, Currentbuf);
@@ -1548,7 +1544,7 @@ void reload(struct CmdArgs* args)
             refresh();
         }
         if (!(buf = renderFrame(args, fbuf, 1))) {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
         if (fbuf->linkBuffer[LB_FRAME]) {
@@ -1558,13 +1554,13 @@ void reload(struct CmdArgs* args)
         }
         fbuf->linkBuffer[LB_FRAME] = buf;
         buf->linkBuffer[LB_N_FRAME] = fbuf;
-        pushBuffer(buf);
+        pushBuffer(args, buf);
         Currentbuf = buf;
         if (Currentbuf->firstLine) {
             COPY_BUFROOT(Currentbuf, &sbuf);
             restorePosition(Currentbuf, &sbuf);
         }
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
         return;
     } else if (Currentbuf->frameset != NULL)
         fbuf = Currentbuf->linkBuffer[LB_FRAME];
@@ -1601,10 +1597,10 @@ void reload(struct CmdArgs* args)
         unlink(request->body);
     if (buf == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message("Can't reload...", TRUE);
+        disp_err_message(args, "Can't reload...", TRUE);
         return;
     } else if (buf == NO_BUFFER) {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     if (fbuf != NULL)
@@ -1621,7 +1617,7 @@ void reload(struct CmdArgs* args)
         COPY_BUFROOT(Currentbuf, &sbuf);
         restorePosition(Currentbuf, &sbuf);
     }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* reshape */
@@ -1629,7 +1625,7 @@ void reshape(struct CmdArgs* args)
 {
     Currentbuf->need_reshape = TRUE;
     reshapeBuffer(args, Currentbuf);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void docCSet(struct CmdArgs* args)
@@ -1641,10 +1637,10 @@ void docCSet(struct CmdArgs* args)
             wc_ces_to_charset(Currentbuf->document_charset));
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
-    _docCSet(charset);
+    _docCSet(args, charset);
 }
 
 void defCSet(struct CmdArgs* args)
@@ -1657,13 +1653,13 @@ void defCSet(struct CmdArgs* args)
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         DocumentCharset = charset;
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void chkURL(struct CmdArgs* args)
 {
     chkURLBuffer(Currentbuf);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void chkWORD(struct CmdArgs* args)
@@ -1674,13 +1670,13 @@ void chkWORD(struct CmdArgs* args)
     if (p == NULL)
         return;
     reAnchorWord(Currentbuf, Currentbuf->currentLine, spos, epos);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void chkNMID(struct CmdArgs* args)
 {
     chkNMIDBuffer(Currentbuf);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 /* render frames */
@@ -1690,13 +1686,13 @@ void rFrame(struct CmdArgs* args)
 
     if ((buf = Currentbuf->linkBuffer[LB_FRAME]) != NULL) {
         Currentbuf = buf;
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     if (Currentbuf->frameset == NULL) {
         if ((buf = Currentbuf->linkBuffer[LB_N_FRAME]) != NULL) {
             Currentbuf = buf;
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
         }
         return;
     }
@@ -1706,27 +1702,27 @@ void rFrame(struct CmdArgs* args)
     }
     buf = renderFrame(args, Currentbuf, 0);
     if (buf == NULL) {
-        displayBuffer(Currentbuf, B_NORMAL);
+        displayBuffer(args, Currentbuf, B_NORMAL);
         return;
     }
     buf->linkBuffer[LB_N_FRAME] = Currentbuf;
     Currentbuf->linkBuffer[LB_FRAME] = buf;
-    pushBuffer(buf);
+    pushBuffer(args, buf);
     if (fmInitialized && display_ok)
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
 }
 
 void extbrz(struct CmdArgs* args)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL) {
         /* FIXME: gettextize? */
-        disp_err_message("Can't browse...", TRUE);
+        disp_err_message(args, "Can't browse...", TRUE);
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
-        disp_err_message("Can't browse stdin", TRUE);
+        disp_err_message(args, "Can't browse stdin", TRUE);
         return;
     }
     invoke_browser(args, parsedURL2Str(&Currentbuf->currentURL)->ptr);
@@ -1773,7 +1769,7 @@ void curlno(struct CmdArgs* args)
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
 
-    disp_message(tmp->ptr, FALSE);
+    disp_message(args, tmp->ptr, FALSE);
 }
 
 void dispI(struct CmdArgs* args)
@@ -1789,7 +1785,7 @@ void dispI(struct CmdArgs* args)
      */
     Currentbuf->image_flag = IMG_FLAG_AUTO;
     Currentbuf->need_reshape = TRUE;
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
 }
 
 void stopI(struct CmdArgs* args)
@@ -1801,12 +1797,12 @@ void stopI(struct CmdArgs* args)
      * return;
      */
     Currentbuf->image_flag = IMG_FLAG_SKIP;
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
 }
 
 void dispVer(struct CmdArgs* args)
 {
-    disp_message(Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
+    disp_message(args, Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
 }
 
 void wrapToggle(struct CmdArgs* args)
@@ -1814,11 +1810,11 @@ void wrapToggle(struct CmdArgs* args)
     if (WrapSearch) {
         WrapSearch = FALSE;
         /* FIXME: gettextize? */
-        disp_message("Wrap search off", TRUE);
+        disp_message(args, "Wrap search off", TRUE);
     } else {
         WrapSearch = TRUE;
         /* FIXME: gettextize? */
-        disp_message("Wrap search on", TRUE);
+        disp_message(args, "Wrap search on", TRUE);
     }
 }
 
@@ -1839,7 +1835,7 @@ void execCmd(struct CmdArgs* args)
     if (data == NULL || *data == '\0') {
         data = inputStrHist(args, "command [; ...]: ", "", TextHist);
         if (data == NULL) {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
     }
@@ -1861,7 +1857,7 @@ void execCmd(struct CmdArgs* args)
         w3mFunc(cmd);
         CurrentCmdData = NULL;
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void setAlarm(struct CmdArgs* args)
@@ -1874,7 +1870,7 @@ void setAlarm(struct CmdArgs* args)
     if (data == NULL || *data == '\0') {
         data = inputStrHist(args, "(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
     }
@@ -1886,14 +1882,12 @@ void setAlarm(struct CmdArgs* args)
     if (cmd >= 0) {
         data = getQWord(&data);
         setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-        disp_message_nsec(Sprintf("%dsec %s %s", sec, cmd,
-                              data)
-                              ->ptr,
-            FALSE, 1, FALSE, TRUE);
+        disp_message_nsec(args, Sprintf("%dsec %s %s", sec, cmd, data)->ptr,
+            false, 1, false, true);
     } else {
         setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, "NOTHING", NULL);
     }
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void reinit(struct CmdArgs* args)
@@ -1902,16 +1896,16 @@ void reinit(struct CmdArgs* args)
 
     if (resource == NULL) {
         init_rc();
-        sync_with_option();
+        sync_with_option(args);
         initCookie();
-        displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+        displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
         return;
     }
 
     if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
         init_rc();
-        sync_with_option();
-        displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+        sync_with_option(args);
+        displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
         return;
     }
 
@@ -1921,7 +1915,7 @@ void reinit(struct CmdArgs* args)
     }
 
     if (!strcasecmp(resource, "KEYMAP")) {
-        initKeymap(TRUE);
+        initKeymap(args, TRUE);
         return;
     }
 
@@ -1940,7 +1934,7 @@ void reinit(struct CmdArgs* args)
         return;
     }
 
-    disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
+    disp_err_message(args, Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
 }
 
 void defKey(struct CmdArgs* args)
@@ -1950,18 +1944,18 @@ void defKey(struct CmdArgs* args)
     if (data == NULL || *data == '\0') {
         data = inputStrHist(args, "Key definition: ", "", TextHist);
         if (data == NULL || *data == '\0') {
-            displayBuffer(Currentbuf, B_NORMAL);
+            displayBuffer(args, Currentbuf, B_NORMAL);
             return;
         }
     }
-    setKeymap(allocStr(data, -1), -1, TRUE);
-    displayBuffer(Currentbuf, B_NORMAL);
+    setKeymap(args, allocStr(data, -1), -1, TRUE);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void newT(struct CmdArgs* args)
 {
     _newT();
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
 }
 
 void closeT(struct CmdArgs* args)
@@ -1976,7 +1970,7 @@ void closeT(struct CmdArgs* args)
         tab = CurrentTab;
     if (tab)
         deleteTab(tab);
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
 }
 
 void nextT(struct CmdArgs* args)
@@ -1991,7 +1985,7 @@ void nextT(struct CmdArgs* args)
         else
             CurrentTab = FirstTab;
     }
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
 }
 
 void prevT(struct CmdArgs* args)
@@ -2006,7 +2000,7 @@ void prevT(struct CmdArgs* args)
         else
             CurrentTab = LastTab;
     }
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
 }
 
 void tabA(struct CmdArgs* args)
@@ -2028,24 +2022,20 @@ void tabrURL(struct CmdArgs* args)
 
 void tabR(struct CmdArgs* args)
 {
-    TabBuffer* tab;
-    int i;
-
-    for (tab = CurrentTab, i = 0; tab && i < PREC_NUM;
+    TabBuffer* tab = CurrentTab;
+    for (int i = 0; tab && i < PREC_NUM;
         tab = tab->nextTab, i++)
         ;
-    moveTab(CurrentTab, tab ? tab : LastTab, TRUE);
+    moveTab(args, CurrentTab, tab ? tab : LastTab, true);
 }
 
 void tabL(struct CmdArgs* args)
 {
-    TabBuffer* tab;
-    int i;
-
-    for (tab = CurrentTab, i = 0; tab && i < PREC_NUM;
+    TabBuffer* tab = CurrentTab;
+    for (int i = 0; tab && i < PREC_NUM;
         tab = tab->prevTab, i++)
         ;
-    moveTab(CurrentTab, tab ? tab : FirstTab, FALSE);
+    moveTab(args, CurrentTab, tab ? tab : FirstTab, FALSE);
 }
 
 void ldDL(struct CmdArgs* args)
@@ -2064,7 +2054,7 @@ void undoPos(struct CmdArgs* args)
         return;
     for (i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
         ;
-    resetPos(b);
+    resetPos(args, b);
 }
 
 void redoPos(struct CmdArgs* args)
@@ -2078,7 +2068,7 @@ void redoPos(struct CmdArgs* args)
         return;
     for (i = 0; i < PREC_NUM && b->next; i++, b = b->next)
         ;
-    resetPos(b);
+    resetPos(args, b);
 }
 
 void cursorTop(struct CmdArgs* args)
@@ -2088,7 +2078,7 @@ void cursorTop(struct CmdArgs* args)
     Currentbuf->currentLine = lineSkip(Currentbuf, Currentbuf->topLine,
         0, FALSE);
     arrangeLine(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void cursorMiddle(struct CmdArgs* args)
@@ -2100,7 +2090,7 @@ void cursorMiddle(struct CmdArgs* args)
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, FALSE);
     arrangeLine(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void cursorBottom(struct CmdArgs* args)
@@ -2112,7 +2102,7 @@ void cursorBottom(struct CmdArgs* args)
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, FALSE);
     arrangeLine(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(args, Currentbuf, B_NORMAL);
 }
 
 void mainMn(struct CmdArgs* args)

@@ -26,7 +26,7 @@ static char keymap_initialized = FALSE;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(char* p, int lineno, int verbose)
+void setKeymap(struct CmdArgs *args, const char* p, int lineno, int verbose)
 {
     const char** map = NULL;
     char *s, *emsg;
@@ -43,7 +43,7 @@ void setKeymap(char* p, int lineno, int verbose)
             emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
         record_err_message(emsg);
         if (verbose)
-            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(args, emsg, FALSE, 1, TRUE, FALSE);
         return;
     }
     const char* cmd = getWord(&p);
@@ -56,7 +56,7 @@ void setKeymap(char* p, int lineno, int verbose)
             emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
         record_err_message(emsg);
         if (verbose)
-            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(args, emsg, FALSE, 1, TRUE, FALSE);
         return;
     }
     if (c & K_MULTI) {
@@ -118,12 +118,12 @@ void setKeymap(char* p, int lineno, int verbose)
 }
 
 static void
-interpret_keymap(FILE* kf, struct stat* current, int force)
+interpret_keymap(struct CmdArgs *args, FILE* kf, struct stat* current, int force)
 {
     int fd;
     struct stat kstat;
     Str line;
-    char *p, *s, *emsg;
+    const char *p, *s, *emsg;
     int lineno;
     wc_ces charset = SystemCharset;
     int verbose = 1;
@@ -161,24 +161,24 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
             emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
             record_err_message(emsg);
             if (verbose)
-                disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+                disp_message_nsec(args, emsg, FALSE, 1, TRUE, FALSE);
             continue;
         }
-        setKeymap(p, lineno, verbose);
+        setKeymap(args, p, lineno, verbose);
     }
 }
 
-void initKeymap(int force)
+void initKeymap(struct CmdArgs *args, int force)
 {
     FILE* kf;
 
     if ((kf = fopen(confFile(KEYMAP_FILE), "rt")) != NULL) {
-        interpret_keymap(kf, &sys_current_keymap_file,
+        interpret_keymap(args, kf, &sys_current_keymap_file,
             force || !keymap_initialized);
         fclose(kf);
     }
     if ((kf = fopen(rcFile(keymap_file), "rt")) != NULL) {
-        interpret_keymap(kf, &current_keymap_file,
+        interpret_keymap(args, kf, &current_keymap_file,
             force || !keymap_initialized);
         fclose(kf);
     }

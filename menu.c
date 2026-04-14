@@ -537,7 +537,7 @@ void popup_menu(struct CmdArgs *args, Menu* parent, Menu* menu)
     CurrentMenu = menu;
     while (active) {
         active = action_menu(args, CurrentMenu);
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
     }
     menu->active = 0;
     CurrentMenu = parent;
@@ -885,7 +885,7 @@ menu_search_forward(struct CmdArgs *args, Menu* menu, int from)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
         return found;
-    disp_message("Not found", true);
+    disp_message(args, "Not found", true);
     return -1;
 }
 
@@ -931,7 +931,7 @@ menu_search_backward(struct CmdArgs *args, Menu* menu, int from)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
         return found;
-    disp_message("Not found", true);
+    disp_message(args, "Not found", true);
     return -1;
 }
 
@@ -945,7 +945,7 @@ mSrchB(struct CmdArgs *args)
 }
 
 static int
-menu_search_next_previous(Menu* menu, int from, int reverse)
+menu_search_next_previous(struct CmdArgs *args, Menu* menu, int from, int reverse)
 {
     int found;
     static int (*routine[2])(Menu*, const char*, int) = {
@@ -953,7 +953,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
     };
 
     if (menuSearchRoutine == NULL) {
-        disp_message("No previous regular expression", true);
+        disp_message(args, "No previous regular expression", true);
         return -1;
     }
 
@@ -968,7 +968,7 @@ menu_search_next_previous(Menu* menu, int from, int reverse)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
         return found;
-    disp_message("Not found", true);
+    disp_message(args, "Not found", true);
     return -1;
 }
 
@@ -976,7 +976,7 @@ static int
 mSrchN(struct CmdArgs *args)
 {
     int mselect;
-    mselect = menu_search_next_previous(CurrentMenu, CurrentMenu->select, 0);
+    mselect = menu_search_next_previous(args, CurrentMenu, CurrentMenu->select, 0);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, 1);
     return (MENU_NOTHING);
@@ -985,7 +985,7 @@ mSrchN(struct CmdArgs *args)
 static int
 mSrchP(struct CmdArgs *args)
 {
-    int mselect = menu_search_next_previous(CurrentMenu, CurrentMenu->select, 1);
+    int mselect = menu_search_next_previous(args, CurrentMenu, CurrentMenu->select, 1);
     if (mselect >= 0)
         goto_menu(CurrentMenu, mselect, -1);
     return (MENU_NOTHING);
@@ -1153,7 +1153,7 @@ smDelBuf(struct CmdArgs *args)
     CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
                                                               : (CurrentMenu->nitem - 2);
 
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
     draw_all_menu(CurrentMenu);
     select_menu(CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);
@@ -1280,7 +1280,7 @@ smDelTab(struct CmdArgs *args)
     CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
                                                               : (CurrentMenu->nitem - 2);
 
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
     draw_all_menu(CurrentMenu);
     select_menu(CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);

@@ -545,7 +545,7 @@ void input_textarea(struct CmdArgs *args, struct FormItem* fi)
     f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message("Can't open temporary file", false);
+        disp_err_message(args, "Can't open temporary file", false);
         return;
     }
     if (fi->value)
@@ -560,7 +560,7 @@ void input_textarea(struct CmdArgs *args, struct FormItem* fi)
     f = fopen(tmpf, "r");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message("Can't open temporary file", false);
+        disp_err_message(args, "Can't open temporary file", false);
         goto input_end;
     }
     fi->value = Strnew();

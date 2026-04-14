@@ -105,7 +105,7 @@ int loadHistory(struct Hist* hist)
     return 0;
 }
 
-void saveHistory(struct Hist* hist, size_t size)
+void saveHistory(struct CmdArgs *args, struct Hist* hist, size_t size)
 {
     FILE* f;
     struct Hist* fhist;
@@ -124,7 +124,7 @@ void saveHistory(struct Hist* hist, size_t size)
     if (hist->mtime != (long long)st.st_mtime) {
         fhist = newHist();
         if (loadHistory(fhist) || mergeHistory(fhist, hist))
-            disp_err_message("Can't merge history", false);
+            disp_err_message(args, "Can't merge history", false);
         else
             hist = fhist;
     }
@@ -146,7 +146,7 @@ void saveHistory(struct Hist* hist, size_t size)
     return;
 
 fail:
-    disp_err_message("Can't open history", false);
+    disp_err_message(args, "Can't open history", false);
     return;
 }
 

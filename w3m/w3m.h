@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 struct CmdArgs {
+    int co_id;
     int ch;
 };
 

@@ -47,6 +47,7 @@ typedef struct _image {
 
 struct Buffer;
 struct Url;
+struct CmdArgs;
 
 extern void initImage(void);
 extern void termImage(void);

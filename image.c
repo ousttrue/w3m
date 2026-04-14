@@ -494,8 +494,8 @@ void loadImage(struct Buffer* buf, int flag)
                 }
                 image_list = NULL;
                 image_file = NULL;
-                if (image_buffer)
-                    displayBuffer(image_buffer, B_NORMAL);
+                // if (image_buffer)
+                //     displayBuffer(args, image_buffer, B_NORMAL);
                 return;
             }
             if (cache->loaded == IMG_FLAG_UNLOADED)

@@ -99,28 +99,82 @@ fn puts(str: []const u8) !void {
 }
 
 extern fn checkDownloadList() bool;
-extern fn submitCurrentBuffer(args: c.CmdArgs) bool;
+extern fn submitCurrentBuffer(args: *c.CmdArgs) bool;
 extern fn processCurrentEvent() bool;
 extern fn processCurrentBufferEvent() bool;
-extern fn processResizeAndImage() void;
+extern fn processResizeAndImage(args: *c.CmdArgs) void;
 extern var GlobalKeymap: [128][*c]const u8;
 extern fn setupCurrentBuffer() void;
 
 export fn w3m_loop() c_int {
-    if (run()) {
-        return 0;
-    } else |e| {
-        std.log.err("{}", .{e});
-        return 1;
+    root.co_start();
+
+    while (root.co_state() != .DEAD) {
+        const has_input = epoll.next(80) catch {
+            // error ?
+            break;
+        };
+
+        if (has_input) |_| {
+            var buf: [1]u8 = undefined;
+            const readsize = std.posix.read(
+                tty_in.handle,
+                &buf,
+            ) catch @panic("getch");
+            std.debug.assert(readsize == 1);
+
+            if (task_stack.backPtr()) |task| {
+                task.co_resume(buf[0]);
+                if (task.co_state() == .DEAD) {
+                    _ = task_stack.popBack();
+                }
+            } else {
+                // root
+                const ch: u8 = buf[0];
+                //         last_key = c;
+                //         if (CurrentAlarm->sec > 0) {
+                //             alarm(0);
+                //         }
+                if (std.ascii.isAscii(ch)) {
+                    if (('0' <= ch) and (ch <= '9') and (g.prec_num != 0 or std.mem.eql(u8, std.mem.span(GlobalKeymap[ch]), "NOTHING"))) {
+                        g.prec_num = g.prec_num * 10 + (ch - '0');
+                        if (g.prec_num > c.PREC_LIMIT)
+                            g.prec_num = c.PREC_LIMIT;
+                    } else {
+                        setupCurrentBuffer();
+                        g.CurrentKey = ch;
+                        w3mFunc(GlobalKeymap[ch]);
+
+                        g.prec_num = 0;
+                    }
+                }
+                // g.prev_key = g.CurrentKey;
+                g.CurrentKey = -1;
+                g.CurrentKeyData = null;
+            }
+        } else {
+            // timeout
+            if (task_stack.backPtr()) |task| {
+                task.co_resume(0);
+                if (task.co_state() == .DEAD) {
+                    _ = task_stack.popBack();
+                }
+            } else {
+                root.co_resume(0);
+            }
+        }
     }
+
+    return 0;
 }
 
-fn run() !void {
+export fn co_root(_args: ?*c.CmdArgs) void {
+    const args = _args.?;
     while (g.is_running) {
         if (checkDownloadList()) {
             c.ldDL(null);
         }
-        if (submitCurrentBuffer(.{})) {
+        if (submitCurrentBuffer(args)) {
             continue;
         }
         if (processCurrentEvent()) {
@@ -130,29 +184,9 @@ fn run() !void {
             continue;
         }
 
-        processResizeAndImage();
+        processResizeAndImage(args);
 
-        const ch = _getch_internal();
-        //         last_key = c;
-        //         if (CurrentAlarm->sec > 0) {
-        //             alarm(0);
-        //         }
-        if (std.ascii.isAscii(ch)) {
-            if (('0' <= ch) and (ch <= '9') and (g.prec_num != 0 or std.mem.eql(u8, std.mem.span(GlobalKeymap[ch]), "NOTHING"))) {
-                g.prec_num = g.prec_num * 10 + (ch - '0');
-                if (g.prec_num > c.PREC_LIMIT)
-                    g.prec_num = c.PREC_LIMIT;
-            } else {
-                setupCurrentBuffer();
-                g.CurrentKey = ch;
-                w3mFunc(GlobalKeymap[ch]);
-
-                g.prec_num = 0;
-            }
-        }
-        // g.prev_key = g.CurrentKey;
-        g.CurrentKey = -1;
-        g.CurrentKeyData = null;
+        co.coroutine_yield(S);
     }
 }
 
@@ -163,49 +197,85 @@ fn run() !void {
 const W3mTask = struct {
     func: defun.CmdFunc,
     args: c.CmdArgs,
-    co_id: c_int,
+
+    const State = enum(u8) {
+        DEAD = 0,
+        READY = 1,
+        RUNNING = 2,
+        SUSPEND = 3,
+    };
 
     export fn coroutine(_S: ?*co.schedule, p: ?*anyopaque) void {
         _ = _S;
         var this: *@This() = @ptrCast(@alignCast(p));
         this.func.func(&this.args);
     }
-};
-var task: ?W3mTask = null;
 
-// export fn foo(S: ?*co.schedule, ud: ?*anyopaque) void {
-//     const arg: *CmdArgs = @ptrCast(@alignCast(ud));
-//     const start = arg.n;
-//     for (0..5) |i| {
-//         std.debug.print("coroutine {} : {} + {}\n", .{ co.coroutine_running(S), start, i });
-//         co.coroutine_yield(S);
-//     }
-// }
-
-//
-// new task
-//
-export fn w3mFunc(cmd: [*c]const u8) void {
-    if (task != null) {
-        @panic("w3mFunc");
+    fn co_start(this: *@This()) void {
+        this.args.co_id = co.coroutine_new(S, &W3mTask.coroutine, this);
+        co.coroutine_resume(S, this.args.co_id);
     }
 
-    if (defun.getFunc(std.mem.span(cmd))) |found| {
-        task = .{
-            .func = found,
-            .args = .{},
-            .co_id = -1,
-        };
+    fn co_state(this: *@This()) State {
+        return @enumFromInt(co.coroutine_status(S, this.args.co_id));
+    }
 
-        if (task) |*t| {
-            t.co_id = co.coroutine_new(S, &W3mTask.coroutine, t);
-            co.coroutine_resume(S, t.co_id);
-            std.debug.assert(co.coroutine_status(S, t.co_id) == 0);
-            task = null;
+    fn co_resume(this: *@This(), ch: u8) void {
+        this.args.ch = ch;
+        co.coroutine_resume(S, this.args.co_id);
+    }
+
+    fn co_yield(this: *@This(), d: std.Io.Duration, args: *c.CmdArgs) c_int {
+        std.debug.assert(&this.args == args);
+        const start = std.Io.Clock.real.now(runtime.io);
+        while (true) {
+            co.coroutine_yield(S);
+            if (args.ch > 0) {
+                return args.ch;
+            } else {
+                const end = std.Io.Clock.real.now(runtime.io);
+                const duration = std.Io.Timestamp.durationTo(start, end);
+                if (duration.toMilliseconds() >= d.toMicroseconds()) {
+                    // timeout
+                    return 0;
+                }
+            }
         }
-    } else {
-        std.log.warn("{s} not found", .{cmd});
+        unreachable;
     }
+};
+
+var root: W3mTask = .{
+    .func = .{
+        .func = co_root,
+        .desc = "loop coroutine",
+    },
+    .args = .{},
+};
+
+var task_stack: std.Deque(W3mTask) = .initBuffer(&.{});
+
+fn pushFunc(func: defun.CmdFunc, args: c.CmdArgs) void {
+    task_stack.pushBack(runtime.allocator, .{
+        .func = func,
+        .args = args,
+    }) catch @panic("OOM");
+
+    if (task_stack.backPtr()) |task| {
+        task.co_start();
+        if (task.co_state() == .DEAD) {
+            _ = task_stack.popBack();
+        }
+    }
+}
+
+export fn w3mFunc(cmd: [*c]const u8) void {
+    const func = defun.getFunc(std.mem.span(cmd)) orelse {
+        std.log.warn("{s} not found", .{cmd});
+        return;
+    };
+
+    pushFunc(func, .{});
 }
 
 export fn ttyname_tty() [*c]const u8 {
@@ -679,58 +749,61 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 // }
 
-fn getch_async(io: std.Io) u8 {
-    var reader_buf: [1]u8 = undefined;
-    var tty_reader = tty_in.reader(io, &reader_buf);
-    var buf: [1]u8 = undefined;
-    if (tty_reader.interface.readSliceAll(&buf)) {
-        return buf[0];
-    } else |_| {
-        // canceled ?
-        return 0;
-    }
-}
+// fn getch_async(io: std.Io) u8 {
+//     var reader_buf: [1]u8 = undefined;
+//     var tty_reader = tty_in.reader(io, &reader_buf);
+//     var buf: [1]u8 = undefined;
+//     if (tty_reader.interface.readSliceAll(&buf)) {
+//         return buf[0];
+//     } else |_| {
+//         // canceled ?
+//         return 0;
+//     }
+// }
 
-fn _getch_internal() u8 {
-    if (peek_queue.popFront()) |ch| {
-        return ch;
-    }
-
-    const io = runtime.io;
-    var future = io.async(getch_async, .{io});
-    return future.await(io);
-}
+// fn _getch_internal() u8 {
+//     if (peek_queue.popFront()) |ch| {
+//         return ch;
+//     }
+//
+//     const io = runtime.io;
+//     var future = io.async(getch_async, .{io});
+//     return future.await(io);
+// }
 
 fn sleep_async(io: std.Io, duration: std.Io.Duration) void {
     io.sleep(duration, .awake) catch {};
 }
 
 /// return -1 if timeout
+/// call from coroutine
 export fn getch_timeout(ms: u32, args: ?*c.CmdArgs) c_int {
-    _ = args;
-
-    if (peek_queue.popFront()) |ch| {
-        return ch;
+    if (task_stack.backPtr()) |task| {
+        return task.co_yield(.fromMilliseconds(ms), args.?);
+    } else {
+        return root.co_yield(.fromMilliseconds(ms), args.?);
     }
-
-    const io = evented.io();
-
-    const InputOrTimeout = std.Io.Select(union(enum) {
-        input: u8,
-        timeout: void,
-    });
-    var buf: [1]InputOrTimeout.Union = undefined;
-    var select: InputOrTimeout = .init(io, &buf);
-
-    select.async(.input, getch_async, .{io});
-    select.async(.timeout, sleep_async, .{ io, std.Io.Duration.fromMilliseconds(ms) });
-
-    const winner = select.await() catch @panic("select.await");
-    defer select.cancelDiscard(); // cancel remaining, discard results
-    return switch (winner) {
-        .input => |ch| ch,
-        .timeout => -1,
-    };
+    // _ = args;
+    //
+    //
+    // const io = evented.io();
+    //
+    // const InputOrTimeout = std.Io.Select(union(enum) {
+    //     input: u8,
+    //     timeout: void,
+    // });
+    // var buf: [1]InputOrTimeout.Union = undefined;
+    // var select: InputOrTimeout = .init(io, &buf);
+    //
+    // select.async(.input, getch_async, .{io});
+    // select.async(.timeout, sleep_async, .{ io, std.Io.Duration.fromMilliseconds(ms) });
+    //
+    // const winner = select.await() catch @panic("select.await");
+    // defer select.cancelDiscard(); // cancel remaining, discard results
+    // return switch (winner) {
+    //     .input => |ch| ch,
+    //     .timeout => -1,
+    // };
 }
 
 export fn unget(ch: c_int) void {

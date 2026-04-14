@@ -89,8 +89,8 @@ static const char* guess_filename(const char* file);
 static int _MoveFile(const char* path1, const char* path2);
 static void uncompress_stream(struct URLFile* uf, const char** src);
 static FILE* lessopen_stream(const char* path);
-static struct Buffer* loadcmdout(const char* cmd,
-    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*),
+static struct Buffer* loadcmdout(struct CmdArgs *args, const char* cmd,
+    struct Buffer* (*loadproc)(struct CmdArgs *args, struct URLFile*, struct Buffer*),
     struct Buffer* defaultbuf);
 static void addnewline(struct Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
@@ -247,13 +247,13 @@ int currentLn(struct Buffer* buf)
         return 1;
 }
 
+typedef struct Buffer* (*LoadProc)(struct CmdArgs* args, struct URLFile*, struct Buffer*);
+
 static struct Buffer*
-loadSomething(struct URLFile* f,
-    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
+loadSomething(struct CmdArgs* args, struct URLFile* f, LoadProc loadproc, struct Buffer* defaultbuf)
 {
     struct Buffer* buf;
-
-    if ((buf = loadproc(f, defaultbuf)) == NULL)
+    if ((buf = loadproc(args, f, defaultbuf)) == NULL)
         return NULL;
 
     if (buf->buffername == NULL || buf->buffername[0] == '\0') {
@@ -531,7 +531,7 @@ int matchattr(const char* p, const char* attr, int len, Str* value)
     return 0;
 }
 
-void readHeader(struct CmdArgs *args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
+void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
 {
     char *p, *q;
     char* emsg;
@@ -751,12 +751,10 @@ void readHeader(struct CmdArgs *args, struct URLFile* uf, struct Buffer* newBuf,
                 int err;
                 if (show_cookie) {
                     if (flag & COO_SECURE)
-                        disp_message_nsec("Received a secured cookie", FALSE, 1,
-                            TRUE, FALSE);
+                        disp_message_nsec(args, "Received a secured cookie", FALSE, 1,
+                            TRUE, false);
                     else
-                        disp_message_nsec(Sprintf("Received cookie: %s=%s",
-                                              name->ptr, value->ptr)
-                                              ->ptr,
+                        disp_message_nsec(args, Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr,
                             FALSE, 1, TRUE, FALSE);
                 }
                 err = add_cookie(pu, name, value, expires, domain, path, flag,
@@ -787,11 +785,9 @@ void readHeader(struct CmdArgs *args, struct URLFile* uf, struct Buffer* newBuf,
                             emsg = "This cookie was rejected to prevent security violation.";
                         record_err_message(emsg);
                         if (show_cookie)
-                            disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+                            disp_message_nsec(args, emsg, FALSE, 1, TRUE, FALSE);
                     } else if (show_cookie)
-                        disp_message_nsec(Sprintf("Accepting invalid cookie: %s=%s",
-                                              name->ptr, value->ptr)
-                                              ->ptr,
+                        disp_message_nsec(args, Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)->ptr,
                             FALSE,
                             1, TRUE, FALSE);
                 }
@@ -1392,7 +1388,7 @@ findAuthentication(struct http_auth* hauth, struct Buffer* buf, char* auth_field
 }
 
 static void
-getAuthCookie(struct CmdArgs *args, struct http_auth* hauth, char* auth_header,
+getAuthCookie(struct CmdArgs* args, struct http_auth* hauth, char* auth_header,
     TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     struct Form* request,
     volatile Str* uname, volatile Str* pwd)
@@ -1511,7 +1507,7 @@ same_url_p(struct Url* pu1, struct Url* pu2)
 }
 
 static int
-checkRedirection(struct Url* pu)
+checkRedirection(struct CmdArgs* args, struct Url* pu)
 {
     static struct Url* puv = NULL;
     static int nredir = 0;
@@ -1528,13 +1524,13 @@ checkRedirection(struct Url* pu)
         /* FIXME: gettextize? */
         tmp = Sprintf("Number of redirections exceeded %d at %s",
             FollowRedirection, parsedURL2Str(pu)->ptr);
-        disp_err_message(tmp->ptr, FALSE);
+        disp_err_message(args, tmp->ptr, FALSE);
         return FALSE;
     } else if (nredir_size > 0 && (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) || (!(nredir % 2) && same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
         /* FIXME: gettextize? */
         tmp = Sprintf("Redirection loop detected (%s)",
             parsedURL2Str(pu)->ptr);
-        disp_err_message(tmp->ptr, FALSE);
+        disp_err_message(args, tmp->ptr, FALSE);
         return FALSE;
     }
     if (!puv) {
@@ -1561,15 +1557,15 @@ strtoclen(const char* s)
 /*
  * loadGeneralFile: load file to buffer
  */
-#define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile*, struct Buffer*)) doExternal)
+#define DO_EXTERNAL ((struct Buffer * (*)(struct CmdArgs * args, struct URLFile*, struct Buffer*)) doExternal)
 struct Buffer*
-loadGeneralFile(struct CmdArgs *args, const char* path, struct Url* volatile current, const char* referer,
+loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* volatile current, const char* referer,
     int flag, struct Form* volatile request)
 {
     struct URLFile f, *volatile of = NULL;
     struct Url pu;
     struct Buffer* b = NULL;
-    struct Buffer* (*volatile proc)(struct URLFile*, struct Buffer*) = loadBuffer;
+    struct Buffer* (*volatile proc)(struct CmdArgs* args, struct URLFile*, struct Buffer*) = loadBuffer;
     const char* volatile t = "text/plain", *p, * volatile real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
@@ -1593,13 +1589,13 @@ loadGeneralFile(struct CmdArgs *args, const char* path, struct Url* volatile cur
     prevtrap = NULL;
     add_auth_cookie_flag = 0;
 
-    checkRedirection(NULL);
+    checkRedirection(args, NULL);
 
 load_doc: {
     const char* sc_redirect;
     pu = parseURL2(tpath, current);
     sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
-    if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
+    if (sc_redirect && *sc_redirect && checkRedirection(args, &pu)) {
         tpath = (char*)sc_redirect;
         request = NULL;
         add_auth_cookie_flag = 0;
@@ -1649,9 +1645,7 @@ load_doc: {
             break;
         case SCM_UNKNOWN:
             /* FIXME: gettextize? */
-            disp_err_message(Sprintf("Unknown URI: %s",
-                                 parsedURL2Str(&pu)->ptr)
-                                 ->ptr,
+            disp_err_message(args, Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr,
                 FALSE);
             break;
         }
@@ -1699,7 +1693,7 @@ load_doc: {
         if (((http_response_code >= 301 && http_response_code <= 303)
                 || http_response_code == 307)
             && (p = checkHeader(t_buf, "Location:")) != NULL
-            && checkRedirection(&pu)) {
+            && checkRedirection(args, &pu)) {
             /* document moved */
             /* 301: Moved Permanently */
             /* 302: Found */
@@ -1850,7 +1844,7 @@ load_doc: {
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
         readHeader(args, &f, t_buf, searchHeader_through, &pu);
-        if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(&pu)) {
+        if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(args, &pu)) {
             /* document moved */
             tpath = url_encode(remove_space(p), NULL, 0);
             request = NULL;
@@ -2034,9 +2028,9 @@ page_loaded:
     t_buf->ssl_certificate = f.ssl_certificate;
     frame_source = flag & RG_FRAME_SRC;
     if (proc == DO_EXTERNAL) {
-        b = doExternal(f, t, t_buf);
+        b = doExternal(args, f, t, t_buf);
     } else {
-        b = loadSomething(&f, proc, t_buf);
+        b = loadSomething(args, &f, proc, t_buf);
     }
     UFclose(&f);
     frame_source = 0;
@@ -6328,7 +6322,7 @@ addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int
  * loadHTMLBuffer: read file and make new buffer
  */
 struct Buffer*
-loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf)
+loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf)
 {
     FILE* src = NULL;
     Str tmp;
@@ -6966,7 +6960,7 @@ Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset)
  * loadBuffer: read file and make new buffer
  */
 struct Buffer*
-loadBuffer(struct URLFile* uf, struct Buffer* volatile newBuf)
+loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile newBuf)
 {
     FILE* volatile src = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -7050,7 +7044,7 @@ _end:
 }
 
 struct Buffer*
-loadImageBuffer(struct URLFile* uf, struct Buffer* newBuf)
+loadImageBuffer(struct CmdArgs *args, struct URLFile* uf, struct Buffer* newBuf)
 {
     Image image;
     ImageCache* cache;
@@ -7188,8 +7182,8 @@ void saveBufferBody(struct Buffer* buf, FILE* f, int cont)
 }
 
 static struct Buffer*
-loadcmdout(const char* cmd,
-    struct Buffer* (*loadproc)(struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
+loadcmdout(struct CmdArgs *args, const char* cmd,
+    struct Buffer* (*loadproc)(struct CmdArgs *args, struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
 {
     FILE *f, *popen(const char*, const char*);
     struct Buffer* buf;
@@ -7201,7 +7195,7 @@ loadcmdout(const char* cmd,
     if (f == NULL)
         return NULL;
     init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
-    buf = loadproc(&uf, defaultbuf);
+    buf = loadproc(args, &uf, defaultbuf);
     UFclose(&uf);
     return buf;
 }
@@ -7211,11 +7205,9 @@ loadcmdout(const char* cmd,
  */
 #define SHELLBUFFERNAME "*Shellout*"
 struct Buffer*
-getshell(const char* cmd)
+getshell(struct CmdArgs *args, const char* cmd)
 {
-    struct Buffer* buf;
-
-    buf = loadcmdout(cmd, loadBuffer, NULL);
+    struct Buffer* buf = loadcmdout(args, cmd, loadBuffer, NULL);
     if (buf == NULL)
         return NULL;
     buf->filename = cmd;
@@ -7276,7 +7268,7 @@ openPagerBuffer(InputStream stream, struct Buffer* buf)
 }
 
 struct Buffer*
-openGeneralPagerBuffer(struct CmdArgs *args, InputStream stream)
+openGeneralPagerBuffer(struct CmdArgs* args, InputStream stream)
 {
     struct Buffer* buf;
     const char* t = "text/plain";
@@ -7305,7 +7297,7 @@ openGeneralPagerBuffer(struct CmdArgs *args, InputStream stream)
         DefaultType = NULL;
     }
     if (is_html_type(t)) {
-        buf = loadHTMLBuffer(&uf, t_buf);
+        buf = loadHTMLBuffer(args, &uf, t_buf);
         buf->type = "text/html";
     } else if (is_plain_text_type(t)) {
         if (IStype(stream) != IST_ENCODED)
@@ -7313,11 +7305,11 @@ openGeneralPagerBuffer(struct CmdArgs *args, InputStream stream)
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
     } else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
-        buf = loadImageBuffer(&uf, t_buf);
+        buf = loadImageBuffer(args, &uf, t_buf);
         buf->type = "text/html";
     } else {
         if (searchExtViewer(t)) {
-            buf = doExternal(uf, t, t_buf);
+            buf = doExternal(args, uf, t, t_buf);
             UFclose(&uf);
             if (buf == NULL || buf == NO_BUFFER)
                 return buf;
@@ -7511,7 +7503,7 @@ _end:
 }
 
 struct Buffer*
-doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
+doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 {
     Str tmpf, command;
     struct mailcap* mcap;
@@ -7566,14 +7558,14 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
         defaultbuf->mailcap = mcap;
     }
     if (mcap->flags & MAILCAP_HTMLOUTPUT) {
-        buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
+        buf = loadcmdout(args, command->ptr, loadHTMLBuffer, defaultbuf);
         if (buf && buf != NO_BUFFER) {
             buf->type = "text/html";
             buf->mailcap_source = buf->sourcefile;
             buf->sourcefile = src;
         }
     } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
-        buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
+        buf = loadcmdout(args, command->ptr, loadBuffer, defaultbuf);
         if (buf && buf != NO_BUFFER) {
             buf->type = "text/plain";
             buf->mailcap_source = buf->sourcefile;
@@ -7585,7 +7577,7 @@ doExternal(struct URLFile uf, const char* type, struct Buffer* defaultbuf)
             mySystem(command->ptr, 0);
             fmInit();
             if (CurrentTab && Currentbuf)
-                displayBuffer(Currentbuf, B_FORCE_REDRAW);
+                displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
         } else {
             mySystem(command->ptr, 1);
         }
@@ -7640,7 +7632,7 @@ _MoveFile(const char* path1, const char* path2)
     return 0;
 }
 
-int _doFileCopy(struct CmdArgs *args, const char* tmpf, const char* defstr, int download)
+int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int download)
 {
     Str msg;
     Str filen;
@@ -7675,14 +7667,14 @@ int _doFileCopy(struct CmdArgs *args, const char* tmpf, const char* defstr, int 
             /* FIXME: gettextize? */
             msg = Sprintf("Can't copy. %s and %s are identical.",
                 conv_from_system(tmpf), conv_from_system(p));
-            disp_err_message(msg->ptr, FALSE);
+            disp_err_message(args, msg->ptr, FALSE);
             return -1;
         }
         if (!download) {
             if (_MoveFile(tmpf, p) < 0) {
                 /* FIXME: gettextize? */
                 msg = Sprintf("Can't save to %s", conv_from_system(p));
-                disp_err_message(msg->ptr, FALSE);
+                disp_err_message(args, msg->ptr, FALSE);
             }
             return -1;
         }
@@ -7740,14 +7732,14 @@ int _doFileCopy(struct CmdArgs *args, const char* tmpf, const char* defstr, int 
     return 0;
 }
 
-int doFileMove(struct CmdArgs *args, const char* tmpf, const char* defstr)
+int doFileMove(struct CmdArgs* args, const char* tmpf, const char* defstr)
 {
     int ret = doFileCopy(args, tmpf, defstr);
     unlink(tmpf);
     return ret;
 }
 
-int doFileSave(struct CmdArgs *args, struct URLFile uf, const char* defstr)
+int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
 {
     Str msg;
     Str filen;
@@ -7772,7 +7764,7 @@ int doFileSave(struct CmdArgs *args, struct URLFile uf, const char* defstr)
             /* FIXME: gettextize? */
             msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));
-            disp_err_message(msg->ptr, FALSE);
+            disp_err_message(args, msg->ptr, FALSE);
             return -1;
         }
         /*
@@ -7871,7 +7863,7 @@ int checkSaveFile(InputStream stream, const char* path2)
     return 0;
 }
 
-int checkOverWrite(struct CmdArgs *args, const char* path)
+int checkOverWrite(struct CmdArgs* args, const char* path)
 {
     struct stat st;
     if (stat(path, &st) < 0)

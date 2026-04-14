@@ -44,7 +44,7 @@ extern int getMetaRefreshParam(char* q, Str* refresh_uri);
 struct _textlinelist;
 extern void HTMLlineproc2(struct Buffer* buf, struct _textlinelist* tl);
 struct URLFile;
-extern struct Buffer* loadHTMLBuffer(struct URLFile* f, struct Buffer* newBuf);
+extern struct Buffer* loadHTMLBuffer(struct CmdArgs *args, struct URLFile* f, struct Buffer* newBuf);
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
 extern void showProgress(int64_t* linelen, int64_t* trbyte);

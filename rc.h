@@ -9,7 +9,7 @@ void init_tmp(void);
 struct Buffer* load_option_panel(void);
 struct parsed_tagarg;
 void panel_set_option(struct CmdArgs *args, struct parsed_tagarg*);
-void sync_with_option(void);
+void sync_with_option(struct CmdArgs *args);
 char* rcFile(const char* base);
 char* etcFile(const char* base);
 char* confFile(const char* base);
