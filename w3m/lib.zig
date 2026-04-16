@@ -9,8 +9,8 @@ const content_type = @import("content_type.zig");
 const guessContentType = content_type.guessContentType;
 const terminfo_entry = @import("terminfo_entry.zig");
 const defun = @import("defun.zig");
-const co = @import("co");
 const Epoll = @import("Epoll.zig");
+const w3m_task = @import("co_task.zig");
 
 var tty: TtyLinux = undefined;
 // blocking tty stdout
@@ -24,8 +24,6 @@ var peek_queue: std.Deque(u8) = .initBuffer(&.{});
 // var evented: std.Io.Evented = undefined;
 var evented: std.Io.Threaded = undefined;
 
-var S: *co.schedule = undefined;
-var co_current: ?c_int = null;
 var epoll: Epoll = undefined;
 
 // var key_input_queue: std.Io.Queue(u8) = .init(&.{});
@@ -72,16 +70,14 @@ pub fn init(process_init: std.process.Init) void {
     tty_in = std.Io.File.stdin();
     // tty_reader = std.Io.File.stdin().reader(evented.io(), &read_buf);
 
-    S = co.coroutine_open() orelse {
-        @panic("coroutine_open");
-    };
+    w3m_task.init();
 
     epoll = .init();
     epoll.add_fd(tty_in.handle);
 }
 
 pub fn deinit() void {
-    co.coroutine_close(S);
+    w3m_task.deinit();
 
     evented.deinit();
     flush_tty();
@@ -123,10 +119,10 @@ export fn w3m_loop() c_int {
             ) catch @panic("getch");
             std.debug.assert(readsize == 1);
 
-            if (task_stack.backPtr()) |task| {
+            if (w3m_task.current()) |task| {
                 task.co_resume(buf[0]);
                 if (task.co_state() == .DEAD) {
-                    _ = task_stack.popBack();
+                    w3m_task.pop();
                 }
             } else {
                 // root
@@ -154,10 +150,10 @@ export fn w3m_loop() c_int {
             }
         } else {
             // timeout
-            if (task_stack.backPtr()) |task| {
+            if (w3m_task.current()) |task| {
                 task.co_resume(0);
                 if (task.co_state() == .DEAD) {
-                    _ = task_stack.popBack();
+                    w3m_task.pop();
                 }
             } else {
                 root.co_resume(0);
@@ -186,66 +182,11 @@ export fn co_root(_args: ?*c.CmdArgs) void {
 
         processResizeAndImage(args);
 
-        co.coroutine_yield(S);
+        w3m_task.co_block();
     }
 }
 
-// const args = struct {
-//     n: c_int,
-// };
-
-const W3mTask = struct {
-    func: defun.CmdFunc,
-    args: c.CmdArgs,
-
-    const State = enum(u8) {
-        DEAD = 0,
-        READY = 1,
-        RUNNING = 2,
-        SUSPEND = 3,
-    };
-
-    export fn coroutine(_S: ?*co.schedule, p: ?*anyopaque) void {
-        _ = _S;
-        var this: *@This() = @ptrCast(@alignCast(p));
-        this.func.func(&this.args);
-    }
-
-    fn co_start(this: *@This()) void {
-        this.args.co_id = co.coroutine_new(S, &W3mTask.coroutine, this);
-        co.coroutine_resume(S, this.args.co_id);
-    }
-
-    fn co_state(this: *@This()) State {
-        return @enumFromInt(co.coroutine_status(S, this.args.co_id));
-    }
-
-    fn co_resume(this: *@This(), ch: u8) void {
-        this.args.ch = ch;
-        co.coroutine_resume(S, this.args.co_id);
-    }
-
-    fn co_yield(this: *@This(), d: std.Io.Duration, args: *c.CmdArgs) c_int {
-        std.debug.assert(&this.args == args);
-        const start = std.Io.Clock.real.now(runtime.io);
-        while (true) {
-            co.coroutine_yield(S);
-            if (args.ch > 0) {
-                return args.ch;
-            } else {
-                const end = std.Io.Clock.real.now(runtime.io);
-                const duration = std.Io.Timestamp.durationTo(start, end);
-                if (duration.toMilliseconds() >= d.toMicroseconds()) {
-                    // timeout
-                    return 0;
-                }
-            }
-        }
-        unreachable;
-    }
-};
-
-var root: W3mTask = .{
+var root: w3m_task.W3mTask = .{
     .func = .{
         .func = co_root,
         .desc = "loop coroutine",
@@ -253,29 +194,13 @@ var root: W3mTask = .{
     .args = .{},
 };
 
-var task_stack: std.Deque(W3mTask) = .initBuffer(&.{});
-
-fn pushFunc(func: defun.CmdFunc, args: c.CmdArgs) void {
-    task_stack.pushBack(runtime.allocator, .{
-        .func = func,
-        .args = args,
-    }) catch @panic("OOM");
-
-    if (task_stack.backPtr()) |task| {
-        task.co_start();
-        if (task.co_state() == .DEAD) {
-            _ = task_stack.popBack();
-        }
-    }
-}
-
 export fn w3mFunc(cmd: [*c]const u8) void {
     const func = defun.getFunc(std.mem.span(cmd)) orelse {
         std.log.warn("{s} not found", .{cmd});
         return;
     };
 
-    pushFunc(func, .{});
+    w3m_task.pushFunc(func, .{});
 }
 
 export fn ttyname_tty() [*c]const u8 {
@@ -778,7 +703,7 @@ fn sleep_async(io: std.Io, duration: std.Io.Duration) void {
 /// return -1 if timeout
 /// call from coroutine
 export fn getch_timeout(ms: u32, args: ?*c.CmdArgs) c_int {
-    if (task_stack.backPtr()) |task| {
+    if (w3m_task.current()) |task| {
         return task.co_yield(.fromMilliseconds(ms), args.?);
     } else {
         return root.co_yield(.fromMilliseconds(ms), args.?);
