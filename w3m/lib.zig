@@ -10,7 +10,12 @@ const guessContentType = content_type.guessContentType;
 const terminfo_entry = @import("terminfo_entry.zig");
 const defun = @import("defun.zig");
 const Epoll = @import("Epoll.zig");
-const w3m_task = @import("co_task.zig");
+const config = @import("config");
+
+const w3m_task = switch (config.task_backend) {
+    .coroutine => @import("task_coroutine.zig"),
+    .thread => @import("task_thread.zig"),
+};
 
 var tty: TtyLinux = undefined;
 // blocking tty stdout
@@ -70,14 +75,14 @@ pub fn init(process_init: std.process.Init) void {
     tty_in = std.Io.File.stdin();
     // tty_reader = std.Io.File.stdin().reader(evented.io(), &read_buf);
 
-    w3m_task.init();
+    w3m_task.tasks_init();
 
     epoll = .init();
     epoll.add_fd(tty_in.handle);
 }
 
 pub fn deinit() void {
-    w3m_task.deinit();
+    w3m_task.tasks_deinit();
 
     evented.deinit();
     flush_tty();
@@ -103,9 +108,9 @@ extern var GlobalKeymap: [128][*c]const u8;
 extern fn setupCurrentBuffer() void;
 
 export fn w3m_loop() c_int {
-    root.co_start();
+    root.begin();
 
-    while (root.co_state() != .DEAD) {
+    while (root.state() != .DEAD) {
         const has_input = epoll.next(80) catch {
             // error ?
             break;
@@ -119,10 +124,10 @@ export fn w3m_loop() c_int {
             ) catch @panic("getch");
             std.debug.assert(readsize == 1);
 
-            if (w3m_task.current()) |task| {
-                task.co_resume(buf[0]);
-                if (task.co_state() == .DEAD) {
-                    w3m_task.pop();
+            if (w3m_task.tasks_current()) |task| {
+                task.enqueue(buf[0]);
+                if (task.state() == .DEAD) {
+                    w3m_task.tasks_pop();
                 }
             } else {
                 // root
@@ -150,13 +155,13 @@ export fn w3m_loop() c_int {
             }
         } else {
             // timeout
-            if (w3m_task.current()) |task| {
-                task.co_resume(0);
-                if (task.co_state() == .DEAD) {
-                    w3m_task.pop();
+            if (w3m_task.tasks_current()) |task| {
+                task.enqueue(0);
+                if (task.state() == .DEAD) {
+                    w3m_task.tasks_pop();
                 }
             } else {
-                root.co_resume(0);
+                root.enqueue(0);
             }
         }
     }
@@ -182,7 +187,7 @@ export fn co_root(_args: ?*c.CmdArgs) void {
 
         processResizeAndImage(args);
 
-        w3m_task.co_block();
+        w3m_task.block_in_task();
     }
 }
 
@@ -200,7 +205,7 @@ export fn w3mFunc(cmd: [*c]const u8) void {
         return;
     };
 
-    w3m_task.pushFunc(func, .{});
+    w3m_task.tasks_push(func, .{});
 }
 
 export fn ttyname_tty() [*c]const u8 {
@@ -703,10 +708,10 @@ fn sleep_async(io: std.Io, duration: std.Io.Duration) void {
 /// return -1 if timeout
 /// call from coroutine
 export fn getch_timeout(ms: u32, args: ?*c.CmdArgs) c_int {
-    if (w3m_task.current()) |task| {
-        return task.co_yield(.fromMilliseconds(ms), args.?);
+    if (w3m_task.tasks_current()) |task| {
+        return task.block(.fromMilliseconds(ms), args.?);
     } else {
-        return root.co_yield(.fromMilliseconds(ms), args.?);
+        return root.block(.fromMilliseconds(ms), args.?);
     }
     // _ = args;
     //

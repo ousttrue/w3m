@@ -23,21 +23,21 @@ pub const W3mTask = struct {
         this.func.func(&this.args);
     }
 
-    pub fn co_start(this: *@This()) void {
+    pub fn begin(this: *@This()) void {
         this.args.co_id = co.coroutine_new(S, &W3mTask.coroutine, this);
         co.coroutine_resume(S, this.args.co_id);
     }
 
-    pub fn co_state(this: *@This()) State {
+    pub fn state(this: *@This()) State {
         return @enumFromInt(co.coroutine_status(S, this.args.co_id));
     }
 
-    pub fn co_resume(this: *@This(), ch: u8) void {
+    pub fn enqueue(this: *@This(), ch: u8) void {
         this.args.ch = ch;
         co.coroutine_resume(S, this.args.co_id);
     }
 
-    pub fn co_yield(this: *@This(), d: std.Io.Duration, args: *c.CmdArgs) c_int {
+    pub fn block(this: *@This(), d: std.Io.Duration, args: *c.CmdArgs) c_int {
         std.debug.assert(&this.args == args);
         const start = std.Io.Clock.real.now(runtime.io);
         while (true) {
@@ -59,38 +59,38 @@ pub const W3mTask = struct {
 
 var task_stack: std.Deque(W3mTask) = .initBuffer(&.{});
 
-pub fn init() void {
+pub fn tasks_init() void {
     S = co.coroutine_open() orelse {
         @panic("coroutine_open");
     };
 }
 
-pub fn deinit() void {
+pub fn tasks_deinit() void {
     co.coroutine_close(S);
 }
 
-pub fn pushFunc(func: defun.CmdFunc, args: c.CmdArgs) void {
+pub fn tasks_push(func: defun.CmdFunc, args: c.CmdArgs) void {
     task_stack.pushBack(runtime.allocator, .{
         .func = func,
         .args = args,
     }) catch @panic("OOM");
 
     if (task_stack.backPtr()) |task| {
-        task.co_start();
-        if (task.co_state() == .DEAD) {
+        task.begin();
+        if (task.state() == .DEAD) {
             _ = task_stack.popBack();
         }
     }
 }
 
-pub fn current() ?*W3mTask {
+pub fn tasks_current() ?*W3mTask {
     return task_stack.backPtr();
 }
 
-pub fn pop() void {
+pub fn tasks_pop() void {
     _ = task_stack.popBack();
 }
 
-pub fn co_block() void {
+pub fn block_in_task() void {
     co.coroutine_yield(S);
 }

@@ -30,6 +30,15 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .link_libc = true,
     });
+
+    const options = b.addOptions();
+    const TaskBackend = enum {
+        coroutine,
+        thread,
+    };
+    options.addOption(TaskBackend, "task_backend", .thread);
+    mod.addOptions("config", options);
+
     mod.addIncludePath(b.path("."));
     mod.addIncludePath(b.path(".."));
     const lib = b.addLibrary(.{
