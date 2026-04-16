@@ -197,6 +197,7 @@ var root: w3m_task.W3mTask = .{
         .desc = "loop coroutine",
     },
     .args = .{},
+    .co_id = -1,
 };
 
 export fn w3mFunc(cmd: [*c]const u8) void {

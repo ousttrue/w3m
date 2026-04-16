@@ -9,6 +9,7 @@ var S: *co.schedule = undefined;
 pub const W3mTask = struct {
     func: defun.CmdFunc,
     args: c.CmdArgs,
+    co_id: c_int,
 
     const State = enum(u8) {
         DEAD = 0,
@@ -24,17 +25,17 @@ pub const W3mTask = struct {
     }
 
     pub fn begin(this: *@This()) void {
-        this.args.co_id = co.coroutine_new(S, &W3mTask.coroutine, this);
-        co.coroutine_resume(S, this.args.co_id);
+        this.co_id = co.coroutine_new(S, &W3mTask.coroutine, this);
+        co.coroutine_resume(S, this.co_id);
     }
 
     pub fn state(this: *@This()) State {
-        return @enumFromInt(co.coroutine_status(S, this.args.co_id));
+        return @enumFromInt(co.coroutine_status(S, this.co_id));
     }
 
     pub fn enqueue(this: *@This(), ch: u8) void {
         this.args.ch = ch;
-        co.coroutine_resume(S, this.args.co_id);
+        co.coroutine_resume(S, this.co_id);
     }
 
     pub fn block(this: *@This(), d: std.Io.Duration, args: *c.CmdArgs) c_int {
@@ -73,6 +74,7 @@ pub fn tasks_push(func: defun.CmdFunc, args: c.CmdArgs) void {
     task_stack.pushBack(runtime.allocator, .{
         .func = func,
         .args = args,
+        .co_id = -1,
     }) catch @panic("OOM");
 
     if (task_stack.backPtr()) |task| {

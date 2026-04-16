@@ -36,7 +36,7 @@ pub fn build(b: *std.Build) void {
         coroutine,
         thread,
     };
-    options.addOption(TaskBackend, "task_backend", .thread);
+    options.addOption(TaskBackend, "task_backend", .coroutine);
     mod.addOptions("config", options);
 
     mod.addIncludePath(b.path("."));
