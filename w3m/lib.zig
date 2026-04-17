@@ -170,7 +170,7 @@ export fn w3m_loop() c_int {
 }
 
 export fn co_root(_args: ?*c.CmdArgs) void {
-    const args = _args.?;
+    const args: *c.CmdArgs = _args.?;
     while (g.is_running) {
         if (checkDownloadList()) {
             c.ldDL(null);
@@ -187,7 +187,8 @@ export fn co_root(_args: ?*c.CmdArgs) void {
 
         processResizeAndImage(args);
 
-        w3m_task.block_in_task();
+        const task: *w3m_task.W3mTask = @alignCast(@fieldParentPtr("args", args));
+        _ = task.block(.fromMilliseconds(100), args);
     }
 }
 

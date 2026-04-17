@@ -92,7 +92,3 @@ pub fn tasks_current() ?*W3mTask {
 pub fn tasks_pop() void {
     _ = task_stack.popBack();
 }
-
-pub fn block_in_task() void {
-    co.coroutine_yield(S);
-}
