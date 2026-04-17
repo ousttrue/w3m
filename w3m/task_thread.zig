@@ -2,6 +2,10 @@ const std = @import("std");
 const defun = @import("defun.zig");
 const c = @import("c.zig").c;
 
+pub fn init() void {}
+
+pub fn deinit() void {}
+
 pub const W3mTask = struct {
     func: defun.CmdFunc,
     args: c.CmdArgs,
@@ -12,6 +16,13 @@ pub const W3mTask = struct {
         RUNNING = 2,
         SUSPEND = 3,
     };
+
+    pub fn init(func: defun.CmdFunc, args: c.CmdArgs) @This() {
+        return @This(){
+            .func = func,
+            .args = args,
+        };
+    }
 
     pub fn begin(this: *@This()) void {
         _ = this;

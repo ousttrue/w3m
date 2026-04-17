@@ -2968,6 +2968,9 @@ void resetPos(struct CmdArgs* args, BufferPos* b)
 
 bool submitCurrentBuffer(struct CmdArgs* args)
 {
+    if(!CurrentTab){
+        return false;
+    }
     if (!Currentbuf->submit) {
         return false;
     }
@@ -2995,7 +2998,7 @@ bool processCurrentEvent(void)
 
 bool processCurrentBufferEvent(void)
 {
-    if (Currentbuf->event) {
+    if (CurrentTab && Currentbuf->event) {
         if (Currentbuf->event->status != AL_UNSET) {
             CurrentAlarm = Currentbuf->event;
             if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
@@ -3011,7 +3014,7 @@ bool processCurrentBufferEvent(void)
             Currentbuf->event = NULL;
     }
 
-    if (!Currentbuf->event)
+    if (!CurrentTab || !Currentbuf->event)
         CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
         signal(SIGALRM, SigAlarm);

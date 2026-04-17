@@ -1,10 +1,8 @@
 const std = @import("std");
+const c = @import("c.zig").c;
 const co = @import("co");
 const runtime = @import("runtime.zig");
 const defun = @import("defun.zig");
-const c = @import("c.zig").c;
-
-var S: *co.schedule = undefined;
 
 pub const W3mTask = struct {
     func: defun.CmdFunc,
@@ -22,6 +20,14 @@ pub const W3mTask = struct {
         _ = _S;
         var this: *@This() = @ptrCast(@alignCast(p));
         this.func.func(&this.args);
+    }
+
+    pub fn init(func: defun.CmdFunc, args: c.CmdArgs) @This() {
+        return .{
+            .func = func,
+            .args = args,
+            .co_id = -1,
+        };
     }
 
     pub fn begin(this: *@This()) void {
@@ -58,37 +64,14 @@ pub const W3mTask = struct {
     }
 };
 
-var task_stack: std.Deque(W3mTask) = .initBuffer(&.{});
+var S: *co.schedule = undefined;
 
-pub fn tasks_init() void {
+pub fn init() void {
     S = co.coroutine_open() orelse {
         @panic("coroutine_open");
     };
 }
 
-pub fn tasks_deinit() void {
+pub fn deinit() void {
     co.coroutine_close(S);
-}
-
-pub fn tasks_push(func: defun.CmdFunc, args: c.CmdArgs) void {
-    task_stack.pushBack(runtime.allocator, .{
-        .func = func,
-        .args = args,
-        .co_id = -1,
-    }) catch @panic("OOM");
-
-    if (task_stack.backPtr()) |task| {
-        task.begin();
-        if (task.state() == .DEAD) {
-            _ = task_stack.popBack();
-        }
-    }
-}
-
-pub fn tasks_current() ?*W3mTask {
-    return task_stack.backPtr();
-}
-
-pub fn tasks_pop() void {
-    _ = task_stack.popBack();
 }

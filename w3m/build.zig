@@ -1,5 +1,11 @@
 const std = @import("std");
 
+const TaskBackend = enum {
+    coroutine,
+    thread,
+};
+const TASK_BACKEND = .coroutine;
+
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -15,13 +21,6 @@ pub fn build(b: *std.Build) void {
     gen.root_module.addIncludePath(b.path("."));
     gen.root_module.addIncludePath(b.path(".."));
 
-    // const wc_dep = b.dependency("wc", .{
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
-    // const libwc = wc_dep.artifact("wc");
-    // gen.root_module.addIncludePath(libwc.getEmittedIncludeTree());
-
     b.installArtifact(gen);
 
     const mod = b.addModule("w3m", .{
@@ -32,11 +31,7 @@ pub fn build(b: *std.Build) void {
     });
 
     const options = b.addOptions();
-    const TaskBackend = enum {
-        coroutine,
-        thread,
-    };
-    options.addOption(TaskBackend, "task_backend", .coroutine);
+    options.addOption(TaskBackend, "task_backend", TASK_BACKEND);
     mod.addOptions("config", options);
 
     mod.addIncludePath(b.path("."));
@@ -47,18 +42,12 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
 
-    const co = build_coroutine(b, target, optimize);
-    mod.addImport("co", co);
+    if (TASK_BACKEND == .coroutine) {
+        const co = build_coroutine(b, target, optimize);
+        mod.addImport("co", co);
+    }
 
     b.installArtifact(lib);
-
-    // const gcstr_dep = b.dependency("gcstr", .{
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
-    // const gcstr_lib = gcstr_dep.artifact("gcstr");
-    // lib.root_module.linkLibrary(gcstr_lib);
-    // lib.installHeadersDirectory(gcstr_lib.getEmittedIncludeTree(), "", .{});
 
     const test_bin = b.addTest(.{
         .root_module = mod,
