@@ -3,6 +3,7 @@
 #include "tab.h"
 #include "line.h"
 #include "url.h"
+#include "image_cache.h"
 
 #define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
@@ -98,9 +99,9 @@ struct Buffer {
     char* header_source;
     char search_header;
     const char* ssl_certificate;
-    char image_flag;
+    enum GetImageFlag image_flag;
     char image_loaded;
-    char need_reshape;
+    bool need_reshape;
     struct Anchor* submit;
     struct _BufferPos* undo;
     struct _AlarmEvent* event;
@@ -190,3 +191,4 @@ extern void chkURLBuffer(struct Buffer* buf);
 extern void chkNMIDBuffer(struct Buffer* buf);
 extern int currentLn(struct Buffer* buf);
 extern void tmpClearBuffer(struct Buffer* buf);
+void showImageProgress(struct Buffer* buf);

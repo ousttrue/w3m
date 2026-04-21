@@ -11,6 +11,7 @@
 #include "maparea.h"
 #include "buffer.h"
 #include "image.h"
+#include "image_cache.h"
 #include "url.h"
 #include "symbol.h"
 #include "global.h"
@@ -700,6 +701,65 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
     return l;
 }
 
+struct ImageTouchInfo {
+    int i;
+    int rcol;
+    int column;
+    int buf_rootX;
+    int buf_COLS;
+};
+
+void touch_image(struct Line* l, struct BufferPoint start, struct Image* image, struct Url* base_url, enum GetImageFlag image_flag, bool* need_reshape,
+    struct ImageTouchInfo info)
+{
+    if (!image || image->touch >= image_touch) {
+        return;
+    }
+
+    // struct Image* image = a->image;
+    struct ImageCache* cache = image->cache = getImage(image, base_url, image_flag);
+    if (!cache) {
+        return;
+    }
+
+    if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
+        image->width = cache->width;
+        image->height = cache->height;
+        *need_reshape = true;
+    }
+    int x = (int)((info.rcol - info.column + info.buf_rootX) * pixel_per_char);
+    int y = (int)(info.i * pixel_per_line);
+    int sx = (int)((info.rcol - COLPOS(l, start.pos)) * pixel_per_char);
+    int sy = (int)((l->linenumber - image->y) * pixel_per_line);
+    if (!enable_inline_image) {
+        if (sx == 0 && x + image->xoffset >= 0)
+            x += image->xoffset;
+        else
+            sx -= image->xoffset;
+        if (sy == 0 && y + image->yoffset >= 0)
+            y += image->yoffset;
+        else
+            sy -= image->yoffset;
+    }
+
+    int w, h;
+    if (image->width > 0)
+        w = image->width - sx;
+    else
+        w = (int)(8 * pixel_per_char - sx);
+    if (image->height > 0)
+        h = image->height - sy;
+    else
+        h = (int)(pixel_per_line - sy);
+    if (w > (int)((info.buf_rootX + info.buf_COLS) * pixel_per_char - x))
+        w = (int)((info.buf_rootX + info.buf_COLS) * pixel_per_char - x);
+    if (h > (int)((LINES - 1) * pixel_per_line - y))
+        h = (int)((LINES - 1) * pixel_per_line - y);
+    addImage(cache, x, y, sx, sy, w, h);
+    image->touch = image_touch;
+    draw_image_flag = true;
+}
+
 static struct Line*
 redrawLineImage(struct Buffer* buf, struct Line* l, int i)
 {
@@ -718,48 +778,19 @@ redrawLineImage(struct Buffer* buf, struct Line* l, int i)
             rcol = COLPOS(l, pos + j + 1);
             continue;
         }
+
         struct Anchor* a = retrieveAnchor(buf->img, l->linenumber, pos + j);
-        if (a && a->image && a->image->touch < image_touch) {
-            struct Image* image = a->image;
-            struct ImageCache* cache = image->cache = getImage(image, baseURL(buf), buf->image_flag);
-            if (cache) {
-                if ((image->width < 0 && cache->width > 0) || (image->height < 0 && cache->height > 0)) {
-                    image->width = cache->width;
-                    image->height = cache->height;
-                    buf->need_reshape = true;
-                }
-                int x, y, sx, sy, w, h;
-                x = (int)((rcol - column + buf->rootX) * pixel_per_char);
-                y = (int)(i * pixel_per_line);
-                sx = (int)((rcol - COLPOS(l, a->start.pos)) * pixel_per_char);
-                sy = (int)((l->linenumber - image->y) * pixel_per_line);
-                if (!enable_inline_image) {
-                    if (sx == 0 && x + image->xoffset >= 0)
-                        x += image->xoffset;
-                    else
-                        sx -= image->xoffset;
-                    if (sy == 0 && y + image->yoffset >= 0)
-                        y += image->yoffset;
-                    else
-                        sy -= image->yoffset;
-                }
-                if (image->width > 0)
-                    w = image->width - sx;
-                else
-                    w = (int)(8 * pixel_per_char - sx);
-                if (image->height > 0)
-                    h = image->height - sy;
-                else
-                    h = (int)(pixel_per_line - sy);
-                if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
-                    w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-                if (h > (int)((LINES - 1) * pixel_per_line - y))
-                    h = (int)((LINES - 1) * pixel_per_line - y);
-                addImage(cache, x, y, sx, sy, w, h);
-                image->touch = image_touch;
-                draw_image_flag = true;
-            }
+        if (a) {
+            touch_image(l, a->start, a->image, baseURL(buf), buf->image_flag, &buf->need_reshape,
+                (struct ImageTouchInfo) {
+                    .i = i,
+                    .rcol = rcol,
+                    .column = column,
+                    .buf_rootX = buf->rootX,
+                    .buf_COLS = buf->COLS,
+                });
         }
+
         rcol = COLPOS(l, pos + j + 1);
     }
     return l;

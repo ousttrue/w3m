@@ -42,6 +42,7 @@ const w3m_srcs = [_][]const u8{
     "menu.c",
     "mailcap.c",
     "image.c",
+    "image_cache.c",
     "symbol.c",
     "entity.c",
     "terms.c",
@@ -127,8 +128,8 @@ pub fn build(b: *std.Build) void {
         exe.root_module.linkSystemLibrary(lib, .{});
     }
 
-    // const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
-    // b.getInstallStep().dependOn(&cdb.step);
+    const cdb = zcc.createStep(b, targets.toOwnedSlice(b.allocator) catch @panic("OOM"));
+    b.getInstallStep().dependOn(&cdb.step);
 }
 
 fn gen_funcname_tab(b: *std.Build) struct {

@@ -705,3 +705,33 @@ int readBufferCache(struct Buffer* buf)
     buf->savecache = NULL;
     return 0;
 }
+
+void showImageProgress(struct Buffer* buf)
+{
+    if (!buf)
+        return;
+
+    struct AnchorList* al = buf->img;
+    if (!al)
+        return;
+
+    struct Anchor* a = al->anchors;
+    int n = 0;
+    int l = 0;
+    for (int i = 0; i < al->nanchor; i++, a++) {
+        if (a->image && a->hseq >= 0) {
+            n++;
+            if (a->image->cache && a->image->cache->loaded & IMG_FLAG_LOADED)
+                l++;
+        }
+    }
+    if (n) {
+        if (enable_inline_image && n == l)
+            drawImage();
+        message(Sprintf("%d/%d images loaded", l, n)->ptr,
+            buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+        refresh();
+    }
+}
+
+

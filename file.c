@@ -36,6 +36,7 @@
 #include "textlist.h"
 #include "table.h"
 #include "image.h"
+#include "image_cache.h"
 #include "symbol.h"
 #include "constants.h"
 #include "history.h"
