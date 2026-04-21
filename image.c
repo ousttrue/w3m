@@ -19,6 +19,8 @@
 #include <unistd.h>
 #include <stdio.h>
 
+#define MAX_LOAD_IMAGE 8
+
 static int image_index = 0;
 
 struct TerminalImage {
@@ -34,118 +36,16 @@ struct TerminalImage {
 static struct TerminalImage* terminal_image = NULL;
 static int n_terminal_image = 0;
 static int max_terminal_image = 0;
-static FILE *Imgdisplay_rf = NULL, *Imgdisplay_wf = NULL;
-static pid_t Imgdisplay_pid = 0;
-static int openImgdisplay(void);
-static void closeImgdisplay(void);
-
-static int getCharSize(void)
-{
-    set_environ("W3M_TTY", ttyname_tty());
-
-    if (enable_inline_image) {
-        int ppc, ppl;
-        if (get_pixel_per_cell(&ppc, &ppl)) {
-            pixel_per_char_i = ppc;
-            pixel_per_line_i = ppl;
-            pixel_per_char = (double)ppc;
-            pixel_per_line = (double)ppl;
-        } else {
-            pixel_per_char_i = (int)pixel_per_char;
-            pixel_per_line_i = (int)pixel_per_line;
-        }
-        return true;
-    }
-
-    Str tmp = Strnew();
-    if (!strchr(Imgdisplay, '/'))
-        Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
-    Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
-    FILE* f = popen(tmp->ptr, "r");
-    if (!f)
-        return false;
-
-    int w = 0, h = 0;
-    while (fscanf(f, "%d %d", &w, &h) < 0) {
-        if (feof(f))
-            break;
-    }
-    pclose(f);
-
-    if (!(w > 0 && h > 0))
-        return false;
-    if (!set_pixel_per_char)
-        pixel_per_char = (int)(1.0 * w / COLS + 0.5);
-    if (!set_pixel_per_line)
-        pixel_per_line = (int)(1.0 * h / LINES + 0.5);
-    return true;
-}
-
-void initImage()
-{
-    if (!activeImage) {
-        if (getCharSize()) {
-            activeImage = true;
-        }
-    }
-}
 
 void termImage()
 {
     if (!activeImage)
         return;
     clearImage();
-    if (Imgdisplay_wf) {
-        fputs("2;\n", Imgdisplay_wf); /* ClearImage() */
-        fflush(Imgdisplay_wf);
-    }
-    closeImgdisplay();
-}
-
-static int
-openImgdisplay()
-{
-    const char* cmd;
-    if (!strchr(Imgdisplay, '/'))
-        cmd = Strnew_m_charp(w3m_auxbin_dir(), "/", Imgdisplay, NULL)->ptr;
-    else
-        cmd = Imgdisplay;
-    Imgdisplay_pid = open_pipe_rw(&Imgdisplay_rf, &Imgdisplay_wf);
-    if (Imgdisplay_pid < 0) {
-        Imgdisplay_pid = 0;
-        activeImage = false;
-        return false;
-    }
-    if (Imgdisplay_pid == 0) {
-        /* child */
-        setup_child(false, 2, -1);
-        myExec(cmd);
-        /* XXX: ifdef __EMX__, use start /f ? */
-    }
-    activeImage = true;
-    return true;
-}
-
-static void
-closeImgdisplay(void)
-{
-    if (Imgdisplay_wf)
-        fclose(Imgdisplay_wf);
-    if (Imgdisplay_rf) {
-        /* sync with the child */
-        getc(Imgdisplay_rf); /* EOF expected */
-        fclose(Imgdisplay_rf);
-    }
-    if (Imgdisplay_pid)
-        kill(Imgdisplay_pid, SIGKILL);
-    Imgdisplay_rf = NULL;
-    Imgdisplay_wf = NULL;
-    Imgdisplay_pid = 0;
 }
 
 void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
 {
-
     if (!activeImage)
         return;
     if (n_terminal_image >= max_terminal_image) {
@@ -165,37 +65,12 @@ void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int
     n_terminal_image++;
 }
 
-static void
-syncImage(void)
-{
-    if (enable_inline_image) {
-        return;
-    }
-
-    fputs("3;\n", Imgdisplay_wf); /* XSync() */
-    fputs("4;\n", Imgdisplay_wf); /* put '\n' */
-    while (fflush(Imgdisplay_wf) != 0) {
-        if (ferror(Imgdisplay_wf))
-            goto err;
-    }
-    if (!fgetc(Imgdisplay_rf))
-        goto err;
-    return;
-err:
-    closeImgdisplay();
-    image_index += MAX_IMAGE;
-    n_terminal_image = 0;
-}
-
 void drawImage(void)
 {
     if (!activeImage)
         return;
     if (!n_terminal_image)
         return;
-
-    static char buf[64];
-    bool draw = false;
 
     for (int j = 0; j < n_terminal_image; j++) {
         struct TerminalImage* i = &terminal_image[j];
@@ -240,35 +115,8 @@ void drawImage(void)
 
             continue;
         }
-
-        if (!(i->cache->loaded & IMG_FLAG_LOADED && i->width > 0 && i->height > 0))
-            continue;
-        if (!(Imgdisplay_rf && Imgdisplay_wf)) {
-            if (!openImgdisplay())
-                return;
-        }
-        if (i->cache->index > 0) {
-            i->cache->index *= -1;
-            fputs("0;", Imgdisplay_wf); /* DrawImage() */
-        } else
-            fputs("1;", Imgdisplay_wf); /* DrawImage(redraw) */
-        sprintf(buf, "%d;%d;%d;%d;%d;%d;%d;%d;%d;",
-            (-i->cache->index - 1) % MAX_IMAGE + 1, i->x, i->y,
-            (i->cache->width > 0) ? i->cache->width : 0,
-            (i->cache->height > 0) ? i->cache->height : 0,
-            i->sx, i->sy, i->width, i->height);
-        fputs(buf, Imgdisplay_wf);
-        fputs(i->cache->file, Imgdisplay_wf);
-        fputs("\n", Imgdisplay_wf);
-        draw = TRUE;
     }
-
-    if (!enable_inline_image) {
-        if (!draw)
-            return;
-        syncImage();
-    } else
-        n_terminal_image = 0;
+    n_terminal_image = 0;
 
     touch_cursor();
     refresh();
@@ -280,26 +128,10 @@ void clearImage()
         return;
     if (!n_terminal_image)
         return;
-    if (!Imgdisplay_wf) {
-        n_terminal_image = 0;
-        return;
-    }
-
-    for (int j = 0; j < n_terminal_image; j++) {
-        struct TerminalImage* i = &terminal_image[j];
-        if (!(i->cache->loaded & IMG_FLAG_LOADED && i->width > 0 && i->height > 0))
-            continue;
-        static char buf[64];
-        sprintf(buf, "6;%d;%d;%d;%d\n", i->x, i->y, i->width, i->height);
-        fputs(buf, Imgdisplay_wf);
-    }
-    syncImage();
     n_terminal_image = 0;
+    return;
 }
 
-#ifndef MAX_LOAD_IMAGE
-#define MAX_LOAD_IMAGE 8
-#endif
 static int n_load_image = 0;
 static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
@@ -309,7 +141,6 @@ static struct Buffer* image_buffer = NULL;
 
 void deleteImage(struct Buffer* buf)
 {
-
     if (!buf)
         return;
 
@@ -352,16 +183,17 @@ void getAllImage(struct Buffer* buf)
 static void
 showImageProgress(struct Buffer* buf)
 {
-    struct AnchorList* al;
-    struct Anchor* a;
-    int i, l, n;
-
     if (!buf)
         return;
-    al = buf->img;
+
+    struct AnchorList* al = buf->img;
     if (!al)
         return;
-    for (i = 0, l = 0, n = 0, a = al->anchors; i < al->nanchor; i++, a++) {
+
+    struct Anchor* a = al->anchors;
+    int n = 0;
+    int l = 0;
+    for (int i = 0; i < al->nanchor; i++, a++) {
         if (a->image && a->hseq >= 0) {
             n++;
             if (a->image->cache && a->image->cache->loaded & IMG_FLAG_LOADED)
@@ -379,9 +211,6 @@ showImageProgress(struct Buffer* buf)
 
 void loadImage(struct Buffer* buf, int flag)
 {
-    struct ImageCache* cache;
-    struct stat st;
-    int i, draw = FALSE;
     /* int wait_st; */
 
     if (maxLoadImage > MAX_LOAD_IMAGE)
@@ -394,10 +223,13 @@ void loadImage(struct Buffer* buf, int flag)
         image_cache = New_N(struct ImageCache*, MAX_LOAD_IMAGE);
         memset(image_cache, 0, sizeof(struct ImageCache*) * MAX_LOAD_IMAGE);
     }
-    for (i = 0; i < n_load_image; i++) {
-        cache = image_cache[i];
+
+    int draw = FALSE;
+    for (int i = 0; i < n_load_image; i++) {
+        struct ImageCache* cache = image_cache[i];
         if (!cache || !cache->touch)
             continue;
+        struct stat st;
         if (lstat(cache->touch, &st))
             continue;
         if (cache->pid) {
@@ -424,8 +256,8 @@ void loadImage(struct Buffer* buf, int flag)
         image_cache[i] = NULL;
     }
 
-    for (i = (buf != image_buffer) ? 0 : maxLoadImage; i < n_load_image; i++) {
-        cache = image_cache[i];
+    for (int i = (buf != image_buffer) ? 0 : maxLoadImage; i < n_load_image; i++) {
+        struct ImageCache* cache = image_cache[i];
         if (!cache || !cache->touch)
             continue;
         if (cache->pid) {
@@ -463,9 +295,11 @@ void loadImage(struct Buffer* buf, int flag)
 
     if (!image_list)
         return;
-    for (i = 0; i < n_load_image; i++) {
+    for (int i = 0; i < n_load_image; i++) {
         if (image_cache[i])
             continue;
+
+        struct ImageCache* cache = 0;
         while (1) {
             cache = (struct ImageCache*)popValue(image_list);
             if (!cache) {

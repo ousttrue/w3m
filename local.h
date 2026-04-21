@@ -41,7 +41,6 @@ typedef struct direct Directory;
 #endif /* not S_ISLNK */
 #endif /* not HAVE_READLINK */
 
-void set_environ(const char* var, const char* value);
 Str localCookie(void);
 Str loadLocalDir(const char* dirname);
 struct Form;

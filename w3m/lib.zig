@@ -117,13 +117,20 @@ export fn ttyname_tty() [*c]const u8 {
     return c.ttyname(tty.stdin.handle);
 }
 
-export fn setlinescols() void {
+fn getTermSize() !c.winsize {
     var wins: c.winsize = undefined;
     const i = c.ioctl(tty.stdin.handle, c.TIOCGWINSZ, &wins);
     if (i >= 0 and wins.ws_row != 0 and wins.ws_col != 0) {
-        g.LINES = wins.ws_row;
-        g.COLS = wins.ws_col;
+        return wins;
+    } else {
+        return error.TIOCGWINSZ;
     }
+}
+
+export fn setlinescols() void {
+    const wins = getTermSize() catch @panic("getTermSize");
+    g.LINES = wins.ws_row;
+    g.COLS = wins.ws_col;
 }
 
 export fn ttymode_add(mode: c_int, imode: c_int) void {
@@ -166,9 +173,27 @@ export fn term_title(s: [*c]const u8) void {
     //     }
 }
 
-export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) c_int {
-    _ = ppc;
-    _ = ppl;
+export fn initImage() void {
+    if (0 == g.activeImage) {
+        if (getCharSize()) {
+            g.activeImage = 1;
+        }
+    }
+}
+
+export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
+    if (getTermSize()) |ws| {
+        if (ws.ws_ypixel > 0 and ws.ws_row > 0 and ws.ws_xpixel > 0 and ws.ws_col > 0) {
+            ppc.* = ws.ws_xpixel / ws.ws_col;
+            ppl.* = ws.ws_ypixel / ws.ws_row;
+            return true;
+        }
+    } else |_| {
+        @panic("getTermSize");
+    }
+
+    // XTWINOPS
+    //
     // fd_set rfd;
     // struct timeval tval;
     // char buf[100];
@@ -177,13 +202,6 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) c_int {
     // ssize_t left;
     // int wp, hp, wc, hc;
     // int i;
-    //
-    // struct winsize ws;
-    // if (ioctl(tty, TIOCGWINSZ, &ws) == 0 && ws.ws_ypixel > 0 && ws.ws_row > 0 && ws.ws_xpixel > 0 && ws.ws_col > 0) {
-    //     *ppc = ws.ws_xpixel / ws.ws_col;
-    //     *ppl = ws.ws_ypixel / ws.ws_row;
-    //     return 1;
-    // }
     //
     // fputs("\x1b[14t\x1b[18t", ttyf);
     // flush_tty();
@@ -215,7 +233,49 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) c_int {
     //     left -= len;
     // }
 
-    return 0;
+    return false;
+}
+
+fn getCharSize() bool {
+    c.set_environ("W3M_TTY", ttyname_tty());
+
+    if (g.enable_inline_image != 0) {
+        var ppc: c_int = undefined;
+        var ppl: c_int = undefined;
+        if (get_pixel_per_cell(&ppc, &ppl)) {
+            g.pixel_per_char_i = ppc;
+            g.pixel_per_line_i = ppl;
+            g.pixel_per_char = @floatFromInt(ppc);
+            g.pixel_per_line = @floatFromInt(ppl);
+        } else {
+            g.pixel_per_char_i = @intFromFloat(g.pixel_per_char);
+            g.pixel_per_line_i = @intFromFloat(g.pixel_per_line);
+        }
+        return true;
+    }
+
+    // Str tmp = Strnew();
+    // if (!strchr(Imgdisplay, '/'))
+    //     Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
+    // Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
+    // FILE* f = popen(tmp->ptr, "r");
+    // if (!f)
+    //     return false;
+    //
+    // int w = 0, h = 0;
+    // while (fscanf(f, "%d %d", &w, &h) < 0) {
+    //     if (feof(f))
+    //         break;
+    // }
+    // pclose(f);
+    //
+    // if (!(w > 0 && h > 0))
+    //     return false;
+    // if (!set_pixel_per_char)
+    //     pixel_per_char = (int)(1.0 * w / COLS + 0.5);
+    // if (!set_pixel_per_line)
+    //     pixel_per_line = (int)(1.0 * h / LINES + 0.5);
+    return false;
 }
 
 export fn flush_tty() void {
