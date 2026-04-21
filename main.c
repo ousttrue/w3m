@@ -1213,7 +1213,7 @@ void _quitfm(struct CmdArgs* args, int confirm)
     }
 
     if (activeImage)
-        termImage();
+        deinitImage();
     fmTerm();
     save_cookies();
     if (UseHistory && SaveURLHist)
