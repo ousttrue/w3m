@@ -17,7 +17,6 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/types.h>
-#include <gc.h>
 
 TextList* backend_batch_commands = NULL;
 TextLineList* backend_halfdump_buf = NULL;

@@ -202,7 +202,6 @@ fusage(FILE* f, int err)
     exit(err);
 }
 
-static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
 
 // static void
@@ -312,8 +311,6 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     wc_uint8 auto_detect;
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
         set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
-    GC_INIT();
-    GC_set_oom_fn(die_oom);
     setlocale(LC_ALL, "");
     proxyInit();
     fileToDelete = newTextList();

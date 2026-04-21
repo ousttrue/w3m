@@ -234,7 +234,7 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
 
     MOVE(&write1, &terminfo, y, x);
 
-    char* cbuf = GC_MALLOC_ATOMIC(3072); /* base64-encoded chunks of 4096 bytes */
+    char* cbuf = malloc(3072); /* base64-encoded chunks of 4096 bytes */
     if (!cbuf)
         goto cleanup;
     int i = 0;
@@ -329,7 +329,7 @@ save_first_animation_frame(const char* path)
         return NULL;
     }
 
-    if (fstat(fd, &st) != 0 || !(header = GC_malloc(st.st_size))) {
+    if (fstat(fd, &st) != 0 || !(header = malloc(st.st_size))) {
         close(fd);
         return NULL;
     }

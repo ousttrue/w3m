@@ -7,7 +7,6 @@
 #include "display.h"
 #include "proto.h"
 #include "myctype.h"
-#include <gc.h>
 #include <signal.h>
 #include <openssl/x509v3.h>
 #include <unistd.h>
@@ -276,7 +275,7 @@ int ISread(InputStream stream, Str buf, int count)
     int len;
 
     if (count + 1 > buf->area_size) {
-        char* newptr = GC_MALLOC_ATOMIC(count + 1);
+        char* newptr = malloc(count + 1);
         memcpy(newptr, buf->ptr, buf->length);
         newptr[buf->length] = '\0';
         buf->ptr = newptr;
@@ -421,7 +420,7 @@ ssl_check_cert_ident(X509* x, const char* hostname)
                      * be null terminated. Ensure we have a null terminated
                      * string that we can modify.
                      */
-                    char* asn = GC_MALLOC(sl + 1);
+                    char* asn = malloc(sl + 1);
                     if (!asn)
                         exit(1);
                     bcopy(sn, asn, sl);

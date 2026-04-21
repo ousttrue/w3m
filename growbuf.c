@@ -1,17 +1,16 @@
 #include "growbuf.h"
 #include "alloc.h"
-#include <gc.h>
 #include <stdlib.h>
 #include <string.h>
 
 static void* w3m_GC_realloc_atomic(void* ptr, size_t size)
 {
-    return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
+    return ptr ? realloc(ptr, size) : malloc(size);
 }
 
 static void w3m_GC_free(void* ptr)
 {
-    GC_FREE(ptr);
+    free(ptr);
 }
 
 void growbuf_init(struct growbuf* gb)

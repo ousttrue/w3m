@@ -1,6 +1,6 @@
-/* $Id: hash.h,v 1.6 2003/09/24 18:48:59 ukai Exp $ */
 #ifndef HASH_H
 #define HASH_H
+#include <stdlib.h>
 
 /* hash table */
 
@@ -29,9 +29,9 @@ defhash(char*, int, si)
         struct Hash_##sym* hash;                                                 \
         int i;                                                                   \
                                                                                  \
-        hash = (Hash_##sym*)GC_malloc(sizeof(Hash_##sym));                       \
+        hash = (Hash_##sym*)malloc(sizeof(Hash_##sym));                       \
         hash->size = size;                                                       \
-        hash->tab = (HashItem_##sym**)GC_malloc(size * sizeof(HashItem_##sym*)); \
+        hash->tab = (HashItem_##sym**)malloc(size * sizeof(HashItem_##sym*)); \
         for (i = 0; i < size; i++)                                               \
             hash->tab[i] = NULL;                                                 \
         return hash;                                                             \
@@ -62,7 +62,7 @@ defhash(char*, int, si)
             return;                                                              \
         }                                                                        \
                                                                                  \
-        hi = (HashItem_##sym*)GC_malloc(sizeof(HashItem_##sym));                 \
+        hi = (HashItem_##sym*)malloc(sizeof(HashItem_##sym));                 \
         hi->key = key;                                                           \
         hi->value = value;                                                       \
         hi->next = t->tab[h];                                                    \
@@ -87,9 +87,9 @@ defhash(char*, int, si)
         struct Hash_##sym* hash;                                                 \
         int i;                                                                   \
                                                                                  \
-        hash = (Hash_##sym*)GC_malloc(sizeof(Hash_##sym));                       \
+        hash = (Hash_##sym*)malloc(sizeof(Hash_##sym));                       \
         hash->size = size;                                                       \
-        hash->tab = (HashItem_##sym**)GC_malloc(size * sizeof(HashItem_##sym*)); \
+        hash->tab = (HashItem_##sym**)malloc(size * sizeof(HashItem_##sym*)); \
         for (i = 0; i < size; i++)                                               \
             hash->tab[i] = NULL;                                                 \
         return hash;                                                             \
@@ -120,7 +120,7 @@ defhash(char*, int, si)
             return;                                                              \
         }                                                                        \
                                                                                  \
-        hi = (HashItem_##sym*)GC_malloc(sizeof(HashItem_##sym));                 \
+        hi = (HashItem_##sym*)malloc(sizeof(HashItem_##sym));                 \
         hi->key = key;                                                           \
         hi->value = value;                                                       \
         hi->next = t->tab[h];                                                    \

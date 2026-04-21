@@ -19,25 +19,7 @@ var tty_in: std.Io.File = undefined;
 // var read_buf: [16]u8 = undefined;
 var peek_queue: std.Deque(u8) = .initBuffer(&.{});
 
-// var evented: std.Io.Evented = undefined;
-var evented: std.Io.Threaded = undefined;
-
 var epoll: Epoll = undefined;
-
-// var key_input_queue: std.Io.Queue(u8) = .init(&.{});
-// fn producer(
-//     io: std.Io,
-//     queue: *std.Io.Queue(u8),
-//     val: u8,
-// ) !void {
-//     try queue.putOne(io, val);
-// }
-// fn consumer(
-//     io: std.Io,
-//     queue: *std.Io.Queue(u8),
-// ) ![]const u8 {
-//     return queue.getOne(io);
-// }
 
 pub export fn _dummy_() void {
     // export symbols ?
@@ -57,24 +39,7 @@ pub fn init(process_init: std.process.Init) void {
 
     tty_writer = std.Io.File.stdout().writer(process_init.io, &write_buf);
 
-    // not work
-    // evented.init(runtime.allocator, .{
-    //     .argv0 = .empty,
-    //     // .environ = runtime.environ_map,
-    //     .backing_allocator_needs_mutex = false,
-    // }) catch @panic("evented.init");
-    evented = .init(runtime.allocator, .{});
-
     tty_in = std.Io.File.stdin();
-    // tty_reader = std.Io.File.stdin().reader(evented.io(), &read_buf);
-
-    input_dispatcher.init(
-        .{
-            .func = co_root,
-            .desc = "loop coroutine",
-        },
-        .{},
-    );
 
     epoll = .init();
     epoll.add_fd(tty_in.handle);
@@ -83,7 +48,6 @@ pub fn init(process_init: std.process.Init) void {
 pub fn deinit() void {
     input_dispatcher.deinit();
 
-    evented.deinit();
     flush_tty();
     runtime.deinit();
 }
@@ -105,7 +69,27 @@ extern fn processCurrentBufferEvent() bool;
 extern fn processResizeAndImage(args: *c.CmdArgs) void;
 
 export fn w3m_loop() c_int {
-    while (input_dispatcher.is_running()) {
+    input_dispatcher.init();
+
+    while (g.is_running) {
+        var args: c.CmdArgs = .{};
+
+        if (checkDownloadList()) {
+            c.ldDL(null);
+        }
+        if (processCurrentEvent()) {
+            continue;
+        }
+        if (processCurrentBufferEvent()) {
+            continue;
+        }
+        if (submitCurrentBuffer(&args)) {
+            continue;
+        }
+
+        // TODO:
+        // processResizeAndImage(&args);
+
         const has_input = epoll.next(80) catch {
             // error ?
             break;
@@ -127,29 +111,6 @@ export fn w3m_loop() c_int {
     }
 
     return 0;
-}
-
-export fn co_root(_args: ?*c.CmdArgs) void {
-    const args: *c.CmdArgs = _args.?;
-    while (g.is_running) {
-        if (checkDownloadList()) {
-            c.ldDL(null);
-        }
-        if (submitCurrentBuffer(args)) {
-            continue;
-        }
-        if (processCurrentEvent()) {
-            continue;
-        }
-        if (processCurrentBufferEvent()) {
-            continue;
-        }
-
-        processResizeAndImage(args);
-
-        const task: *input_dispatcher.W3mTask = @alignCast(@fieldParentPtr("args", args));
-        _ = task.block(.fromMilliseconds(100), args);
-    }
 }
 
 export fn ttyname_tty() [*c]const u8 {
@@ -621,28 +582,6 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     // cleanup:
 //     //     fclose(fp);
 //     //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
-// }
-
-// fn getch_async(io: std.Io) u8 {
-//     var reader_buf: [1]u8 = undefined;
-//     var tty_reader = tty_in.reader(io, &reader_buf);
-//     var buf: [1]u8 = undefined;
-//     if (tty_reader.interface.readSliceAll(&buf)) {
-//         return buf[0];
-//     } else |_| {
-//         // canceled ?
-//         return 0;
-//     }
-// }
-
-// fn _getch_internal() u8 {
-//     if (peek_queue.popFront()) |ch| {
-//         return ch;
-//     }
-//
-//     const io = runtime.io;
-//     var future = io.async(getch_async, .{io});
-//     return future.await(io);
 // }
 
 fn sleep_async(io: std.Io, duration: std.Io.Duration) void {

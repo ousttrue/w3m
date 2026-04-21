@@ -15,7 +15,6 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <gc.h>
 #include <stdarg.h>
 #include <string.h>
 #ifdef __EMX__ /* or include "fm.h" for HAVE_BCOPY? */
@@ -37,10 +36,10 @@
 
 Str Strnew()
 {
-    Str x = GC_MALLOC(sizeof(struct _Str));
+    Str x = malloc(sizeof(struct _Str));
     if (x == NULL)
         exit(1);
-    x->ptr = GC_MALLOC_ATOMIC(INITIAL_STR_SIZE);
+    x->ptr = malloc(INITIAL_STR_SIZE);
     if (x->ptr == NULL)
         exit(1);
     x->ptr[0] = '\0';
@@ -51,14 +50,14 @@ Str Strnew()
 
 Str Strnew_size(int n)
 {
-    Str x = GC_MALLOC(sizeof(struct _Str));
+    Str x = malloc(sizeof(struct _Str));
     if (x == NULL)
         exit(1);
     if (n < 0 || n >= STR_SIZE_MAX)
         n = STR_SIZE_MAX - 1;
     else if (n + 1 < INITIAL_STR_SIZE)
         n = INITIAL_STR_SIZE - 1;
-    x->ptr = GC_MALLOC_ATOMIC(n + 1);
+    x->ptr = malloc(n + 1);
     if (x->ptr == NULL)
         exit(1);
     x->ptr[0] = '\0';
@@ -74,7 +73,7 @@ Str Strnew_charp(const char* p)
 
     if (p == NULL)
         return Strnew();
-    x = GC_MALLOC(sizeof(struct _Str));
+    x = malloc(sizeof(struct _Str));
     if (x == NULL)
         exit(1);
     n = strlen(p) + 1;
@@ -83,7 +82,7 @@ Str Strnew_charp(const char* p)
     len = n - 1;
     if (n < INITIAL_STR_SIZE)
         n = INITIAL_STR_SIZE;
-    x->ptr = GC_MALLOC_ATOMIC(n);
+    x->ptr = malloc(n);
     if (x->ptr == NULL)
         exit(1);
     x->area_size = n;
@@ -114,7 +113,7 @@ Str Strnew_charp_n(const char* p, int n)
 
     if (p == NULL)
         return Strnew_size(n);
-    x = GC_MALLOC(sizeof(struct _Str));
+    x = malloc(sizeof(struct _Str));
     if (x == NULL)
         exit(1);
     if (n < 0 || n >= STR_SIZE_MAX)
@@ -122,7 +121,7 @@ Str Strnew_charp_n(const char* p, int n)
     len = n;
     if (n + 1 < INITIAL_STR_SIZE)
         n = INITIAL_STR_SIZE - 1;
-    x->ptr = GC_MALLOC_ATOMIC(n + 1);
+    x->ptr = malloc(n + 1);
     if (x->ptr == NULL)
         exit(1);
     x->area_size = n + 1;
@@ -148,8 +147,8 @@ void Strclear(Str s)
 
 void Strfree(Str x)
 {
-    GC_free(x->ptr);
-    GC_free(x);
+    free(x->ptr);
+    free(x);
 }
 
 void Strcopy(Str x, Str y)
@@ -157,7 +156,7 @@ void Strcopy(Str x, Str y)
     STR_LENGTH_CHECK(x);
     STR_LENGTH_CHECK(y);
     if (x->area_size < y->length + 1) {
-        x->ptr = GC_REALLOC(x->ptr, y->length + 1);
+        x->ptr = realloc(x->ptr, y->length + 1);
         if (x->ptr == NULL)
             exit(1);
         x->area_size = y->length + 1;
@@ -180,7 +179,7 @@ void Strcopy_charp(Str x, const char* y)
     if (len < 0 || len >= STR_SIZE_MAX)
         len = STR_SIZE_MAX - 1;
     if (x->area_size < len + 1) {
-        x->ptr = GC_REALLOC(x->ptr, len + 1);
+        x->ptr = realloc(x->ptr, len + 1);
         if (x->ptr == NULL)
             exit(1);
         x->area_size = len + 1;
@@ -203,7 +202,7 @@ void Strcopy_charp_n(Str x, const char* y, int n)
     if (len < 0 || len >= STR_SIZE_MAX)
         len = STR_SIZE_MAX - 1;
     if (x->area_size < len + 1) {
-        x->ptr = GC_REALLOC(x->ptr, len + 1);
+        x->ptr = realloc(x->ptr, len + 1);
         if (x->ptr == NULL)
             exit(1);
         x->area_size = len + 1;
@@ -233,7 +232,7 @@ void Strcat_charp_n(Str x, const char* y, int n)
         newlen += newlen / 2;
         if (newlen <= 0 || newlen > STR_SIZE_MAX)
             newlen = STR_SIZE_MAX;
-        x->ptr = GC_REALLOC(x->ptr, newlen);
+        x->ptr = realloc(x->ptr, newlen);
         if (x->ptr == NULL)
             exit(1);
         x->area_size = newlen;
@@ -284,7 +283,7 @@ void Strgrow(Str x)
             x->length = newlen - 2;
     }
     if (x->area_size < newlen) {
-        x->ptr = GC_REALLOC(x->ptr, newlen);
+        x->ptr = realloc(x->ptr, newlen);
         if (x->ptr == NULL)
             exit(1);
         x->area_size = newlen;

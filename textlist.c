@@ -3,7 +3,6 @@
 #include "indep.h"
 #include "Str.h"
 #include "myctype.h"
-#include <gc.h>
 
 /* General doubly linked list */
 

@@ -12,20 +12,12 @@ pub const W3mTask = w3m_task.W3mTask;
 
 var task_stack: std.Deque(w3m_task.W3mTask) = .initBuffer(&.{});
 
-var root: W3mTask = undefined;
-
-pub fn init(func: defun.CmdFunc, args: c.CmdArgs) void {
+pub fn init() void {
     w3m_task.init();
-    root = .init(func, args);
-    root.begin();
 }
 
 pub fn deinit() void {
     w3m_task.deinit();
-}
-
-pub fn is_running() bool {
-    return root.state() != .DEAD;
 }
 
 pub fn tasks_push(func: defun.CmdFunc, args: c.CmdArgs) void {
@@ -97,8 +89,6 @@ pub fn dispatch_timeout() void {
         if (task.state() == .DEAD) {
             tasks_pop();
         }
-    } else {
-        root.enqueue(0);
     }
 }
 
@@ -108,7 +98,7 @@ pub export fn getch_timeout(ms: u32, args: ?*c.CmdArgs) c_int {
     if (tasks_current()) |task| {
         return task.block(.fromMilliseconds(ms), args.?);
     } else {
-        return root.block(.fromMilliseconds(ms), args.?);
+        return 0;
     }
     // _ = args;
     //
