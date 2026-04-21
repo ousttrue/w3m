@@ -9,7 +9,6 @@
 #include "buffer.h"
 #include "url.h"
 #include "display.h"
-#include "image.h"
 #include "symbol.h"
 #include "defun_impl.h"
 #include "history.h"

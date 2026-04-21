@@ -1,5 +1,4 @@
 #include "image_cache.h"
-#include "image.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "constants.h"

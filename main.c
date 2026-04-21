@@ -28,7 +28,6 @@
 #include "cookie.h"
 #include "rc.h"
 #include "local.h"
-#include "image.h"
 #include "global.h"
 #include "constants.h"
 #include "history.h"

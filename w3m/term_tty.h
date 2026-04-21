@@ -4,7 +4,6 @@
 #include <stddef.h>
 
 int set_tty(void);
-char* ttyname_tty(void);
 void setlinescols(void);
 void clear_tty(void);
 void set_cc(int spec, int val);

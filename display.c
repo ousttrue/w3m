@@ -10,7 +10,6 @@
 #include "wc_util.h"
 #include "maparea.h"
 #include "buffer.h"
-#include "image.h"
 #include "image_cache.h"
 #include "url.h"
 #include "symbol.h"

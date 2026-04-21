@@ -7,7 +7,6 @@
 #include "indep.h"
 #include "alloc.h"
 #include "buffer.h"
-#include "image.h"
 #include "anchor.h"
 #include "wc_util.h"
 #include "etc.h"

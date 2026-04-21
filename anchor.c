@@ -3,7 +3,6 @@
 #include "menu.h"
 #include "indep.h"
 #include "alloc.h"
-#include "image.h"
 #include "maparea.h"
 #include "buffer.h"
 #include "url.h"

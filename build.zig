@@ -41,7 +41,6 @@ const w3m_srcs = [_][]const u8{
     "rc.c",
     "menu.c",
     "mailcap.c",
-    "image.c",
     "image_cache.c",
     "symbol.c",
     "entity.c",

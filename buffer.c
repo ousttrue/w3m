@@ -13,7 +13,6 @@
 #include "etc.h"
 #include "display.h"
 #include "global.h"
-#include "image.h"
 #include "proto.h"
 #include <unistd.h>
 

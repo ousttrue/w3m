@@ -9,6 +9,7 @@ const guessContentType = content_type.guessContentType;
 const terminfo_entry = @import("terminfo_entry.zig");
 const Epoll = @import("Epoll.zig");
 const input_dispatcher = @import("input_dispatcher.zig");
+const image = @import("image.zig");
 
 var tty: TtyLinux = undefined;
 // blocking tty stdout
@@ -26,6 +27,7 @@ pub export fn _dummy_() void {
     std.log.debug("{}", .{global});
     std.log.debug("{}", .{terminfo_entry});
     std.log.debug("{}", .{content_type});
+    std.log.debug("{}", .{image});
 }
 
 comptime {
@@ -113,11 +115,11 @@ export fn w3m_loop() c_int {
     return 0;
 }
 
-export fn ttyname_tty() [*c]const u8 {
+pub fn ttyname_tty() [*c]const u8 {
     return c.ttyname(tty.stdin.handle);
 }
 
-fn getTermSize() !c.winsize {
+pub fn getTermSize() !c.winsize {
     var wins: c.winsize = undefined;
     const i = c.ioctl(tty.stdin.handle, c.TIOCGWINSZ, &wins);
     if (i >= 0 and wins.ws_row != 0 and wins.ws_col != 0) {
@@ -171,111 +173,6 @@ export fn term_title(s: [*c]const u8) void {
     //     if (title_str != NULL) {
     //         fprintf(ttyf, title_str, s);
     //     }
-}
-
-export fn initImage() void {
-    if (0 == g.activeImage) {
-        if (getCharSize()) {
-            g.activeImage = 1;
-        }
-    }
-}
-
-export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
-    if (getTermSize()) |ws| {
-        if (ws.ws_ypixel > 0 and ws.ws_row > 0 and ws.ws_xpixel > 0 and ws.ws_col > 0) {
-            ppc.* = ws.ws_xpixel / ws.ws_col;
-            ppl.* = ws.ws_ypixel / ws.ws_row;
-            return true;
-        }
-    } else |_| {
-        @panic("getTermSize");
-    }
-
-    // XTWINOPS
-    //
-    // fd_set rfd;
-    // struct timeval tval;
-    // char buf[100];
-    // char* p;
-    // ssize_t len;
-    // ssize_t left;
-    // int wp, hp, wc, hc;
-    // int i;
-    //
-    // fputs("\x1b[14t\x1b[18t", ttyf);
-    // flush_tty();
-    //
-    // p = buf;
-    // left = sizeof(buf) - 1;
-    // for (i = 0; i < 10; i++) {
-    //     tval.tv_usec = 200000; /* 0.2 sec * 10 */
-    //     tval.tv_sec = 0;
-    //     FD_ZERO(&rfd);
-    //     FD_SET(tty, &rfd);
-    //     if (select(tty + 1, &rfd, NULL, NULL, &tval) <= 0 || !FD_ISSET(tty, &rfd))
-    //         continue;
-    //
-    //     if ((len = read(tty, p, left)) <= 0)
-    //         continue;
-    //     p[len] = '\0';
-    //
-    //     if (sscanf(buf, "\x1b[4;%d;%dt\x1b[8;%d;%dt", &hp, &wp, &hc, &wc) == 4) {
-    //         if (wp > 0 && wc > 0 && hp > 0 && hc > 0) {
-    //             *ppc = wp / wc;
-    //             *ppl = hp / hc;
-    //             return 1;
-    //         } else {
-    //             return 0;
-    //         }
-    //     }
-    //     p += len;
-    //     left -= len;
-    // }
-
-    return false;
-}
-
-fn getCharSize() bool {
-    c.set_environ("W3M_TTY", ttyname_tty());
-
-    if (g.enable_inline_image != 0) {
-        var ppc: c_int = undefined;
-        var ppl: c_int = undefined;
-        if (get_pixel_per_cell(&ppc, &ppl)) {
-            g.pixel_per_char_i = ppc;
-            g.pixel_per_line_i = ppl;
-            g.pixel_per_char = @floatFromInt(ppc);
-            g.pixel_per_line = @floatFromInt(ppl);
-        } else {
-            g.pixel_per_char_i = @intFromFloat(g.pixel_per_char);
-            g.pixel_per_line_i = @intFromFloat(g.pixel_per_line);
-        }
-        return true;
-    }
-
-    // Str tmp = Strnew();
-    // if (!strchr(Imgdisplay, '/'))
-    //     Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
-    // Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
-    // FILE* f = popen(tmp->ptr, "r");
-    // if (!f)
-    //     return false;
-    //
-    // int w = 0, h = 0;
-    // while (fscanf(f, "%d %d", &w, &h) < 0) {
-    //     if (feof(f))
-    //         break;
-    // }
-    // pclose(f);
-    //
-    // if (!(w > 0 && h > 0))
-    //     return false;
-    // if (!set_pixel_per_char)
-    //     pixel_per_char = (int)(1.0 * w / COLS + 0.5);
-    // if (!set_pixel_per_line)
-    //     pixel_per_line = (int)(1.0 * h / LINES + 0.5);
-    return false;
 }
 
 export fn flush_tty() void {
