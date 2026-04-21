@@ -89,8 +89,8 @@ static const char* guess_filename(const char* file);
 static int _MoveFile(const char* path1, const char* path2);
 static void uncompress_stream(struct URLFile* uf, const char** src);
 static FILE* lessopen_stream(const char* path);
-static struct Buffer* loadcmdout(struct CmdArgs *args, const char* cmd,
-    struct Buffer* (*loadproc)(struct CmdArgs *args, struct URLFile*, struct Buffer*),
+static struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
+    struct Buffer* (*loadproc)(struct CmdArgs* args, struct URLFile*, struct Buffer*),
     struct Buffer* defaultbuf);
 static void addnewline(struct Buffer* buf, char* line, Lineprop* prop,
     Linecolor* color, int pos, int width, int nlines);
@@ -3058,13 +3058,14 @@ Str process_img(struct HtmlTag* tag, int width)
         i0 = i;
         if (w < 0 || i < 0) {
             struct Url u = parseURL2(p, cur_baseURL);
-            Image image;
-            image.url = parsedURL2Str(&u)->ptr;
+            struct Image image = {
+                .url = parsedURL2Str(&u)->ptr,
+                .cache = NULL,
+                .width = w,
+                .height = i,
+            };
             if (!uncompressed_file_type(u.file, &image.ext))
                 image.ext = filename_extension(u.file, TRUE);
-            image.cache = NULL;
-            image.width = w;
-            image.height = i;
 
             image.cache = getImage(&image, cur_baseURL, IMG_FLAG_SKIP);
             if (image.cache && image.cache->width > 0 && image.cache->height > 0) {
@@ -5430,8 +5431,8 @@ HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                         a_img->image = NULL;
                         if (iseq > 0) {
                             struct Url u = parseURL2(a_img->url, base);
-                            Image* image;
-                            a_img->image = image = New(Image);
+                            struct Image* image = New(struct Image);
+                            a_img->image = image;
                             image->url = parsedURL2Str(&u)->ptr;
                             if (!uncompressed_file_type(u.file, &image->ext))
                                 image->ext = filename_extension(u.file, TRUE);
@@ -7044,53 +7045,54 @@ _end:
 }
 
 struct Buffer*
-loadImageBuffer(struct CmdArgs *args, struct URLFile* uf, struct Buffer* newBuf)
+loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
 {
-    Image image;
-    ImageCache* cache;
-    Str tmp, tmpf;
-    FILE* src = NULL;
-    struct URLFile f;
-    SignalFunc prevtrap = NULL;
-    struct stat st;
     const struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
 
     loadImage(newBuf, IMG_FLAG_STOP);
-    image.url = uf->url;
-    image.ext = uf->ext;
-    image.width = -1;
-    image.height = -1;
-    image.cache = NULL;
-    cache = getImage(&image, (struct Url*)pu, IMG_FLAG_AUTO);
-    if (!(pu && pu->is_nocache) && cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st))
-        goto image_buffer;
+    struct Image image = {
+        .url = uf->url,
+        .ext = uf->ext,
+        .width = -1,
+        .height = -1,
+        .cache = NULL,
+    };
+    struct ImageCache* cache = getImage(&image, (struct Url*)pu, IMG_FLAG_AUTO);
+    struct stat st;
+    if (!(pu && pu->is_nocache) && cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st)) {
+        // goto image_buffer;
+    } else {
 
-    if (IStype(uf->stream) != IST_ENCODED)
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
-    TRAP_ON;
-    if (save2tmp(*uf, cache->file) < 0) {
+        SignalFunc prevtrap = NULL;
+
+        if (IStype(uf->stream) != IST_ENCODED)
+            uf->stream = newEncodedStream(uf->stream, uf->encoding);
+        TRAP_ON;
+        if (save2tmp(*uf, cache->file) < 0) {
+            TRAP_OFF;
+            return NULL;
+        }
         TRAP_OFF;
-        return NULL;
+
+        cache->loaded = IMG_FLAG_LOADED;
+        cache->index = 0;
     }
-    TRAP_OFF;
 
-    cache->loaded = IMG_FLAG_LOADED;
-    cache->index = 0;
-
-image_buffer:
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
     cache->loaded |= IMG_FLAG_DONT_REMOVE;
     if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL)
         newBuf->sourcefile = cache->file;
 
+    Str tmp, tmpf;
     tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
     tmpf = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmpf->ptr, "w");
+    FILE* src = fopen(tmpf->ptr, "w");
     if (src == NULL)
         return NULL;
     newBuf->mailcap_source = tmpf->ptr;
 
+    struct URLFile f;
     init_stream(&f, SCM_LOCAL, newStrStream(tmp));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
@@ -7182,8 +7184,8 @@ void saveBufferBody(struct Buffer* buf, FILE* f, int cont)
 }
 
 static struct Buffer*
-loadcmdout(struct CmdArgs *args, const char* cmd,
-    struct Buffer* (*loadproc)(struct CmdArgs *args, struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
+loadcmdout(struct CmdArgs* args, const char* cmd,
+    struct Buffer* (*loadproc)(struct CmdArgs* args, struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
 {
     FILE *f, *popen(const char*, const char*);
     struct Buffer* buf;
@@ -7205,7 +7207,7 @@ loadcmdout(struct CmdArgs *args, const char* cmd,
  */
 #define SHELLBUFFERNAME "*Shellout*"
 struct Buffer*
-getshell(struct CmdArgs *args, const char* cmd)
+getshell(struct CmdArgs* args, const char* cmd)
 {
     struct Buffer* buf = loadcmdout(args, cmd, loadBuffer, NULL);
     if (buf == NULL)

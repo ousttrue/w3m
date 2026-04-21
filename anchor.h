@@ -20,7 +20,7 @@ struct Anchor {
     char slave;
     short y;
     short rows;
-    struct _image* image;
+    struct Image* image;
 };
 
 struct AnchorList {

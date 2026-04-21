@@ -544,16 +544,15 @@ void shiftAnchorPosition(struct AnchorList* al, struct HmarkerList* hl, int line
 
 void addMultirowsImg(struct Buffer* buf, struct AnchorList* al)
 {
-    int i, j, k, col, ecol, pos;
-    Image* img;
-    struct Anchor a_img, a_href, a_form, *a;
+    int j, k, col, ecol, pos;
+    struct Anchor a_href, a_form, *a;
     struct Line *l, *ls;
 
     if (al == NULL || al->nanchor == 0)
         return;
-    for (i = 0; i < al->nanchor; i++) {
-        a_img = al->anchors[i];
-        img = a_img.image;
+    for (int i = 0; i < al->nanchor; i++) {
+        struct Anchor a_img = al->anchors[i];
+        struct Image* img = a_img.image;
         if (a_img.hseq < 0 || !img || img->rows <= 1)
             continue;
         for (l = buf->firstLine; l != NULL; l = l->next) {

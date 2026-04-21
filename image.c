@@ -1,8 +1,10 @@
 #include "image.h"
 #include "w3m.h"
+#include "global.h"
+#include "constants.h"
+#include "Str.h"
 #include "alloc.h"
 #include "term_tty.h"
-#include "constants.h"
 #include "textlist.h"
 #include "hash.h"
 #include "terms.h"
@@ -10,61 +12,39 @@
 #include "buffer.h"
 #include "anchor.h"
 #include "display.h"
-#include "url.h"
 #include "etc.h"
 #include "local.h"
-#include "global.h"
 #include "proto.h"
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <signal.h>
-#include <errno.h>
 #include <unistd.h>
-#include <sys/wait.h>
+#include <stdio.h>
 
 static int image_index = 0;
 
-/* display image */
-
-typedef struct _termialImage {
-    ImageCache* cache;
+struct TerminalImage {
+    struct ImageCache* cache;
     short x;
     short y;
     short sx;
     short sy;
     short width;
     short height;
-} TerminalImage;
+};
 
-static TerminalImage* terminal_image = NULL;
+static struct TerminalImage* terminal_image = NULL;
 static int n_terminal_image = 0;
 static int max_terminal_image = 0;
 static FILE *Imgdisplay_rf = NULL, *Imgdisplay_wf = NULL;
 static pid_t Imgdisplay_pid = 0;
 static int openImgdisplay(void);
 static void closeImgdisplay(void);
-static int getCharSize(void);
 
-void initImage()
+static int getCharSize(void)
 {
-    if (activeImage)
-        return;
-    if (getCharSize())
-        activeImage = TRUE;
-}
-
-static int
-getCharSize(void)
-{
-    FILE* f;
-    Str tmp;
-    int w = 0, h = 0;
-
     set_environ("W3M_TTY", ttyname_tty());
 
     if (enable_inline_image) {
         int ppc, ppl;
-
         if (get_pixel_per_cell(&ppc, &ppl)) {
             pixel_per_char_i = ppc;
             pixel_per_line_i = ppl;
@@ -74,17 +54,18 @@ getCharSize(void)
             pixel_per_char_i = (int)pixel_per_char;
             pixel_per_line_i = (int)pixel_per_line;
         }
-
-        return TRUE;
+        return true;
     }
 
-    tmp = Strnew();
+    Str tmp = Strnew();
     if (!strchr(Imgdisplay, '/'))
         Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
     Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
-    f = popen(tmp->ptr, "r");
+    FILE* f = popen(tmp->ptr, "r");
     if (!f)
-        return FALSE;
+        return false;
+
+    int w = 0, h = 0;
     while (fscanf(f, "%d %d", &w, &h) < 0) {
         if (feof(f))
             break;
@@ -92,12 +73,21 @@ getCharSize(void)
     pclose(f);
 
     if (!(w > 0 && h > 0))
-        return FALSE;
+        return false;
     if (!set_pixel_per_char)
         pixel_per_char = (int)(1.0 * w / COLS + 0.5);
     if (!set_pixel_per_line)
         pixel_per_line = (int)(1.0 * h / LINES + 0.5);
-    return TRUE;
+    return true;
+}
+
+void initImage()
+{
+    if (!activeImage) {
+        if (getCharSize()) {
+            activeImage = true;
+        }
+    }
 }
 
 void termImage()
@@ -121,20 +111,19 @@ openImgdisplay()
     else
         cmd = Imgdisplay;
     Imgdisplay_pid = open_pipe_rw(&Imgdisplay_rf, &Imgdisplay_wf);
-    if (Imgdisplay_pid < 0)
-        goto err0;
+    if (Imgdisplay_pid < 0) {
+        Imgdisplay_pid = 0;
+        activeImage = false;
+        return false;
+    }
     if (Imgdisplay_pid == 0) {
         /* child */
-        setup_child(FALSE, 2, -1);
+        setup_child(false, 2, -1);
         myExec(cmd);
         /* XXX: ifdef __EMX__, use start /f ? */
     }
-    activeImage = TRUE;
-    return TRUE;
-err0:
-    Imgdisplay_pid = 0;
-    activeImage = FALSE;
-    return FALSE;
+    activeImage = true;
+    return true;
 }
 
 static void
@@ -154,18 +143,18 @@ closeImgdisplay(void)
     Imgdisplay_pid = 0;
 }
 
-void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
+void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h)
 {
-    TerminalImage* i;
 
     if (!activeImage)
         return;
     if (n_terminal_image >= max_terminal_image) {
         max_terminal_image = max_terminal_image ? (2 * max_terminal_image) : 8;
-        terminal_image = New_Reuse(TerminalImage, terminal_image,
+        terminal_image = New_Reuse(struct TerminalImage, terminal_image,
             max_terminal_image);
     }
-    i = &terminal_image[n_terminal_image];
+
+    struct TerminalImage* i = &terminal_image[n_terminal_image];
     i->cache = cache;
     i->x = x;
     i->y = y;
@@ -200,23 +189,22 @@ err:
 
 void drawImage(void)
 {
-    static char buf[64];
-    int j, draw = FALSE;
-    TerminalImage* i;
-    struct stat st;
-
     if (!activeImage)
         return;
     if (!n_terminal_image)
         return;
-    for (j = 0; j < n_terminal_image; j++) {
-        i = &terminal_image[j];
 
+    static char buf[64];
+    bool draw = false;
+
+    for (int j = 0; j < n_terminal_image; j++) {
+        struct TerminalImage* i = &terminal_image[j];
         if (enable_inline_image) {
             /*
              * So this shouldn't ever happen, but if it does then at least let's
              * not have external programs fetch images from the Internet...
              */
+            struct stat st;
             if (!i->cache->touch || stat(i->cache->file, &st))
                 return;
 
@@ -288,10 +276,6 @@ void drawImage(void)
 
 void clearImage()
 {
-    static char buf[64];
-    int j;
-    TerminalImage* i;
-
     if (!activeImage)
         return;
     if (!n_terminal_image)
@@ -300,18 +284,18 @@ void clearImage()
         n_terminal_image = 0;
         return;
     }
-    for (j = 0; j < n_terminal_image; j++) {
-        i = &terminal_image[j];
+
+    for (int j = 0; j < n_terminal_image; j++) {
+        struct TerminalImage* i = &terminal_image[j];
         if (!(i->cache->loaded & IMG_FLAG_LOADED && i->width > 0 && i->height > 0))
             continue;
+        static char buf[64];
         sprintf(buf, "6;%d;%d;%d;%d\n", i->x, i->y, i->width, i->height);
         fputs(buf, Imgdisplay_wf);
     }
     syncImage();
     n_terminal_image = 0;
 }
-
-/* load image */
 
 #ifndef MAX_LOAD_IMAGE
 #define MAX_LOAD_IMAGE 8
@@ -320,21 +304,21 @@ static int n_load_image = 0;
 static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
 static GeneralList* image_list = NULL;
-static ImageCache** image_cache = NULL;
+static struct ImageCache** image_cache = NULL;
 static struct Buffer* image_buffer = NULL;
 
 void deleteImage(struct Buffer* buf)
 {
-    struct AnchorList* al;
-    struct Anchor* a;
-    int i;
 
     if (!buf)
         return;
-    al = buf->img;
+
+    struct AnchorList* al = buf->img;
     if (!al)
         return;
-    for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
+
+    struct Anchor* a = al->anchors;
+    for (int i = 0; i < al->nanchor; i++, a++) {
         if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
             unlink(a->image->cache->file);
     }
@@ -395,13 +379,10 @@ showImageProgress(struct Buffer* buf)
 
 void loadImage(struct Buffer* buf, int flag)
 {
-    ImageCache* cache;
+    struct ImageCache* cache;
     struct stat st;
     int i, draw = FALSE;
     /* int wait_st; */
-#ifdef DONT_CALL_GC_AFTER_FORK
-    char* loadargs[7];
-#endif
 
     if (maxLoadImage > MAX_LOAD_IMAGE)
         maxLoadImage = MAX_LOAD_IMAGE;
@@ -410,8 +391,8 @@ void loadImage(struct Buffer* buf, int flag)
     if (n_load_image == 0)
         n_load_image = maxLoadImage;
     if (!image_cache) {
-        image_cache = New_N(ImageCache*, MAX_LOAD_IMAGE);
-        memset(image_cache, 0, sizeof(ImageCache*) * MAX_LOAD_IMAGE);
+        image_cache = New_N(struct ImageCache*, MAX_LOAD_IMAGE);
+        memset(image_cache, 0, sizeof(struct ImageCache*) * MAX_LOAD_IMAGE);
     }
     for (i = 0; i < n_load_image; i++) {
         cache = image_cache[i];
@@ -486,7 +467,7 @@ void loadImage(struct Buffer* buf, int flag)
         if (image_cache[i])
             continue;
         while (1) {
-            cache = (ImageCache*)popValue(image_list);
+            cache = (struct ImageCache*)popValue(image_list);
             if (!cache) {
                 for (i = 0; i < n_load_image; i++) {
                     if (image_cache[i])
@@ -507,23 +488,6 @@ void loadImage(struct Buffer* buf, int flag)
         }
 
         flush_tty();
-#ifdef DONT_CALL_GC_AFTER_FORK
-        loadargs[0] = MyProgramName;
-        loadargs[1] = "-$$getimage";
-        loadargs[2] = conv_to_system(cache->url);
-        loadargs[3] = conv_to_system(parsedURL2Str(cache->current)->ptr);
-        loadargs[4] = cache->file;
-        loadargs[5] = cache->touch;
-        loadargs[6] = NULL;
-        if ((cache->pid = fork()) == 0) {
-            setup_child(FALSE, 0, -1);
-            execvp(MyProgramName, loadargs);
-            exit(1);
-        } else if (cache->pid < 0) {
-            cache->pid = 0;
-            return;
-        }
-#else /* !DONT_CALL_GC_AFTER_FORK */
         if ((cache->pid = fork()) == 0) {
             /*
              * setup_child(TRUE, 0, -1);
@@ -541,25 +505,23 @@ void loadImage(struct Buffer* buf, int flag)
             cache->pid = 0;
             return;
         }
-#endif /* !DONT_CALL_GC_AFTER_FORK */
     }
 }
 
-ImageCache*
-getImage(Image* image, struct Url* current, int flag)
+struct ImageCache* getImage(struct Image* image, struct Url* current, int flag)
 {
-    Str key = NULL;
-    ImageCache* cache;
-
     if (!activeImage)
         return NULL;
     if (!image_hash)
         image_hash = newHash_sv(100);
+
+    struct ImageCache* cache;
+    Str key = NULL;
     if (image->cache)
         cache = image->cache;
     else {
         key = Sprintf("%d;%d;%s", image->width, image->height, image->url);
-        cache = (ImageCache*)getHash_sv(image_hash, key->ptr, NULL);
+        cache = (struct ImageCache*)getHash_sv(image_hash, key->ptr, NULL);
     }
     if (cache && cache->index && abs(cache->index) <= image_index - MAX_IMAGE) {
         struct stat st;
@@ -572,7 +534,7 @@ getImage(Image* image, struct Url* current, int flag)
         if (flag == IMG_FLAG_SKIP)
             return NULL;
 
-        cache = New(ImageCache);
+        cache = New(struct ImageCache);
         cache->url = image->url;
         cache->current = current;
         cache->file = tmpfname(TMPF_DFL, image->ext)->ptr;
@@ -614,14 +576,13 @@ getImage(Image* image, struct Url* current, int flag)
 }
 
 static int
-parseImageHeader(char* path, u_int* width, u_int* height)
+parseImageHeader(const char* path, uint32_t* width, uint32_t* height)
 {
-    FILE* fp;
-    u_char buf[8];
+    FILE* fp = fopen(path, "r");
+    if (!fp)
+        return false;
 
-    if (!(fp = fopen(path, "r")))
-        return FALSE;
-
+    uint8_t buf[8];
     if (fread(buf, 1, 2, fp) != 2)
         goto error;
 
@@ -693,7 +654,7 @@ success:
     return TRUE;
 }
 
-int getImageSize(ImageCache* cache)
+int getImageSize(struct ImageCache* cache)
 {
     Str tmp;
     FILE* f;

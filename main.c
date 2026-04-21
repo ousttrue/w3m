@@ -596,17 +596,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 w3m_debug = TRUE;
             } else if (!strcmp("-reqlog", argv[i])) {
                 w3m_reqlog = rcFile("request.log");
-            }
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-            else if (!strcmp("-$$getimage", argv[i])) {
-                ++i;
-                getimage_args = argv + i;
-                i += 4;
-                if (i > argc)
-                    usage();
-            }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-            else {
+            } else {
                 usage();
             }
         } else if (*argv[i] == '+') {
@@ -651,21 +641,6 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
 
     if (w3m_backend)
         backend(args);
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    if (getimage_args) {
-        char* image_url = conv_from_system(getimage_args[0]);
-        char* base_url = conv_from_system(getimage_args[1]);
-        struct Url base_pu;
-
-        parseURL2(base_url, &base_pu, NULL);
-        image_source = getimage_args[2];
-        newbuf = loadGeneralFile(image_url, &base_pu, NULL, 0, NULL);
-        if (!newbuf || !newbuf->real_type || strncasecmp(newbuf->real_type, "image/", 6))
-            unlink(getimage_args[2]);
-        symlink(getimage_args[2], getimage_args[3]);
-        w3m_exit(0);
-    }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 
     if (w3m_dump)
         signal(SIGINT, SIG_IGN);
@@ -2965,7 +2940,7 @@ void resetPos(struct CmdArgs* args, BufferPos* b)
 
 bool submitCurrentBuffer(struct CmdArgs* args)
 {
-    if(!CurrentTab){
+    if (!CurrentTab) {
         return false;
     }
     if (!Currentbuf->submit) {
