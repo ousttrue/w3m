@@ -111,7 +111,6 @@ void saveHistory(struct CmdArgs *args, struct Hist* hist, size_t size)
     struct Hist* fhist;
     HistItem* item;
     char* histf;
-    char* tmpf;
     int rename_ret;
     struct stat st;
 
@@ -129,7 +128,7 @@ void saveHistory(struct CmdArgs *args, struct Hist* hist, size_t size)
             hist = fhist;
     }
 
-    tmpf = tmpfname(TMPF_HIST, NULL)->ptr;
+    const char* tmpf = tmpfname(TMPF_HIST, NULL);
     if ((f = fopen(tmpf, "w")) == NULL)
         goto fail;
     for (item = hist->list->first; item && hist->list->nitem > size;

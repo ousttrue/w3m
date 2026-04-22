@@ -1,6 +1,6 @@
 #include "line_input.h"
+#include "history.h"
 #include "qsort_util.h"
-#include "alloc.h"
 #include "term_tty.h"
 #include "global.h"
 #include "ctrlcode.h"
@@ -8,18 +8,16 @@
 #include "terms.h"
 #include "indep.h"
 #include "tab.h"
-#include "buffer.h"
-#include "wc_util.h"
 #include "url.h"
-#include "proto.h"
 #include "etc.h"
 #include "display.h"
 #include "local_cgi.h"
-#include "myctype.h"
-#include "history.h"
 
+#include "wc_util.h"
 #include <libwc/charset.h>
-#include <libwc/wtf.h>
+
+#include <sys/stat.h>
+#include <dirent.h>
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
@@ -215,11 +213,11 @@ char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* 
             cm_disp_next = -1;
         } else if (!i_quote && args->ch < 0x20) { /* Control code */
             if (incrfunc == NULL
-                || (args->ch = incrfunc(args, strBuf, strProp)) < 0x20) {
+                || (args->ch = incrfunc(args, strBuf->ptr, strProp)) < 0x20) {
                 (*InputKeymap[args->ch])(args);
             }
             if (incrfunc && args->ch != (unsigned char)-1 && args->ch != CTRL_J)
-                incrfunc(args, strBuf, strProp);
+                incrfunc(args, strBuf->ptr, strProp);
             if (cm_clear)
                 cm_next = false;
             if (cm_disp_clear)
@@ -237,7 +235,7 @@ char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* 
                 goto next_char;
             ins_char(args, tmp);
             if (incrfunc)
-                incrfunc(args, strBuf, strProp);
+                incrfunc(args, strBuf->ptr, strProp);
         }
         if (CLen && (flag & IN_CHAR))
             break;

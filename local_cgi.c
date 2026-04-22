@@ -16,7 +16,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <signal.h>
 #include <errno.h>
 #include <unistd.h>
 
@@ -25,18 +24,16 @@
 #define CGIFN_CGIBIN 2
 
 static Str Local_cookie = NULL;
-static char* Local_cookie_file = NULL;
+static const char* Local_cookie_file = NULL;
 
 static void
 writeLocalCookie()
 {
-    FILE* f;
-
     if (Local_cookie_file)
         return;
-    Local_cookie_file = tmpfname(TMPF_COOKIE, NULL)->ptr;
+    Local_cookie_file = tmpfname(TMPF_COOKIE, NULL);
     set_environ("LOCAL_COOKIE_FILE", Local_cookie_file);
-    f = fopen(Local_cookie_file, "wb");
+    FILE* f = fopen(Local_cookie_file, "wb");
     if (!f)
         return;
     localCookie();
@@ -287,21 +284,18 @@ cgi_filename(const char* uri, const char** fn, const char** name, const char** p
 
 FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, const char* referer)
 {
-    FILE *fr = NULL, *fw = NULL;
-    int status;
-    pid_t pid;
-    const char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
-
-    char* cgi_dir;
-
-    char* cgi_basename;
-
-    status = cgi_filename(uri, &file, &name, &path_info);
+    const char* file = uri;
+    const char* name = uri;
+    const char* path_info = NULL;
+    int status = cgi_filename(uri, &file, &name, &path_info);
     if (check_local_cgi(file, status) < 0)
         return NULL;
+
     writeLocalCookie();
+    FILE* fw = NULL;
+    const char* tmpf = NULL;
     if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
-        tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+        tmpf = tmpfname(TMPF_DFL, NULL);
         fw = fopen(tmpf, "w");
         if (!fw)
             return NULL;
@@ -309,10 +303,10 @@ FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, con
     if (qstr)
         uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
 
-    cgi_dir = mydirname(file);
-
-    cgi_basename = mybasename(file);
-    pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
+    const char* cgi_dir = mydirname(file);
+    const char* cgi_basename = mybasename(file);
+    FILE* fr = NULL;
+    pid_t pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
     /* Don't invoke gc after here, or the program might crash in some platforms */
     if (pid < 0) {
         if (fw)

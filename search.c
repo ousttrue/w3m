@@ -292,17 +292,16 @@ int srchcore(const char* str, SrchFunc func)
     return result;
 }
 
-int dispincsrch(struct CmdArgs* args, Str buf, Lineprop* prop)
+static int dispincsrch(struct CmdArgs* args, const char* str, Lineprop* prop)
 {
     static struct Buffer sbuf;
     bool do_next_search = false;
 
-    if (args->ch == 0 && buf == NULL) {
+    if (args->ch == 0 && str == NULL) {
         SAVE_BUFPOSITION(&sbuf); /* search starting point */
         return -1;
     }
 
-    const char* str = buf->ptr;
     switch (args->ch) {
     case 022: /* C-r */
         searchRoutine = backwardSearch;
@@ -359,7 +358,7 @@ void isrch(struct CmdArgs* args, SrchFunc func, const char* prompt)
     displayBuffer(args, B_FORCE_REDRAW);
 }
 
-void srch_nxtprv(struct CmdArgs *args, int reverse)
+void srch_nxtprv(struct CmdArgs* args, int reverse)
 {
     static SrchFunc routine[2] = {
         forwardSearch, backwardSearch

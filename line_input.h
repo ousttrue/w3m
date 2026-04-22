@@ -1,6 +1,5 @@
 #pragma once
-#include "defun_impl.h"
-#include "Str.h"
+#include <w3m.h>
 #include "line.h"
 
 enum InputLineFlags {
@@ -14,7 +13,7 @@ enum InputLineFlags {
 
 struct Hist;
 
-typedef int (*IncrFunc)(struct CmdArgs* args, Str buf, Lineprop* prop);
+typedef int (*IncrFunc)(struct CmdArgs* args, const char* str, Lineprop* prop);
 
 char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* def_str,
     enum InputLineFlags flag, struct Hist* hist, IncrFunc incfunc);

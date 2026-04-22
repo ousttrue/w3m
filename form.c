@@ -35,7 +35,7 @@ extern int max_textarea;
 extern struct FormSelectOption* select_option;
 extern int max_select;
 
-typedef void (*FormActionFunc)(struct CmdArgs *args, struct parsed_tagarg*);
+typedef void (*FormActionFunc)(struct CmdArgs* args, struct parsed_tagarg*);
 
 struct FormAction {
     const char* action;
@@ -535,38 +535,38 @@ form_fputs_decode(Str s, FILE* f)
     Strfputs(z, f);
 }
 
-void input_textarea(struct CmdArgs *args, struct FormItem* fi)
+static Str editor_input(struct CmdArgs* args, Str value, bool readonly)
 {
-    char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    Str tmp;
-    FILE* f;
-    wc_ces charset = DisplayCharset;
-    wc_uint8 auto_detect;
-
-    f = fopen(tmpf, "w");
+    const char* tmpf = tmpfname(TMPF_DFL, NULL);
+    FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
         disp_err_message(args, "Can't open temporary file", false);
-        return;
+        return value;
     }
-    if (fi->value)
-        form_fputs_decode(fi->value, f);
+    if (value) {
+        form_fputs_decode(value, f);
+    }
     fclose(f);
 
     if (exec_cmd(args, myEditor(Editor, tmpf, 1)->ptr))
         goto input_end;
 
-    if (fi->readonly)
+    if (readonly)
         goto input_end;
+
     f = fopen(tmpf, "r");
     if (f == NULL) {
         /* FIXME: gettextize? */
         disp_err_message(args, "Can't open temporary file", false);
         goto input_end;
     }
-    fi->value = Strnew();
-    auto_detect = WcOption.auto_detect;
+
+    Str out = Strnew();
+    wc_ces charset = DisplayCharset;
+    wc_uint8 auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
+    Str tmp;
     while (tmp = Strfgets(f), tmp->length > 0) {
         if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
             /* null line with bare LF */
@@ -576,15 +576,22 @@ void input_textarea(struct CmdArgs *args, struct FormItem* fi)
             Strcat_charp(tmp, "\r\n");
         }
         tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset);
-        Strcat(fi->value, tmp);
+        Strcat(out, tmp);
     }
     WcOption.auto_detect = auto_detect;
     fclose(f);
 input_end:
     unlink(tmpf);
+
+    return out;
 }
 
-void do_internal(struct CmdArgs *args, char* action, char* data)
+void input_textarea(struct CmdArgs* args, struct FormItem* fi)
+{
+    fi->value = editor_input(args, fi->value, fi->readonly);
+}
+
+void do_internal(struct CmdArgs* args, char* action, char* data)
 {
     for (int i = 0; internal_action[i].action; i++) {
         if (strcasecmp(internal_action[i].action, action) == 0) {
@@ -653,7 +660,7 @@ void updateSelectOption(struct FormItem* fi, struct FormSelectOptionItem* item)
     }
 }
 
-int formChooseOptionByMenu(struct CmdArgs *args, struct FormItem* fi, int x, int y)
+int formChooseOptionByMenu(struct CmdArgs* args, struct FormItem* fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     struct FormSelectOptionItem* opt;

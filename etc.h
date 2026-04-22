@@ -8,15 +8,17 @@
 pid_t open_pipe_rw(FILE** fr, FILE** fw);
 char* lastFileName(const char* path);
 
-#define TMPF_DFL 0
-#define TMPF_SRC 1
-#define TMPF_FRAME 2
-#define TMPF_CACHE 3
-#define TMPF_COOKIE 4
-#define TMPF_HIST 5
-#define MAX_TMPF_TYPE 6
+enum TmpFileType {
+    TMPF_DFL = 0,
+    TMPF_SRC = 1,
+    TMPF_FRAME = 2,
+    TMPF_CACHE = 3,
+    TMPF_COOKIE = 4,
+    TMPF_HIST = 5,
+    MAX_TMPF_TYPE = 6,
+};
+const char* tmpfname(enum TmpFileType type, const char* ext);
 
-Str tmpfname(int type, const char* ext);
 char* mydirname(const char* s);
 char* mybasename(const char* s);
 Str myEditor(const char* cmd, const char* file, int line);

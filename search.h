@@ -19,4 +19,3 @@ void srch(struct CmdArgs *args, SrchFunc func, const char* prompt);
 void isrch(struct CmdArgs *args, SrchFunc func, const char* prompt);
 void srch_nxtprv(struct CmdArgs *args, int reverse);
 int srchcore(const char* str, SrchFunc func);
-int dispincsrch(struct CmdArgs *args, Str buf, Lineprop* prop);

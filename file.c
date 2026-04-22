@@ -320,7 +320,6 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
     Str tmp;
     TextList* headerlist;
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
-    char* tmpf;
     FILE* src = NULL;
     Lineprop* propBuffer;
 
@@ -333,7 +332,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
 
     if (thru && !newBuf->header_source
         && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+        const char* tmpf = tmpfname(TMPF_DFL, NULL);
         src = fopen(tmpf, "w");
         if (src)
             newBuf->header_source = tmpf;
@@ -390,7 +389,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             if (thru && activeImage && displayImage) {
                 Str src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
-                    tmpf = &tmp->ptr[12];
+                    const char* tmpf = &tmp->ptr[12];
                     SKIP_BLANKS(tmpf);
                     src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
                         "\" alt=\"X-Image-URL\">", NULL);
@@ -1345,7 +1344,7 @@ loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* volatile cur
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
     struct URLOption url_option;
-    Str tmp;
+    const char* tmpf;
     Str volatile page = NULL;
     int gopher_download = FALSE;
     wc_ces charset = WC_CES_US_ASCII;
@@ -1671,8 +1670,8 @@ page_loaded:
         FILE* src;
         if (image_source)
             return NULL;
-        tmp = tmpfname(TMPF_SRC, ".html");
-        src = fopen(tmp->ptr, "w");
+        tmpf = tmpfname(TMPF_SRC, ".html");
+        src = fopen(tmpf, "w");
         if (src) {
             Str s = Strnew_wc_output(wc_Str_conv_strict(WcOption, page->ptr, page->length, InnerCharset, charset));
             Strfputs(s, src);
@@ -1686,7 +1685,7 @@ page_loaded:
                 file = Sprintf("%s.html", file)->ptr;
             if (f.scheme == SCM_NEWS_GROUP)
                 file = Sprintf("%s.html", file)->ptr;
-            doFileMove(args, tmp->ptr, file);
+            doFileMove(args, tmpf, file);
             return NO_BUFFER;
         }
         b = loadHTMLString(page);
@@ -1695,7 +1694,7 @@ page_loaded:
             b->real_scheme = pu.scheme;
             b->real_type = (char*)t;
             if (src)
-                b->sourcefile = tmp->ptr;
+                b->sourcefile = tmpf;
             b->document_charset = charset;
         }
         return b;
@@ -6094,16 +6093,15 @@ addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int
 struct Buffer*
 loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf)
 {
-    FILE* src = NULL;
-    Str tmp;
-
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
+
+    FILE* src = NULL;
     if (newBuf->sourcefile == NULL && (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
-        tmp = tmpfname(TMPF_SRC, ".html");
-        src = fopen(tmp->ptr, "w");
+        const char* tmpf = tmpfname(TMPF_SRC, ".html");
+        src = fopen(tmpf, "w");
         if (src)
-            newBuf->sourcefile = tmp->ptr;
+            newBuf->sourcefile = tmpf;
     }
 
     loadHTMLstream(f, newBuf, src, newBuf->bufferprop & BP_FRAME);
@@ -6737,7 +6735,7 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     Str lineBuf2;
     volatile char pre_lbuf = '\0';
     int nlines;
-    Str tmpf;
+    const char* tmpf;
     int64_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
@@ -6753,9 +6751,9 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
 
     if (newBuf->sourcefile == NULL && (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
-        src = fopen(tmpf->ptr, "w");
+        src = fopen(tmpf, "w");
         if (src)
-            newBuf->sourcefile = tmpf->ptr;
+            newBuf->sourcefile = tmpf;
     }
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
@@ -6852,11 +6850,11 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL)
         newBuf->sourcefile = cache->file;
 
-    Str tmpf = tmpfname(TMPF_SRC, ".html");
-    FILE* src = fopen(tmpf->ptr, "w");
+    const char* tmpf = tmpfname(TMPF_SRC, ".html");
+    FILE* src = fopen(tmpf, "w");
     if (src == NULL)
         return NULL;
-    newBuf->mailcap_source = tmpf->ptr;
+    newBuf->mailcap_source = tmpf;
 
     Str tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
     struct URLFile f = init_stream(SCM_LOCAL, newStrStream(tmp->ptr, tmp->length));
@@ -7271,7 +7269,7 @@ _end:
 struct Buffer*
 doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 {
-    Str tmpf, command;
+    Str command;
     struct mailcap* mcap;
     int mc_stat;
     struct Buffer* buf = NULL;
@@ -7281,20 +7279,20 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
         return NULL;
 
     if (mcap->nametemplate) {
-        tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
+        Str tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
         if (tmpf->ptr[0] == '.')
             ext = tmpf->ptr;
     }
-    tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
+    const char* tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
 
     if (uf.stream->type != IST_ENCODED)
         uf.stream = newEncodedStream(uf.stream, uf.encoding);
     header = checkHeader(defaultbuf, "Content-Type:");
     if (header)
         header = conv_to_system(header);
-    command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
+    command = unquote_mailcap(mcap->viewer, type, tmpf, header, &mc_stat);
     if (!(mc_stat & MCSTAT_REPNAME)) {
-        Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
+        Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf));
         command = tmp;
     }
 
@@ -7302,14 +7300,14 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
         flush_tty();
         if (!fork()) {
             setup_child(FALSE, 0, ISfd(uf.stream));
-            if (save2tmp(uf.stream, uf.scheme, tmpf->ptr) < 0)
+            if (save2tmp(uf.stream, uf.scheme, tmpf) < 0)
                 exit(1);
             UFclose(&uf);
             myExec(command->ptr);
         }
         return NO_BUFFER;
     } else {
-        if (save2tmp(uf.stream, uf.scheme, tmpf->ptr) < 0) {
+        if (save2tmp(uf.stream, uf.scheme, tmpf) < 0) {
             return NULL;
         }
     }
@@ -7319,7 +7317,7 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
         if (defaultbuf->sourcefile)
             src = defaultbuf->sourcefile;
         else
-            src = tmpf->ptr;
+            src = tmpf;
         defaultbuf->sourcefile = NULL;
         defaultbuf->mailcap = mcap;
     }
@@ -7404,7 +7402,7 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
     Str filen;
     const char *p, *q = NULL;
     pid_t pid;
-    char* lock;
+    const char* lock;
     struct stat st;
     int64_t size = 0;
     int is_pipe = FALSE;
@@ -7444,7 +7442,7 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
             }
             return -1;
         }
-        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+        lock = tmpfname(TMPF_DFL, ".lock");
         symlink(p, lock);
         flush_tty();
         pid = fork();
@@ -7556,7 +7554,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
          * disp_err_message(msg->ptr, FALSE);
          * }
          */
-        lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+        lock = tmpfname(TMPF_DFL, ".lock");
 
         symlink(p, lock);
         flush_tty();

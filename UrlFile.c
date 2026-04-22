@@ -972,7 +972,7 @@ void uncompress_stream(struct URLFile* uf, const char** src)
 
     if (uf->scheme != SCM_LOCAL
         && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, ext)->ptr;
+        tmpf = tmpfname(TMPF_DFL, ext);
     }
 
     /* child1 -- stdout|f1=uf -> parent */

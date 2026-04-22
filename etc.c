@@ -551,8 +551,6 @@ char* strerror(int errno)
 }
 #endif /* not HAVE_STRERROR */
 
-
-
 /* get last modified time */
 char* last_modified(struct Buffer* buf)
 {
@@ -947,30 +945,15 @@ static char* tmpf_base[MAX_TMPF_TYPE] = {
 };
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
-Str tmpfname(int type, const char* ext)
+const char* tmpfname(enum TmpFileType type, const char* ext)
 {
-    const char* dir;
-    switch (type) {
-    case TMPF_HIST:
-        dir = rc_dir;
-        break;
-    case TMPF_DFL:
-    case TMPF_COOKIE:
-    case TMPF_SRC:
-    case TMPF_FRAME:
-    case TMPF_CACHE:
-    default:
-        dir = tmp_dir;
-    }
-
+    const char* dir = (type == TMPF_HIST) ? rc_dir : tmp_dir;
     Str tmpf = Sprintf("%s/w3m%s%d-%d%s",
         dir,
         tmpf_base[type],
         CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
-
     addDeleteFile(tmpf->ptr);
-
-    return tmpf;
+    return tmpf->ptr;
 }
 
 static char* monthtbl[] = {

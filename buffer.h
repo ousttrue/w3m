@@ -97,7 +97,7 @@ struct Buffer {
     const char* edit;
     struct mailcap* mailcap;
     const char* mailcap_source;
-    char* header_source;
+    const char* header_source;
     char search_header;
     const char* ssl_certificate;
     enum GetImageFlag image_flag;

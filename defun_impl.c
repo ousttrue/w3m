@@ -266,7 +266,7 @@ void pipeBuf(struct CmdArgs* args)
         displayBuffer(args, B_NORMAL);
         return;
     }
-    char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    const char* tmpf = tmpfname(TMPF_DFL, NULL);
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         disp_message(args, Sprintf("Can't save buffer to %s", cmd)->ptr, true);
@@ -681,7 +681,7 @@ void editBf(struct CmdArgs* args)
 /* Run editor on the current screen */
 void editScr(struct CmdArgs* args)
 {
-    const char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    const char* tmpf = tmpfname(TMPF_DFL, NULL);
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */

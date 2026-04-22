@@ -60,7 +60,7 @@ struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetIm
         cache = New(struct ImageCache);
         cache->url = image->url;
         cache->current = current;
-        cache->file = tmpfname(TMPF_DFL, image->ext)->ptr;
+        cache->file = tmpfname(TMPF_DFL, image->ext);
         cache->pid = 0;
         cache->index = 0;
         cache->loaded = IMG_FLAG_UNLOADED;
@@ -71,7 +71,7 @@ struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetIm
             if (image->height > 0 && image->height % pixel_per_line_i > 0)
                 image->height += (pixel_per_line_i - image->height % pixel_per_line_i);
         }
-        cache->touch = tmpfname(TMPF_DFL, NULL)->ptr;
+        cache->touch = tmpfname(TMPF_DFL, NULL);
 
         cache->width = image->width;
         cache->height = image->height;
