@@ -1,6 +1,7 @@
 #pragma once
 #include <w3m.h>
 #include "line.h"
+#include "history.h"
 
 enum InputLineFlags {
     IN_STRING = 0x10,
@@ -11,26 +12,24 @@ enum InputLineFlags {
     IN_CHAR = 0x200,
 };
 
-struct Hist;
-
 typedef int (*IncrFunc)(struct CmdArgs* args, const char* str, Lineprop* prop);
 
 char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* def_str,
-    enum InputLineFlags flag, struct Hist* hist, IncrFunc incfunc);
+    enum InputLineFlags flag, enum HistoryType hist, IncrFunc incfunc);
 
-inline static char* inputLineHist(struct CmdArgs* args, const char* p, const char* d, enum InputLineFlags f, struct Hist* h)
+inline static char* inputLineHist(struct CmdArgs* args, const char* p, const char* d, enum InputLineFlags f, enum HistoryType h)
 {
     return inputLineHistSearch(args, p, d, f, h, NULL);
 }
 inline static char* inputLine(struct CmdArgs* args, const char* p, const char* d, enum InputLineFlags f)
 {
-    return inputLineHist(args, p, d, f, NULL);
+    return inputLineHist(args, p, d, f, HistoryNone);
 }
 inline static char* inputStr(struct CmdArgs* args, const char* p, const char* d)
 {
     return inputLine(args, p, d, IN_STRING);
 }
-inline static char* inputStrHist(struct CmdArgs* args, const char* p, const char* d, struct Hist* h)
+inline static char* inputStrHist(struct CmdArgs* args, const char* p, const char* d, enum HistoryType h)
 {
     return inputLineHist(args, p, d, IN_STRING, h);
 }
@@ -38,7 +37,7 @@ inline static char* inputFilename(struct CmdArgs* args, const char* p, const cha
 {
     return inputLine(args, p, d, IN_FILENAME);
 }
-inline static char* inputFilenameHist(struct CmdArgs* args, const char* p, const char* d, struct Hist* h)
+inline static char* inputFilenameHist(struct CmdArgs* args, const char* p, const char* d, enum HistoryType h)
 {
     return inputLineHist(args, p, d, IN_FILENAME, h);
 }

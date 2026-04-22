@@ -238,7 +238,7 @@ void setEnv(struct CmdArgs* args)
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
-        env = inputStrHist(args, "Set environ: ", env, TextHist);
+        env = inputStrHist(args, "Set environ: ", env, HistoryText);
         if (env == NULL || *env == '\0') {
             displayBuffer(args, B_NORMAL);
             return;
@@ -258,7 +258,7 @@ void pipeBuf(struct CmdArgs* args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(args, "Pipe buffer to: ", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(args, "Pipe buffer to: ", "", IN_COMMAND, HistoryShell);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -295,7 +295,7 @@ void pipesh(struct CmdArgs* args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(args, "(read shell[pipe])!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(args, "(read shell[pipe])!", "", IN_COMMAND, HistoryShell);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -321,7 +321,7 @@ void readsh(struct CmdArgs* args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(args, "(read shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(args, "(read shell)!", "", IN_COMMAND, HistoryShell);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -352,7 +352,7 @@ void execsh(struct CmdArgs* args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(args, "(exec shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(args, "(exec shell)!", "", IN_COMMAND, HistoryShell);
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -374,7 +374,7 @@ void ldfile(struct CmdArgs* args)
     const char* fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
         /* FIXME: gettextize? */
-        fn = inputFilenameHist(args, "(Load)Filename? ", NULL, LoadHist);
+        fn = inputFilenameHist(args, "(Load)Filename? ", NULL, HistoryLoad);
     }
     if (fn != NULL)
         fn = conv_to_system(fn);
@@ -786,7 +786,7 @@ void reMark(struct CmdArgs* args)
         return;
     const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist(args, "(Mark)Regexp: ", MarkString, TextHist);
+        str = inputStrHist(args, "(Mark)Regexp: ", MarkString, HistoryText);
         if (str == NULL || *str == '\0') {
             displayBuffer(args, B_NORMAL);
             return;
@@ -1165,10 +1165,10 @@ void goHome(struct CmdArgs* args)
         SKIP_BLANKS(url);
         url = url_encode(url, NULL, 0);
         p_url = parseURL2(url, NULL);
-        pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+        pushUrlHist(parsedURL2Str(&p_url)->ptr);
         cmd_loadURL(args, url, NULL, NULL, NULL);
         if (Currentbuf != cur_buf) /* success */
-            pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+            pushUrlHist(parsedURL2Str(&Currentbuf->currentURL)->ptr);
     }
 }
 
@@ -1215,7 +1215,7 @@ void setOpt(struct CmdArgs* args)
             char* v = get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
-        opt = inputStrHist(args, "Set option: ", opt, TextHist);
+        opt = inputStrHist(args, "Set option: ", opt, HistoryText);
         if (opt == NULL || *opt == '\0') {
             displayBuffer(args, B_NORMAL);
             return;
@@ -1261,7 +1261,7 @@ void linkMn(struct CmdArgs* args)
     }
 
     struct Url p_url = parseURL2(l->url, baseURL(Currentbuf));
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    pushUrlHist(parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(args, l->url, baseURL(Currentbuf),
         parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
 }
@@ -1304,7 +1304,7 @@ void cooLst(struct CmdArgs* args)
 /* History page */
 void ldHist(struct CmdArgs* args)
 {
-    Str html = historyBuffer(URLHist);
+    Str html = Strnew_charp(historyBuffer(HistoryURL));
     cmd_loadBuffer(args, loadHTMLString(html), BP_NO_URL, LB_NOLINK);
 }
 
@@ -1337,7 +1337,7 @@ void svBuf(struct CmdArgs* args)
     file = searchKeyData();
     if (file == NULL || *file == '\0') {
         /* FIXME: gettextize? */
-        qfile = inputLineHist(args, "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
+        qfile = inputLineHist(args, "Save buffer to: ", NULL, IN_COMMAND, HistorySave);
         if (qfile == NULL || *qfile == '\0') {
             displayBuffer(args, B_NORMAL);
             return;
@@ -1451,9 +1451,8 @@ void vwSrc(struct CmdArgs* args)
         if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
             wc_ces old_charset;
             wc_bool old_fix_width_conv;
-            FILE* f;
-            Str tmpf = tmpfname(TMPF_SRC, NULL);
-            f = fopen(tmpf->ptr, "w");
+            const char* tmpf = tmpfname(TMPF_SRC, NULL);
+            FILE* f = fopen(tmpf, "w");
             if (f == NULL)
                 return;
             old_charset = DisplayCharset;
@@ -1466,7 +1465,7 @@ void vwSrc(struct CmdArgs* args)
             DisplayCharset = old_charset;
             WcOption.fix_width_conv = old_fix_width_conv;
             fclose(f);
-            Currentbuf->sourcefile = tmpf->ptr;
+            Currentbuf->sourcefile = tmpf;
         } else {
             return;
         }
@@ -1833,7 +1832,7 @@ void execCmd(struct CmdArgs* args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist(args, "command [; ...]: ", "", TextHist);
+        data = inputStrHist(args, "command [; ...]: ", "", HistoryText);
         if (data == NULL) {
             displayBuffer(args, B_NORMAL);
             return;
@@ -1868,7 +1867,7 @@ void setAlarm(struct CmdArgs* args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist(args, "(Alarm)sec command: ", "", TextHist);
+        data = inputStrHist(args, "(Alarm)sec command: ", "", HistoryText);
         if (data == NULL) {
             displayBuffer(args, B_NORMAL);
             return;
@@ -1942,7 +1941,7 @@ void defKey(struct CmdArgs* args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist(args, "Key definition: ", "", TextHist);
+        data = inputStrHist(args, "Key definition: ", "", HistoryText);
         if (data == NULL || *data == '\0') {
             displayBuffer(args, B_NORMAL);
             return;

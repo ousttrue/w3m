@@ -1,20 +1,49 @@
+#include "history.h"
+#include "textlist.h"
 #include "global.h"
-#include "etc.h"
-#include "display.h"
 #include "rc.h"
 #include "url.h"
-#include "history.h"
 #include "alloc.h"
 #include "indep.h"
+#include "hash.h"
 #include <sys/stat.h>
 
+#define HIST_LIST_MAX GENERAL_LIST_MAX
+#define HIST_HASH_SIZE 127
+
 #define HISTORY_FILE "history"
+
+typedef GeneralList HistList;
+struct Hist {
+    HistList* list;
+    ListItem* current;
+    Hash_sv* hash;
+    long long mtime;
+};
 
 struct Hist* LoadHist;
 struct Hist* SaveHist;
 struct Hist* URLHist;
 struct Hist* ShellHist;
 struct Hist* TextHist;
+
+static struct Hist* getHistory(enum HistoryType h)
+{
+    switch (h) {
+    case HistoryNone:
+        return NULL;
+    case HistoryLoad:
+        return LoadHist;
+    case HistorySave:
+        return SaveHist;
+    case HistoryURL:
+        return URLHist;
+    case HistoryShell:
+        return ShellHist;
+    case HistoryText:
+        return TextHist;
+    }
+}
 
 static struct Hist* newHist(void)
 {
@@ -34,23 +63,58 @@ void initHist(void)
     URLHist = newHist();
 }
 
-/* Merge entries from their history into ours */
-static int
-mergeHistory(struct Hist* ours, struct Hist* theirs)
+static ListItem*
+getHashHist(struct Hist* hist, const char* ptr)
 {
-    HistItem* item;
+    ListItem* item;
 
-    for (item = theirs->list->first; item; item = item->next)
-        if (!getHashHist(ours, item->ptr))
-            pushHist(ours, item->ptr);
-
-    return 0;
+    if (hist == NULL || hist->list == NULL)
+        return NULL;
+    if (hist->hash == NULL) {
+        hist->hash = newHash_sv(HIST_HASH_SIZE);
+        for (item = hist->list->first; item; item = item->next)
+            putHash_sv(hist->hash, item->ptr, (void*)item);
+    }
+    return (ListItem*)getHash_sv(hist->hash, ptr, NULL);
 }
 
-Str historyBuffer(struct Hist* hist)
+bool hasHist(enum HistoryType hist, const char* ptr)
 {
+    return getHashHist(getHistory(hist), ptr) != 0;
+}
+
+static ListItem*
+_pushHist(struct Hist* hist, const char* ptr)
+{
+    ListItem* item;
+
+    if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
+        return NULL;
+    item = (ListItem*)newListItem((void*)allocStr(ptr, -1),
+        NULL, (ListItem*)hist->list->last);
+    if (hist->list->last)
+        hist->list->last->next = item;
+    else
+        hist->list->first = item;
+    hist->list->last = item;
+    hist->list->nitem++;
+    return item;
+}
+
+/* Merge entries from their history into ours */
+static void
+mergeHistory(struct Hist* ours, struct Hist* theirs)
+{
+    for (ListItem* item = theirs->list->first; item; item = item->next)
+        if (!getHashHist(ours, item->ptr))
+            _pushHist(ours, item->ptr);
+}
+
+const char* historyBuffer(enum HistoryType _hist)
+{
+    struct Hist* hist = getHistory(_hist);
     Str src = Strnew();
-    HistItem* item;
+    ListItem* item;
     char *p, *q;
 
     /* FIXME: gettextize? */
@@ -72,10 +136,10 @@ Str historyBuffer(struct Hist* hist)
         }
     }
     Strcat_charp(src, "</ol>\n</body>\n</html>");
-    return src;
+    return src->ptr;
 }
 
-int loadHistory(struct Hist* hist)
+static int _loadHistory(struct Hist* hist)
 {
     FILE* f;
     Str line;
@@ -99,53 +163,60 @@ int loadHistory(struct Hist* hist)
         Strremovetrailingspaces(line);
         if (line->length == 0)
             continue;
-        pushHist(hist, url_quote(line->ptr));
+        _pushHist(hist, url_quote(line->ptr));
     }
     fclose(f);
     return 0;
 }
 
-void saveHistory(struct CmdArgs *args, struct Hist* hist, size_t size)
+int loadHistory(enum HistoryType hist)
 {
-    FILE* f;
-    struct Hist* fhist;
-    HistItem* item;
-    char* histf;
-    int rename_ret;
-    struct stat st;
+    return _loadHistory(getHistory(hist));
+}
 
+void saveHistory(enum HistoryType _hist)
+{
+    struct Hist* hist = getHistory(_hist);
     if (hist == NULL || hist->list == NULL)
         return;
 
-    histf = rcFile(HISTORY_FILE);
-    if (stat(histf, &st) == -1)
-        goto fail;
+    char* histf = rcFile(HISTORY_FILE);
+    struct stat st;
+    if (stat(histf, &st) == -1) {
+        return;
+    }
+
     if (hist->mtime != (long long)st.st_mtime) {
-        fhist = newHist();
-        if (loadHistory(fhist) || mergeHistory(fhist, hist))
-            disp_err_message(args, "Can't merge history", false);
-        else
+        struct Hist* fhist = newHist();
+        if (_loadHistory(fhist)) {
+            // disp_err_message(args, "Can't merge history", false);
+        } else {
+            mergeHistory(fhist, hist);
             hist = fhist;
+        }
     }
 
     const char* tmpf = tmpfname(TMPF_HIST, NULL);
-    if ((f = fopen(tmpf, "w")) == NULL)
-        goto fail;
-    for (item = hist->list->first; item && hist->list->nitem > size;
+    FILE* f = fopen(tmpf, "w");
+    if (f == NULL) {
+        return;
+    }
+
+    ListItem* item = hist->list->first;
+    for (; item && hist->list->nitem > URLHistSize;
         item = item->next)
-        size++;
+        URLHistSize++;
     for (; item; item = item->next)
         fprintf(f, "%s\n", (char*)item->ptr);
-    if (fclose(f) == EOF)
-        goto fail;
-    rename_ret = rename(tmpf, rcFile(HISTORY_FILE));
-    if (rename_ret != 0)
-        goto fail;
+    if (fclose(f) == EOF) {
+        return;
+    }
+    int rename_ret = rename(tmpf, rcFile(HISTORY_FILE));
+    if (rename_ret != 0) {
+        // disp_err_message(args, "Can't open history", false);
+        return;
+    }
 
-    return;
-
-fail:
-    disp_err_message(args, "Can't open history", false);
     return;
 }
 
@@ -153,28 +224,23 @@ fail:
  * The following functions are used for internal stuff, we need them regardless
  * if history is used or not.
  */
-
-struct Hist* copyHist(struct Hist* hist)
+static struct Hist* copyHist(struct Hist* hist)
 {
-    struct Hist* new;
-    HistItem* item;
-
     if (hist == NULL)
         return NULL;
-    new = newHist();
-    for (item = hist->list->first; item; item = item->next)
-        pushHist(new, item->ptr);
+
+    struct Hist* new = newHist();
+    for (ListItem* item = hist->list->first; item; item = item->next)
+        _pushHist(new, item->ptr);
     return new;
 }
 
-HistItem*
-unshiftHist(struct Hist* hist, const char* ptr)
+void unshiftHist(enum HistoryType _hist, const char* ptr)
 {
-    HistItem* item;
-
+    struct Hist* hist = getHistory(_hist);
     if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
-        return NULL;
-    item = (HistItem*)newListItem((void*)allocStr(ptr, -1),
+        return;
+    ListItem* item = (ListItem*)newListItem((void*)allocStr(ptr, -1),
         (ListItem*)hist->list->first, NULL);
     if (hist->list->first)
         hist->list->first->prev = item;
@@ -182,33 +248,20 @@ unshiftHist(struct Hist* hist, const char* ptr)
         hist->list->last = item;
     hist->list->first = item;
     hist->list->nitem++;
-    return item;
+    return;
 }
 
-HistItem*
-pushHist(struct Hist* hist, const char* ptr)
+void pushHist(enum HistoryType hist, const char* ptr)
 {
-    HistItem* item;
-
-    if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
-        return NULL;
-    item = (HistItem*)newListItem((void*)allocStr(ptr, -1),
-        NULL, (ListItem*)hist->list->last);
-    if (hist->list->last)
-        hist->list->last->next = item;
-    else
-        hist->list->first = item;
-    hist->list->last = item;
-    hist->list->nitem++;
-    return item;
+    _pushHist(getHistory(hist), ptr);
 }
 
 /* Don't mix pushHashHist() and pushHist()/unshiftHist(). */
 
-HistItem*
+static ListItem*
 pushHashHist(struct Hist* hist, const char* ptr)
 {
-    HistItem* item;
+    ListItem* item;
 
     if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
         return NULL;
@@ -224,28 +277,18 @@ pushHashHist(struct Hist* hist, const char* ptr)
             hist->list->first = item->next;
         hist->list->nitem--;
     }
-    item = pushHist(hist, ptr);
+    item = _pushHist(hist, ptr);
     putHash_sv(hist->hash, ptr, (void*)item);
     return item;
 }
-
-HistItem*
-getHashHist(struct Hist* hist, const char* ptr)
+void pushUrlHist(const char* ptr)
 {
-    HistItem* item;
-
-    if (hist == NULL || hist->list == NULL)
-        return NULL;
-    if (hist->hash == NULL) {
-        hist->hash = newHash_sv(HIST_HASH_SIZE);
-        for (item = hist->list->first; item; item = item->next)
-            putHash_sv(hist->hash, item->ptr, (void*)item);
-    }
-    return (HistItem*)getHash_sv(hist->hash, ptr, NULL);
+    pushHashHist(getHistory(HistoryURL), ptr);
 }
 
-const char* lastHist(struct Hist* hist)
+const char* lastHist(enum HistoryType _hist)
 {
+    struct Hist* hist = getHistory(_hist);
     if (hist == NULL || hist->list == NULL)
         return NULL;
     if (hist->list->last) {
@@ -255,8 +298,9 @@ const char* lastHist(struct Hist* hist)
     return NULL;
 }
 
-const char* nextHist(struct Hist* hist)
+const char* nextHist(enum HistoryType _hist)
 {
+    struct Hist* hist = getHistory(_hist);
     if (hist == NULL || hist->list == NULL)
         return NULL;
     if (hist->current && hist->current->next) {
@@ -266,8 +310,9 @@ const char* nextHist(struct Hist* hist)
     return NULL;
 }
 
-const char* prevHist(struct Hist* hist)
+const char* prevHist(enum HistoryType _hist)
 {
+    struct Hist* hist = getHistory(_hist);
     if (hist == NULL || hist->list == NULL)
         return NULL;
     if (hist->current && hist->current->prev) {

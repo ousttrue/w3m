@@ -1,35 +1,22 @@
 #pragma once
-#include "textlist.h"
-#include "hash.h"
 
-#define HIST_LIST_MAX GENERAL_LIST_MAX
-#define HIST_HASH_SIZE 127
-
-typedef ListItem HistItem;
-typedef GeneralList HistList;
-struct Hist {
-    HistList* list;
-    HistItem* current;
-    Hash_sv* hash;
-    long long mtime;
+enum HistoryType {
+    HistoryNone,
+    HistoryLoad,
+    HistorySave,
+    HistoryURL,
+    HistoryShell,
+    HistoryText,
 };
 
-extern struct Hist* LoadHist;
-extern struct Hist* SaveHist;
-extern struct Hist* URLHist;
-extern struct Hist* ShellHist;
-extern struct Hist* TextHist;
-
 void initHist(void);
-struct Hist* copyHist(struct Hist* hist);
-HistItem* unshiftHist(struct Hist* hist, const char* ptr);
-HistItem* pushHist(struct Hist* hist, const char* ptr);
-HistItem* pushHashHist(struct Hist* hist, const char* ptr);
-HistItem* getHashHist(struct Hist* hist, const char* ptr);
-const char* lastHist(struct Hist* hist);
-const char* nextHist(struct Hist* hist);
-const char* prevHist(struct Hist* hist);
-int loadHistory(struct Hist* hist);
-struct CmdArgs;
-void saveHistory(struct CmdArgs *args, struct Hist* hist, size_t size);
-Str historyBuffer(struct Hist* hist);
+void unshiftHist(enum HistoryType hist, const char* ptr);
+void pushHist(enum HistoryType hist, const char* ptr);
+void pushUrlHist(const char* ptr);
+bool hasHist(enum HistoryType hist, const char* ptr);
+const char* lastHist(enum HistoryType hist);
+const char* nextHist(enum HistoryType hist);
+const char* prevHist(enum HistoryType hist);
+int loadHistory(enum HistoryType hist);
+void saveHistory(enum HistoryType hist);
+const char* historyBuffer(enum HistoryType hist);

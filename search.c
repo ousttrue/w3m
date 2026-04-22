@@ -244,7 +244,7 @@ void srch(struct CmdArgs* args, SrchFunc func, const char* prompt)
 
     const char* str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist(args, prompt, NULL, TextHist);
+        str = inputStrHist(args, prompt, NULL, HistoryText);
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
@@ -351,7 +351,7 @@ void isrch(struct CmdArgs* args, SrchFunc func, const char* prompt)
     dispincsrch(args, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    const char* str = inputLineHistSearch(args, prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    const char* str = inputLineHistSearch(args, prompt, NULL, IN_STRING, HistoryText, dispincsrch);
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }

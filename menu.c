@@ -871,7 +871,7 @@ menuForwardSearch(Menu* menu, const char* str, int from)
 static int
 menu_search_forward(struct CmdArgs *args, Menu* menu, int from)
 {
-    const char* str = inputStrHist(args, "Forward: ", NULL, TextHist);
+    const char* str = inputStrHist(args, "Forward: ", NULL, HistoryText);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')
@@ -917,7 +917,7 @@ menuBackwardSearch(Menu* menu, const char* str, int from)
 static int
 menu_search_backward(struct CmdArgs *args, Menu* menu, int from)
 {
-    const char* str = inputStrHist(args, "Backward: ", NULL, TextHist);
+    const char* str = inputStrHist(args, "Backward: ", NULL, HistoryText);
     if (str != NULL && *str == '\0')
         str = SearchString;
     if (str == NULL || *str == '\0')

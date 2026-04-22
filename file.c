@@ -7411,7 +7411,7 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
-            q = inputLineHist(args, "(Download)Save file to: ", defstr, IN_COMMAND, SaveHist);
+            q = inputLineHist(args, "(Download)Save file to: ", defstr, IN_COMMAND, HistorySave);
             if (q == NULL || *q == '\0')
                 return FALSE;
             p = conv_to_system(q);
@@ -7533,7 +7533,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
         if (p == NULL || *p == '\0') {
             /* FIXME: gettextize? */
             p = inputLineHist(args, "(Download)Save file to: ",
-                defstr, IN_FILENAME, SaveHist);
+                defstr, IN_FILENAME, HistorySave);
             if (p == NULL || *p == '\0')
                 return -1;
             p = conv_to_system(p);

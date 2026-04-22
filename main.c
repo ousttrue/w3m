@@ -625,7 +625,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     sync_with_option(args);
     initCookie();
     if (UseHistory)
-        loadHistory(URLHist);
+        loadHistory(HistoryURL);
 
     /*  if (w3m_dump)
      *    WcOption.pre_conv = WC_TRUE;
@@ -676,7 +676,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else if (newbuf != NO_BUFFER)
-                pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+                pushUrlHist(parsedURL2Str(&newbuf->currentURL)->ptr);
         } else {
             if (fmInitialized)
                 fmTerm();
@@ -752,9 +752,9 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 break;
             case SCM_LOCAL:
             case SCM_LOCAL_CGI:
-                unshiftHist(LoadHist, url);
+                unshiftHist(HistoryLoad, url);
             default:
-                pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+                pushUrlHist(parsedURL2Str(&newbuf->currentURL)->ptr);
                 break;
             }
         } else if (newbuf == NO_BUFFER)
@@ -1210,7 +1210,7 @@ void _quitfm(struct CmdArgs* args, int confirm)
     fmTerm();
     save_cookies();
     if (UseHistory && SaveURLHist)
-        saveHistory(args, URLHist, URLHistSize);
+        saveHistory(HistoryURL);
     w3m_exit(0);
 }
 
@@ -1285,7 +1285,7 @@ struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* targe
     }
 
     pu = parseURL2(url, base);
-    pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
+    pushUrlHist(parsedURL2Str(&pu)->ptr);
 
     if (buf == NO_BUFFER) {
         return NULL;
@@ -1367,7 +1367,7 @@ void gotoLabel(struct CmdArgs* args, const char* label)
     for (i = 0; i < MAX_LB; i++)
         buf->linkBuffer[i] = NULL;
     buf->currentURL.label = allocStr(label, -1);
-    pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
+    pushUrlHist(parsedURL2Str(&buf->currentURL)->ptr);
     (*buf->clone)++;
     pushBuffer(args, buf);
     gotoLine(Currentbuf, al->start.line);
@@ -1404,7 +1404,7 @@ int handleMailto(struct CmdArgs* args, const char* url)
     }
     exec_cmd(args, myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
     displayBuffer(args, B_FORCE_REDRAW);
-    pushHashHist(URLHist, url);
+    pushUrlHist(url);
     return 1;
 }
 
@@ -1629,7 +1629,7 @@ void _followForm(struct CmdArgs* args, int submit)
             /* FIXME: gettextize? */
             disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
-        p = inputStrHist(args, "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+        p = inputStrHist(args, "TEXT:", fi->value ? fi->value->ptr : NULL, HistoryText);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -1644,8 +1644,7 @@ void _followForm(struct CmdArgs* args, int submit)
             /* FIXME: gettextize? */
             disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
         /* FIXME: gettextize? */
-        p = inputFilenameHist(args, "Filename:", fi->value ? fi->value->ptr : NULL,
-            NULL);
+        p = inputFilenameHist(args, "Filename:", fi->value ? fi->value->ptr : NULL, HistoryNone);
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -1825,7 +1824,7 @@ void _nextA(struct CmdArgs* args, bool visited)
                 hseq++;
                 if (visited == TRUE && an) {
                     url = parseURL2(an->url, baseURL(Currentbuf));
-                    if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                    if (hasHist(HistoryURL, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
                 }
@@ -1844,7 +1843,7 @@ void _nextA(struct CmdArgs* args, bool visited)
             y = an->start.line;
             if (visited == TRUE) {
                 url = parseURL2(an->url, baseURL(Currentbuf));
-                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                if (hasHist(HistoryURL, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
             }
@@ -1907,7 +1906,7 @@ void _prevA(struct CmdArgs* args, bool visited)
                 hseq--;
                 if (visited == TRUE && an) {
                     url = parseURL2(an->url, baseURL(Currentbuf));
-                    if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                    if (hasHist(HistoryURL, parsedURL2Str(&url)->ptr)) {
                         goto _end;
                     }
                 }
@@ -1926,7 +1925,7 @@ void _prevA(struct CmdArgs* args, bool visited)
             y = an->start.line;
             if (visited == TRUE && an) {
                 url = parseURL2(an->url, baseURL(Currentbuf));
-                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                if (hasHist(HistoryURL, parsedURL2Str(&url)->ptr)) {
                     goto _end;
                 }
             }
@@ -2097,8 +2096,7 @@ void goURL0(struct CmdArgs* args, char* prompt, int relative)
 
     const char* url = searchKeyData();
     if (url == NULL) {
-        struct Hist* hist = copyHist(URLHist);
-        struct Anchor* a;
+        // struct Hist* hist = copyHist(URLHist);
 
         current = baseURL(Currentbuf);
         if (current) {
@@ -2106,18 +2104,18 @@ void goURL0(struct CmdArgs* args, char* prompt, int relative)
             if (DefaultURLString == DEFAULT_URL_CURRENT)
                 url = url_decode2(c_url, NULL);
             else
-                pushHist(hist, c_url);
+                pushHist(HistoryURL, c_url);
         }
-        a = retrieveCurrentAnchor(Currentbuf);
+        struct Anchor* a = retrieveCurrentAnchor(Currentbuf);
         if (a) {
             p_url = parseURL2(a->url, current);
             const char* a_url = parsedURL2Str(&p_url)->ptr;
             if (DefaultURLString == DEFAULT_URL_LINK)
                 url = url_decode2(a_url, Currentbuf);
             else
-                pushHist(hist, a_url);
+                pushHist(HistoryURL, a_url);
         }
-        url = inputLineHist(args, prompt, url, IN_URL, hist);
+        url = inputLineHist(args, prompt, url, IN_URL, HistoryURL);
         if (url != NULL)
             SKIP_BLANKS(url);
     }
@@ -2143,10 +2141,10 @@ void goURL0(struct CmdArgs* args, char* prompt, int relative)
         return;
     }
     p_url = parseURL2(url, current);
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    pushUrlHist(parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(args, url, current, referer, NULL);
     if (Currentbuf != cur_buf) /* success */
-        pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+        pushUrlHist(parsedURL2Str(&Currentbuf->currentURL)->ptr);
 }
 
 void cmd_loadBuffer(struct CmdArgs* args, struct Buffer* buf, int prop, int linkid)
@@ -2181,7 +2179,7 @@ void follow_map(struct CmdArgs* args, struct parsed_tagarg* arg)
         return;
     }
     struct Url p_url = parseURL2(a->url, baseURL(Currentbuf));
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    pushUrlHist(parsedURL2Str(&p_url)->ptr);
     if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         struct Buffer* buf;
 

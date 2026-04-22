@@ -1,4 +1,5 @@
 #include "line_input.h"
+#include "alloc.h"
 #include "history.h"
 #include "qsort_util.h"
 #include "term_tty.h"
@@ -109,12 +110,12 @@ static enum CompletionFlags cm_mode = 0;
 static int need_redraw, is_passwd;
 static int move_word;
 
-static struct Hist* CurrentHist;
+static enum HistoryType CurrentHist = HistoryNone;
 static Str strCurrentBuf;
 static int use_hist;
 
 char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* def_str,
-    enum InputLineFlags flag, struct Hist* hist, IncrFunc incrfunc)
+    enum InputLineFlags flag, enum HistoryType hist, IncrFunc incrfunc)
 {
     int opos, x, y, lpos, rpos, epos;
     char* p;
@@ -124,7 +125,7 @@ char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* 
     move_word = true;
 
     CurrentHist = hist;
-    if (hist != NULL) {
+    if (hist != HistoryNone) {
         use_hist = true;
         strCurrentBuf = NULL;
     } else {
@@ -918,7 +919,7 @@ doComplete(Str ifn, enum CompletionStatus* status, int next)
 
 static int _prev(struct CmdArgs* args)
 {
-    struct Hist* hist = CurrentHist;
+    enum HistoryType hist = CurrentHist;
     if (!use_hist)
         return 0;
     const char* p;
@@ -942,7 +943,7 @@ static int _prev(struct CmdArgs* args)
 
 static int _next(struct CmdArgs* args)
 {
-    struct Hist* hist = CurrentHist;
+    enum HistoryType hist = CurrentHist;
 
     if (!use_hist)
         return 0;

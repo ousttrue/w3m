@@ -628,7 +628,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
                 url = parseURL2(a->url, baseURL(buf));
-                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                if (hasHist(HistoryURL, parsedURL2Str(&url)->ptr)) {
                     for (k = a->start.pos; k < a->end.pos; k++)
                         pr[k - pos] |= PE_VISITED;
                 }
@@ -832,7 +832,7 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
                 url = parseURL2(a->url, baseURL(buf));
-                if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+                if (hasHist(HistoryURL, parsedURL2Str(&url)->ptr)) {
                     for (k = a->start.pos; k < a->end.pos; k++)
                         pr[k - pos] |= PE_VISITED;
                 }
