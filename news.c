@@ -5,7 +5,7 @@
 #include "quote.h"
 #include "term_tty.h"
 #include "html.h"
-#include "istream.h"
+#include "input_stream.h"
 #include "signal_util.h"
 #include "wc_util.h"
 #include "buffer.h"

@@ -35,7 +35,7 @@ const w3m_srcs = [_][]const u8{
     "search.c",
     "line_input.c",
     "table.c",
-    "local.c",
+    "local_cgi.c",
     "form.c",
     "maparea.c",
     "frame.c",
@@ -58,7 +58,7 @@ const w3m_srcs = [_][]const u8{
 
     "anchor.c",
     "tagtable.c",
-    "istream.c",
+    "input_stream.c",
 
     "Str.c",
     "indep.c",

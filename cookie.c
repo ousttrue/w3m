@@ -18,7 +18,7 @@
 #include "html.h"
 #include "defun_impl.h"
 #include <time.h>
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
 

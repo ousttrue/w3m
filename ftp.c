@@ -6,7 +6,7 @@
 #include "alloc.h"
 #include "term_tty.h"
 #include "terms.h"
-#include "istream.h"
+#include "input_stream.h"
 #include "signal_util.h"
 #include "etc.h"
 #include "url.h"

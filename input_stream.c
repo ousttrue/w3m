@@ -1,4 +1,4 @@
-#include "istream.h"
+#include "input_stream.h"
 #include "global.h"
 #include "line_input.h"
 #include "alloc.h"

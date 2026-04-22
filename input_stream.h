@@ -2,6 +2,7 @@
 #include <w3m.h>
 #include "growbuf.h"
 #include "line.h"
+#include "stream_encoding.h"
 
 #include <libwc/wc_types.h>
 
@@ -12,13 +13,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-enum StreamEncoding {
-    ENC_7BIT = 0,
-    ENC_BASE64 = 1,
-    ENC_QUOTE = 2,
-    ENC_UUENCODE = 3,
-};
 
 struct stream_buffer {
     unsigned char* buf;

@@ -5,7 +5,7 @@
 #include "html_feed_environ.h"
 #include "form.h"
 #include "terms.h"
-#include "istream.h"
+#include "input_stream.h"
 #include "indep.h"
 #include "alloc.h"
 #include "signal_util.h"

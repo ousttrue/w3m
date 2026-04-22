@@ -2,7 +2,7 @@
 #include "url_scheme.h"
 #include "Str.h"
 #include "line.h"
-#include "istream.h"
+#include "stream_encoding.h"
 #include <time.h>
 
 #define NO_REFERER ((char*)-1)
@@ -47,6 +47,7 @@ struct Url;
 struct Form;
 struct _textlist;
 struct HttpRequest;
+struct CmdArgs;
 struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* current,
     struct URLOption* option, struct Form* request,
     struct _textlist* extra_header, struct URLFile* ouf,

@@ -25,7 +25,7 @@
 #include "url.h"
 #include "rc.h"
 #include "buffer.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "global.h"
 #include "history.h"
 #include "line_input.h"

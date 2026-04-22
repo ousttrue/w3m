@@ -7,7 +7,7 @@
 #include "html.h"
 #include "frame.h"
 #include "terms.h"
-#include "istream.h"
+#include "input_stream.h"
 #include "alloc.h"
 #include "anchor.h"
 #include "wc_util.h"

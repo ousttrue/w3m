@@ -1,6 +1,6 @@
 #include "display.h"
 #include "UrlFile.h"
-#include "istream.h"
+#include "input_stream.h"
 #include "auth.h"
 #include "w3m.h"
 #include "indep.h"
@@ -15,7 +15,7 @@
 #include "frame.h"
 #include "menu.h"
 #include "terms.h"
-#include "istream.h"
+#include "input_stream.h"
 #include "html_feed_environ.h"
 #include "anchor.h"
 #include "http_request.h"
@@ -48,7 +48,7 @@
 #include "signal_util.h"
 #include "html.h"
 #include "html_tag.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 
 #include <libwc/charset.h>

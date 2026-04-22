@@ -14,7 +14,7 @@
 #include "proto.h"
 #include "etc.h"
 #include "display.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "myctype.h"
 #include "history.h"
 

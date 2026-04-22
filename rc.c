@@ -22,7 +22,7 @@
 #include "defun_impl.h"
 #include "proto.h"
 #include "parsetag.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 
 #include "wc_util.h"

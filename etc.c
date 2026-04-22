@@ -4,7 +4,7 @@
 #include "term_tty.h"
 #include "constants.h"
 #include "ctrlcode.h"
-#include "istream.h"
+#include "input_stream.h"
 #include "textlist.h"
 #include "terms.h"
 #include "indep.h"
@@ -19,7 +19,7 @@
 #include <pwd.h>
 #include "myctype.h"
 #include "html.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "hash.h"
 
 #include <fcntl.h>

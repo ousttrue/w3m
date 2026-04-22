@@ -1,4 +1,4 @@
-#include "local.h"
+#include "local_cgi.h"
 #include "UrlFile.h"
 #include "qsort_util.h"
 #include "w3m.h"
