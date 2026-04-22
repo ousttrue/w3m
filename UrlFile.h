@@ -65,5 +65,7 @@ void parseCompression(struct URLFile* uf, const char* p);
 void uncompress_stream(struct URLFile* uf, const char** src);
 Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname);
 void free_ssl_ctx(void);
-void ssl_close(void* _handle);
-int ssl_read(void* _handle, uint8_t* buf, int len);
+
+union input_handle;
+void ssl_close(union input_handle* _handle);
+int ssl_read(union input_handle* _handle, uint8_t* buf, int len);

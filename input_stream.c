@@ -7,11 +7,8 @@
 #include <signal.h>
 #include <strings.h>
 #include <unistd.h>
-// #include <libwc/wc_types.h>
-// #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-// #include <fcntl.h>
 
 #define STREAM_BUF_SIZE 8192
 #define SSL_BUF_SIZE 1536
@@ -32,15 +29,15 @@ do_update(struct InputStream* base)
 }
 
 static void
-basic_close(void* handle)
+basic_close(union input_handle* handle)
 {
-    close(*(int*)handle);
+    close(handle->fd);
 }
 
 static int
-basic_read(void* handle, uint8_t* buf, int len)
+basic_read(union input_handle* handle, uint8_t* buf, int len)
 {
-    return read(*(int*)handle, buf, len);
+    return read(handle->fd, buf, len);
 }
 
 struct InputStream*
@@ -51,6 +48,7 @@ newInputStream(int des)
     struct InputStream* stream = NewWithoutGC(struct InputStream);
     alloc_buffer(&stream->stream, NULL, STREAM_BUF_SIZE);
     stream->iseos = false;
+    stream->unclose = false;
     stream->type = IST_FD;
     stream->handle.fd = des;
     stream->read = basic_read;
@@ -58,16 +56,15 @@ newInputStream(int des)
     return stream;
 }
 
-static void file_close(void* _handle)
+static void file_close(union input_handle* handle)
 {
-    struct io_file_handle* handle = (struct io_file_handle*)_handle;
-    handle->close(handle->f);
+    handle->file.close(handle->file.f);
 }
 
 static int
-file_read(void* handle, uint8_t* buf, int len)
+file_read(union input_handle* handle, uint8_t* buf, int len)
 {
-    return fread(buf, 1, len, ((struct io_file_handle*)handle)->f);
+    return fread(buf, 1, len, handle->file.f);
 }
 
 struct InputStream*
@@ -78,6 +75,7 @@ newFileStream(FILE* f, int (*closep)(FILE*))
     struct InputStream* stream = NewWithoutGC(struct InputStream);
     alloc_buffer(&stream->stream, NULL, STREAM_BUF_SIZE);
     stream->iseos = false;
+    stream->unclose = false;
     stream->type = IST_FILE;
     stream->handle.file = (struct io_file_handle) {
         .f = f,
@@ -89,7 +87,7 @@ newFileStream(FILE* f, int (*closep)(FILE*))
 }
 
 static int
-str_read(void* handle, uint8_t* buf, int len)
+nop_read(union input_handle* handle, uint8_t* buf, int len)
 {
     return 0;
 }
@@ -103,8 +101,9 @@ newStrStream(const char* s, int len)
     struct InputStream* stream = NewWithoutGC(struct InputStream);
     alloc_buffer(&stream->stream, (const uint8_t*)s, len);
     stream->iseos = false;
+    stream->unclose = false;
     stream->type = IST_BUFFER;
-    stream->read = str_read;
+    stream->read = nop_read;
     stream->close = NULL;
     return stream;
 }
@@ -117,6 +116,7 @@ newSSLStream(SSL* ssl, int sock)
     struct InputStream* stream = NewWithoutGC(struct InputStream);
     alloc_buffer(&stream->stream, NULL, SSL_BUF_SIZE);
     stream->iseos = false;
+    stream->unclose = false;
     stream->type = IST_SSL;
     stream->handle.ssl = (struct ssl_handle) {
         .ssl = ssl,
@@ -128,11 +128,10 @@ newSSLStream(SSL* ssl, int sock)
 }
 
 static void
-ens_close(void* _handle)
+ens_close(union input_handle* handle)
 {
-    struct encoded_stream_handle* handle = (struct encoded_stream_handle*)_handle;
-    ISclose(handle->is);
-    growbuf_clear(&handle->gb);
+    ISclose(handle->ens.is);
+    growbuf_clear(&handle->ens.gb);
 }
 
 static void
@@ -150,40 +149,39 @@ memchop(char* p, int* len)
 }
 
 static int
-ens_read(void* _handle, uint8_t* buf, int len)
+ens_read(union input_handle* handle, uint8_t* buf, int len)
 {
-    struct encoded_stream_handle* handle = (struct encoded_stream_handle*)_handle;
-    if (handle->pos == handle->gb.length) {
+    if (handle->ens.pos == handle->ens.gb.length) {
         struct growbuf gbtmp;
 
-        ISgets_to_growbuf(handle->is, &handle->gb, true);
-        if (handle->gb.length == 0)
+        ISgets_to_growbuf(handle->ens.is, &handle->ens.gb, true);
+        if (handle->ens.gb.length == 0)
             return 0;
-        if (handle->encoding == ENC_BASE64)
-            memchop(handle->gb.ptr, &handle->gb.length);
-        else if (handle->encoding == ENC_UUENCODE) {
-            if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-                ISgets_to_growbuf(handle->is, &handle->gb, true);
-            memchop(handle->gb.ptr, &handle->gb.length);
+        if (handle->ens.encoding == ENC_BASE64)
+            memchop(handle->ens.gb.ptr, &handle->ens.gb.length);
+        else if (handle->ens.encoding == ENC_UUENCODE) {
+            if (handle->ens.gb.length >= 5 && !strncmp(handle->ens.gb.ptr, "begin", 5))
+                ISgets_to_growbuf(handle->ens.is, &handle->ens.gb, true);
+            memchop(handle->ens.gb.ptr, &handle->ens.gb.length);
         }
         growbuf_init_without_GC(&gbtmp);
-        char* p = (char*)handle->gb.ptr;
-        if (handle->encoding == ENC_QUOTE)
+        char* p = (char*)handle->ens.gb.ptr;
+        if (handle->ens.encoding == ENC_QUOTE)
             decodeQP_to_growbuf(&gbtmp, &p);
-        else if (handle->encoding == ENC_BASE64)
+        else if (handle->ens.encoding == ENC_BASE64)
             decodeB_to_growbuf(&gbtmp, &p);
-        else if (handle->encoding == ENC_UUENCODE)
+        else if (handle->ens.encoding == ENC_UUENCODE)
             decodeU_to_growbuf(&gbtmp, &p);
-        growbuf_clear(&handle->gb);
-        handle->gb = gbtmp;
-        handle->pos = 0;
+        growbuf_clear(&handle->ens.gb);
+        handle->ens.gb = gbtmp;
+        handle->ens.pos = 0;
     }
 
-    if (len > handle->gb.length - handle->pos)
-        len = handle->gb.length - handle->pos;
+    if (len > handle->ens.gb.length - handle->ens.pos)
+        len = handle->ens.gb.length - handle->ens.pos;
 
-    memcpy(buf, &handle->gb.ptr[handle->pos], len);
-    handle->pos += len;
+    memcpy(buf, &handle->ens.gb.ptr[handle->ens.pos], len);
+    handle->ens.pos += len;
     return len;
 }
 
@@ -194,6 +192,7 @@ struct InputStream* newEncodedStream(struct InputStream* is, enum StreamEncoding
     struct InputStream* stream = NewWithoutGC(struct InputStream);
     alloc_buffer(&stream->stream, NULL, STREAM_BUF_SIZE);
     stream->iseos = false;
+    stream->unclose = false;
     stream->type = IST_ENCODED;
     stream->handle.ens = (struct encoded_stream_handle) {
         .is = is,
@@ -212,7 +211,7 @@ int ISclose(struct InputStream* stream)
     if (stream == NULL)
         return -1;
     if (stream->close != NULL) {
-        if (stream->type & IST_UNCLOSE) {
+        if (stream->unclose) {
             return -1;
         }
         prevtrap = signal(SIGINT, SIG_IGN);
@@ -319,7 +318,7 @@ int ISfd(struct InputStream* stream)
 {
     if (stream == NULL)
         return -1;
-    switch (stream->type & ~IST_UNCLOSE) {
+    switch (stream->type) {
     case IST_FD:
         return stream->handle.fd;
     case IST_FILE:

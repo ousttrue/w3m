@@ -1311,24 +1311,22 @@ Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
     return s;
 }
 
-void ssl_close(void* _handle)
+void ssl_close(union input_handle* handle)
 {
-    struct ssl_handle* handle = (struct ssl_handle*)_handle;
-    close(handle->sock);
-    if (handle->ssl)
-        SSL_free(handle->ssl);
+    close(handle->ssl.sock);
+    if (handle->ssl.ssl)
+        SSL_free(handle->ssl.ssl);
 }
 
-int ssl_read(void* _handle, uint8_t* buf, int len)
+int ssl_read(union input_handle* handle, uint8_t* buf, int len)
 {
-    struct ssl_handle* handle = (struct ssl_handle*)_handle;
     int status;
-    if (handle->ssl) {
+    if (handle->ssl.ssl) {
         for (;;) {
-            status = SSL_read(handle->ssl, buf, len);
+            status = SSL_read(handle->ssl.ssl, buf, len);
             if (status > 0)
                 break;
-            switch (SSL_get_error(handle->ssl, status)) {
+            switch (SSL_get_error(handle->ssl.ssl, status)) {
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see SSL_get_error(3) */
                 continue;
@@ -1337,7 +1335,8 @@ int ssl_read(void* _handle, uint8_t* buf, int len)
             }
             break;
         }
-    } else
-        status = read(handle->sock, buf, len);
+    } else {
+        status = read(handle->ssl.sock, buf, len);
+    }
     return status;
 }

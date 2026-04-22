@@ -103,7 +103,7 @@ ftp_close(FTP ftp)
     if (!ftp->host)
         return;
     if (ftp->rf) {
-        ftp->rf->type &= ~IST_UNCLOSE;
+        ftp->rf->unclose = false;
         ISclose(ftp->rf);
         ftp->rf = NULL;
     }
@@ -160,7 +160,7 @@ ftp_login(FTP ftp)
         goto open_err;
     if (!ftp->rf || !ftp->wf)
         goto open_err;
-    ftp->rf->type |= IST_UNCLOSE;
+    ftp->rf->unclose = true;
     ftp_command(ftp, NULL, NULL, &status);
     if (status != 220)
         goto open_err;
