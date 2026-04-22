@@ -52,8 +52,8 @@ extern struct Buffer* loadHTMLString(Str page);
 extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 
-union input_stream;
-extern int save2tmp(union input_stream* stream, enum UrlScheme scheme, const char* tmpf);
+struct InputStream;
+extern int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf);
 extern int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int download);
 #define doFileCopy(args, tmpf, defstr) _doFileCopy(args, tmpf, defstr, FALSE);
 extern int doFileMove(struct CmdArgs* args, const char* tmpf, const char* defstr);

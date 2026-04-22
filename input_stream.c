@@ -1,20 +1,17 @@
 #include "input_stream.h"
 #include "UrlFile.h"
-#include "global.h"
-#include "line_input.h"
 #include "alloc.h"
 #include "mimehead.h"
-#include "display.h"
 #include "proto.h"
-#include "myctype.h"
 
-#include <stdio.h>
 #include <signal.h>
-#include <openssl/x509v3.h>
 #include <strings.h>
 #include <unistd.h>
-
-#define uchar unsigned char
+// #include <libwc/wc_types.h>
+// #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+// #include <fcntl.h>
 
 #define STREAM_BUF_SIZE 8192
 #define SSL_BUF_SIZE 1536
@@ -24,10 +21,10 @@
 #define POP_CHAR(bs) ((bs)->iseos ? '\0' : (bs)->stream.buf[(bs)->stream.cur++])
 
 static void
-do_update(struct BaseStream* base)
+do_update(struct InputStream* base)
 {
     base->stream.cur = base->stream.next = 0;
-    int len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
+    int len = (*base->read)(&base->handle, base->stream.buf, base->stream.size);
     if (len <= 0)
         base->iseos = true;
     else
@@ -35,17 +32,9 @@ do_update(struct BaseStream* base)
 }
 
 static void
-init_base_stream(struct BaseStream* base, int bufsize)
-{
-    alloc_buffer(&base->stream, NULL, bufsize);
-    base->iseos = false;
-}
-
-static void
 basic_close(void* handle)
 {
     close(*(int*)handle);
-    xfree(handle);
 }
 
 static int
@@ -54,19 +43,18 @@ basic_read(void* handle, uint8_t* buf, int len)
     return read(*(int*)handle, buf, len);
 }
 
-InputStream
+struct InputStream*
 newInputStream(int des)
 {
-    InputStream stream;
     if (des < 0)
         return NULL;
-    stream = NewWithoutGC(union input_stream);
-    init_base_stream(&stream->base, STREAM_BUF_SIZE);
-    stream->base.type = IST_BASIC;
-    stream->base.handle = NewWithoutGC(int);
-    *(int*)stream->base.handle = des;
-    stream->base.read = basic_read;
-    stream->base.close = basic_close;
+    struct InputStream* stream = NewWithoutGC(struct InputStream);
+    alloc_buffer(&stream->stream, NULL, STREAM_BUF_SIZE);
+    stream->iseos = false;
+    stream->type = IST_FD;
+    stream->handle.fd = des;
+    stream->read = basic_read;
+    stream->close = basic_close;
     return stream;
 }
 
@@ -74,7 +62,6 @@ static void file_close(void* _handle)
 {
     struct io_file_handle* handle = (struct io_file_handle*)_handle;
     handle->close(handle->f);
-    xfree(handle);
 }
 
 static int
@@ -83,23 +70,21 @@ file_read(void* handle, uint8_t* buf, int len)
     return fread(buf, 1, len, ((struct io_file_handle*)handle)->f);
 }
 
-InputStream
-newFileStream(FILE* f, void (*closep)())
+struct InputStream*
+newFileStream(FILE* f, int (*closep)(FILE*))
 {
-    InputStream stream;
     if (f == NULL)
         return NULL;
-    stream = NewWithoutGC(union input_stream);
-    init_base_stream(&stream->base, STREAM_BUF_SIZE);
-    stream->file.type = IST_FILE;
-    stream->file.handle = NewWithoutGC(struct io_file_handle);
-    stream->file.handle->f = f;
-    if (closep)
-        stream->file.handle->close = (int (*)(FILE*))closep;
-    else
-        stream->file.handle->close = fclose;
-    stream->file.read = file_read;
-    stream->file.close = file_close;
+    struct InputStream* stream = NewWithoutGC(struct InputStream);
+    alloc_buffer(&stream->stream, NULL, STREAM_BUF_SIZE);
+    stream->iseos = false;
+    stream->type = IST_FILE;
+    stream->handle.file = (struct io_file_handle) {
+        .f = f,
+        .close = (closep) ? closep : fclose
+    };
+    stream->read = file_read;
+    stream->close = file_close;
     return stream;
 }
 
@@ -109,81 +94,45 @@ str_read(void* handle, uint8_t* buf, int len)
     return 0;
 }
 
-InputStream
+struct InputStream*
 newStrStream(const char* s, int len)
 {
     if (s == NULL)
         return NULL;
 
-    InputStream stream = NewWithoutGC(union input_stream);
-    alloc_buffer(&stream->base.stream, (const uint8_t*)s, len);
-    stream->base.iseos = false;
-    stream->str.type = IST_STR;
-    stream->str.handle = NULL;
-    stream->str.read = str_read;
-    stream->str.close = NULL;
+    struct InputStream* stream = NewWithoutGC(struct InputStream);
+    alloc_buffer(&stream->stream, (const uint8_t*)s, len);
+    stream->iseos = false;
+    stream->type = IST_BUFFER;
+    stream->read = str_read;
+    stream->close = NULL;
     return stream;
 }
 
-static void
-ssl_close(void* _handle)
-{
-    struct ssl_handle* handle = (struct ssl_handle*)_handle;
-    close(handle->sock);
-    if (handle->ssl)
-        SSL_free(handle->ssl);
-    xfree(handle);
-}
-
-static int
-ssl_read(void* _handle, uint8_t* buf, int len)
-{
-
-    struct ssl_handle* handle = (struct ssl_handle*)_handle;
-    int status;
-    if (handle->ssl) {
-        for (;;) {
-            status = SSL_read(handle->ssl, buf, len);
-            if (status > 0)
-                break;
-            switch (SSL_get_error(handle->ssl, status)) {
-            case SSL_ERROR_WANT_READ:
-            case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see SSL_get_error(3) */
-                continue;
-            default:
-                break;
-            }
-            break;
-        }
-    } else
-        status = read(handle->sock, buf, len);
-    return status;
-}
-
-InputStream
+struct InputStream*
 newSSLStream(SSL* ssl, int sock)
 {
-    InputStream stream;
     if (sock < 0)
         return NULL;
-    stream = NewWithoutGC(union input_stream);
-    init_base_stream(&stream->base, SSL_BUF_SIZE);
-    stream->ssl.type = IST_SSL;
-    stream->ssl.handle = NewWithoutGC(struct ssl_handle);
-    stream->ssl.handle->ssl = ssl;
-    stream->ssl.handle->sock = sock;
-    stream->ssl.read = ssl_read;
-    stream->ssl.close = ssl_close;
+    struct InputStream* stream = NewWithoutGC(struct InputStream);
+    alloc_buffer(&stream->stream, NULL, SSL_BUF_SIZE);
+    stream->iseos = false;
+    stream->type = IST_SSL;
+    stream->handle.ssl = (struct ssl_handle) {
+        .ssl = ssl,
+        .sock = sock,
+    };
+    stream->read = ssl_read;
+    stream->close = ssl_close;
     return stream;
 }
 
 static void
 ens_close(void* _handle)
 {
-    struct ens_handle* handle = (struct ens_handle*)_handle;
+    struct encoded_stream_handle* handle = (struct encoded_stream_handle*)_handle;
     ISclose(handle->is);
     growbuf_clear(&handle->gb);
-    xfree(handle);
 }
 
 static void
@@ -203,7 +152,7 @@ memchop(char* p, int* len)
 static int
 ens_read(void* _handle, uint8_t* buf, int len)
 {
-    struct ens_handle* handle = (struct ens_handle*)_handle;
+    struct encoded_stream_handle* handle = (struct encoded_stream_handle*)_handle;
     if (handle->pos == handle->gb.length) {
         struct growbuf gbtmp;
 
@@ -218,7 +167,7 @@ ens_read(void* _handle, uint8_t* buf, int len)
             memchop(handle->gb.ptr, &handle->gb.length);
         }
         growbuf_init_without_GC(&gbtmp);
-        char* p = handle->gb.ptr;
+        char* p = (char*)handle->gb.ptr;
         if (handle->encoding == ENC_QUOTE)
             decodeQP_to_growbuf(&gbtmp, &p);
         else if (handle->encoding == ENC_BASE64)
@@ -238,58 +187,57 @@ ens_read(void* _handle, uint8_t* buf, int len)
     return len;
 }
 
-InputStream
-newEncodedStream(InputStream is, enum StreamEncoding encoding)
+struct InputStream* newEncodedStream(struct InputStream* is, enum StreamEncoding encoding)
 {
-    InputStream stream;
     if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 && encoding != ENC_UUENCODE))
         return is;
-    stream = NewWithoutGC(union input_stream);
-    init_base_stream(&stream->base, STREAM_BUF_SIZE);
-    stream->ens.type = IST_ENCODED;
-    stream->ens.handle = NewWithoutGC(struct ens_handle);
-    stream->ens.handle->is = is;
-    stream->ens.handle->pos = 0;
-    stream->ens.handle->encoding = encoding;
-    growbuf_init_without_GC(&stream->ens.handle->gb);
-    stream->ens.read = ens_read;
-    stream->ens.close = ens_close;
+    struct InputStream* stream = NewWithoutGC(struct InputStream);
+    alloc_buffer(&stream->stream, NULL, STREAM_BUF_SIZE);
+    stream->iseos = false;
+    stream->type = IST_ENCODED;
+    stream->handle.ens = (struct encoded_stream_handle) {
+        .is = is,
+        .pos = 0,
+        .encoding = encoding,
+    };
+    growbuf_init_without_GC(&stream->handle.ens.gb);
+    stream->read = ens_read;
+    stream->close = ens_close;
     return stream;
 }
 
-int ISclose(InputStream stream)
+int ISclose(struct InputStream* stream)
 {
     void (*prevtrap)(int);
     if (stream == NULL)
         return -1;
-    if (stream->base.close != NULL) {
-        if (stream->base.type & IST_UNCLOSE) {
+    if (stream->close != NULL) {
+        if (stream->type & IST_UNCLOSE) {
             return -1;
         }
         prevtrap = signal(SIGINT, SIG_IGN);
-        stream->base.close(stream->base.handle);
+        stream->close(&stream->handle);
         signal(SIGINT, prevtrap);
     }
-    xfree(stream->base.stream.buf);
+    xfree(stream->stream.buf);
     xfree(stream);
     return 0;
 }
 
-int ISgetc(InputStream stream)
+int ISgetc(struct InputStream* base)
 {
-    if (stream == NULL)
+    if (base == NULL)
         return '\0';
-    struct BaseStream* base = &stream->base;
     if (!base->iseos && MUST_BE_UPDATED(base))
         do_update(base);
     return POP_CHAR(base);
 }
 
-int ISundogetc(InputStream stream)
+int ISundogetc(struct InputStream* stream)
 {
     if (stream == NULL)
         return -1;
-    struct StreamBuffer* sb = &stream->base.stream;
+    struct StreamBuffer* sb = &stream->stream;
     if (sb->cur > 0) {
         sb->cur--;
         return 0;
@@ -297,7 +245,7 @@ int ISundogetc(InputStream stream)
     return -1;
 }
 
-Str StrISgets2(InputStream stream, char crnl)
+Str StrISgets2(struct InputStream* stream, char crnl)
 {
     if (stream == NULL)
         return NULL;
@@ -311,9 +259,8 @@ Str StrISgets2(InputStream stream, char crnl)
     return s;
 }
 
-void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl)
+void ISgets_to_growbuf(struct InputStream* base, struct growbuf* gb, char crnl)
 {
-    struct BaseStream* base = &stream->base;
     struct StreamBuffer* sb = &base->stream;
 
     gb->length = 0;
@@ -348,37 +295,17 @@ void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl)
     return;
 }
 
-#ifdef unused
-int ISread(InputStream stream, Str buf, int count)
+int ISread_n(struct InputStream* base, char* dst, int count)
 {
-    int len;
-
-    if (count + 1 > buf->area_size) {
-        char* newptr = malloc(count + 1);
-        memcpy(newptr, buf->ptr, buf->length);
-        newptr[buf->length] = '\0';
-        buf->ptr = newptr;
-        buf->area_size = count + 1;
-    }
-    len = ISread_n(stream, buf->ptr, count);
-    buf->length = (len > 0) ? len : 0;
-    buf->ptr[buf->length] = '\0';
-    return (len > 0) ? 1 : 0;
-}
-#endif
-
-int ISread_n(InputStream stream, char* dst, int count)
-{
-    if (stream == NULL || count <= 0)
+    if (base == NULL || count <= 0)
         return -1;
 
-    struct BaseStream* base;
-    if ((base = &stream->base)->iseos)
+    if (base->iseos)
         return 0;
 
     int len = buffer_read(&base->stream, dst, count);
     if (MUST_BE_UPDATED(base)) {
-        int l = (*base->read)(base->handle, (uint8_t*)&dst[len], count - len);
+        int l = (*base->read)(&base->handle, (uint8_t*)&dst[len], count - len);
         if (l <= 0) {
             base->iseos = true;
         } else {
@@ -388,301 +315,27 @@ int ISread_n(InputStream stream, char* dst, int count)
     return len;
 }
 
-int ISfileno(InputStream stream)
+int ISfd(struct InputStream* stream)
 {
     if (stream == NULL)
         return -1;
-    switch (IStype(stream) & ~IST_UNCLOSE) {
-    case IST_BASIC:
-        return *(int*)stream->base.handle;
+    switch (stream->type & ~IST_UNCLOSE) {
+    case IST_FD:
+        return stream->handle.fd;
     case IST_FILE:
-        return fileno(stream->file.handle->f);
+        return fileno(stream->handle.file.f);
     case IST_SSL:
-        return stream->ssl.handle->sock;
+        return stream->handle.ssl.sock;
     case IST_ENCODED:
-        return ISfileno(stream->ens.handle->is);
+        return ISfd(stream->handle.ens.is);
     default:
         return -1;
     }
 }
 
-int ISeos(InputStream stream)
+int ISeos(struct InputStream* base)
 {
-    struct BaseStream* base = &stream->base;
     if (!base->iseos && MUST_BE_UPDATED(base))
         do_update(base);
     return base->iseos;
 }
-
-static Str accept_this_site;
-
-void ssl_accept_this_site(const char* hostname)
-{
-    if (hostname)
-        accept_this_site = Strnew_charp(hostname);
-    else
-        accept_this_site = NULL;
-}
-
-static int
-ssl_match_cert_ident(const char* ident, int ilen, const char* hostname)
-{
-    /* RFC2818 3.1.  Server Identity
-     * Names may contain the wildcard
-     * character * which is considered to match any single domain name
-     * component or component fragment. E.g., *.a.com matches foo.a.com but
-     * not bar.foo.a.com. f*.com matches foo.com but not bar.com.
-     */
-    int hlen = strlen(hostname);
-    int i, c;
-
-    /* Is this an exact match? */
-    if ((ilen == hlen) && strncasecmp(ident, hostname, hlen) == 0)
-        return true;
-
-    for (i = 0; i < ilen; i++) {
-        if (ident[i] == '*' && ident[i + 1] == '.') {
-            while ((c = *hostname++) != '\0')
-                if (c == '.')
-                    break;
-            i++;
-        } else {
-            if (ident[i] != *hostname++)
-                return false;
-        }
-    }
-    return *hostname == '\0';
-}
-
-static Str
-ssl_check_cert_ident(X509* x, const char* hostname)
-{
-    int i;
-    Str ret = NULL;
-    int match_ident = false;
-    /*
-     * All we need to do here is check that the CN matches.
-     *
-     * From RFC2818 3.1 Server Identity:
-     * If a subjectAltName extension of type dNSName is present, that MUST
-     * be used as the identity. Otherwise, the (most specific) Common Name
-     * field in the Subject field of the certificate MUST be used. Although
-     * the use of the Common Name is existing practice, it is deprecated and
-     * Certification Authorities are encouraged to use the dNSName instead.
-     */
-    i = X509_get_ext_by_NID(x, NID_subject_alt_name, -1);
-    if (i >= 0) {
-        X509_EXTENSION* ex;
-        STACK_OF(GENERAL_NAME) * alt;
-
-        ex = X509_get_ext(x, i);
-        alt = X509V3_EXT_d2i(ex);
-        if (alt) {
-            int n;
-            GENERAL_NAME* gn;
-            Str seen_dnsname = NULL;
-
-            n = sk_GENERAL_NAME_num(alt);
-            for (i = 0; i < n; i++) {
-                gn = sk_GENERAL_NAME_value(alt, i);
-                if (gn->type == GEN_DNS) {
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-                    unsigned char* sn = ASN1_STRING_data(gn->d.ia5);
-#else
-                    const unsigned char* sn = ASN1_STRING_get0_data(gn->d.ia5);
-#endif
-                    int sl = ASN1_STRING_length(gn->d.ia5);
-
-                    /*
-                     * sn is a pointer to internal data and not guaranteed to
-                     * be null terminated. Ensure we have a null terminated
-                     * string that we can modify.
-                     */
-                    char* asn = malloc(sl + 1);
-                    if (!asn)
-                        exit(1);
-                    bcopy(sn, asn, sl);
-                    asn[sl] = '\0';
-
-                    if (!seen_dnsname)
-                        seen_dnsname = Strnew();
-                    /* replace \0 to make full string visible to user */
-                    if (sl != strlen(asn)) {
-                        int i;
-                        for (i = 0; i < sl; ++i) {
-                            if (!asn[i])
-                                asn[i] = '!';
-                        }
-                    }
-                    Strcat_m_charp(seen_dnsname, asn, " ", NULL);
-                    if (sl == strlen(asn) /* catch \0 in SAN */
-                        && ssl_match_cert_ident(asn, sl, hostname))
-                        break;
-                }
-            }
-            X509V3_EXT_get(ex);
-            sk_GENERAL_NAME_free(alt);
-            if (i < n) /* Found a match */
-                match_ident = true;
-            else if (seen_dnsname)
-                /* FIXME: gettextize? */
-                ret = Sprintf("Bad cert ident from %s: dNSName=%s", hostname,
-                    seen_dnsname->ptr);
-        }
-    }
-
-    if (match_ident == false && ret == NULL) {
-        X509_NAME* xn;
-        char buf[2048];
-        int slen;
-
-        xn = X509_get_subject_name(x);
-
-        slen = X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf));
-        if (slen == -1)
-            /* FIXME: gettextize? */
-            ret = Strnew_charp("Unable to get common name from peer cert");
-        else if (slen != strlen(buf)
-            || !ssl_match_cert_ident(buf, strlen(buf), hostname)) {
-            /* replace \0 to make full string visible to user */
-            if (slen != strlen(buf)) {
-                int i;
-                for (i = 0; i < slen; ++i) {
-                    if (!buf[i])
-                        buf[i] = '!';
-                }
-            }
-            /* FIXME: gettextize? */
-            ret = Sprintf("Bad cert ident %s from %s", buf, hostname);
-        }
-    }
-    return ret;
-}
-
-Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
-{
-    BIO* bp;
-    X509* x;
-    X509_NAME* xn;
-    char* p;
-    int len;
-    Str s;
-    char buf[2048];
-    Str amsg = NULL;
-    Str emsg;
-    char* ans;
-
-    if (ssl == NULL)
-        return NULL;
-    x = SSL_get_peer_certificate(ssl);
-    if (x == NULL) {
-        if (accept_this_site
-            && strcasecmp(accept_this_site->ptr, hostname) == 0)
-            ans = "y";
-        else {
-            /* FIXME: gettextize? */
-            emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
-            ans = inputAnswer(args, emsg->ptr);
-        }
-        if (ans && TOLOWER(*ans) == 'y')
-            /* FIXME: gettextize? */
-            amsg = Strnew_charp("Accept SSL session without any peer certificate");
-        else {
-            /* FIXME: gettextize? */
-            char* e = "This SSL session was rejected "
-                      "to prevent security violation: no peer certificate";
-            disp_err_message(args, e, false);
-            free_ssl_ctx();
-            return NULL;
-        }
-        if (amsg)
-            disp_err_message(args, amsg->ptr, false);
-        ssl_accept_this_site(hostname);
-        /* FIXME: gettextize? */
-        s = amsg ? amsg : Strnew_charp("valid certificate");
-        return s;
-    }
-    /* check the cert chain.
-     * The chain length is automatically checked by OpenSSL when we
-     * set the verify depth in the ctx.
-     */
-    if (ssl_verify_server) {
-        long verr;
-        if ((verr = SSL_get_verify_result(ssl))
-            != X509_V_OK) {
-            const char* em = X509_verify_cert_error_string(verr);
-            if (accept_this_site
-                && strcasecmp(accept_this_site->ptr, hostname) == 0)
-                ans = "y";
-            else {
-                /* FIXME: gettextize? */
-                emsg = Sprintf("%s: accept? (y/n)", em);
-                ans = inputAnswer(args, emsg->ptr);
-            }
-            if (ans && TOLOWER(*ans) == 'y') {
-                /* FIXME: gettextize? */
-                amsg = Sprintf("Accept unsecure SSL session: "
-                               "unverified: %s",
-                    em);
-            } else {
-                /* FIXME: gettextize? */
-                char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                disp_err_message(args, e, false);
-                free_ssl_ctx();
-                return NULL;
-            }
-        }
-    }
-    emsg = ssl_check_cert_ident(x, hostname);
-    if (emsg != NULL) {
-        if (accept_this_site
-            && strcasecmp(accept_this_site->ptr, hostname) == 0)
-            ans = "y";
-        else {
-            Str ep = Strdup(emsg);
-            if (ep->length > COLS - 16)
-                Strshrink(ep, ep->length - (COLS - 16));
-            Strcat_charp(ep, ": accept? (y/n)");
-            ans = inputAnswer(args, ep->ptr);
-        }
-        if (ans && TOLOWER(*ans) == 'y') {
-            /* FIXME: gettextize? */
-            amsg = Strnew_charp("Accept unsecure SSL session:");
-            Strcat(amsg, emsg);
-        } else {
-            /* FIXME: gettextize? */
-            const char* e = "This SSL session was rejected "
-                            "to prevent security violation";
-            disp_err_message(args, e, false);
-            free_ssl_ctx();
-            return NULL;
-        }
-    }
-    if (amsg)
-        disp_err_message(args, amsg->ptr, false);
-    ssl_accept_this_site(hostname);
-    /* FIXME: gettextize? */
-    s = amsg ? amsg : Strnew_charp("valid certificate");
-    Strcat_charp(s, "\n");
-    xn = X509_get_subject_name(x);
-    if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
-        Strcat_charp(s, " subject=<unknown>");
-    else
-        Strcat_m_charp(s, " subject=", buf, NULL);
-    xn = X509_get_issuer_name(x);
-    if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
-        Strcat_charp(s, ": issuer=<unknown>");
-    else
-        Strcat_m_charp(s, ": issuer=", buf, NULL);
-    Strcat_charp(s, "\n\n");
-
-    bp = BIO_new(BIO_s_mem());
-    X509_print(bp, x);
-    len = (int)BIO_ctrl(bp, BIO_CTRL_INFO, 0, (char*)&p);
-    Strcat_charp_n(s, p, len);
-    BIO_free_all(bp);
-    X509_free(x);
-    return s;
-}
-
-/* Raw level input stream functions */

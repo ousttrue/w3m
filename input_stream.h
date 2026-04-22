@@ -1,115 +1,70 @@
 #pragma once
-#include <w3m.h>
 #include "growbuf.h"
 #include "stream_encoding.h"
 #include "StreamBuffer.h"
-
-#include <libwc/wc_types.h>
-
 #include <stdio.h>
-#include <openssl/bio.h>
-#include <openssl/x509.h>
-#include <openssl/ssl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 typedef int (*ReadFunc)(void* handle, uint8_t* buf, int size);
 typedef void (*CloseFunc)(void* handle);
 
 enum InputStreamType {
-    IST_BASIC = 0,
-    IST_FILE = 1,
-    IST_STR = 2,
+    IST_BUFFER = 0,
+    IST_FD = 1,
+    IST_FILE = 2,
     IST_SSL = 3,
     IST_ENCODED = 4,
 };
 
 #define IST_UNCLOSE 0x10
 
-struct BaseStream {
-    enum InputStreamType type;
-    struct StreamBuffer stream;
-    bool iseos;
-    ReadFunc read;
-    CloseFunc close;
-    void* handle;
-};
-
 struct io_file_handle {
     FILE* f;
     int (*close)(FILE*);
 };
-struct FileStream {
-    enum InputStreamType type;
-    struct StreamBuffer stream;
-    bool iseos;
-    ReadFunc read;
-    CloseFunc close;
-    struct io_file_handle* handle;
-};
-
-struct StrStream {
-    enum InputStreamType type;
-    struct StreamBuffer stream;
-    bool iseos;
-    ReadFunc read;
-    CloseFunc close;
-    void* handle;
-};
 
 struct ssl_handle {
-    SSL* ssl;
+    struct ssl_st* ssl;
     int sock;
 };
-struct SslStream {
-    enum InputStreamType type;
-    struct StreamBuffer stream;
-    bool iseos;
-    ReadFunc read;
-    CloseFunc close;
-    struct ssl_handle* handle;
-};
 
-struct ens_handle {
-    union input_stream* is;
+struct encoded_stream_handle {
+    struct InputStream* is;
     struct growbuf gb;
     int pos;
-    char encoding;
+    enum StreamEncoding encoding;
 };
-struct EncodedStream {
+
+struct InputStream {
     enum InputStreamType type;
     struct StreamBuffer stream;
     bool iseos;
     ReadFunc read;
     CloseFunc close;
-    struct ens_handle* handle;
+    union {
+        int fd;
+        struct io_file_handle file;
+        struct ssl_handle ssl;
+        struct encoded_stream_handle ens;
+    } handle;
 };
+static inline int ssl_socket_of(struct InputStream* stream)
+{
+    if (stream->type != IST_SSL) {
+        return 0;
+    }
+    return stream->handle.ssl.sock;
+}
 
-union input_stream {
-    struct BaseStream base;
-    struct FileStream file;
-    struct StrStream str;
-    struct SslStream ssl;
-    struct EncodedStream ens;
-};
-
-typedef union input_stream* InputStream;
-
-InputStream newInputStream(int des);
+struct InputStream* newInputStream(int des);
 #define openIS(path) newInputStream(open((path), O_RDONLY))
-InputStream newFileStream(FILE* f, void (*closep)());
-InputStream newStrStream(const char* s, int len);
-InputStream newSSLStream(SSL* ssl, int sock);
-InputStream newEncodedStream(InputStream is, enum StreamEncoding encoding);
-int ISclose(InputStream stream);
-int ISgetc(InputStream stream);
-int ISundogetc(InputStream stream);
-void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl);
-int ISread_n(InputStream stream, char* dst, int bufsize);
-int ISfileno(InputStream stream);
-int ISeos(InputStream stream);
-
-#define IStype(stream) ((stream)->base.type)
-#define iseos(stream) ((stream)->base.iseos)
-#define ssl_socket_of(stream) ((stream)->ssl.handle->sock)
+struct InputStream* newFileStream(FILE* f, int (*closep)(FILE*));
+struct InputStream* newStrStream(const char* s, int len);
+struct InputStream* newSSLStream(struct ssl_st* ssl, int sock);
+struct InputStream* newEncodedStream(struct InputStream* is, enum StreamEncoding encoding);
+int ISclose(struct InputStream* stream);
+int ISgetc(struct InputStream* stream);
+int ISundogetc(struct InputStream* stream);
+void ISgets_to_growbuf(struct InputStream* stream, struct growbuf* gb, char crnl);
+int ISread_n(struct InputStream* stream, char* dst, int bufsize);
+int ISfd(struct InputStream* stream);
+int ISeos(struct InputStream* stream);

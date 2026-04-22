@@ -42,7 +42,7 @@ typedef struct _FTP {
     int port;
     char* user;
     char* pass;
-    InputStream rf;
+    struct InputStream* rf;
     FILE* wf;
     FILE* data;
 }* FTP;
@@ -103,7 +103,7 @@ ftp_close(FTP ftp)
     if (!ftp->host)
         return;
     if (ftp->rf) {
-        IStype(ftp->rf) &= ~IST_UNCLOSE;
+        ftp->rf->type &= ~IST_UNCLOSE;
         ISclose(ftp->rf);
         ftp->rf = NULL;
     }
@@ -160,7 +160,7 @@ ftp_login(FTP ftp)
         goto open_err;
     if (!ftp->rf || !ftp->wf)
         goto open_err;
-    IStype(ftp->rf) |= IST_UNCLOSE;
+    ftp->rf->type |= IST_UNCLOSE;
     ftp_command(ftp, NULL, NULL, &status);
     if (status != 220)
         goto open_err;
@@ -311,7 +311,7 @@ static int ex_ftpdir_name_size_date(char*, char**, char**, char**,
 #define FTPDIR_LINK 2
 #define FTPDIR_FILE 3
 
-static void
+static int
 closeFTPdata(FILE* f)
 {
     int status;
@@ -322,6 +322,7 @@ closeFTPdata(FILE* f)
     }
     ftp_command(&current_ftp, NULL, NULL, &status);
     /* status == 226 */
+    return status;
 }
 
 void closeFTP(void)
@@ -329,8 +330,8 @@ void closeFTP(void)
     ftp_close(&current_ftp);
 }
 
-InputStream
-openFTPStream(struct CmdArgs *args, struct Url* pu, struct URLFile* uf)
+struct InputStream*
+openFTPStream(struct CmdArgs* args, struct Url* pu, struct URLFile* uf)
 {
     Str tmp;
     int status;
@@ -425,7 +426,7 @@ ftp_read:
     uf->modtime = ftp_modtime(&current_ftp, realpathname);
     ftp_command(&current_ftp, "RETR", realpathname, &status);
     if (status == 125 || status == 150)
-        return newFileStream(current_ftp.data, (void (*)())closeFTPdata);
+        return newFileStream(current_ftp.data, closeFTPdata);
 
 ftp_dir:
     pu->scheme = SCM_FTPDIR;

@@ -20,17 +20,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <signal.h>
+// #include <signal.h>
 #include <unistd.h>
 
 #define NEWS_ENDLINE(p) \
     ((*(p) == '.' && ((p)[1] == '\n' || (p)[1] == '\r' || (p)[1] == '\0')) || *(p) == '\n' || *(p) == '\r' || *(p) == '\0')
 
 typedef struct _News {
-    char* host;
+    const char* host;
     int port;
-    char* mode;
-    InputStream rf;
+    const char* mode;
+    struct InputStream* rf;
     FILE* wf;
 } News;
 
@@ -67,7 +67,7 @@ news_close(News* news)
     if (!news->host)
         return;
     if (news->rf) {
-        IStype(news->rf) &= ~IST_UNCLOSE;
+        news->rf->type &= ~IST_UNCLOSE;
         ISclose(news->rf);
         news->rf = NULL;
     }
@@ -92,7 +92,7 @@ news_open(News* news)
     news->wf = fdopen(fd, "wb");
     if (!news->rf || !news->wf)
         goto open_err;
-    IStype(news->rf) |= IST_UNCLOSE;
+    news->rf->type |= IST_UNCLOSE;
     news_command(news, NULL, NULL, &status);
     if (status != 200 && status != 201)
         goto open_err;
@@ -229,14 +229,14 @@ add_news_message(Str str, int index, char* date, char* name, char* subject,
  * <message-id> = <unique>@<full_domain_name>
  */
 
-InputStream
+struct InputStream*
 openNewsStream(struct Url* pu)
 {
-    const char *host, *mode, *group, *p;
-    int port, status;
-
     if (pu->file == NULL || *pu->file == '\0')
         return NULL;
+
+    const char *host, *mode, *group, *p;
+    int port, status;
     if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NNTP_GROUP)
         host = pu->host;
     else

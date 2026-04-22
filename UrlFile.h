@@ -31,7 +31,7 @@ struct URLFile {
     enum UrlScheme scheme;
     bool is_cgi;
     enum StreamEncoding encoding;
-    union input_stream* stream;
+    struct InputStream* stream;
     const char* ext;
     enum ContentCompression compression;
     int content_encoding;
@@ -41,8 +41,8 @@ struct URLFile {
     time_t modtime;
 };
 
-typedef union input_stream* InputStream;
-struct URLFile init_stream(enum UrlScheme scheme, InputStream stream);
+struct InputStream;
+struct URLFile init_stream(enum UrlScheme scheme, struct InputStream *stream);
 struct URLFile examineFile(const char* path);
 struct Url;
 struct Form;
@@ -65,4 +65,5 @@ void parseCompression(struct URLFile* uf, const char* p);
 void uncompress_stream(struct URLFile* uf, const char** src);
 Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname);
 void free_ssl_ctx(void);
-void ssl_accept_this_site(const char* hostname);
+void ssl_close(void* _handle);
+int ssl_read(void* _handle, uint8_t* buf, int len);

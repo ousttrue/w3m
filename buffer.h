@@ -44,7 +44,7 @@ typedef struct _BufferPos {
 #define CHK_URL 1
 #define CHK_NMID 2
 
-typedef union input_stream* InputStream;
+struct InputStream;
 struct Buffer {
     const char* filename;
     char* buffername;
@@ -69,7 +69,7 @@ struct Buffer {
     short rootY;
     short COLS;
     short LINES;
-    InputStream pagerSource;
+    struct InputStream *pagerSource;
     struct AnchorList* href;
     struct AnchorList* name;
     struct AnchorList* img;
@@ -165,9 +165,9 @@ extern void saveBuffer(struct Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(struct CmdArgs* args, const char* cmd);
 extern struct Buffer* getpipe(const char* cmd);
-typedef union input_stream* InputStream;
-extern struct Buffer* openPagerBuffer(InputStream stream, struct Buffer* buf);
-extern struct Buffer* openGeneralPagerBuffer(struct CmdArgs* args, InputStream stream);
+struct InputStream;
+extern struct Buffer* openPagerBuffer(struct InputStream *stream, struct Buffer* buf);
+extern struct Buffer* openGeneralPagerBuffer(struct CmdArgs* args, struct InputStream *stream);
 extern struct Line* getNextPage(struct Buffer* buf, int plen);
 extern struct Buffer* doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buffer* defaultbuf);
 extern void cursorUp0(struct Buffer* buf, int n);

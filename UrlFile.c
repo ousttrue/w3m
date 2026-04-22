@@ -1,4 +1,5 @@
 #include "UrlFile.h"
+#include "line_input.h"
 #include "display.h"
 #include "form.h"
 #include "local_cgi.h"
@@ -14,16 +15,20 @@
 #include "etc.h"
 #include "myctype.h"
 #include "proxy.h"
+#include <fcntl.h>
 #include <strings.h>
 #include <unistd.h>
 
-#include <openssl/types.h>
+#include <openssl/ssl.h>
 #ifndef SSLEAY_VERSION_NUMBER
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
 #endif
 #include <openssl/err.h>
+#include <openssl/x509v3.h>
+#include <openssl/bio.h>
+#include <openssl/x509.h>
 
-struct URLFile init_stream(enum UrlScheme scheme, InputStream stream)
+struct URLFile init_stream(enum UrlScheme scheme, struct InputStream* stream)
 {
     return (struct URLFile) {
         // memset(uf, 0, sizeof(struct URLFile));
@@ -205,7 +210,7 @@ struct URLFile examineFile(const char* path)
             FILE* fp;
             if ((fp = lessopen_stream(path))) {
                 UFclose(&uf);
-                uf.stream = newFileStream(fp, (void (*)())pclose);
+                uf.stream = newFileStream(fp, pclose);
                 uf.guess_type = "text/plain";
                 return uf;
             }
@@ -251,14 +256,6 @@ add_index_file(struct Url* pu, struct URLFile* uf)
 }
 
 SSL_CTX* ssl_ctx = NULL;
-
-void free_ssl_ctx(void)
-{
-    if (ssl_ctx != NULL)
-        SSL_CTX_free(ssl_ctx);
-    ssl_ctx = NULL;
-    ssl_accept_this_site(NULL);
-}
 
 #if SSLEAY_VERSION_NUMBER >= 0x00905100
 #include <openssl/rand.h>
@@ -575,14 +572,11 @@ retry:
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
-            uf.stream = newFileStream(localcgi_post(pu->real_file, pu->query,
-                                          request, option->referer),
-                (void (*)())fclose);
+            uf.stream = newFileStream(localcgi_post(pu->real_file, pu->query, request, option->referer),
+                fclose);
         else
             /* lodal CGI: GET */
-            uf.stream = newFileStream(localcgi_get(pu->real_file, pu->query,
-                                          option->referer),
-                (void (*)())fclose);
+            uf.stream = newFileStream(localcgi_get(pu->real_file, pu->query, option->referer), fclose);
         if (uf.stream) {
             uf.is_cgi = true;
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
@@ -958,7 +952,7 @@ void uncompress_stream(struct URLFile* uf, const char** src)
     struct compression_decoder* d;
     int use_d_arg = 0;
 
-    if (IStype(uf->stream) != IST_ENCODED) {
+    if (uf->stream->type != IST_ENCODED) {
         uf->stream = newEncodedStream(uf->stream, uf->encoding);
         uf->encoding = ENC_7BIT;
     }
@@ -1004,7 +998,7 @@ void uncompress_stream(struct URLFile* uf, const char** src)
             int count;
             FILE* f = NULL;
 
-            setup_child(true, 2, ISfileno(uf->stream));
+            setup_child(true, 2, ISfd(uf->stream));
             if (tmpf)
                 f = fopen(tmpf, "wb");
             while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
@@ -1035,5 +1029,315 @@ void uncompress_stream(struct URLFile* uf, const char** src)
             uf->scheme = SCM_LOCAL;
     }
     UFhalfclose(uf);
-    uf->stream = newFileStream(f1, (void (*)())fclose);
+    uf->stream = newFileStream(f1, fclose);
+}
+
+static Str accept_this_site;
+
+static void ssl_accept_this_site(const char* hostname)
+{
+    if (hostname)
+        accept_this_site = Strnew_charp(hostname);
+    else
+        accept_this_site = NULL;
+}
+
+void free_ssl_ctx(void)
+{
+    if (ssl_ctx != NULL)
+        SSL_CTX_free(ssl_ctx);
+    ssl_ctx = NULL;
+    ssl_accept_this_site(NULL);
+}
+
+static int
+ssl_match_cert_ident(const char* ident, int ilen, const char* hostname)
+{
+    /* RFC2818 3.1.  Server Identity
+     * Names may contain the wildcard
+     * character * which is considered to match any single domain name
+     * component or component fragment. E.g., *.a.com matches foo.a.com but
+     * not bar.foo.a.com. f*.com matches foo.com but not bar.com.
+     */
+    int hlen = strlen(hostname);
+    int i, c;
+
+    /* Is this an exact match? */
+    if ((ilen == hlen) && strncasecmp(ident, hostname, hlen) == 0)
+        return true;
+
+    for (i = 0; i < ilen; i++) {
+        if (ident[i] == '*' && ident[i + 1] == '.') {
+            while ((c = *hostname++) != '\0')
+                if (c == '.')
+                    break;
+            i++;
+        } else {
+            if (ident[i] != *hostname++)
+                return false;
+        }
+    }
+    return *hostname == '\0';
+}
+
+static Str
+ssl_check_cert_ident(X509* x, const char* hostname)
+{
+    int i;
+    Str ret = NULL;
+    int match_ident = false;
+    /*
+     * All we need to do here is check that the CN matches.
+     *
+     * From RFC2818 3.1 Server Identity:
+     * If a subjectAltName extension of type dNSName is present, that MUST
+     * be used as the identity. Otherwise, the (most specific) Common Name
+     * field in the Subject field of the certificate MUST be used. Although
+     * the use of the Common Name is existing practice, it is deprecated and
+     * Certification Authorities are encouraged to use the dNSName instead.
+     */
+    i = X509_get_ext_by_NID(x, NID_subject_alt_name, -1);
+    if (i >= 0) {
+        X509_EXTENSION* ex;
+        STACK_OF(GENERAL_NAME) * alt;
+
+        ex = X509_get_ext(x, i);
+        alt = X509V3_EXT_d2i(ex);
+        if (alt) {
+            int n;
+            GENERAL_NAME* gn;
+            Str seen_dnsname = NULL;
+
+            n = sk_GENERAL_NAME_num(alt);
+            for (i = 0; i < n; i++) {
+                gn = sk_GENERAL_NAME_value(alt, i);
+                if (gn->type == GEN_DNS) {
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
+                    unsigned char* sn = ASN1_STRING_data(gn->d.ia5);
+#else
+                    const unsigned char* sn = ASN1_STRING_get0_data(gn->d.ia5);
+#endif
+                    int sl = ASN1_STRING_length(gn->d.ia5);
+
+                    /*
+                     * sn is a pointer to internal data and not guaranteed to
+                     * be null terminated. Ensure we have a null terminated
+                     * string that we can modify.
+                     */
+                    char* asn = malloc(sl + 1);
+                    if (!asn)
+                        exit(1);
+                    bcopy(sn, asn, sl);
+                    asn[sl] = '\0';
+
+                    if (!seen_dnsname)
+                        seen_dnsname = Strnew();
+                    /* replace \0 to make full string visible to user */
+                    if (sl != strlen(asn)) {
+                        int i;
+                        for (i = 0; i < sl; ++i) {
+                            if (!asn[i])
+                                asn[i] = '!';
+                        }
+                    }
+                    Strcat_m_charp(seen_dnsname, asn, " ", NULL);
+                    if (sl == strlen(asn) /* catch \0 in SAN */
+                        && ssl_match_cert_ident(asn, sl, hostname))
+                        break;
+                }
+            }
+            X509V3_EXT_get(ex);
+            sk_GENERAL_NAME_free(alt);
+            if (i < n) /* Found a match */
+                match_ident = true;
+            else if (seen_dnsname)
+                /* FIXME: gettextize? */
+                ret = Sprintf("Bad cert ident from %s: dNSName=%s", hostname,
+                    seen_dnsname->ptr);
+        }
+    }
+
+    if (match_ident == false && ret == NULL) {
+        X509_NAME* xn;
+        char buf[2048];
+        int slen;
+
+        xn = X509_get_subject_name(x);
+
+        slen = X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf));
+        if (slen == -1)
+            /* FIXME: gettextize? */
+            ret = Strnew_charp("Unable to get common name from peer cert");
+        else if (slen != strlen(buf)
+            || !ssl_match_cert_ident(buf, strlen(buf), hostname)) {
+            /* replace \0 to make full string visible to user */
+            if (slen != strlen(buf)) {
+                int i;
+                for (i = 0; i < slen; ++i) {
+                    if (!buf[i])
+                        buf[i] = '!';
+                }
+            }
+            /* FIXME: gettextize? */
+            ret = Sprintf("Bad cert ident %s from %s", buf, hostname);
+        }
+    }
+    return ret;
+}
+
+Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
+{
+    BIO* bp;
+    X509* x;
+    X509_NAME* xn;
+    char* p;
+    int len;
+    Str s;
+    char buf[2048];
+    Str amsg = NULL;
+    Str emsg;
+    char* ans;
+
+    if (ssl == NULL)
+        return NULL;
+    x = SSL_get_peer_certificate(ssl);
+    if (x == NULL) {
+        if (accept_this_site
+            && strcasecmp(accept_this_site->ptr, hostname) == 0)
+            ans = "y";
+        else {
+            /* FIXME: gettextize? */
+            emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
+            ans = inputAnswer(args, emsg->ptr);
+        }
+        if (ans && TOLOWER(*ans) == 'y')
+            /* FIXME: gettextize? */
+            amsg = Strnew_charp("Accept SSL session without any peer certificate");
+        else {
+            /* FIXME: gettextize? */
+            char* e = "This SSL session was rejected "
+                      "to prevent security violation: no peer certificate";
+            disp_err_message(args, e, false);
+            free_ssl_ctx();
+            return NULL;
+        }
+        if (amsg)
+            disp_err_message(args, amsg->ptr, false);
+        ssl_accept_this_site(hostname);
+        /* FIXME: gettextize? */
+        s = amsg ? amsg : Strnew_charp("valid certificate");
+        return s;
+    }
+    /* check the cert chain.
+     * The chain length is automatically checked by OpenSSL when we
+     * set the verify depth in the ctx.
+     */
+    if (ssl_verify_server) {
+        long verr;
+        if ((verr = SSL_get_verify_result(ssl))
+            != X509_V_OK) {
+            const char* em = X509_verify_cert_error_string(verr);
+            if (accept_this_site
+                && strcasecmp(accept_this_site->ptr, hostname) == 0)
+                ans = "y";
+            else {
+                /* FIXME: gettextize? */
+                emsg = Sprintf("%s: accept? (y/n)", em);
+                ans = inputAnswer(args, emsg->ptr);
+            }
+            if (ans && TOLOWER(*ans) == 'y') {
+                /* FIXME: gettextize? */
+                amsg = Sprintf("Accept unsecure SSL session: "
+                               "unverified: %s",
+                    em);
+            } else {
+                /* FIXME: gettextize? */
+                char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
+                disp_err_message(args, e, false);
+                free_ssl_ctx();
+                return NULL;
+            }
+        }
+    }
+    emsg = ssl_check_cert_ident(x, hostname);
+    if (emsg != NULL) {
+        if (accept_this_site
+            && strcasecmp(accept_this_site->ptr, hostname) == 0)
+            ans = "y";
+        else {
+            Str ep = Strdup(emsg);
+            if (ep->length > COLS - 16)
+                Strshrink(ep, ep->length - (COLS - 16));
+            Strcat_charp(ep, ": accept? (y/n)");
+            ans = inputAnswer(args, ep->ptr);
+        }
+        if (ans && TOLOWER(*ans) == 'y') {
+            /* FIXME: gettextize? */
+            amsg = Strnew_charp("Accept unsecure SSL session:");
+            Strcat(amsg, emsg);
+        } else {
+            /* FIXME: gettextize? */
+            const char* e = "This SSL session was rejected "
+                            "to prevent security violation";
+            disp_err_message(args, e, false);
+            free_ssl_ctx();
+            return NULL;
+        }
+    }
+    if (amsg)
+        disp_err_message(args, amsg->ptr, false);
+    ssl_accept_this_site(hostname);
+    /* FIXME: gettextize? */
+    s = amsg ? amsg : Strnew_charp("valid certificate");
+    Strcat_charp(s, "\n");
+    xn = X509_get_subject_name(x);
+    if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
+        Strcat_charp(s, " subject=<unknown>");
+    else
+        Strcat_m_charp(s, " subject=", buf, NULL);
+    xn = X509_get_issuer_name(x);
+    if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
+        Strcat_charp(s, ": issuer=<unknown>");
+    else
+        Strcat_m_charp(s, ": issuer=", buf, NULL);
+    Strcat_charp(s, "\n\n");
+
+    bp = BIO_new(BIO_s_mem());
+    X509_print(bp, x);
+    len = (int)BIO_ctrl(bp, BIO_CTRL_INFO, 0, (char*)&p);
+    Strcat_charp_n(s, p, len);
+    BIO_free_all(bp);
+    X509_free(x);
+    return s;
+}
+
+void ssl_close(void* _handle)
+{
+    struct ssl_handle* handle = (struct ssl_handle*)_handle;
+    close(handle->sock);
+    if (handle->ssl)
+        SSL_free(handle->ssl);
+}
+
+int ssl_read(void* _handle, uint8_t* buf, int len)
+{
+    struct ssl_handle* handle = (struct ssl_handle*)_handle;
+    int status;
+    if (handle->ssl) {
+        for (;;) {
+            status = SSL_read(handle->ssl, buf, len);
+            if (status > 0)
+                break;
+            switch (SSL_get_error(handle->ssl, status)) {
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see SSL_get_error(3) */
+                continue;
+            default:
+                break;
+            }
+            break;
+        }
+    } else
+        status = read(handle->sock, buf, len);
+    return status;
 }

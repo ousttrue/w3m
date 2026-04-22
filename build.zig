@@ -69,6 +69,7 @@ const w3m_srcs = [_][]const u8{
     "hash.c",
 };
 const flags = [_][]const u8{
+    "-D_POSIX_SOURCE=200112L",
     "-DOPENSSL_API_COMPAT=0x010101000L",
     // "-Wno-implicit-int",
     // "-Wno-int-conversion",

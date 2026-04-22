@@ -297,7 +297,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
 {
     struct Buffer* newbuf = NULL;
     int c, i;
-    InputStream redin;
+    struct InputStream *redin;
     const char* line_str = NULL;
     const char** load_argv;
     struct Form* request;
@@ -657,7 +657,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     if (load_argc == 0) {
         /* no URL specified */
         if (!isatty(0)) {
-            redin = newFileStream(fdopen(dup(0), "rb"), (void (*)())pclose);
+            redin = newFileStream(fdopen(dup(0), "rb"), pclose);
             newbuf = openGeneralPagerBuffer(args, redin);
             dup2(1, 0);
         } else if (load_bookmark) {
