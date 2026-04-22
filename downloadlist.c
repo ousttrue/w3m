@@ -82,14 +82,14 @@ void downloadListPanel(struct CmdArgs *args)
                     deleteTab(CurrentTab);
             } else
                 delBuffer(Currentbuf);
-            displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+            displayBuffer(args, B_FORCE_REDRAW);
         }
         return;
     }
     reload = checkDownloadList();
     buf = DownloadListBuffer();
     if (!buf) {
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -107,7 +107,7 @@ void downloadListPanel(struct CmdArgs *args)
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             "RELOAD", NULL);
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void exitDownloadList()

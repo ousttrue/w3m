@@ -536,7 +536,7 @@ void popup_menu(struct CmdArgs *args, Menu* parent, Menu* menu)
     CurrentMenu = menu;
     while (active) {
         active = action_menu(args, CurrentMenu);
-        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, B_FORCE_REDRAW);
     }
     menu->active = 0;
     CurrentMenu = parent;
@@ -1152,7 +1152,7 @@ smDelBuf(struct CmdArgs *args)
     CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
                                                               : (CurrentMenu->nitem - 2);
 
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
     draw_all_menu(CurrentMenu);
     select_menu(CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);
@@ -1279,7 +1279,7 @@ smDelTab(struct CmdArgs *args)
     CurrentMenu->select = (mselect <= CurrentMenu->nitem - 2) ? mselect
                                                               : (CurrentMenu->nitem - 2);
 
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
     draw_all_menu(CurrentMenu);
     select_menu(CurrentMenu, CurrentMenu->select);
     return (MENU_NOTHING);

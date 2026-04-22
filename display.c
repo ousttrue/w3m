@@ -321,7 +321,7 @@ make_lastline_message(struct Buffer* buf)
     return msg;
 }
 
-void displayBuffer(struct CmdArgs* args, struct Buffer* buf, int mode)
+static void _displayBuffer(struct Buffer* buf, struct CmdArgs* args, enum DisplayBufferMode mode)
 {
     Str msg;
     int ny = 0;
@@ -385,7 +385,7 @@ void displayBuffer(struct CmdArgs* args, struct Buffer* buf, int mode)
         buf->topLine = buf->firstLine;
 
     if (buf->need_reshape) {
-        displayBuffer(args, buf, B_FORCE_REDRAW);
+        _displayBuffer(buf, args, B_FORCE_REDRAW);
         return;
     }
 
@@ -410,8 +410,13 @@ void displayBuffer(struct CmdArgs* args, struct Buffer* buf, int mode)
     }
     if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
         chkURLBuffer(buf);
-        displayBuffer(args, buf, B_NORMAL);
+        _displayBuffer(buf, args, B_NORMAL);
     }
+}
+
+void displayBuffer(struct CmdArgs* args, enum DisplayBufferMode mode)
+{
+    _displayBuffer(Currentbuf, args, mode);
 }
 
 static void
@@ -1096,7 +1101,7 @@ void disp_message_nsec(struct CmdArgs* args, const char* s, int redraw_current, 
         unget(ch);
     }
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
 }
 
 void set_delayed_message(char* s)

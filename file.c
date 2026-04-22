@@ -7579,7 +7579,7 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
             mySystem(command->ptr, 0);
             fmInit();
             if (CurrentTab && Currentbuf)
-                displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+                displayBuffer(args, B_FORCE_REDRAW);
         } else {
             mySystem(command->ptr, 1);
         }

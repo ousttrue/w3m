@@ -245,7 +245,7 @@ char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* 
 
     if (CurrentTab) {
         if (need_redraw)
-            displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+            displayBuffer(args, B_FORCE_REDRAW);
     }
 
     if (i_broken)
@@ -651,7 +651,7 @@ next_dcompl(struct CmdArgs* args, int next)
         return;
     cm_disp_clear = false;
     if (CurrentTab)
-        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, B_FORCE_REDRAW);
     if ((LINES - 1) >= 3) {
         comment = true;
         nline = (LINES - 1) - 2;
@@ -1030,7 +1030,7 @@ static int _editor(struct CmdArgs* args)
     }
     CLen = CPos = setStrType(strBuf, strProp);
     if (CurrentTab)
-        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, B_FORCE_REDRAW);
     return 0;
 }
 

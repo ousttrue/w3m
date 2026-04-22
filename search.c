@@ -248,7 +248,7 @@ void srch(struct CmdArgs* args, SrchFunc func, const char* prompt)
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
         disp = true;
@@ -261,7 +261,7 @@ void srch(struct CmdArgs* args, SrchFunc func, const char* prompt)
         clear_mark(Currentbuf->currentLine);
     else
         Currentbuf->pos = pos;
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
     if (disp)
         disp_srchresult(args, result, prompt, str);
     searchRoutine = func;
@@ -329,7 +329,7 @@ int dispincsrch(struct CmdArgs* args, Str buf, Lineprop* prop)
                 SAVE_BUFPOSITION(&sbuf);
             }
             arrangeCursor(Currentbuf);
-            displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+            displayBuffer(args, B_FORCE_REDRAW);
             clear_mark(Currentbuf->currentLine);
             return -1;
         } else
@@ -340,7 +340,7 @@ int dispincsrch(struct CmdArgs* args, Str buf, Lineprop* prop)
         srchcore(str, searchRoutine);
         arrangeCursor(Currentbuf);
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
     clear_mark(Currentbuf->currentLine);
     return -1;
 }
@@ -356,7 +356,7 @@ void isrch(struct CmdArgs* args, SrchFunc func, const char* prompt)
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void srch_nxtprv(struct CmdArgs *args, int reverse)
@@ -384,7 +384,7 @@ void srch_nxtprv(struct CmdArgs *args, int reverse)
         if (reverse == 0)
             Currentbuf->pos -= 1;
     }
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
     disp_srchresult(args, result, (reverse ? "Backward: " : "Forward: "),
         SearchString);
 }

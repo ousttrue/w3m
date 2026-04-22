@@ -117,7 +117,7 @@ void ctrCsrV(struct CmdArgs* args)
     if (offsety != 0) {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, FALSE);
         arrangeLine(Currentbuf);
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
     }
 }
 
@@ -130,7 +130,7 @@ void ctrCsrH(struct CmdArgs* args)
     if (offsetx != 0) {
         columnSkip(Currentbuf, offsetx);
         arrangeCursor(Currentbuf);
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
     }
 }
 
@@ -138,7 +138,7 @@ void rdrwSc(struct CmdArgs* args)
 {
     clear();
     arrangeCursor(Currentbuf);
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void srchfor(struct CmdArgs* args)
@@ -180,7 +180,7 @@ void shiftl(struct CmdArgs* args)
     column = Currentbuf->currentColumn;
     columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->COLS + 1) + 1);
     shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void shiftr(struct CmdArgs* args)
@@ -192,7 +192,7 @@ void shiftr(struct CmdArgs* args)
     column = Currentbuf->currentColumn;
     columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->COLS - 1) - 1);
     shiftvisualpos(Currentbuf, Currentbuf->currentColumn - column);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void col1R(struct CmdArgs* args)
@@ -210,7 +210,7 @@ void col1R(struct CmdArgs* args)
             break;
         shiftvisualpos(Currentbuf, 1);
     }
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void col1L(struct CmdArgs* args)
@@ -227,7 +227,7 @@ void col1L(struct CmdArgs* args)
         columnSkip(Currentbuf, -1);
         shiftvisualpos(Currentbuf, -1);
     }
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void setEnv(struct CmdArgs* args)
@@ -239,7 +239,7 @@ void setEnv(struct CmdArgs* args)
             env = Sprintf("%s=", env)->ptr;
         env = inputStrHist(args, "Set environ: ", env, TextHist);
         if (env == NULL || *env == '\0') {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
     }
@@ -249,7 +249,7 @@ void setEnv(struct CmdArgs* args)
         value++;
         set_environ(var, value);
     }
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void pipeBuf(struct CmdArgs* args)
@@ -262,7 +262,7 @@ void pipeBuf(struct CmdArgs* args)
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd == NULL || *cmd == '\0') {
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     char* tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
@@ -286,7 +286,7 @@ void pipeBuf(struct CmdArgs* args)
         buf->currentURL.file = "-";
         pushBuffer(args, buf);
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void pipesh(struct CmdArgs* args)
@@ -299,7 +299,7 @@ void pipesh(struct CmdArgs* args)
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd == NULL || *cmd == '\0') {
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     struct Buffer* buf = getpipe(cmd);
@@ -312,7 +312,7 @@ void pipesh(struct CmdArgs* args)
             buf->type = "text/plain";
         pushBuffer(args, buf);
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void readsh(struct CmdArgs* args)
@@ -325,7 +325,7 @@ void readsh(struct CmdArgs* args)
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd == NULL || *cmd == '\0') {
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     auto prevtrap = signal(SIGINT, intTrap);
@@ -343,7 +343,7 @@ void readsh(struct CmdArgs* args)
             buf->type = "text/plain";
         pushBuffer(args, buf);
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void execsh(struct CmdArgs* args)
@@ -365,7 +365,7 @@ void execsh(struct CmdArgs* args)
         fmInit();
         getch(args);
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void ldfile(struct CmdArgs* args)
@@ -378,7 +378,7 @@ void ldfile(struct CmdArgs* args)
     if (fn != NULL)
         fn = conv_to_system(fn);
     if (fn == NULL || *fn == '\0') {
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     cmd_loadfile(args, fn);
@@ -483,7 +483,7 @@ void movLW(struct CmdArgs* args)
     }
 end:
     arrangeCursor(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void movRW(struct CmdArgs* args)
@@ -525,7 +525,7 @@ void movRW(struct CmdArgs* args)
     }
 end:
     arrangeCursor(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* Quit */
@@ -583,7 +583,7 @@ void selBuf(struct CmdArgs* args)
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
@@ -602,7 +602,7 @@ void susp(struct CmdArgs* args)
     kill(0, SIGTSTP); /* stop whole job, not a single process */
 
     fmInit();
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void goLine(struct CmdArgs* args)
@@ -636,7 +636,7 @@ void linbeg(struct CmdArgs* args)
         cursorUp0(Currentbuf, 1);
     Currentbuf->pos = 0;
     arrangeCursor(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* Go to the bottom of the line */
@@ -649,7 +649,7 @@ void linend(struct CmdArgs* args)
         cursorDown0(Currentbuf, 1);
     Currentbuf->pos = Currentbuf->currentLine->len - 1;
     arrangeCursor(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* Run editor on the current buffer */
@@ -673,7 +673,7 @@ void editBf(struct CmdArgs* args)
             cur_real_linenumber(Currentbuf));
     exec_cmd(args, cmd->ptr);
 
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
     reload(args);
 }
 
@@ -691,7 +691,7 @@ void editScr(struct CmdArgs* args)
     fclose(f);
     exec_cmd(args, myEditor(Editor, shell_quote(tmpf), cur_real_linenumber(Currentbuf))->ptr);
     unlink(tmpf);
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 /* Set / unset mark */
@@ -704,7 +704,7 @@ void _mark(struct CmdArgs* args)
         return;
     l = Currentbuf->currentLine;
     l->propBuf[Currentbuf->pos] ^= PE_MARK;
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 /* Go to next mark */
@@ -729,7 +729,7 @@ void nextMk(struct CmdArgs* args)
                 Currentbuf->currentLine = l;
                 Currentbuf->pos = i;
                 arrangeCursor(Currentbuf);
-                displayBuffer(args, Currentbuf, B_NORMAL);
+                displayBuffer(args, B_NORMAL);
                 return;
             }
         }
@@ -763,7 +763,7 @@ void prevMk(struct CmdArgs* args)
                 Currentbuf->currentLine = l;
                 Currentbuf->pos = i;
                 arrangeCursor(Currentbuf);
-                displayBuffer(args, Currentbuf, B_NORMAL);
+                displayBuffer(args, B_NORMAL);
                 return;
             }
         }
@@ -787,7 +787,7 @@ void reMark(struct CmdArgs* args)
     if (str == NULL || *str == '\0') {
         str = inputStrHist(args, "(Mark)Regexp: ", MarkString, TextHist);
         if (str == NULL || *str == '\0') {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
     }
@@ -809,7 +809,7 @@ void reMark(struct CmdArgs* args)
         }
     }
 
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 /* follow HREF link */
@@ -863,11 +863,11 @@ void followA(struct CmdArgs* args)
             delBuffer(buf);
         else
             deleteTab(CurrentTab);
-        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, B_FORCE_REDRAW);
         return;
     }
     loadLink(args, url, a->target, a->referer, NULL);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* view inline image */
@@ -893,7 +893,7 @@ void followI(struct CmdArgs* args)
     } else if (buf != NO_BUFFER) {
         pushBuffer(args, buf);
     }
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* submit form */
@@ -932,7 +932,7 @@ void topA(struct CmdArgs* args)
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* go to the last anchor */
@@ -967,7 +967,7 @@ void lastA(struct CmdArgs* args)
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* go to the nth anchor */
@@ -996,7 +996,7 @@ void nthA(struct CmdArgs* args)
     gotoLine(Currentbuf, po->line);
     Currentbuf->pos = po->pos;
     arrangeCursor(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* go to the next anchor */
@@ -1074,7 +1074,7 @@ void nextBf(struct CmdArgs* args)
         }
         Currentbuf = buf;
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 /* go to the previous bufferr */
@@ -1092,7 +1092,7 @@ void prevBf(struct CmdArgs* args)
         }
         Currentbuf = buf;
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 /* delete current buffer and back to the previous buffer */
@@ -1103,7 +1103,7 @@ void backBf(struct CmdArgs* args)
     if (!checkBackBuffer(Currentbuf)) {
         if (close_tab_back && nTab >= 1) {
             deleteTab(CurrentTab);
-            displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+            displayBuffer(args, B_FORCE_REDRAW);
         } else
             /* FIXME: gettextize? */
             disp_message(args, "Can't go back...", TRUE);
@@ -1140,7 +1140,7 @@ void backBf(struct CmdArgs* args)
             delBuffer(Currentbuf);
         }
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void deletePrevBuf(struct CmdArgs* args)
@@ -1216,13 +1216,13 @@ void setOpt(struct CmdArgs* args)
         }
         opt = inputStrHist(args, "Set option: ", opt, TextHist);
         if (opt == NULL || *opt == '\0') {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
     }
     if (set_param_option(opt))
         sync_with_option(args);
-    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, B_REDRAW_IMAGE);
 }
 
 /* error message list */
@@ -1238,7 +1238,7 @@ void pginfo(struct CmdArgs* args)
 
     if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != NULL) {
         Currentbuf = buf;
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     if ((buf = Currentbuf->linkBuffer[LB_INFO]) != NULL)
@@ -1338,7 +1338,7 @@ void svBuf(struct CmdArgs* args)
         /* FIXME: gettextize? */
         qfile = inputLineHist(args, "Save buffer to: ", NULL, IN_COMMAND, SaveHist);
         if (qfile == NULL || *qfile == '\0') {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
     }
@@ -1353,7 +1353,7 @@ void svBuf(struct CmdArgs* args)
         }
         file = expandPath(file);
         if (checkOverWrite(args, file) < 0) {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
         f = fopen(file, "w");
@@ -1370,7 +1370,7 @@ void svBuf(struct CmdArgs* args)
         pclose(f);
     else
         fclose(f);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* save source */
@@ -1388,7 +1388,7 @@ void svSrc(struct CmdArgs* args)
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
     doFileCopy(args, Currentbuf->sourcefile, file);
     PermitSaveToPipe = FALSE;
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* peek URL */
@@ -1443,7 +1443,7 @@ void vwSrc(struct CmdArgs* args)
         return;
     if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL || (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
         Currentbuf = buf;
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     if (Currentbuf->sourcefile == NULL) {
@@ -1509,7 +1509,7 @@ void vwSrc(struct CmdArgs* args)
     buf->need_reshape = TRUE;
     reshapeBuffer(args, buf);
     pushBuffer(args, buf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 /* reload */
@@ -1543,7 +1543,7 @@ void reload(struct CmdArgs* args)
             refresh();
         }
         if (!(buf = renderFrame(args, fbuf, 1))) {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
         if (fbuf->linkBuffer[LB_FRAME]) {
@@ -1559,7 +1559,7 @@ void reload(struct CmdArgs* args)
             COPY_BUFROOT(Currentbuf, &sbuf);
             restorePosition(Currentbuf, &sbuf);
         }
-        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, B_FORCE_REDRAW);
         return;
     } else if (Currentbuf->frameset != NULL)
         fbuf = Currentbuf->linkBuffer[LB_FRAME];
@@ -1599,7 +1599,7 @@ void reload(struct CmdArgs* args)
         disp_err_message(args, "Can't reload...", TRUE);
         return;
     } else if (buf == NO_BUFFER) {
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     if (fbuf != NULL)
@@ -1616,7 +1616,7 @@ void reload(struct CmdArgs* args)
         COPY_BUFROOT(Currentbuf, &sbuf);
         restorePosition(Currentbuf, &sbuf);
     }
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 /* reshape */
@@ -1624,7 +1624,7 @@ void reshape(struct CmdArgs* args)
 {
     Currentbuf->need_reshape = TRUE;
     reshapeBuffer(args, Currentbuf);
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void docCSet(struct CmdArgs* args)
@@ -1636,7 +1636,7 @@ void docCSet(struct CmdArgs* args)
             wc_ces_to_charset(Currentbuf->document_charset));
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     _docCSet(args, charset);
@@ -1652,13 +1652,13 @@ void defCSet(struct CmdArgs* args)
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         DocumentCharset = charset;
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void chkURL(struct CmdArgs* args)
 {
     chkURLBuffer(Currentbuf);
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void chkWORD(struct CmdArgs* args)
@@ -1669,13 +1669,13 @@ void chkWORD(struct CmdArgs* args)
     if (p == NULL)
         return;
     reAnchorWord(Currentbuf, Currentbuf->currentLine, spos, epos);
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void chkNMID(struct CmdArgs* args)
 {
     chkNMIDBuffer(Currentbuf);
-    displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(args, B_FORCE_REDRAW);
 }
 
 /* render frames */
@@ -1685,13 +1685,13 @@ void rFrame(struct CmdArgs* args)
 
     if ((buf = Currentbuf->linkBuffer[LB_FRAME]) != NULL) {
         Currentbuf = buf;
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     if (Currentbuf->frameset == NULL) {
         if ((buf = Currentbuf->linkBuffer[LB_N_FRAME]) != NULL) {
             Currentbuf = buf;
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
         }
         return;
     }
@@ -1701,14 +1701,14 @@ void rFrame(struct CmdArgs* args)
     }
     buf = renderFrame(args, Currentbuf, 0);
     if (buf == NULL) {
-        displayBuffer(args, Currentbuf, B_NORMAL);
+        displayBuffer(args, B_NORMAL);
         return;
     }
     buf->linkBuffer[LB_N_FRAME] = Currentbuf;
     Currentbuf->linkBuffer[LB_FRAME] = buf;
     pushBuffer(args, buf);
     if (fmInitialized && display_ok)
-        displayBuffer(args, Currentbuf, B_FORCE_REDRAW);
+        displayBuffer(args, B_FORCE_REDRAW);
 }
 
 void extbrz(struct CmdArgs* args)
@@ -1784,7 +1784,7 @@ void dispI(struct CmdArgs* args)
      */
     Currentbuf->image_flag = IMG_FLAG_AUTO;
     Currentbuf->need_reshape = TRUE;
-    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, B_REDRAW_IMAGE);
 }
 
 void stopI(struct CmdArgs* args)
@@ -1796,7 +1796,7 @@ void stopI(struct CmdArgs* args)
      * return;
      */
     Currentbuf->image_flag = IMG_FLAG_SKIP;
-    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, B_REDRAW_IMAGE);
 }
 
 void dispVer(struct CmdArgs* args)
@@ -1834,7 +1834,7 @@ void execCmd(struct CmdArgs* args)
     if (data == NULL || *data == '\0') {
         data = inputStrHist(args, "command [; ...]: ", "", TextHist);
         if (data == NULL) {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
     }
@@ -1856,7 +1856,7 @@ void execCmd(struct CmdArgs* args)
         w3mFunc(cmd);
         CurrentCmdData = NULL;
     }
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void setAlarm(struct CmdArgs* args)
@@ -1869,7 +1869,7 @@ void setAlarm(struct CmdArgs* args)
     if (data == NULL || *data == '\0') {
         data = inputStrHist(args, "(Alarm)sec command: ", "", TextHist);
         if (data == NULL) {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
     }
@@ -1886,7 +1886,7 @@ void setAlarm(struct CmdArgs* args)
     } else {
         setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, "NOTHING", NULL);
     }
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void reinit(struct CmdArgs* args)
@@ -1897,14 +1897,14 @@ void reinit(struct CmdArgs* args)
         init_rc();
         sync_with_option(args);
         initCookie();
-        displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+        displayBuffer(args, B_REDRAW_IMAGE);
         return;
     }
 
     if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
         init_rc();
         sync_with_option(args);
-        displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+        displayBuffer(args, B_REDRAW_IMAGE);
         return;
     }
 
@@ -1943,18 +1943,18 @@ void defKey(struct CmdArgs* args)
     if (data == NULL || *data == '\0') {
         data = inputStrHist(args, "Key definition: ", "", TextHist);
         if (data == NULL || *data == '\0') {
-            displayBuffer(args, Currentbuf, B_NORMAL);
+            displayBuffer(args, B_NORMAL);
             return;
         }
     }
     setKeymap(args, allocStr(data, -1), -1, TRUE);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void newT(struct CmdArgs* args)
 {
     _newT();
-    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, B_REDRAW_IMAGE);
 }
 
 void closeT(struct CmdArgs* args)
@@ -1969,7 +1969,7 @@ void closeT(struct CmdArgs* args)
         tab = CurrentTab;
     if (tab)
         deleteTab(tab);
-    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, B_REDRAW_IMAGE);
 }
 
 void nextT(struct CmdArgs* args)
@@ -1984,7 +1984,7 @@ void nextT(struct CmdArgs* args)
         else
             CurrentTab = FirstTab;
     }
-    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, B_REDRAW_IMAGE);
 }
 
 void prevT(struct CmdArgs* args)
@@ -1999,7 +1999,7 @@ void prevT(struct CmdArgs* args)
         else
             CurrentTab = LastTab;
     }
-    displayBuffer(args, Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(args, B_REDRAW_IMAGE);
 }
 
 void tabA(struct CmdArgs* args)
@@ -2077,7 +2077,7 @@ void cursorTop(struct CmdArgs* args)
     Currentbuf->currentLine = lineSkip(Currentbuf, Currentbuf->topLine,
         0, FALSE);
     arrangeLine(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void cursorMiddle(struct CmdArgs* args)
@@ -2089,7 +2089,7 @@ void cursorMiddle(struct CmdArgs* args)
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, FALSE);
     arrangeLine(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void cursorBottom(struct CmdArgs* args)
@@ -2101,7 +2101,7 @@ void cursorBottom(struct CmdArgs* args)
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, FALSE);
     arrangeLine(Currentbuf);
-    displayBuffer(args, Currentbuf, B_NORMAL);
+    displayBuffer(args, B_NORMAL);
 }
 
 void mainMn(struct CmdArgs* args)
