@@ -83,3 +83,54 @@ export fn w3m_loop() c_int {
 
     return 0;
 }
+
+var fileToDelete: std.ArrayList([]const u8) = .initBuffer(&.{});
+
+export fn addDeleteFile(file: [*c]const u8) void {
+    const copy = runtime.allocator.dupe(u8, std.mem.span(file)) catch @panic("OOM");
+    fileToDelete.append(runtime.allocator, copy) catch @panic("OOM");
+}
+
+export fn deleteFiles() void {
+    const allocator = runtime.allocator;
+    const io = runtime.io;
+
+    for (fileToDelete.items) |file| {
+        std.Io.Dir.cwd().deleteFile(io, file) catch {
+            std.log.warn("fail to remove: {s}", .{file});
+        };
+        if (g.enable_inline_image == c.INLINE_IMG_SIXEL and std.mem.endsWith(u8, file, ".gif")) {
+            const firstframe = std.fmt.allocPrint(allocator, "{s}-1", .{file}) catch @panic("OOM");
+            defer allocator.free(firstframe);
+            std.Io.Dir.cwd().deleteFile(io, firstframe) catch {
+                std.log.warn("fail to remove: {s}", .{firstframe});
+            };
+        }
+        allocator.free(file);
+    }
+    fileToDelete.deinit(allocator);
+}
+
+var tmpf_base: []const []const u8 = &.{
+    "tmp",
+    "src",
+    "frame",
+    "cache",
+    "cookie",
+    "hist",
+};
+var tmpf_seq = [1]usize{0} ** c.MAX_TMPF_TYPE;
+
+export fn tmpfname(tmp_type: c.TmpFileType, _ext: ?[*:0]const u8) [*c]const u8 {
+    const dir = if (tmp_type == c.TMPF_HIST) std.mem.span(g.rc_dir) else std.mem.span(g.tmp_dir);
+    const tmpf = std.fmt.allocPrintSentinel(runtime.allocator, "{s}/w3m{s}{}-{}{s}", .{
+        dir,
+        tmpf_base[tmp_type],
+        g.CurrentPid,
+        tmpf_seq[tmp_type],
+        if (_ext) |ext| ext else "",
+    }, 0) catch @panic("OOM");
+    tmpf_seq[tmp_type] += 1;
+    addDeleteFile(tmpf);
+    return &tmpf[0];
+}

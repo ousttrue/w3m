@@ -57,13 +57,6 @@
 #include <sys/wait.h>
 #include <time.h>
 
-static TextList* fileToDelete = 0;
-
-void addDeleteFile(const char* file)
-{
-    pushText(fileToDelete, file);
-}
-
 #define USE_IMAGE 1
 unsigned char last_key = 0;
 
@@ -297,7 +290,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
 {
     struct Buffer* newbuf = NULL;
     int c, i;
-    struct InputStream *redin;
+    struct InputStream* redin;
     const char* line_str = NULL;
     const char** load_argv;
     struct Form* request;
@@ -313,7 +306,6 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
         set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
     setlocale(LC_ALL, "");
     proxyInit();
-    fileToDelete = newTextList();
 
     load_argv = New_N(char*, argc - 1);
     load_argc = 0;
@@ -1508,22 +1500,19 @@ conv_form_encoding(Str val, struct FormItem* fi, struct Buffer* buf)
 
 void query_from_followform(Str* query, struct FormItem* fi, int multipart)
 {
-    struct FormItem* f2;
     FILE* body = NULL;
-
     if (multipart) {
-        *query = tmpfname(TMPF_DFL, NULL);
+        const char* tmpf = tmpfname(TMPF_DFL, NULL);
         body = fopen((*query)->ptr, "w");
         if (body == NULL) {
             return;
         }
-        fi->parent->body = (*query)->ptr;
-        fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld", CurrentPid,
-            fi->parent, fi->parent->body, fi->parent->boundary)
-                                   ->ptr;
+        fi->parent->body = tmpf;
+        fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld", CurrentPid, fi->parent, fi->parent->body, fi->parent->boundary)->ptr;
     }
+
     *query = Strnew();
-    for (f2 = fi->parent->item; f2; f2 = f2->next) {
+    for (struct FormItem* f2 = fi->parent->item; f2; f2 = f2->next) {
         if (f2->name == NULL)
             continue;
         /* <ISINDEX> is translated into single text form */
@@ -2572,11 +2561,11 @@ int searchKeyNum(void)
     return n * PREC_NUM;
 }
 
-static void deleteFiles()
+void w3m_exit(int i)
 {
-    struct Buffer* buf;
-    char* f;
+    stopDownload();
 
+    struct Buffer* buf;
     for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
         while (Firstbuf && Firstbuf != NO_BUFFER) {
             buf = Firstbuf->nextBuffer;
@@ -2584,19 +2573,7 @@ static void deleteFiles()
             Firstbuf = buf;
         }
     }
-    while ((f = popText(fileToDelete)) != NULL) {
-        unlink(f);
-        if (enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
-            Str firstframe = Strnew_charp(f);
-            Strcat_charp(firstframe, "-1");
-            unlink(firstframe->ptr);
-        }
-    }
-}
 
-void w3m_exit(int i)
-{
-    stopDownload();
     deleteFiles();
     free_ssl_ctx();
     disconnectFTP();

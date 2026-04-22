@@ -935,27 +935,6 @@ char* url_unquote_conv(const char* url, wc_ces charset)
     return tmp->ptr;
 }
 
-static char* tmpf_base[MAX_TMPF_TYPE] = {
-    "tmp",
-    "src",
-    "frame",
-    "cache",
-    "cookie",
-    "hist",
-};
-static unsigned int tmpf_seq[MAX_TMPF_TYPE];
-
-const char* tmpfname(enum TmpFileType type, const char* ext)
-{
-    const char* dir = (type == TMPF_HIST) ? rc_dir : tmp_dir;
-    Str tmpf = Sprintf("%s/w3m%s%d-%d%s",
-        dir,
-        tmpf_base[type],
-        CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
-    addDeleteFile(tmpf->ptr);
-    return tmpf->ptr;
-}
-
 static char* monthtbl[] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"

@@ -34,3 +34,15 @@ void deinitImage(void);
 void drawImage(void);
 void clearImage(void);
 
+void addDeleteFile(const char* file);
+void deleteFiles(void);
+enum TmpFileType {
+    TMPF_DFL = 0,
+    TMPF_SRC = 1,
+    TMPF_FRAME = 2,
+    TMPF_CACHE = 3,
+    TMPF_COOKIE = 4,
+    TMPF_HIST = 5,
+    MAX_TMPF_TYPE = 6,
+};
+const char* tmpfname(enum TmpFileType type, const char* ext);
