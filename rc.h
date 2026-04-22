@@ -13,7 +13,6 @@ void sync_with_option(struct CmdArgs *args);
 char* rcFile(const char* base);
 char* etcFile(const char* base);
 char* confFile(const char* base);
-char* auxbinFile(const char* base);
 char* libFile(const char* base);
 char* helpFile(const char* base);
 void init_rc(void);

@@ -124,3 +124,14 @@ pub export fn guessContentType(_src: [*c]const u8) [*c]const u8 {
 
     return null;
 }
+
+export fn is_html_type(_type: [*c]const u8) bool {
+    const content_type = std.mem.span(_type);
+    if (std.ascii.eqlIgnoreCase(content_type, "text/html")) {
+        return true;
+    }
+    if (std.ascii.eqlIgnoreCase(content_type, "application/xhtml+xml")) {
+        return true;
+    }
+    return false;
+}

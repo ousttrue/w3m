@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "UrlFile.h"
 #include "form.h"
 #include "auth.h"
 #include "w3m.h"
@@ -1405,11 +1406,6 @@ char* rcFile(const char* base)
         /* /file, ./file, ../file, ~/file */
         return expandPath(base);
     return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
-}
-
-char* auxbinFile(const char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
 #if 0 /* not used */

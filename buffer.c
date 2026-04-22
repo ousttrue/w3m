@@ -1,4 +1,6 @@
 #include "buffer.h"
+#include "content_type.h"
+#include "UrlFile.h"
 #include "main.h"
 #include "term_tty.h"
 #include "ctrlcode.h"

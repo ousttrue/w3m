@@ -1,4 +1,5 @@
 #include "main.h"
+#include "UrlFile.h"
 #include "alloc.h"
 #include "term_tty.h"
 #include <strings.h>

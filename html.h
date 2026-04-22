@@ -5,12 +5,6 @@
 
 #include <time.h>
 
-#define StrUFgets(f) StrISgets((f)->stream)
-#define StrmyUFgets(f) StrmyISgets((f)->stream)
-#define UFgetc(f) ISgetc((f)->stream)
-#define UFundogetc(f) ISundogetc((f)->stream)
-#define UFfileno(f) ISfileno((f)->stream)
-
 #define MAILCAP_NEEDSTERMINAL 0x01
 #define MAILCAP_COPIOUSOUTPUT 0x02
 #define MAILCAP_HTMLOUTPUT 0x04
@@ -18,18 +12,6 @@
 #define MCSTAT_REPNAME 0x01
 #define MCSTAT_REPTYPE 0x02
 #define MCSTAT_REPPARAM 0x04
-
-#define CMP_NOCOMPRESS 0
-#define CMP_COMPRESS 1
-#define CMP_GZIP 2
-#define CMP_BZIP2 3
-#define CMP_DEFLATE 4
-#define CMP_BROTLI 5
-
-#define ENC_7BIT 0
-#define ENC_BASE64 1
-#define ENC_QUOTE 2
-#define ENC_UUENCODE 3
 
 #define HTML_UNKNOWN 0
 #define HTML_A 1

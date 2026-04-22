@@ -4,6 +4,7 @@
  *
  *   Created: Wed Feb 10 12:47:03 1999
  */
+#include "url_scheme.h"
 #include <w3m.h>
 #include <libwc/wc_types.h>
 
@@ -15,12 +16,9 @@ extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, sho
 
 struct Buffer;
 
-extern char* acceptableEncoding(void);
-extern int dir_exist(const char* path);
-extern int is_html_type(const char* type);
 struct Form;
 struct Url;
-extern struct Buffer* loadGeneralFile(struct CmdArgs *args, const char* path, struct Url* current, const char* referer,
+extern struct Buffer* loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* current, const char* referer,
     int flag, struct Form* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
@@ -44,7 +42,7 @@ extern int getMetaRefreshParam(char* q, Str* refresh_uri);
 struct _textlinelist;
 extern void HTMLlineproc2(struct Buffer* buf, struct _textlinelist* tl);
 struct URLFile;
-extern struct Buffer* loadHTMLBuffer(struct CmdArgs *args, struct URLFile* f, struct Buffer* newBuf);
+extern struct Buffer* loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf);
 extern char* convert_size(int64_t size, int usefloat);
 extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
 extern void showProgress(int64_t* linelen, int64_t* trbyte);
@@ -54,15 +52,16 @@ extern struct Buffer* loadHTMLString(Str page);
 extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 
-extern int save2tmp(struct URLFile uf, const char* tmpf);
-extern int _doFileCopy(struct CmdArgs *args, const char* tmpf, const char* defstr, int download);
+union input_stream;
+extern int save2tmp(union input_stream* stream, enum UrlScheme scheme, const char* tmpf);
+extern int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int download);
 #define doFileCopy(args, tmpf, defstr) _doFileCopy(args, tmpf, defstr, FALSE);
-extern int doFileMove(struct CmdArgs *args, const char* tmpf, const char* defstr);
-extern int doFileSave(struct CmdArgs *args, struct URLFile uf, const char* defstr);
+extern int doFileMove(struct CmdArgs* args, const char* tmpf, const char* defstr);
+extern int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr);
 extern int checkCopyFile(const char* path1, const char* path2);
-extern int checkOverWrite(struct CmdArgs *args, const char* path);
+extern int checkOverWrite(struct CmdArgs* args, const char* path);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
-extern void readHeader(struct CmdArgs *args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
+extern void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(struct Buffer* buf, char* field);
 
 extern Str unescape_spaces(Str s);
@@ -70,4 +69,3 @@ extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
 extern int visible_length(char* str);
-

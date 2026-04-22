@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "UrlFile.h"
 #include "alloc.h"
 #include "term_tty.h"
 #include "constants.h"

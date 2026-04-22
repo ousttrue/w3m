@@ -1,4 +1,5 @@
 #include "display.h"
+#include "content_type.h"
 #include "alloc.h"
 #include "terminfo_entry.h"
 #include "term_tty.h"

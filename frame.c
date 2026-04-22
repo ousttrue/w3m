@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "UrlFile.h"
 #include "term_tty.h"
 #include "html_token.h"
 #include "html_feed_environ.h"
@@ -526,7 +527,7 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                 if (frame.body->type && !strcasecmp(frame.body->type, "text/plain")) {
                     Str tmp;
                     fprintf(f1, "<pre>\n");
-                    while ((tmp = StrmyUFgets(&f2)) && tmp->length) {
+                    while ((tmp = StrmyISgets(f2.stream)) && tmp->length) {
                         tmp = convertLine(NULL, tmp, HTML_MODE, &charset,
                             doc_charset);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
@@ -542,7 +543,7 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
 
                     do {
                         if (*p == '\0') {
-                            Str tmp = StrmyUFgets(&f2);
+                            Str tmp = StrmyISgets(f2.stream);
                             if (!tmp || tmp->length == 0)
                                 break;
                             tmp = convertLine(NULL, tmp, HTML_MODE, &charset,

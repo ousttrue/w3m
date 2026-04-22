@@ -27,8 +27,10 @@ extern char* w3m_lib_dir(void);
 extern char* w3m_etc_dir(void);
 extern char* w3m_conf_dir(void);
 extern void set_environ(const char* var, const char* value);
+int dir_exist(const char* path);
 
 void initImage(void);
 void deinitImage(void);
 void drawImage(void);
 void clearImage(void);
+

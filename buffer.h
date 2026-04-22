@@ -44,6 +44,7 @@ typedef struct _BufferPos {
 #define CHK_URL 1
 #define CHK_NMID 2
 
+typedef union input_stream* InputStream;
 struct Buffer {
     const char* filename;
     char* buffername;

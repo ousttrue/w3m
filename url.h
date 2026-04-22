@@ -29,32 +29,10 @@ void copyParsedURL(struct Url* p, const struct Url* q);
 struct Url parseURL2(const char* url, const struct Url* current);
 Str parsedURL2Str(struct Url* pu);
 Str parsedURL2RefererStr(struct Url* pu);
-struct URLFile;
-typedef union input_stream* InputStream;
-
-struct URLFile init_stream(enum UrlScheme scheme, InputStream stream);
-struct URLFile examineFile(const char* path);
-void UFclose(struct URLFile* f);
 
 struct Form;
 struct _textlist;
 struct HttpRequest;
-
-#define NO_REFERER ((char*)-1)
-
-enum UrlOptionFlags {
-    RG_NOCACHE = 1,
-    RG_FRAME = 2,
-    RG_FRAME_SRC = 4,
-};
-struct URLOption {
-    const char* referer;
-    enum UrlOptionFlags flag;
-};
-struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* current,
-    struct URLOption* option, struct Form* request,
-    struct _textlist* extra_header, struct URLFile* ouf,
-    struct HttpRequest* hr, unsigned char* status);
 
 const char* filename_extension(const char* patch, int is_url);
 struct Url* schemeToProxy(int scheme);
@@ -66,7 +44,3 @@ char* url_quote(const char* str);
 Str Str_url_unquote(Str x, int is_form, int safe);
 Str Str_form_quote(Str x);
 #define Str_form_unquote(x) Str_url_unquote((x), true, false)
-
-void check_compression(const char* path, struct URLFile* uf);
-const char* uncompressed_file_type(const char* path, const char** ext);
-void uncompress_stream(struct URLFile* uf, const char** src);

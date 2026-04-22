@@ -1,4 +1,5 @@
 #include "terms.h"
+#include "UrlFile.h"
 #include "indep.h"
 #include "alloc.h"
 #include "quote.h"

@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "UrlFile.h"
 #include "auth.h"
 #include "qsort_util.h"
 #include "indep.h"

@@ -1,4 +1,6 @@
 #include "backend.h"
+#include "UrlFile.h"
+#include "content_type.h"
 #include "constants.h"
 #include "form.h"
 #include "indep.h"

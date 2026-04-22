@@ -13,6 +13,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+enum StreamEncoding {
+    ENC_7BIT = 0,
+    ENC_BASE64 = 1,
+    ENC_QUOTE = 2,
+    ENC_UUENCODE = 3,
+};
+
 struct stream_buffer {
     unsigned char* buf;
     int size, cur, next;
@@ -92,20 +99,6 @@ union input_stream {
     struct encoded_stream ens;
 };
 
-struct URLFile {
-    unsigned char scheme;
-    char is_cgi;
-    char encoding;
-    union input_stream* stream;
-    const char* ext;
-    int compression;
-    int content_encoding;
-    const char* guess_type;
-    const char* ssl_certificate;
-    const char* url;
-    time_t modtime;
-};
-
 typedef struct base_stream* BaseStream;
 typedef struct file_stream* FileStream;
 typedef struct str_stream* StrStream;
@@ -118,7 +111,7 @@ extern InputStream newInputStream(int des);
 extern InputStream newFileStream(FILE* f, void (*closep)());
 extern InputStream newStrStream(Str s);
 extern InputStream newSSLStream(SSL* ssl, int sock);
-extern InputStream newEncodedStream(InputStream is, char encoding);
+extern InputStream newEncodedStream(InputStream is, enum StreamEncoding encoding);
 extern int ISclose(InputStream stream);
 extern int ISgetc(InputStream stream);
 extern int ISundogetc(InputStream stream);
@@ -133,7 +126,7 @@ int ISread_n(InputStream stream, char* dst, int bufsize);
 extern int ISfileno(InputStream stream);
 extern int ISeos(InputStream stream);
 extern void ssl_accept_this_site(const char* hostname);
-extern Str ssl_get_certificate(struct CmdArgs *args, SSL* ssl, const char* hostname);
+extern Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname);
 
 #define IST_BASIC 0
 #define IST_FILE 1
@@ -152,9 +145,6 @@ extern Str ssl_get_certificate(struct CmdArgs *args, SSL* ssl, const char* hostn
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
-
-Str convertLine(struct URLFile* uf, Str line, enum LineMode mode, wc_ces* charset,
-    wc_ces doc_charset);
 
 int checkSaveFile(InputStream stream, const char* path);
 void free_ssl_ctx(void);
