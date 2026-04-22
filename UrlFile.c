@@ -17,6 +17,7 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include <openssl/types.h>
 #ifndef SSLEAY_VERSION_NUMBER
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
 #endif
@@ -834,7 +835,7 @@ retry:
             uf.encoding = ENC_BASE64;
         } else
             tmp = Str_url_unquote(tmp, false, false);
-        uf.stream = newStrStream(tmp);
+        uf.stream = newStrStream(tmp->ptr, tmp->length);
         uf.guess_type = (*p != '\0') ? p : "text/plain";
         return uf;
     case SCM_UNKNOWN:

@@ -1,8 +1,8 @@
 #include "input_stream.h"
+#include "UrlFile.h"
 #include "global.h"
 #include "line_input.h"
 #include "alloc.h"
-#include "html.h"
 #include "mimehead.h"
 #include "display.h"
 #include "proto.h"
@@ -37,11 +37,10 @@ static void ens_close(struct ens_handle* handle);
 static void memchop(char* p, int* len);
 
 static void
-do_update(BaseStream base)
+do_update(struct BaseStream* base)
 {
-    int len;
     base->stream.cur = base->stream.next = 0;
-    len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
+    int len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
     if (len <= 0)
         base->iseos = true;
     else
@@ -49,22 +48,22 @@ do_update(BaseStream base)
 }
 
 static int
-buffer_read(StreamBuffer sb, char* obuf, int count)
+buffer_read(struct StreamBuffer* sb, char* obuf, int count)
 {
     int len = sb->next - sb->cur;
     if (len > 0) {
         if (len > count)
             len = count;
-        bcopy((const void*)&sb->buf[sb->cur], obuf, len);
+        memcpy(obuf, &sb->buf[sb->cur], len);
         sb->cur += len;
     }
     return len;
 }
 
 static void
-init_buffer(BaseStream base, char* buf, int bufsize)
+init_buffer(struct BaseStream* base, const char* buf, int bufsize)
 {
-    StreamBuffer sb = &base->stream;
+    struct StreamBuffer *sb = &base->stream;
     sb->size = bufsize;
     sb->cur = 0;
     sb->buf = NewWithoutGC_N(uchar, bufsize);
@@ -78,15 +77,9 @@ init_buffer(BaseStream base, char* buf, int bufsize)
 }
 
 static void
-init_base_stream(BaseStream base, int bufsize)
+init_base_stream(struct BaseStream* base, int bufsize)
 {
     init_buffer(base, NULL, bufsize);
-}
-
-static void
-init_str_stream(BaseStream base, Str s)
-{
-    init_buffer(base, s->ptr, s->length);
 }
 
 InputStream
@@ -126,13 +119,12 @@ newFileStream(FILE* f, void (*closep)())
 }
 
 InputStream
-newStrStream(Str s)
+newStrStream(const char* s, int len)
 {
-    InputStream stream;
     if (s == NULL)
         return NULL;
-    stream = NewWithoutGC(union input_stream);
-    init_str_stream(&stream->base, s);
+    InputStream stream = NewWithoutGC(union input_stream);
+    init_buffer(&stream->base, s, len);
     stream->str.type = IST_STR;
     stream->str.handle = NULL;
     stream->str.read = (int (*)())str_read;
@@ -196,10 +188,9 @@ int ISclose(InputStream stream)
 
 int ISgetc(InputStream stream)
 {
-    BaseStream base;
     if (stream == NULL)
         return '\0';
-    base = &stream->base;
+    struct BaseStream* base = &stream->base;
     if (!base->iseos && MUST_BE_UPDATED(base))
         do_update(base);
     return POP_CHAR(base);
@@ -207,10 +198,9 @@ int ISgetc(InputStream stream)
 
 int ISundogetc(InputStream stream)
 {
-    StreamBuffer sb;
     if (stream == NULL)
         return -1;
-    sb = &stream->base.stream;
+    struct StreamBuffer *sb = &stream->base.stream;
     if (sb->cur > 0) {
         sb->cur--;
         return 0;
@@ -234,9 +224,8 @@ Str StrISgets2(InputStream stream, char crnl)
 
 void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl)
 {
-    BaseStream base = &stream->base;
-    StreamBuffer sb = &base->stream;
-    int i;
+    struct BaseStream* base = &stream->base;
+    struct StreamBuffer *sb = &base->stream;
 
     gb->length = 0;
 
@@ -252,6 +241,7 @@ void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl)
             }
             break;
         }
+        int i;
         for (i = sb->cur; i < sb->next; ++i) {
             if (sb->buf[i] == '\n' || (crnl && sb->buf[i] == '\r')) {
                 ++i;
@@ -290,17 +280,16 @@ int ISread(InputStream stream, Str buf, int count)
 
 int ISread_n(InputStream stream, char* dst, int count)
 {
-    int len, l;
-    BaseStream base;
-
     if (stream == NULL || count <= 0)
         return -1;
+
+    struct BaseStream* base;
     if ((base = &stream->base)->iseos)
         return 0;
 
-    len = buffer_read(&base->stream, dst, count);
+    int len = buffer_read(&base->stream, dst, count);
     if (MUST_BE_UPDATED(base)) {
-        l = (*base->read)(base->handle, &dst[len], count - len);
+        int l = (*base->read)(base->handle, &dst[len], count - len);
         if (l <= 0) {
             base->iseos = true;
         } else {
@@ -330,7 +319,7 @@ int ISfileno(InputStream stream)
 
 int ISeos(InputStream stream)
 {
-    BaseStream base = &stream->base;
+    struct BaseStream* base = &stream->base;
     if (!base->iseos && MUST_BE_UPDATED(base))
         do_update(base);
     return base->iseos;
@@ -481,7 +470,7 @@ ssl_check_cert_ident(X509* x, const char* hostname)
     return ret;
 }
 
-Str ssl_get_certificate(struct CmdArgs *args, SSL* ssl, const char* hostname)
+Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
 {
     BIO* bp;
     X509* x;
@@ -574,7 +563,7 @@ Str ssl_get_certificate(struct CmdArgs *args, SSL* ssl, const char* hostname)
         } else {
             /* FIXME: gettextize? */
             const char* e = "This SSL session was rejected "
-                      "to prevent security violation";
+                            "to prevent security violation";
             disp_err_message(args, e, false);
             free_ssl_ctx();
             return NULL;

@@ -1,6 +1,7 @@
 #include "display.h"
 #include "UrlFile.h"
 #include "input_stream.h"
+#include "input_stream_str.h"
 #include "auth.h"
 #include "w3m.h"
 #include "indep.h"
@@ -397,7 +398,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 if (src) {
                     struct Line* l;
                     wc_ces old_charset = newBuf->document_charset;
-                    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(src));
+                    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(src->ptr, src->length));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
                     UFclose(&f);
                     for (l = newBuf->lastLine; l && l->real_linenumber;
@@ -6553,7 +6554,7 @@ loadHTMLString(Str page)
     SignalFunc prevtrap = NULL;
     struct Buffer* newBuf;
 
-    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(page));
+    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(page->ptr, page->length));
 
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
@@ -6858,7 +6859,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     newBuf->mailcap_source = tmpf->ptr;
 
     Str tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(tmp));
+    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(tmp->ptr, tmp->length));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
     if (src)
@@ -7504,6 +7505,22 @@ int doFileMove(struct CmdArgs* args, const char* tmpf, const char* defstr)
     return ret;
 }
 
+static int checkSaveFile(int des, const char* path2)
+{
+    if (des < 0)
+        return 0;
+
+    if (*path2 == '|' && PermitSaveToPipe)
+        return 0;
+
+    struct stat st1, st2;
+    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
+        if (st1.st_ino == st2.st_ino)
+            return -1;
+
+    return 0;
+}
+
 int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
 {
     Str msg;
@@ -7525,7 +7542,8 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
         }
         if (checkOverWrite(args, p) < 0)
             return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
+
+        if (checkSaveFile(ISfileno(uf.stream), p) < 0) {
             /* FIXME: gettextize? */
             msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));
@@ -7580,7 +7598,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
         p = expandPath(q);
         if (checkOverWrite(args, p) < 0)
             return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
+        if (checkSaveFile(ISfileno(uf.stream), p) < 0) {
             /* FIXME: gettextize? */
             printf("Can't save. Load file and %s are identical.", p);
             return -1;
@@ -7608,21 +7626,6 @@ int checkCopyFile(const char* path1, const char* path2)
     if (*path2 == '|' && PermitSaveToPipe)
         return 0;
     if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
-        if (st1.st_ino == st2.st_ino)
-            return -1;
-    return 0;
-}
-
-int checkSaveFile(InputStream stream, const char* path2)
-{
-    struct stat st1, st2;
-    int des = ISfileno(stream);
-
-    if (des < 0)
-        return 0;
-    if (*path2 == '|' && PermitSaveToPipe)
-        return 0;
-    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
         if (st1.st_ino == st2.st_ino)
             return -1;
     return 0;

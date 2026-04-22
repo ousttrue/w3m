@@ -7,6 +7,7 @@
 #include "term_tty.h"
 #include "terms.h"
 #include "input_stream.h"
+#include "input_stream_str.h"
 #include "signal_util.h"
 #include "etc.h"
 #include "url.h"
@@ -53,11 +54,10 @@ static struct _FTP current_ftp = {
 static Str
 ftp_command(FTP ftp, char* cmd, char* arg, int* status)
 {
-    Str tmp;
-
     if (!ftp->host)
         return NULL;
     if (cmd) {
+        Str tmp;
         if (arg)
             tmp = Sprintf("%s %s\r\n", cmd, arg);
         else
@@ -68,6 +68,8 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
     if (!status)
         return NULL;
     *status = -1; /* error */
+
+    Str tmp;
     if (!(tmp = StrISgets(ftp->rf)))
         return NULL;
     if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ')

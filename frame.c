@@ -6,6 +6,7 @@
 #include "form.h"
 #include "terms.h"
 #include "input_stream.h"
+#include "input_stream_str.h"
 #include "indep.h"
 #include "alloc.h"
 #include "signal_util.h"

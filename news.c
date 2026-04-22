@@ -6,6 +6,7 @@
 #include "term_tty.h"
 #include "html.h"
 #include "input_stream.h"
+#include "input_stream_str.h"
 #include "signal_util.h"
 #include "wc_util.h"
 #include "buffer.h"
@@ -38,11 +39,11 @@ static News current_news = { NULL, 0, NULL, NULL, NULL };
 static Str
 news_command(News* news, const char* cmd, const char* arg, int* status)
 {
-    Str tmp;
-
     if (!news->host)
         return NULL;
+
     if (cmd) {
+        Str tmp;
         if (arg)
             tmp = Sprintf("%s %s\r\n", cmd, arg);
         else
@@ -53,7 +54,8 @@ news_command(News* news, const char* cmd, const char* arg, int* status)
     if (!status)
         return NULL;
     *status = -1;
-    tmp = StrISgets(news->rf);
+
+    Str tmp = StrISgets(news->rf);
     if (tmp && tmp->length)
         sscanf(tmp->ptr, "%d", status);
     return tmp;
