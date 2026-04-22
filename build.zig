@@ -35,6 +35,7 @@ const w3m_srcs = [_][]const u8{
     "etc.c",
     "search.c",
     "line_input.c",
+    "LineInput.c",
     "table.c",
     "local_cgi.c",
     "form.c",

@@ -1,4 +1,5 @@
 #include "line_input.h"
+#include "LineInput.h"
 #include "alloc.h"
 #include "history.h"
 #include "qsort_util.h"
@@ -20,7 +21,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
-#define STR_LEN 1024
 #define CLEN (COLS - 2)
 
 enum CompletionStatus {
@@ -29,17 +29,6 @@ enum CompletionStatus {
     CPL_FAIL = 2,
     CPL_MENU = 3,
 };
-
-enum CompletionFlags {
-    CPL_NEVER = 0x0,
-    CPL_OFF = 0x1,
-    CPL_ON = 0x2,
-    CPL_ALWAYS = 0x4,
-    CPL_URL = 0x8,
-};
-
-static Str strBuf;
-static Lineprop strProp[STR_LEN];
 
 static Str CompleteBuf;
 static Str CFileName;
@@ -52,32 +41,6 @@ static int NCFileOffset;
 
 // static void insertself(char c),
 
-typedef int (*InputFunc)(struct CmdArgs* args);
-static int iself(struct CmdArgs* args);
-static int _mvR(struct CmdArgs* args);
-static int _mvL(struct CmdArgs* args);
-static int _mvRw(struct CmdArgs* args);
-static int _mvLw(struct CmdArgs* args);
-static int delC(struct CmdArgs* args);
-static int insC(struct CmdArgs* args);
-static int _mvB(struct CmdArgs* args);
-static int _mvE(struct CmdArgs* args);
-static int _enter(struct CmdArgs* args);
-static int _quo(struct CmdArgs* args);
-static int _bs(struct CmdArgs* args);
-static int _bsw(struct CmdArgs* args);
-static int killn(struct CmdArgs* args);
-static int killb(struct CmdArgs* args);
-static int _inbrk(struct CmdArgs* args);
-static int _esc(struct CmdArgs* args);
-static int _editor(struct CmdArgs* args);
-static int _prev(struct CmdArgs* args);
-static int _next(struct CmdArgs* args);
-static int _compl(struct CmdArgs* args);
-static int _tcompl(struct CmdArgs* args);
-static int _dcompl(struct CmdArgs* args);
-static int _rdcompl(struct CmdArgs* args);
-static int _rcompl(struct CmdArgs* args);
 ;
 static int terminated(unsigned char c);
 
@@ -98,21 +61,15 @@ InputFunc InputKeymap[32] = {
 };
 // clang-format on
 
-static int setStrType(Str str, Lineprop* prop);
 static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
 static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
 static void ins_char(struct CmdArgs* args, Str str);
 
-static int CPos, CLen, offset;
-static int i_cont, i_broken, i_quote;
-static int cm_next, cm_clear, cm_disp_next, cm_disp_clear;
-static enum CompletionFlags cm_mode = 0;
-static int need_redraw, is_passwd;
-static int move_word;
-
 static enum HistoryType CurrentHist = HistoryNone;
 static Str strCurrentBuf;
 static int use_hist;
+
+static struct LineInput g;
 
 char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* def_str,
     enum InputLineFlags flag, enum HistoryType hist, IncrFunc incrfunc)
@@ -121,8 +78,7 @@ char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* 
     char* p;
     Str tmp;
 
-    is_passwd = false;
-    move_word = true;
+    g = LineInputInit(def_str);
 
     CurrentHist = hist;
     if (hist != HistoryNone) {
@@ -132,127 +88,119 @@ char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* 
         use_hist = false;
     }
     if (flag & IN_URL) {
-        cm_mode = CPL_ALWAYS | CPL_URL;
+        g.cm_mode = CPL_ALWAYS | CPL_URL;
     } else if (flag & IN_FILENAME) {
-        cm_mode = CPL_ALWAYS;
+        g.cm_mode = CPL_ALWAYS;
     } else if (flag & IN_PASSWORD) {
-        cm_mode = CPL_NEVER;
-        is_passwd = true;
-        move_word = false;
+        g.cm_mode = CPL_NEVER;
+        g.is_passwd = true;
+        g.move_word = false;
     } else if (flag & IN_COMMAND)
-        cm_mode = CPL_ON;
+        g.cm_mode = CPL_ON;
     else
-        cm_mode = CPL_OFF;
+        g.cm_mode = CPL_OFF;
     opos = get_strwidth(WcOption, prompt);
     epos = CLEN - opos;
     if (epos < 0)
         epos = 0;
     lpos = epos / 3;
     rpos = epos * 2 / 3;
-    offset = 0;
+    g.offset = 0;
 
-    if (def_str) {
-        strBuf = Strnew_charp(def_str);
-        CLen = CPos = setStrType(strBuf, strProp);
-    } else {
-        strBuf = Strnew();
-        CLen = CPos = 0;
-    }
-
-    i_cont = true;
-    i_broken = false;
-    i_quote = false;
-    cm_next = false;
-    cm_disp_next = -1;
-    need_redraw = false;
+    g.i_cont = true;
+    g.i_broken = false;
+    g.i_quote = false;
+    g.cm_next = false;
+    g.cm_disp_next = -1;
+    g.need_redraw = false;
 
     wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
     do {
-        x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
-        if (x - rpos > offset) {
-            y = calcPosition(strBuf->ptr, strProp, CLen, CLen, 0, CP_AUTO);
+        x = calcPosition(g.strBuf->ptr, g.strProp, g.CLen, g.CPos, 0, CP_FORCE);
+        if (x - rpos > g.offset) {
+            y = calcPosition(g.strBuf->ptr, g.strProp, g.CLen, g.CLen, 0, CP_AUTO);
             if (y - epos > x - rpos)
-                offset = x - rpos;
+                g.offset = x - rpos;
             else if (y - epos > 0)
-                offset = y - epos;
-        } else if (x - lpos < offset) {
+                g.offset = y - epos;
+        } else if (x - lpos < g.offset) {
             if (x - lpos > 0)
-                offset = x - lpos;
+                g.offset = x - lpos;
             else
-                offset = 0;
+                g.offset = 0;
         }
         move((LINES - 1), 0);
         addstr(prompt);
-        if (is_passwd)
-            addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+        if (g.is_passwd)
+            addPasswd(g.strBuf->ptr, g.strProp, g.CLen, g.offset, COLS - opos);
         else
-            addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+            addStr(g.strBuf->ptr, g.strProp, g.CLen, g.offset, COLS - opos);
         clrtoeolx();
-        move((LINES - 1), opos + x - offset);
+        move((LINES - 1), opos + x - g.offset);
         refresh();
 
     next_char:
         args->ch = getch(args);
-        cm_clear = true;
-        cm_disp_clear = true;
-        if (!i_quote && (((cm_mode & CPL_ALWAYS) && (args->ch == CTRL_I || (space_autocomplete && args->ch == ' '))) || ((cm_mode & CPL_ON) && (args->ch == CTRL_I)))) {
-            if (emacs_like_lineedit && cm_next) {
-                _dcompl(args);
-                need_redraw = true;
+        g.cm_clear = true;
+        g.cm_disp_clear = true;
+        if (!g.i_quote && (((g.cm_mode & CPL_ALWAYS) && (args->ch == CTRL_I || (space_autocomplete && args->ch == ' '))) || ((g.cm_mode & CPL_ON) && (args->ch == CTRL_I)))) {
+            if (emacs_like_lineedit && g.cm_next) {
+                _dcompl(args, &g);
+                g.need_redraw = true;
             } else {
-                _compl(args);
-                cm_disp_next = -1;
+                _compl(args, &g);
+                g.cm_disp_next = -1;
             }
-        } else if (!i_quote && CLen == CPos && (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && args->ch == CTRL_D) {
+        } else if (!g.i_quote && g.CLen == g.CPos && (g.cm_mode & CPL_ALWAYS || g.cm_mode & CPL_ON) && args->ch == CTRL_D) {
             if (!emacs_like_lineedit) {
-                _dcompl(args);
-                need_redraw = true;
+                _dcompl(args, &g);
+                g.need_redraw = true;
             }
-        } else if (!i_quote && args->ch == DEL_CODE) {
-            _bs(args);
-            cm_next = false;
-            cm_disp_next = -1;
-        } else if (!i_quote && args->ch < 0x20) { /* Control code */
+        } else if (!g.i_quote && args->ch == DEL_CODE) {
+            _bs(args, &g);
+            g.cm_next = false;
+            g.cm_disp_next = -1;
+        } else if (!g.i_quote && args->ch < 0x20) { /* Control code */
             if (incrfunc == NULL
-                || (args->ch = incrfunc(args, strBuf->ptr, strProp)) < 0x20) {
-                (*InputKeymap[args->ch])(args);
+                || (args->ch = incrfunc(args, g.strBuf->ptr, g.strProp)) < 0x20) {
+                (*InputKeymap[args->ch])(args, &g);
             }
             if (incrfunc && args->ch != (unsigned char)-1 && args->ch != CTRL_J)
-                incrfunc(args, strBuf->ptr, strProp);
-            if (cm_clear)
-                cm_next = false;
-            if (cm_disp_clear)
-                cm_disp_next = -1;
+                incrfunc(args, g.strBuf->ptr, g.strProp);
+            if (g.cm_clear)
+                g.cm_next = false;
+            if (g.cm_disp_clear)
+                g.cm_disp_next = -1;
         } else {
             tmp = Strnew_wc_output(wc_char_conv(WcOption, args->ch));
             if (tmp == NULL) {
-                i_quote = true;
+                g.i_quote = true;
                 goto next_char;
             }
-            i_quote = false;
-            cm_next = false;
-            cm_disp_next = -1;
-            if (CLen + tmp->length > STR_LEN || !tmp->length)
+            g.i_quote = false;
+            g.cm_next = false;
+            g.cm_disp_next = -1;
+            if (g.CLen + tmp->length > STR_LEN || !tmp->length)
                 goto next_char;
             ins_char(args, tmp);
             if (incrfunc)
-                incrfunc(args, strBuf->ptr, strProp);
+                incrfunc(args, g.strBuf->ptr, g.strProp);
         }
-        if (CLen && (flag & IN_CHAR))
+        if (g.CLen && (flag & IN_CHAR))
             break;
-    } while (i_cont);
+    } while (g.i_cont);
 
     if (CurrentTab) {
-        if (need_redraw)
+        if (g.need_redraw)
             displayBuffer(args, B_FORCE_REDRAW);
     }
 
-    if (i_broken)
+    if (g.i_broken)
         return NULL;
 
     move((LINES - 1), 0);
     refresh();
-    p = strBuf->ptr;
+    p = g.strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
         SKIP_BLANKS(p);
     }
@@ -326,34 +274,34 @@ ins_char(struct CmdArgs* args, Str str)
     Lineprop ctype;
     int len;
 
-    if (CLen + str->length >= STR_LEN)
+    if (g.CLen + str->length >= STR_LEN)
         return;
     while (p < ep) {
         len = get_mclen(p);
         ctype = get_mctype(p);
-        if (is_passwd) {
+        if (g.is_passwd) {
             if (ctype & PC_CTRL)
                 ctype = PC_ASCII;
             if (ctype & PC_UNKNOWN)
                 ctype = PC_WCHAR1;
         }
-        insC(args);
-        strBuf->ptr[CPos] = *(p++);
-        strProp[CPos] = ctype;
-        CPos++;
+        insC(args, &g);
+        g.strBuf->ptr[g.CPos] = *(p++);
+        g.strProp[g.CPos] = ctype;
+        g.CPos++;
         if (--len) {
             ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
             while (len--) {
-                insC(args);
-                strBuf->ptr[CPos] = *(p++);
-                strProp[CPos] = ctype;
-                CPos++;
+                insC(args, &g);
+                g.strBuf->ptr[g.CPos] = *(p++);
+                g.strProp[g.CPos] = ctype;
+                g.CPos++;
             }
         }
     }
 }
 
-static int _esc(struct CmdArgs* args)
+int _esc(struct CmdArgs* args, struct LineInput *li)
 {
     args->ch = getch(args);
     switch (args->ch) {
@@ -361,220 +309,220 @@ static int _esc(struct CmdArgs* args)
     case 'O':
         switch (args->ch = getch(args)) {
         case 'A':
-            _prev(args);
+            _prev(args, li);
             break;
         case 'B':
-            _next(args);
+            _next(args, li);
             break;
         case 'C':
-            _mvR(args);
+            _mvR(args, li);
             break;
         case 'D':
-            _mvL(args);
+            _mvL(args, li);
             break;
         }
         break;
     case CTRL_I:
     case ' ':
         if (emacs_like_lineedit) {
-            _rdcompl(args);
-            cm_clear = false;
-            need_redraw = true;
+            _rdcompl(args, li);
+            g.cm_clear = false;
+            g.need_redraw = true;
         } else
-            _rcompl(args);
+            _rcompl(args, li);
         break;
     case CTRL_D:
         if (!emacs_like_lineedit)
-            _rdcompl(args);
-        need_redraw = true;
+            _rdcompl(args, li);
+        g.need_redraw = true;
         break;
     case 'f':
         if (emacs_like_lineedit)
-            _mvRw(args);
+            _mvRw(args, li);
         break;
     case 'b':
         if (emacs_like_lineedit)
-            _mvLw(args);
+            _mvLw(args, li);
         break;
     case CTRL_H:
         if (emacs_like_lineedit)
-            _bsw(args);
+            _bsw(args, li);
         break;
     default:
         if (wc_char_conv(WcOption, ESC_CODE).data == NULL && wc_char_conv(WcOption, args->ch).data == NULL)
-            i_quote = true;
+            g.i_quote = true;
     }
 
     return 0;
 }
 
-static int insC(struct CmdArgs* args)
+int insC(struct CmdArgs* args, struct LineInput *li)
 {
-    Strinsert_char(strBuf, CPos, ' ');
-    CLen = strBuf->length;
-    for (int i = CLen; i > CPos; i--) {
-        strProp[i] = strProp[i - 1];
+    Strinsert_char(g.strBuf, g.CPos, ' ');
+    g.CLen = g.strBuf->length;
+    for (int i = g.CLen; i > g.CPos; i--) {
+        g.strProp[i] = g.strProp[i - 1];
     }
     return 0;
 }
 
-static int delC(struct CmdArgs* args)
+int delC(struct CmdArgs* args, struct LineInput *li)
 {
-    if (CLen == CPos)
+    if (g.CLen == g.CPos)
         return 0;
 
-    int i = CPos;
+    int i = g.CPos;
     int delta = 1;
-    while (i + delta < CLen && strProp[i + delta] & PC_WCHAR2)
+    while (i + delta < g.CLen && g.strProp[i + delta] & PC_WCHAR2)
         delta++;
-    for (i = CPos; i < CLen; i++) {
-        strProp[i] = strProp[i + delta];
+    for (i = g.CPos; i < g.CLen; i++) {
+        g.strProp[i] = g.strProp[i + delta];
     }
-    Strdelete(strBuf, CPos, delta);
-    CLen -= delta;
+    Strdelete(g.strBuf, g.CPos, delta);
+    g.CLen -= delta;
     return 0;
 }
 
-static int _mvL(struct CmdArgs* args)
+int _mvL(struct CmdArgs* args, struct LineInput *li)
 {
-    if (CPos > 0)
-        CPos--;
-    while (CPos > 0 && strProp[CPos] & PC_WCHAR2)
-        CPos--;
+    if (g.CPos > 0)
+        g.CPos--;
+    while (g.CPos > 0 && g.strProp[g.CPos] & PC_WCHAR2)
+        g.CPos--;
     return 0;
 }
 
-static int _mvLw(struct CmdArgs* args)
+int _mvLw(struct CmdArgs* args, struct LineInput *li)
 {
     int first = 1;
-    while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
-        CPos--;
+    while (g.CPos > 0 && (first || !terminated(g.strBuf->ptr[g.CPos - 1]))) {
+        g.CPos--;
         first = 0;
-        if (CPos > 0 && strProp[CPos] & PC_WCHAR2)
-            CPos--;
-        if (!move_word)
+        if (g.CPos > 0 && g.strProp[g.CPos] & PC_WCHAR2)
+            g.CPos--;
+        if (!g.move_word)
             break;
     }
     return 0;
 }
 
-static int _mvRw(struct CmdArgs* args)
+int _mvRw(struct CmdArgs* args, struct LineInput *li)
 {
     int first = 1;
-    while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
-        CPos++;
+    while (g.CPos < g.CLen && (first || !terminated(g.strBuf->ptr[g.CPos - 1]))) {
+        g.CPos++;
         first = 0;
-        if (CPos < CLen && strProp[CPos] & PC_WCHAR2)
-            CPos++;
-        if (!move_word)
+        if (g.CPos < g.CLen && g.strProp[g.CPos] & PC_WCHAR2)
+            g.CPos++;
+        if (!g.move_word)
             break;
     }
     return 0;
 }
 
-static int _mvR(struct CmdArgs* args)
+int _mvR(struct CmdArgs* args, struct LineInput *li)
 {
-    if (CPos < CLen)
-        CPos++;
-    while (CPos < CLen && strProp[CPos] & PC_WCHAR2)
-        CPos++;
+    if (g.CPos < g.CLen)
+        g.CPos++;
+    while (g.CPos < g.CLen && g.strProp[g.CPos] & PC_WCHAR2)
+        g.CPos++;
     return 0;
 }
 
-static int _bs(struct CmdArgs* args)
+int _bs(struct CmdArgs* args, struct LineInput *li)
 {
-    if (CPos > 0) {
-        _mvL(args);
-        delC(args);
+    if (g.CPos > 0) {
+        _mvL(args, li);
+        delC(args, li);
     }
     return 0;
 }
 
-static int _bsw(struct CmdArgs* args)
+int _bsw(struct CmdArgs* args, struct LineInput *li)
 {
     int t = 0;
-    while (CPos > 0 && !t) {
-        _mvL(args);
-        t = (move_word && terminated(strBuf->ptr[CPos - 1]));
-        delC(args);
+    while (g.CPos > 0 && !t) {
+        _mvL(args, li);
+        t = (g.move_word && terminated(g.strBuf->ptr[g.CPos - 1]));
+        delC(args, li);
     }
     return 0;
 }
 
-static int _enter(struct CmdArgs* args)
+int _enter(struct CmdArgs* args, struct LineInput *li)
 {
-    i_cont = false;
+    g.i_cont = false;
     return 0;
 }
 
-static int iself(struct CmdArgs* args)
+int iself(struct CmdArgs* args, struct LineInput *li)
 {
-    if (CLen >= STR_LEN)
+    if (g.CLen >= STR_LEN)
         return 0;
-    insC(args);
-    strBuf->ptr[CPos] = args->ch;
-    strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
-    CPos++;
+    insC(args, li);
+    g.strBuf->ptr[g.CPos] = args->ch;
+    g.strProp[g.CPos] = (g.is_passwd) ? PC_ASCII : PC_CTRL;
+    g.CPos++;
     return 0;
 }
 
-static int _quo(struct CmdArgs* args)
+int _quo(struct CmdArgs* args, struct LineInput *li)
 {
-    i_quote = true;
+    g.i_quote = true;
     return 0;
 }
 
-static int _mvB(struct CmdArgs* args)
+int _mvB(struct CmdArgs* args, struct LineInput *li)
 {
-    CPos = 0;
+    g.CPos = 0;
     return 0;
 }
 
-static int _mvE(struct CmdArgs* args)
+int _mvE(struct CmdArgs* args, struct LineInput *li)
 {
-    CPos = CLen;
+    g.CPos = g.CLen;
     return 0;
 }
 
-static int killn(struct CmdArgs* args)
+int killn(struct CmdArgs* args, struct LineInput *li)
 {
-    CLen = CPos;
-    Strtruncate(strBuf, CLen);
+    g.CLen = g.CPos;
+    Strtruncate(g.strBuf, g.CLen);
     return 0;
 }
 
-static int killb(struct CmdArgs* args)
+int killb(struct CmdArgs* args, struct LineInput *li)
 {
-    while (CPos > 0)
-        _bs(args);
+    while (g.CPos > 0)
+        _bs(args, li);
     return 0;
 }
 
-static int _inbrk(struct CmdArgs* args)
+int _inbrk(struct CmdArgs* args, struct LineInput *li)
 {
-    i_cont = false;
-    i_broken = true;
+    g.i_cont = false;
+    g.i_broken = true;
     return 0;
 }
 
-static int _compl(struct CmdArgs* args)
+int _compl(struct CmdArgs* args, struct LineInput *li)
 {
     next_compl(1);
     return 0;
 }
 
-static int _rcompl(struct CmdArgs* args)
+int _rcompl(struct CmdArgs* args, struct LineInput *li)
 {
     next_compl(-1);
     return 0;
 }
 
-static int _tcompl(struct CmdArgs* args)
+int _tcompl(struct CmdArgs* args, struct LineInput *li)
 {
-    if (cm_mode & CPL_OFF)
-        cm_mode = CPL_ON;
-    else if (cm_mode & CPL_ON)
-        cm_mode = CPL_OFF;
+    if (g.cm_mode & CPL_OFF)
+        g.cm_mode = CPL_ON;
+    else if (g.cm_mode & CPL_ON)
+        g.cm_mode = CPL_OFF;
     return 0;
 }
 
@@ -586,26 +534,26 @@ next_compl(int next)
     Str buf;
     Str s;
 
-    if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
+    if (g.cm_mode == CPL_NEVER || g.cm_mode & CPL_OFF)
         return;
-    cm_clear = false;
-    if (!cm_next) {
-        if (cm_mode & CPL_ALWAYS) {
+    g.cm_clear = false;
+    if (!g.cm_next) {
+        if (g.cm_mode & CPL_ALWAYS) {
             b = 0;
         } else {
-            for (b = CPos - 1; b >= 0; b--) {
-                if ((strBuf->ptr[b] == ' ' || strBuf->ptr[b] == CTRL_I) && !((b > 0) && strBuf->ptr[b - 1] == '\\'))
+            for (b = g.CPos - 1; b >= 0; b--) {
+                if ((g.strBuf->ptr[b] == ' ' || g.strBuf->ptr[b] == CTRL_I) && !((b > 0) && g.strBuf->ptr[b - 1] == '\\'))
                     break;
             }
             b++;
         }
-        a = CPos;
-        CBeforeBuf = Strsubstr(strBuf, 0, b);
-        buf = Strsubstr(strBuf, b, a - b);
-        CAfterBuf = Strsubstr(strBuf, a, strBuf->length - a);
+        a = g.CPos;
+        CBeforeBuf = Strsubstr(g.strBuf, 0, b);
+        buf = Strsubstr(g.strBuf, b, a - b);
+        CAfterBuf = Strsubstr(g.strBuf, a, g.strBuf->length - a);
         s = doComplete(buf, &status, next);
     } else {
-        s = doComplete(strBuf, &status, next);
+        s = doComplete(g.strBuf, &status, next);
     }
     if (next == 0)
         return;
@@ -615,20 +563,20 @@ next_compl(int next)
     if (status == CPL_FAIL)
         return;
 
-    strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, NULL);
-    CLen = setStrType(strBuf, strProp);
-    CPos = CBeforeBuf->length + s->length;
-    if (CPos > CLen)
-        CPos = CLen;
+    g.strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, NULL);
+    setStrType(&g);
+    g.CPos = CBeforeBuf->length + s->length;
+    if (g.CPos > g.CLen)
+        g.CPos = g.CLen;
 }
 
-static int _dcompl(struct CmdArgs* args)
+int _dcompl(struct CmdArgs* args, struct LineInput *li)
 {
     next_dcompl(args, 1);
     return 0;
 }
 
-static int _rdcompl(struct CmdArgs* args)
+int _rdcompl(struct CmdArgs* args, struct LineInput *li)
 {
     next_dcompl(args, -1);
     return 0;
@@ -646,9 +594,9 @@ next_dcompl(struct CmdArgs* args, int next)
     struct stat st;
     int comment, nline;
 
-    if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
+    if (g.cm_mode == CPL_NEVER || g.cm_mode & CPL_OFF)
         return;
-    cm_disp_clear = false;
+    g.cm_disp_clear = false;
     if (CurrentTab)
         displayBuffer(args, B_FORCE_REDRAW);
     if ((LINES - 1) >= 3) {
@@ -661,30 +609,30 @@ next_dcompl(struct CmdArgs* args, int next)
         return;
     }
 
-    if (cm_disp_next >= 0) {
+    if (g.cm_disp_next >= 0) {
         if (next == 1) {
-            cm_disp_next += col * nline;
-            if (cm_disp_next >= NCFileBuf)
-                cm_disp_next = 0;
+            g.cm_disp_next += col * nline;
+            if (g.cm_disp_next >= NCFileBuf)
+                g.cm_disp_next = 0;
         } else if (next == -1) {
-            cm_disp_next -= col * nline;
-            if (cm_disp_next < 0)
-                cm_disp_next = 0;
+            g.cm_disp_next -= col * nline;
+            if (g.cm_disp_next < 0)
+                g.cm_disp_next = 0;
         }
-        row = (NCFileBuf - cm_disp_next + col - 1) / col;
+        row = (NCFileBuf - g.cm_disp_next + col - 1) / col;
         goto disp_next;
     }
 
-    cm_next = false;
+    g.cm_next = false;
     next_compl(0);
     if (NCFileBuf == 0)
         return;
-    cm_disp_next = 0;
+    g.cm_disp_next = 0;
 
     d = Str_conv_to_system(CDirBuf->ptr, CDirBuf->length);
     if (d->length > 0 && Strlastchar(d) != '/')
         Strcat_char(d, '/');
-    if (cm_mode & CPL_URL && d->ptr[0] == 'f') {
+    if (g.cm_mode & CPL_URL && d->ptr[0] == 'f') {
         p = d->ptr;
         if (strncmp(p, "file://localhost/", 17) == 0)
             p = &p[16];
@@ -736,7 +684,7 @@ disp_next:
     }
     for (i = 0; i < row; i++) {
         for (j = 0; j < col; j++) {
-            n = cm_disp_next + j * row + i;
+            n = g.cm_disp_next + j * row + i;
             if (n >= NCFileBuf)
                 break;
             move(y, j * len);
@@ -815,16 +763,16 @@ doComplete(Str ifn, enum CompletionStatus* status, int next)
     Directory* dir;
     struct stat st;
 
-    if (!cm_next) {
+    if (!g.cm_next) {
         NCFileBuf = 0;
         ifn = Str_conv_to_system(ifn->ptr, ifn->length);
-        if (cm_mode & CPL_ON)
+        if (g.cm_mode & CPL_ON)
             ifn = unescape_spaces(ifn);
         CompleteBuf = Strdup(ifn);
         while (Strlastchar(CompleteBuf) != '/' && CompleteBuf->length > 0)
             Strshrink(CompleteBuf, 1);
         CDirBuf = Strdup(CompleteBuf);
-        if (cm_mode & CPL_URL) {
+        if (g.cm_mode & CPL_URL) {
             if (strncmp(CompleteBuf->ptr, "file://localhost/", 17) == 0)
                 Strdelete(CompleteBuf, 0, 16);
             else if (strncmp(CompleteBuf->ptr, "file:///", 8) == 0)
@@ -846,7 +794,7 @@ doComplete(Str ifn, enum CompletionStatus* status, int next)
         if ((d = opendir(expandPath(CompleteBuf->ptr))) == NULL) {
             CompleteBuf = Strdup(ifn);
             *status = CPL_FAIL;
-            if (cm_mode & CPL_ON)
+            if (g.cm_mode & CPL_ON)
                 CompleteBuf = escape_spaces(CompleteBuf);
             return CompleteBuf;
         }
@@ -878,14 +826,14 @@ doComplete(Str ifn, enum CompletionStatus* status, int next)
         if (NCFileBuf == 0) {
             CompleteBuf = Strdup(ifn);
             *status = CPL_FAIL;
-            if (cm_mode & CPL_ON)
+            if (g.cm_mode & CPL_ON)
                 CompleteBuf = escape_spaces(CompleteBuf);
             return CompleteBuf;
         }
         qsort(CFileBuf, NCFileBuf, sizeof(CFileBuf[0]), strCmp);
         NCFileOffset = 0;
         if (NCFileBuf >= 2) {
-            cm_next = true;
+            g.cm_next = true;
             *status = CPL_AMBIG;
         } else {
             *status = CPL_OK;
@@ -901,7 +849,7 @@ doComplete(Str ifn, enum CompletionStatus* status, int next)
     Strcat(CompleteBuf, CFileName);
     if (*status != CPL_AMBIG) {
         p = CompleteBuf->ptr;
-        if (cm_mode & CPL_URL) {
+        if (g.cm_mode & CPL_URL) {
             if (strncmp(p, "file://localhost/", 17) == 0)
                 p = &p[16];
             else if (strncmp(p, "file:///", 8) == 0)
@@ -912,12 +860,12 @@ doComplete(Str ifn, enum CompletionStatus* status, int next)
         if (stat(expandPath(p), &st) != -1 && S_ISDIR(st.st_mode))
             Strcat_char(CompleteBuf, '/');
     }
-    if (cm_mode & CPL_ON)
+    if (g.cm_mode & CPL_ON)
         CompleteBuf = escape_spaces(CompleteBuf);
     return Str_conv_from_system(CompleteBuf->ptr, CompleteBuf->length);
 }
 
-static int _prev(struct CmdArgs* args)
+int _prev(struct CmdArgs* args, struct LineInput *li)
 {
     enum HistoryType hist = CurrentHist;
     if (!use_hist)
@@ -931,17 +879,17 @@ static int _prev(struct CmdArgs* args)
         p = lastHist(hist);
         if (p == NULL)
             return 0;
-        strCurrentBuf = strBuf;
+        strCurrentBuf = g.strBuf;
     }
-    if (DecodeURL && (cm_mode & CPL_URL))
+    if (DecodeURL && (g.cm_mode & CPL_URL))
         p = url_decode2(p, NULL);
-    strBuf = Strnew_charp(p);
-    CLen = CPos = setStrType(strBuf, strProp);
-    offset = 0;
+    g.strBuf = Strnew_charp(p);
+    setStrType(&g);
+    g.offset = 0;
     return 0;
 }
 
-static int _next(struct CmdArgs* args)
+int _next(struct CmdArgs* args, struct LineInput *li)
 {
     enum HistoryType hist = CurrentHist;
 
@@ -953,45 +901,16 @@ static int _next(struct CmdArgs* args)
 
     const char* p = nextHist(hist);
     if (p) {
-        if (DecodeURL && (cm_mode & CPL_URL))
+        if (DecodeURL && (g.cm_mode & CPL_URL))
             p = url_decode2(p, NULL);
-        strBuf = Strnew_charp(p);
+        g.strBuf = Strnew_charp(p);
     } else {
-        strBuf = strCurrentBuf;
+        g.strBuf = strCurrentBuf;
         strCurrentBuf = NULL;
     }
-    CLen = CPos = setStrType(strBuf, strProp);
-    offset = 0;
+    setStrType(&g);
+    g.offset = 0;
     return 0;
-}
-
-static int
-setStrType(Str str, Lineprop* prop)
-{
-    Lineprop ctype;
-    char *p = str->ptr, *ep = p + str->length;
-    int i, len = 1;
-
-    for (i = 0; p < ep;) {
-        len = get_mclen(p);
-        if (i + len > STR_LEN)
-            break;
-        ctype = get_mctype(p);
-        if (is_passwd) {
-            if (ctype & PC_CTRL)
-                ctype = PC_ASCII;
-            if (ctype & PC_UNKNOWN)
-                ctype = PC_WCHAR1;
-        }
-        prop[i++] = ctype;
-        p += len;
-        if (--len) {
-            ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
-            while (len--)
-                prop[i++] = ctype;
-        }
-    }
-    return i;
 }
 
 static int
@@ -1009,25 +928,25 @@ terminated(unsigned char c)
     return 0;
 }
 
-static int _editor(struct CmdArgs* args)
+int _editor(struct CmdArgs* args, struct LineInput *li)
 {
-    if (is_passwd)
+    if (g.is_passwd)
         return 0;
 
     struct FormItem fi;
     fi.readonly = false;
-    fi.value = Strdup(strBuf);
+    fi.value = Strdup(g.strBuf);
     Strcat_char(fi.value, '\n');
 
     input_textarea(args, &fi);
 
-    strBuf = Strnew();
+    g.strBuf = Strnew();
     for (char* p = fi.value->ptr; *p; p++) {
         if (*p == '\r' || *p == '\n')
             continue;
-        Strcat_char(strBuf, *p);
+        Strcat_char(g.strBuf, *p);
     }
-    CLen = CPos = setStrType(strBuf, strProp);
+    setStrType(&g);
     if (CurrentTab)
         displayBuffer(args, B_FORCE_REDRAW);
     return 0;
