@@ -1,5 +1,14 @@
 #pragma once
 
+enum HistoryType {
+    HistoryNone,
+    HistoryLoad,
+    HistorySave,
+    HistoryURL,
+    HistoryShell,
+    HistoryText,
+};
+
 #define STR_SIZE_MAX (INT_MAX / 32)
 #define MAX_LINE 200
 #define MAX_COLUMN 400

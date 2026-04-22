@@ -9,6 +9,7 @@ const guessContentType = content_type.guessContentType;
 const terminfo_entry = @import("terminfo_entry.zig");
 const input_dispatcher = @import("input_dispatcher.zig");
 const image = @import("image.zig");
+const history = @import("history.zig");
 
 pub export fn _dummy_() void {
     // export symbols ?
@@ -16,6 +17,7 @@ pub export fn _dummy_() void {
     std.log.debug("{}", .{terminfo_entry});
     std.log.debug("{}", .{content_type});
     std.log.debug("{}", .{image});
+    std.log.debug("{}", .{history});
 }
 
 comptime {
