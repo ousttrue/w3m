@@ -294,11 +294,10 @@ openNewsStream(struct Url* pu)
     return NULL;
 }
 
-Str loadNewsgroup(struct CmdArgs *args, struct Url* pu, wc_ces* charset)
+Str loadNewsgroup(struct CmdArgs* args, struct Url* pu, wc_ces* charset)
 {
     volatile Str page;
     Str tmp;
-    struct URLFile f;
     struct Buffer* buf;
     char *qgroup, *p, *q, *s, *t, *n;
     char* volatile scheme, * volatile group, * volatile list;
@@ -375,6 +374,8 @@ Str loadNewsgroup(struct CmdArgs *args, struct Url* pu, wc_ces* charset)
     Strcat_charp(page, "<table>\n");
     news_command(&current_news, "XOVER", Sprintf("%d-%d", start, end)->ptr,
         &status);
+
+    struct URLFile f;
     if (status == 224) {
         f.scheme = SCM_NEWS;
         while (1) {
@@ -415,7 +416,7 @@ Str loadNewsgroup(struct CmdArgs *args, struct Url* pu, wc_ces* charset)
                 pu->scheme == SCM_NNTP_GROUP ? qgroup : NULL);
         }
     } else {
-        init_stream(&f, SCM_NEWS, current_news.rf);
+        f = init_stream(SCM_NEWS, current_news.rf);
         buf = newBuffer(INIT_BUFFER_WIDTH);
         for (i = start; i <= end && i <= last; i++) {
             news_command(&current_news, "HEAD", Sprintf("%d", i)->ptr,

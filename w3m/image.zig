@@ -108,16 +108,16 @@ fn getCharSize() bool {
     return false;
 }
 
-// struct TerminalImage {
-//     struct ImageCache* cache;
-//     short x;
-//     short y;
-//     short sx;
-//     short sy;
-//     short width;
-//     short height;
-// };
-//
+const TerminalImage = struct {
+    //     struct ImageCache* cache;
+    //     short x;
+    //     short y;
+    //     short sx;
+    //     short sy;
+    //     short width;
+    //     short height;
+};
+
 // static struct TerminalImage* terminal_image = NULL;
 var n_terminal_image: usize = 0;
 // static int max_terminal_image = 0;
@@ -366,7 +366,6 @@ export fn drawImage() void {
 //     //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 // }
 
-
 export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c_int) void {
     _ = url;
     _ = x;
@@ -526,5 +525,3 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     //
 //     //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 // }
-
-

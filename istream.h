@@ -153,8 +153,6 @@ extern Str ssl_get_certificate(struct CmdArgs *args, SSL* ssl, const char* hostn
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
 
-void examineFile(const char* path, struct URLFile* uf);
-
 Str convertLine(struct URLFile* uf, Str line, enum LineMode mode, wc_ces* charset,
     wc_ces doc_charset);
 

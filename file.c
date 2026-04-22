@@ -87,8 +87,6 @@ static int need_number = 0;
 
 static const char* guess_filename(const char* file);
 static int _MoveFile(const char* path1, const char* path2);
-static void uncompress_stream(struct URLFile* uf, const char** src);
-static FILE* lessopen_stream(const char* path);
 static struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
     struct Buffer* (*loadproc)(struct CmdArgs* args, struct URLFile*, struct Buffer*),
     struct Buffer* defaultbuf);
@@ -308,8 +306,7 @@ int is_html_type(const char* type)
     return (type && (strcasecmp(type, "text/html") == 0 || strcasecmp(type, "application/xhtml+xml") == 0));
 }
 
-static void
-check_compression(const char* path, struct URLFile* uf)
+void check_compression(const char* path, struct URLFile* uf)
 {
     int len;
     struct compression_decoder* d;
@@ -344,8 +341,7 @@ compress_application_type(int compression)
     return NULL;
 }
 
-static const char*
-uncompressed_file_type(const char* path, const char** ext)
+const char* uncompressed_file_type(const char* path, const char** ext)
 {
     int len, slen;
     Str fn;
@@ -388,43 +384,6 @@ setModtime(const char* path, time_t modtime)
         t.actime = time(NULL);
     t.modtime = modtime;
     return utime(path, &t);
-}
-
-void examineFile(const char* path, struct URLFile* uf)
-{
-    struct stat stbuf;
-
-    uf->guess_type = NULL;
-    if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
-        uf->stream = NULL;
-        return;
-    }
-    uf->stream = openIS(path);
-    if (!do_download) {
-        if (use_lessopen && getenv("LESSOPEN") != NULL) {
-            uf->guess_type = guessContentType(path);
-            if (uf->guess_type == NULL)
-                uf->guess_type = "text/plain";
-            if (is_html_type(uf->guess_type))
-                return;
-            FILE* fp;
-            if ((fp = lessopen_stream(path))) {
-                UFclose(uf);
-                uf->stream = newFileStream(fp, (void (*)())pclose);
-                uf->guess_type = "text/plain";
-                return;
-            }
-        }
-        check_compression(path, uf);
-        if (uf->compression != CMP_NOCOMPRESS) {
-            const char* ext = uf->ext;
-            const char* t0 = uncompressed_file_type(path, &ext);
-            uf->guess_type = t0;
-            uf->ext = ext;
-            uncompress_stream(uf, NULL);
-            return;
-        }
-    }
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
@@ -616,10 +575,9 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                         "\" alt=\"X-Image-URL\">", NULL);
                 }
                 if (src) {
-                    struct URLFile f;
                     struct Line* l;
                     wc_ces old_charset = newBuf->document_charset;
-                    init_stream(&f, SCM_LOCAL, newStrStream(src));
+                    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(src));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
                     UFclose(&f);
                     for (l = newBuf->lastLine; l && l->real_linenumber;
@@ -6782,11 +6740,10 @@ phase2:
 struct Buffer*
 loadHTMLString(Str page)
 {
-    struct URLFile f;
     SignalFunc prevtrap = NULL;
     struct Buffer* newBuf;
 
-    init_stream(&f, SCM_LOCAL, newStrStream(page));
+    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(page));
 
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
@@ -7084,16 +7041,14 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL)
         newBuf->sourcefile = cache->file;
 
-    Str tmp, tmpf;
-    tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    tmpf = tmpfname(TMPF_SRC, ".html");
+    Str tmpf = tmpfname(TMPF_SRC, ".html");
     FILE* src = fopen(tmpf->ptr, "w");
     if (src == NULL)
         return NULL;
     newBuf->mailcap_source = tmpf->ptr;
 
-    struct URLFile f;
-    init_stream(&f, SCM_LOCAL, newStrStream(tmp));
+    Str tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
+    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(tmp));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
     if (src)
@@ -7187,17 +7142,15 @@ static struct Buffer*
 loadcmdout(struct CmdArgs* args, const char* cmd,
     struct Buffer* (*loadproc)(struct CmdArgs* args, struct URLFile*, struct Buffer*), struct Buffer* defaultbuf)
 {
-    FILE *f, *popen(const char*, const char*);
-    struct Buffer* buf;
-    struct URLFile uf;
-
     if (cmd == NULL || *cmd == '\0')
         return NULL;
-    f = popen(cmd, "r");
+
+    FILE* f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
-    buf = loadproc(args, &uf, defaultbuf);
+
+    struct URLFile uf = init_stream(SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
+    struct Buffer* buf = loadproc(args, &uf, defaultbuf);
     UFclose(&uf);
     return buf;
 }
@@ -7272,18 +7225,16 @@ openPagerBuffer(InputStream stream, struct Buffer* buf)
 struct Buffer*
 openGeneralPagerBuffer(struct CmdArgs* args, InputStream stream)
 {
-    struct Buffer* buf;
-    const char* t = "text/plain";
-    struct Buffer* t_buf = NULL;
-    struct URLFile uf;
-
-    init_stream(&uf, SCM_UNKNOWN, stream);
-
     content_charset = 0;
-    t_buf = newBuffer(INIT_BUFFER_WIDTH);
+
+    struct URLFile uf = init_stream(SCM_UNKNOWN, stream);
+
+    struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
     copyParsedURL(&t_buf->currentURL, NULL);
     t_buf->currentURL.scheme = SCM_LOCAL;
     t_buf->currentURL.file = "-";
+
+    const char* t = "text/plain";
     if (SearchHeader) {
         readHeader(args, &uf, t_buf, TRUE, NULL);
         t = checkContentType(t_buf);
@@ -7298,6 +7249,8 @@ openGeneralPagerBuffer(struct CmdArgs* args, InputStream stream)
         t = DefaultType;
         DefaultType = NULL;
     }
+
+    struct Buffer* buf;
     if (is_html_type(t)) {
         buf = loadHTMLBuffer(args, &uf, t_buf);
         buf->type = "text/html";
@@ -7372,7 +7325,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     }
     TRAP_ON;
 
-    init_stream(&uf, SCM_UNKNOWN, NULL);
+    uf = init_stream(SCM_UNKNOWN, NULL);
     for (i = 0; i < plen; i++) {
         if (!(lineBuf2 = StrmyISgets(buf->pagerSource)))
             return NULL;
@@ -7879,7 +7832,7 @@ int checkOverWrite(struct CmdArgs* args, const char* path)
         return -1;
 }
 
-static void
+void
 uncompress_stream(struct URLFile* uf, const char** src)
 {
     pid_t pid1;
@@ -7969,54 +7922,6 @@ uncompress_stream(struct URLFile* uf, const char** src)
     }
     UFhalfclose(uf);
     uf->stream = newFileStream(f1, (void (*)())fclose);
-}
-
-static FILE*
-lessopen_stream(const char* path)
-{
-    char* lessopen;
-    FILE* fp;
-    Str tmpf;
-    int c, n = 0;
-
-    lessopen = getenv("LESSOPEN");
-    if (lessopen == NULL || lessopen[0] == '\0')
-        return NULL;
-
-    if (lessopen[0] != '|') /* filename mode, not supported m(__)m */
-        return NULL;
-
-    /* pipe mode */
-    ++lessopen;
-
-    /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
-    for (const char* f = lessopen; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%') /* Literal % */
-                f++;
-            else if (*++f == 's') {
-                if (n)
-                    return NULL;
-                n++;
-            } else
-                return NULL;
-        }
-    }
-    if (!n)
-        return NULL;
-
-    tmpf = Sprintf(lessopen, shell_quote(path));
-    fp = popen(tmpf->ptr, "r");
-    if (fp == NULL) {
-        return NULL;
-    }
-    c = getc(fp);
-    if (c == EOF) {
-        pclose(fp);
-        return NULL;
-    }
-    ungetc(c, fp);
-    return fp;
 }
 
 #define DEF_SAVE_FILE "index.html"

@@ -366,7 +366,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
  * Select buffer visually
  */
 struct Buffer*
-selectBuffer(struct CmdArgs *args, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
+selectBuffer(struct CmdArgs* args, struct Buffer* firstbuf, struct Buffer* currentbuf, char* selectchar)
 {
     int i, cpoint, /* Current struct Buffer Number */
         spoint, /* Current Line on Screen */
@@ -471,9 +471,8 @@ selectBuffer(struct CmdArgs *args, struct Buffer* firstbuf, struct Buffer* curre
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(struct CmdArgs *args, struct Buffer* buf)
+void reshapeBuffer(struct CmdArgs* args, struct Buffer* buf)
 {
-    struct URLFile f;
     struct Buffer sbuf;
     wc_uint8 old_auto_detect = WcOption.auto_detect;
 
@@ -483,9 +482,8 @@ void reshapeBuffer(struct CmdArgs *args, struct Buffer* buf)
     buf->width = INIT_BUFFER_WIDTH;
     if (buf->sourcefile == NULL)
         return;
-    init_stream(&f, SCM_LOCAL, NULL);
-    examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile,
-        &f);
+
+    struct URLFile f = examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
     if (f.stream == NULL)
         return;
     copyBuffer(&sbuf, buf);
@@ -509,9 +507,7 @@ void reshapeBuffer(struct CmdArgs *args, struct Buffer* buf)
 
     if (buf->header_source) {
         if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
-            struct URLFile h;
-            init_stream(&h, SCM_LOCAL, NULL);
-            examineFile(buf->header_source, &h);
+            struct URLFile h = examineFile(buf->header_source);
             if (h.stream) {
                 readHeader(args, &h, buf, true, NULL);
                 UFclose(&h);
@@ -732,5 +728,3 @@ void showImageProgress(struct Buffer* buf)
         refresh();
     }
 }
-
-

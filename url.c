@@ -1,4 +1,5 @@
 #include "url.h"
+#include "content_type.h"
 #include "alloc.h"
 #include "term_tty.h"
 #include "siteconf.h"
@@ -973,18 +974,115 @@ Str parsedURL2RefererStr(struct Url* pu)
     return _parsedURL2Str(pu, false, false, false);
 }
 
-void init_stream(struct URLFile* uf, int scheme, InputStream stream)
+struct URLFile init_stream(enum UrlScheme scheme, InputStream stream)
 {
-    memset(uf, 0, sizeof(struct URLFile));
-    uf->stream = stream;
-    uf->scheme = scheme;
-    uf->encoding = ENC_7BIT;
-    uf->is_cgi = false;
-    uf->compression = CMP_NOCOMPRESS;
-    uf->content_encoding = CMP_NOCOMPRESS;
-    uf->guess_type = NULL;
-    uf->ext = NULL;
-    uf->modtime = -1;
+    return (struct URLFile) {
+        // memset(uf, 0, sizeof(struct URLFile));
+        .stream = stream,
+        .scheme = scheme,
+        .encoding = ENC_7BIT,
+        .is_cgi = false,
+        .compression = CMP_NOCOMPRESS,
+        .content_encoding = CMP_NOCOMPRESS,
+        .guess_type = NULL,
+        .ext = NULL,
+        .modtime = -1,
+    };
+}
+
+static FILE*
+lessopen_stream(const char* path)
+{
+    char* lessopen;
+    FILE* fp;
+    Str tmpf;
+    int c, n = 0;
+
+    lessopen = getenv("LESSOPEN");
+    if (lessopen == NULL || lessopen[0] == '\0')
+        return NULL;
+
+    if (lessopen[0] != '|') /* filename mode, not supported m(__)m */
+        return NULL;
+
+    /* pipe mode */
+    ++lessopen;
+
+    /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
+    for (const char* f = lessopen; *f; f++) {
+        if (*f == '%') {
+            if (f[1] == '%') /* Literal % */
+                f++;
+            else if (*++f == 's') {
+                if (n)
+                    return NULL;
+                n++;
+            } else
+                return NULL;
+        }
+    }
+    if (!n)
+        return NULL;
+
+    tmpf = Sprintf(lessopen, shell_quote(path));
+    fp = popen(tmpf->ptr, "r");
+    if (fp == NULL) {
+        return NULL;
+    }
+    c = getc(fp);
+    if (c == EOF) {
+        pclose(fp);
+        return NULL;
+    }
+    ungetc(c, fp);
+    return fp;
+}
+
+struct URLFile examineFile(const char* path)
+{
+    struct URLFile uf = init_stream(SCM_LOCAL, NULL);
+
+    struct stat stbuf;
+    if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
+        uf.stream = NULL;
+        return uf;
+    }
+
+    uf.stream = openIS(path);
+    if (!do_download) {
+        if (use_lessopen && getenv("LESSOPEN") != NULL) {
+            uf.guess_type = guessContentType(path);
+            if (uf.guess_type == NULL)
+                uf.guess_type = "text/plain";
+            if (is_html_type(uf.guess_type))
+                return uf;
+            FILE* fp;
+            if ((fp = lessopen_stream(path))) {
+                UFclose(&uf);
+                uf.stream = newFileStream(fp, (void (*)())pclose);
+                uf.guess_type = "text/plain";
+                return uf;
+            }
+        }
+        check_compression(path, &uf);
+        if (uf.compression != CMP_NOCOMPRESS) {
+            const char* ext = uf.ext;
+            const char* t0 = uncompressed_file_type(path, &ext);
+            uf.guess_type = t0;
+            uf.ext = ext;
+            uncompress_stream(&uf, NULL);
+            return uf;
+        }
+    }
+
+    return uf;
+}
+
+void UFclose(struct URLFile* f)
+{
+    if (ISclose(f->stream) == 0) {
+        (f)->stream = NULL;
+    }
 }
 
 struct URLFile
@@ -992,31 +1090,32 @@ openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* curre
     struct URLOption* option, struct Form* request, TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
-    Str tmp;
-    int sock, scheme;
-    const char *p, *q, *u;
-    Str gophertmp;
-    char type;
-    int n;
-    struct URLFile uf;
     struct HttpRequest hr0;
-    SSL* sslh = NULL;
-
     if (hr == NULL)
         hr = &hr0;
 
+    struct URLFile uf;
     if (ouf) {
         uf = *ouf;
     } else {
-        init_stream(&uf, SCM_MISSING, NULL);
+        uf = init_stream(SCM_MISSING, NULL);
     }
 
-    u = url;
-    scheme = getURLScheme(&u);
+    Str tmp;
+    int sock;
+    const char *p, *q;
+    Str gophertmp;
+    char type;
+    int n;
+    SSL* sslh = NULL;
+
+    const char* u = url;
+    enum UrlScheme scheme = getURLScheme(&u);
     if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
         u = file_to_url(url); /* force to local file */
     else
         u = url;
+
 retry:
     *pu = parseURL2(u, current);
     if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
@@ -1067,7 +1166,7 @@ retry:
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
             return uf;
         }
-        examineFile(pu->real_file, &uf);
+        uf = examineFile(pu->real_file);
         if (uf.stream == NULL) {
             if (dir_exist(pu->real_file)) {
                 add_index_file(pu, &uf);
@@ -1088,7 +1187,7 @@ retry:
                         return uf;
                     }
                 } else {
-                    examineFile(q, &uf);
+                    uf = examineFile(q);
                     if (uf.stream) {
                         pu->file = p;
                         pu->real_file = q;
@@ -1343,7 +1442,7 @@ add_index_file(struct Url* pu, struct URLFile* uf)
         p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
         p = cleanupName(p);
         q = cleanupName(file_unquote(p));
-        examineFile(q, uf);
+        *uf = examineFile(q);
         if (uf->stream != NULL) {
             pu->file = p;
             pu->real_file = q;

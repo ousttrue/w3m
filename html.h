@@ -9,10 +9,6 @@
 #define StrmyUFgets(f) StrmyISgets((f)->stream)
 #define UFgetc(f) ISgetc((f)->stream)
 #define UFundogetc(f) ISundogetc((f)->stream)
-#define UFclose(f)                   \
-    if (ISclose((f)->stream) == 0) { \
-        (f)->stream = NULL;          \
-    }
 #define UFfileno(f) ISfileno((f)->stream)
 
 #define MAILCAP_NEEDSTERMINAL 0x01
