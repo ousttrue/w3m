@@ -65,3 +65,4 @@ void parseCompression(struct URLFile* uf, const char* p);
 void uncompress_stream(struct URLFile* uf, const char** src);
 Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname);
 void free_ssl_ctx(void);
+void ssl_accept_this_site(const char* hostname);
