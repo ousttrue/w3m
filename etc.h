@@ -18,3 +18,4 @@ Str base64_encode(const char* src, size_t len);
 int is_localhost(const char* host);
 time_t mymktime(const char* timestr);
 char* file_to_url(const char* file);
+Str unescape_spaces(Str s);

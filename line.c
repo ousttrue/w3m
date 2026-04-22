@@ -1,4 +1,5 @@
 #include "line.h"
+#include "display.h"
 
 void cleanup_line(Str s, enum LineMode mode)
 {
@@ -16,4 +17,53 @@ void cleanup_line(Str s, enum LineMode mode)
                 s->ptr[i] = ' ';
         }
     }
+}
+
+void addStr(char* p, Lineprop* pr, int len, int offset, int limit)
+{
+    int i = 0, rcol = 0, ncol, delta = 1;
+
+    if (offset) {
+        for (i = 0; i < len; i++) {
+            if (calcPosition(p, pr, len, i, 0, CP_AUTO) > offset)
+                break;
+        }
+        if (i >= len)
+            return;
+        while (pr[i] & PC_WCHAR2)
+            i++;
+        addChar('{', 0);
+        rcol = offset + 1;
+        ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
+        for (; rcol < ncol; rcol++)
+            addChar(' ', 0);
+    }
+    for (; i < len; i += delta) {
+        delta = wtf_len((wc_uchar*)&p[i]);
+        ncol = calcPosition(p, pr, len, i + delta, 0, CP_AUTO);
+        if (ncol - offset > limit)
+            break;
+        if (p[i] == '\t') {
+            for (; rcol < ncol; rcol++)
+                addChar(' ', 0);
+            continue;
+        } else {
+            addMChar(&p[i], pr[i], delta);
+        }
+        rcol = ncol;
+    }
+}
+
+void addPasswd(char* p, Lineprop* pr, int len, int offset, int limit)
+{
+    int rcol = 0;
+    int ncol = calcPosition(p, pr, len, len, 0, CP_AUTO);
+    if (ncol > offset + limit)
+        ncol = offset + limit;
+    if (offset) {
+        addChar('{', 0);
+        rcol = offset + 1;
+    }
+    for (; rcol < ncol; rcol++)
+        addChar('*', 0);
 }

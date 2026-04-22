@@ -84,3 +84,6 @@ enum LineMode {
 };
 
 void cleanup_line(Str s, enum LineMode mode);
+void addStr(char* p, Lineprop* pr, int len, int offset, int limit);
+void addPasswd(char* p, Lineprop* pr, int len, int offset, int limit);
+

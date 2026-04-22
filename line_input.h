@@ -1,16 +1,8 @@
 #pragma once
 #include <w3m.h>
 #include "line.h"
-#include "history.h"
-
-enum InputLineFlags {
-    IN_STRING = 0x10,
-    IN_FILENAME = 0x20,
-    IN_PASSWORD = 0x40,
-    IN_COMMAND = 0x80,
-    IN_URL = 0x100,
-    IN_CHAR = 0x200,
-};
+#include "constants.h"
+#include "LineInput.h"
 
 typedef int (*IncrFunc)(struct CmdArgs* args, const char* str, Lineprop* prop);
 
