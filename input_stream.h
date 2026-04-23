@@ -22,7 +22,7 @@ enum InputStreamType ist_type(struct InputStream* stream);
 bool ist_close(struct InputStream* stream);
 void ist_set_unclose(struct InputStream* stream, bool unclose);
 int ist_getc(struct InputStream* stream);
-int ist_undogetc(struct InputStream* stream);
+int ist_peek(struct InputStream* stream);
 int ist_read(struct InputStream* stream, char* dst, int bufsize);
 int ist_fd(struct InputStream* stream);
 int ist_eos(struct InputStream* stream);

@@ -157,16 +157,14 @@ int ist_getc(struct InputStream* s)
     return POP_CHAR(s);
 }
 
-int ist_undogetc(struct InputStream* stream)
+int ist_peek(struct InputStream* s)
 {
-    if (stream == NULL)
-        return -1;
-    struct StreamBuffer* sb = &stream->stream;
+    int c = ist_getc(s);
+    struct StreamBuffer* sb = &s->stream;
     if (sb->cur > 0) {
         sb->cur--;
-        return 0;
     }
-    return -1;
+    return c;
 }
 
 int ist_read(struct InputStream* base, char* dst, int count)

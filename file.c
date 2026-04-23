@@ -362,8 +362,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             } else {
                 lineBuf2 = tmp;
             }
-            c = ist_getc(uf->stream);
-            ist_undogetc(uf->stream);
+            c = ist_peek(uf->stream);
             if (c == ' ' || c == '\t')
                 /* header line is continued */
                 continue;
