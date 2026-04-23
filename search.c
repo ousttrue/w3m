@@ -292,7 +292,7 @@ int srchcore(const char* str, SrchFunc func)
     return result;
 }
 
-static int dispincsrch(struct CmdArgs* args, const char* str, Lineprop* prop)
+static int dispincsrch(struct CmdArgs* args, const char* str, const Lineprop* prop)
 {
     static struct Buffer sbuf;
     bool do_next_search = false;

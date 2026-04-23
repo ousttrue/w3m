@@ -43,8 +43,8 @@
 
 #define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
-typedef unsigned short Lineprop;
-typedef unsigned char Linecolor;
+typedef uint16_t Lineprop;
+typedef uint8_t Linecolor;
 
 struct Line {
     char* lineBuf;
@@ -86,4 +86,3 @@ enum LineMode {
 void cleanup_line(Str s, enum LineMode mode);
 void addStr(char* p, Lineprop* pr, int len, int offset, int limit);
 void addPasswd(char* p, Lineprop* pr, int len, int offset, int limit);
-

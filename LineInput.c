@@ -1,4 +1,6 @@
 #include "LineInput.h"
+#include "Str.h"
+#include "line.h"
 #include "global.h"
 #include "ctrlcode.h"
 #include "form.h"
@@ -14,11 +16,119 @@
 #include "qsort_util.h"
 #include "term_tty.h"
 #include "terms.h"
+#include <stdbool.h>
 #include <dirent.h>
 #include <w3m.h>
 
 #include "wc_util.h"
 #include <libwc/conv.h>
+#include <libwc/charset.h>
+
+#define STR_LEN 1024
+
+enum CompletionFlags {
+    CPL_NEVER = 0x0,
+    CPL_OFF = 0x1,
+    CPL_ON = 0x2,
+    CPL_ALWAYS = 0x4,
+    CPL_URL = 0x8,
+};
+
+enum CompletionStatus {
+    CPL_OK = 0,
+    CPL_AMBIG = 1,
+    CPL_FAIL = 2,
+    CPL_MENU = 3,
+};
+
+struct LineInput {
+    bool use_hist;
+    enum HistoryType CurrentHist; // = HistoryNone;
+
+    bool is_passwd;
+    bool move_word;
+
+    Str strBuf;
+    Lineprop strProp[STR_LEN];
+    int CLen;
+    int CPos;
+    int offset;
+
+    Str strCurrentBuf;
+    Str CBeforeBuf;
+    Str CAfterBuf;
+    int NCFileBuf;
+    Str CompleteBuf;
+    Str CDirBuf;
+    Str CFileName;
+    char** CFileBuf; // = NULL;
+    int NCFileOffset;
+
+    bool need_redraw;
+    bool i_broken;
+    bool i_cont;
+    bool i_quote;
+
+    bool cm_next;
+    bool cm_clear;
+    int cm_disp_next;
+    bool cm_disp_clear;
+    enum CompletionFlags cm_mode; // = 0;
+};
+
+//
+// lineinput keymap
+//
+
+typedef int (*InputFunc)(struct CmdArgs* args, struct LineInput* li);
+
+int iself(struct CmdArgs* args, struct LineInput* li);
+int _mvR(struct CmdArgs* args, struct LineInput* li);
+int _mvL(struct CmdArgs* args, struct LineInput* li);
+int _mvRw(struct CmdArgs* args, struct LineInput* li);
+int _mvLw(struct CmdArgs* args, struct LineInput* li);
+int delC(struct CmdArgs* args, struct LineInput* li);
+int insC(struct CmdArgs* args, struct LineInput* li);
+int _mvB(struct CmdArgs* args, struct LineInput* li);
+int _mvE(struct CmdArgs* args, struct LineInput* li);
+int _enter(struct CmdArgs* args, struct LineInput* li);
+int _quo(struct CmdArgs* args, struct LineInput* li);
+int _bs(struct CmdArgs* args, struct LineInput* li);
+int _bsw(struct CmdArgs* args, struct LineInput* li);
+int killn(struct CmdArgs* args, struct LineInput* li);
+int killb(struct CmdArgs* args, struct LineInput* li);
+int _inbrk(struct CmdArgs* args, struct LineInput* li);
+int _esc(struct CmdArgs* args, struct LineInput* li);
+int _editor(struct CmdArgs* args, struct LineInput* li);
+int _prev(struct CmdArgs* args, struct LineInput* li);
+int _next(struct CmdArgs* args, struct LineInput* li);
+int _compl(struct CmdArgs* args, struct LineInput* li);
+int _tcompl(struct CmdArgs* args, struct LineInput* li);
+int _dcompl(struct CmdArgs* args, struct LineInput* li);
+int _rdcompl(struct CmdArgs* args, struct LineInput* li);
+int _rcompl(struct CmdArgs* args, struct LineInput* li);
+
+// clang-format off
+InputFunc InputKeymap[32] = {
+    /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
+    _compl, _mvB, _mvL, _inbrk, delC, _mvE, _mvR, _inbrk,
+    /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
+    _bs, iself, _enter, killn, iself, _enter, _next, _editor,
+    /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w     */
+    _prev, _quo, _bsw, iself, _mvLw, killb, _quo, _bsw,
+    /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
+    _tcompl, _mvRw, iself, _esc, iself, iself, iself, iself,
+};
+// clang-format on
+
+struct LineInput LineInputInit(const char* def_str,
+    enum InputLineFlags flag,
+    enum HistoryType hist);
+void setStrType(struct LineInput* li);
+void next_dcompl(struct LineInput* li, struct CmdArgs* args, int next);
+int terminated(unsigned char c);
+void next_compl(struct LineInput* li, int next);
+void ins_char(struct LineInput* li, struct CmdArgs* args, Str str);
 
 struct LineInput LineInputInit(const char* def_str,
     enum InputLineFlags flag,
@@ -56,11 +166,11 @@ struct LineInput LineInputInit(const char* def_str,
         li.cm_mode = CPL_OFF;
     li.offset = 0;
     li.i_cont = true;
-    li.i_broken = false;
     li.i_quote = false;
     li.cm_next = false;
     li.cm_disp_next = -1;
     li.need_redraw = false;
+    li.i_broken = false;
 
     return li;
 }
@@ -753,3 +863,116 @@ int _rcompl(struct CmdArgs* args, struct LineInput* li)
     return 0;
 }
 
+#define CLEN (COLS - 2)
+
+struct LineInputResult do_lineinput(struct CmdArgs* args, const char* prompt, const char* def_str,
+    enum InputLineFlags flag,
+    enum HistoryType hist, IncrFunc incrfunc)
+{
+    struct LineInput li = LineInputInit(def_str, flag, hist);
+
+    int opos = get_strwidth(WcOption, prompt);
+    int epos = CLEN - opos;
+    if (epos < 0)
+        epos = 0;
+    int lpos = epos / 3;
+    int rpos = epos * 2 / 3;
+
+    wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
+    do {
+        int x = calcPosition(li.strBuf->ptr, li.strProp, li.CLen, li.CPos, 0, CP_FORCE);
+        if (x - rpos > li.offset) {
+            int y = calcPosition(li.strBuf->ptr, li.strProp, li.CLen, li.CLen, 0, CP_AUTO);
+            if (y - epos > x - rpos)
+                li.offset = x - rpos;
+            else if (y - epos > 0)
+                li.offset = y - epos;
+        } else if (x - lpos < li.offset) {
+            if (x - lpos > 0)
+                li.offset = x - lpos;
+            else
+                li.offset = 0;
+        }
+        move((LINES - 1), 0);
+        addstr(prompt);
+        if (li.is_passwd)
+            addPasswd(li.strBuf->ptr, li.strProp, li.CLen, li.offset, COLS - opos);
+        else
+            addStr(li.strBuf->ptr, li.strProp, li.CLen, li.offset, COLS - opos);
+        clrtoeolx();
+        move((LINES - 1), opos + x - li.offset);
+        refresh();
+
+    next_char:
+        args->ch = getch(args);
+        li.cm_clear = true;
+        li.cm_disp_clear = true;
+        if (!li.i_quote && (((li.cm_mode & CPL_ALWAYS) && (args->ch == CTRL_I || (space_autocomplete && args->ch == ' '))) || ((li.cm_mode & CPL_ON) && (args->ch == CTRL_I)))) {
+            if (emacs_like_lineedit && li.cm_next) {
+                _dcompl(args, &li);
+                li.need_redraw = true;
+            } else {
+                _compl(args, &li);
+                li.cm_disp_next = -1;
+            }
+        } else if (!li.i_quote && li.CLen == li.CPos && (li.cm_mode & CPL_ALWAYS || li.cm_mode & CPL_ON) && args->ch == CTRL_D) {
+            if (!emacs_like_lineedit) {
+                _dcompl(args, &li);
+                li.need_redraw = true;
+            }
+        } else if (!li.i_quote && args->ch == DEL_CODE) {
+            _bs(args, &li);
+            li.cm_next = false;
+            li.cm_disp_next = -1;
+        } else if (!li.i_quote && args->ch < 0x20) { /* Control code */
+            if (incrfunc == NULL
+                || (args->ch = incrfunc(args, li.strBuf->ptr, li.strProp)) < 0x20) {
+                (*InputKeymap[args->ch])(args, &li);
+            }
+            if (incrfunc && args->ch != (unsigned char)-1 && args->ch != CTRL_J)
+                incrfunc(args, li.strBuf->ptr, li.strProp);
+            if (li.cm_clear)
+                li.cm_next = false;
+            if (li.cm_disp_clear)
+                li.cm_disp_next = -1;
+        } else {
+            Str tmp = Strnew_wc_output(wc_char_conv(WcOption, args->ch));
+            if (tmp == NULL) {
+                li.i_quote = true;
+                goto next_char;
+            }
+            li.i_quote = false;
+            li.cm_next = false;
+            li.cm_disp_next = -1;
+            if (li.CLen + tmp->length > STR_LEN || !tmp->length)
+                goto next_char;
+            ins_char(&li, args, tmp);
+            if (incrfunc)
+                incrfunc(args, li.strBuf->ptr, li.strProp);
+        }
+        if (li.CLen && (flag & IN_CHAR))
+            break;
+    } while (li.i_cont);
+
+    const char* p = li.strBuf->ptr;
+    if (flag & (IN_FILENAME | IN_COMMAND)) {
+        SKIP_BLANKS(p);
+    }
+
+    if (hist != HistoryNone && !(flag & IN_URL) && *p != '\0') {
+        const char* q = lastHist(hist);
+        if (!q || strcmp(q, p))
+            pushHist(hist, p);
+    }
+
+    if (flag & IN_FILENAME)
+        p = expandPath(p);
+    else
+        p = allocStr(p, -1);
+
+    return (struct LineInputResult) {
+        .str = p,
+        .i_broken = li.i_broken,
+        .need_redraw = li.need_redraw,
+    };
+}

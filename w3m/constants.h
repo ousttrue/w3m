@@ -1,4 +1,9 @@
 #pragma once
+#include <stdint.h>
+
+struct CmdArgs;
+
+typedef int (*IncrFunc)(struct CmdArgs* args, const char* str, const uint16_t* prop);
 
 enum HistoryType {
     HistoryNone,
