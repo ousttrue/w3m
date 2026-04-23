@@ -1,48 +1,28 @@
+#include "input_stream.h"
 #include "input_stream_str.h"
 #include "input_handle.h"
 #include "mimehead.h"
 #include "alloc.h"
 
-Str StrISgets2(struct InputStream* stream, char crnl)
-{
-    if (stream == NULL)
-        return NULL;
-
-    struct growbuf gb;
-    growbuf_init(&gb);
-    ist_gets_to_growbuf(stream, &gb, crnl);
-
-    Str s = Strnew_size(gb.length);
-    Strcat_charp_n(s, (const char*)gb.ptr, gb.length);
-    return s;
-}
-
 void ist_gets_to_growbuf(struct InputStream* ist, struct growbuf* gb, bool check_crnl)
 {
-    struct StreamBuffer* sb = &ist->stream;
-
     gb->length = 0;
 
-    while (!ist->iseos) {
+    while (!ist_eos(ist)) {
         if (ist_drain(ist)) {
             continue;
         }
         if (check_crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
-            if (sb->buf[sb->cur] == '\n') {
+            if (ist_peek(ist) == '\n') {
                 GROWBUF_ADD_CHAR(gb, '\n');
-                ++sb->cur;
+                ist_getc(ist);
             }
             break;
         }
-        int i;
-        for (i = sb->cur; i < sb->next; ++i) {
-            if (sb->buf[i] == '\n' || (check_crnl && sb->buf[i] == '\r')) {
-                ++i;
-                break;
-            }
-        }
-        growbuf_append(gb, &sb->buf[sb->cur], i - sb->cur);
-        sb->cur = i;
+        struct InputSpan span = (check_crnl)
+            ? ist_buffered_until(ist, "\r\n")
+            : ist_buffered_until(ist, "\n");
+        growbuf_append(gb, span.ptr, span.length);
         if (gb->length > 0 && gb->ptr[gb->length - 1] == '\n')
             break;
     }

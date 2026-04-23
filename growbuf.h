@@ -16,7 +16,6 @@ struct growbuf {
 void growbuf_init(struct growbuf* gb);
 void growbuf_init_without_GC(struct growbuf* gb);
 void growbuf_clear(struct growbuf* gb);
-// Str growbuf_to_Str(struct growbuf* gb);
 void growbuf_reserve(struct growbuf* gb, int leastarea);
 void growbuf_append(struct growbuf* gb, const unsigned char* src, int len);
 

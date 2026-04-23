@@ -323,7 +323,14 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
         if (src)
             newBuf->header_source = tmpf;
     }
-    while ((tmp = StrmyISgets(uf->stream)) && tmp->length) {
+    while (true) {
+        struct growbuf gb;
+        growbuf_init(&gb);
+        ist_gets_to_growbuf(uf->stream, &gb, true);
+        if (gb.length == 0) {
+            break;
+        }
+        tmp = Strnew_charp_n((const char*)gb.ptr, gb.length);
         if (uf->scheme == SCM_NEWS && tmp->ptr[0] == '.')
             Strshrinkfirst(tmp, 1);
         if (w3m_reqlog) {
@@ -5562,13 +5569,14 @@ static struct InputStream* _file_lp2;
 static Str
 file_feed(void)
 {
-    Str s;
-    s = StrISgets(_file_lp2);
-    if (s && s->length == 0) {
+    struct growbuf gb;
+    growbuf_init(&gb);
+    ist_gets_to_growbuf(_file_lp2, &gb, false);
+    if (gb.length == 0) {
         ist_close(_file_lp2);
         return NULL;
     }
-    return s;
+    return Strnew_charp_n(gb.ptr, gb.length);
 }
 
 static void
@@ -6464,7 +6472,14 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     meta_charset = 0;
     if (ist_type(f->stream) != IST_ENCODED)
         f->stream = ist_decode(f->stream, f->encoding);
-    while ((lineBuf2 = StrmyISgets(f->stream)) && lineBuf2->length) {
+    while (true) {
+        struct growbuf gb;
+        growbuf_init(&gb);
+        ist_gets_to_growbuf(f->stream, &gb, true);
+        if (gb.length == 0) {
+            break;
+        }
+        lineBuf2 = Strnew_charp_n((const char*)gb.ptr, gb.length);
         if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
             if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
@@ -6593,8 +6608,12 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
 
     pre = 0;
     while (1) {
-        if (!(lbuf = StrISgets(uf->stream)) || lbuf->length == 0)
+        struct growbuf gb;
+        growbuf_init(&gb);
+        ist_gets_to_growbuf(uf->stream, &gb, false);
+        if (gb.length == 0)
             break;
+        lbuf = Strnew_charp_n((const char*)gb.ptr, gb.length);
         if (lbuf->ptr[0] == '.' && (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
             break;
         lbuf = convertLine(lbuf->ptr, lbuf->length, HTML_MODE, charset, doc_charset, uf->scheme == SCM_NEWS);
@@ -6749,7 +6768,14 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     nlines = 0;
     if (ist_type(uf->stream) != IST_ENCODED)
         uf->stream = ist_decode(uf->stream, uf->encoding);
-    while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
+    while (true) {
+        struct growbuf gb;
+        growbuf_init(&gb);
+        ist_gets_to_growbuf(uf->stream, &gb, true);
+        if (gb.length == 0) {
+            break;
+        }
+        lineBuf2 = Strnew_charp_n(gb.ptr, gb.length);
         if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
             if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
@@ -7122,8 +7148,12 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
 
     uf = init_stream(SCM_UNKNOWN, NULL);
     for (i = 0; i < plen; i++) {
-        if (!(lineBuf2 = StrmyISgets(buf->pagerSource)))
+        struct growbuf gb;
+        growbuf_init(&gb);
+        ist_gets_to_growbuf(buf->pagerSource, &gb, true);
+        if (!gb.length == 0)
             return NULL;
+        lineBuf2 = Strnew_charp_n((const char*)gb.ptr, gb.length);
         if (lineBuf2->length == 0) {
             /* Assume that `cmd == buf->filename' */
             if (buf->filename)

@@ -69,9 +69,13 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
         return NULL;
     *status = -1; /* error */
 
-    Str tmp;
-    if (!(tmp = StrISgets(ftp->rf)))
+    struct growbuf gb;
+    growbuf_init(&gb);
+    ist_gets_to_growbuf(ftp->rf, &gb, false);
+    if (gb.length == 0)
         return NULL;
+
+    Str tmp = Strnew_m_charp((const char*)gb.ptr, gb.length);
     if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ')
         sscanf(tmp->ptr, "%d", status);
 
@@ -87,8 +91,13 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
      * with the same code, followed immediately by Space <SP>,
      * optionally some text, and the Telnet end-of-line code. */
     while (1) {
-        if (!(tmp = StrISgets(ftp->rf)))
+        struct growbuf gb;
+        growbuf_init(&gb);
+        ist_gets_to_growbuf(ftp->rf, &gb, false);
+        if (gb.length == 0)
             break;
+
+        tmp = Strnew_m_charp((const char*)gb.ptr, gb.length);
         if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ') {
             sscanf(tmp->ptr, "%d", status);
             break;

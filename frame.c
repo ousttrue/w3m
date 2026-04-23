@@ -526,9 +526,13 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                     doc_charset = DocumentCharset;
                 t_stack = 0;
                 if (frame.body->type && !strcasecmp(frame.body->type, "text/plain")) {
-                    Str tmp;
                     fprintf(f1, "<pre>\n");
-                    while ((tmp = StrmyISgets(f2.stream)) && tmp->length) {
+                    struct growbuf gb;
+                    growbuf_init(&gb);
+                    ist_gets_to_growbuf(f2.stream, &gb, true);
+
+                    while (gb.length) {
+                        Str tmp = Strnew_m_charp((const char*)gb.ptr, gb.length);
                         tmp = convertLine(tmp->ptr, tmp->length, HTML_MODE, &charset,
                             doc_charset, false);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
@@ -544,9 +548,12 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
 
                     do {
                         if (*p == '\0') {
-                            Str tmp = StrmyISgets(f2.stream);
-                            if (!tmp || tmp->length == 0)
+                            struct growbuf gb;
+                            growbuf_init(&gb);
+                            ist_gets_to_growbuf(f2.stream, &gb, true);
+                            if (gb.length == 0)
                                 break;
+                            Str tmp = Strnew_m_charp((const char*)gb.ptr, gb.length);
                             tmp = convertLine(tmp->ptr, tmp->length, HTML_MODE, &charset,
                                 doc_charset, false);
                             p = tmp->ptr;

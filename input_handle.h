@@ -42,5 +42,3 @@ struct InputStream {
     CloseFunc close;
     union input_handle handle;
 };
-
-bool ist_drain(struct InputStream* s);

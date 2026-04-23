@@ -55,9 +55,15 @@ news_command(News* news, const char* cmd, const char* arg, int* status)
         return NULL;
     *status = -1;
 
-    Str tmp = StrISgets(news->rf);
-    if (tmp && tmp->length)
+    Str tmp = NULL;
+    struct growbuf gb;
+    growbuf_init(&gb);
+    ist_gets_to_growbuf(news->rf, &gb, false);
+
+    if (gb.length) {
+        tmp = Strnew_charp_n((const char*)gb.ptr, gb.length);
         sscanf(tmp->ptr, "%d", status);
+    }
     return tmp;
 }
 
@@ -382,8 +388,13 @@ Str loadNewsgroup(struct CmdArgs* args, struct Url* pu, wc_ces* charset)
     if (status == 224) {
         f.scheme = SCM_NEWS;
         while (1) {
-            if (!(tmp = StrISgets(current_news.rf)))
+            struct growbuf gb;
+            growbuf_init(&gb);
+            ist_gets_to_growbuf(current_news.rf, &gb, false);
+            if (gb.length == 0)
                 break;
+
+            tmp = Strnew_charp_n((const char*)gb.ptr, gb.length);
             if (NEWS_ENDLINE(tmp->ptr))
                 break;
             if (sscanf(tmp->ptr, "%d", &i) != 1)
@@ -461,8 +472,13 @@ news_list:
     if (status != 215)
         goto news_end;
     while (1) {
-        if (!(tmp = StrISgets(current_news.rf)))
+        struct growbuf gb;
+        growbuf_init(&gb);
+        ist_gets_to_growbuf(current_news.rf, &gb, false);
+        if (gb.length == 0)
             break;
+
+        tmp = Strnew_charp_n((const char*)gb.ptr, gb.length);
         if (NEWS_ENDLINE(tmp->ptr))
             break;
         if (flag < 2) {

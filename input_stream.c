@@ -40,14 +40,34 @@ bool ist_drain(struct InputStream* s)
     return true;
 }
 
-enum InputStreamType ist_type(struct InputStream* stream)
+struct InputSpan ist_buffered_until(struct InputStream* ist, const char* needles)
 {
-    return stream->type;
+    struct StreamBuffer* sb = &ist->stream;
+    bool found = false;
+    int i = sb->cur;
+    for (; !found && i < sb->next; ++i) {
+        for (const char* p = needles; *p; ++p) {
+            if (sb->buf[i] == *p) {
+                found = true;
+            }
+        }
+    }
+    struct InputSpan span = {
+        .ptr = sb->buf + sb->cur,
+        .length = i - sb->cur,
+    };
+    sb->cur = i;
+    return span;
 }
 
-void ist_set_unclose(struct InputStream* stream, bool unclose)
+enum InputStreamType ist_type(struct InputStream* ist)
 {
-    stream->unclose = unclose;
+    return ist->type;
+}
+
+void ist_set_unclose(struct InputStream* ist, bool unclose)
+{
+    ist->unclose = unclose;
 }
 
 #define SSL_BUF_SIZE 1536
@@ -71,15 +91,15 @@ ist_from_fd(int des)
 {
     if (des < 0)
         return NULL;
-    struct InputStream* stream = NewWithoutGC(struct InputStream);
-    alloc_buffer(&stream->stream, NULL, STREAM_BUF_SIZE);
-    stream->iseos = false;
-    stream->unclose = false;
-    stream->type = IST_FD;
-    stream->handle.fd = des;
-    stream->read = basic_read;
-    stream->close = basic_close;
-    return stream;
+    struct InputStream* ist = NewWithoutGC(struct InputStream);
+    alloc_buffer(&ist->stream, NULL, STREAM_BUF_SIZE);
+    ist->iseos = false;
+    ist->unclose = false;
+    ist->type = IST_FD;
+    ist->handle.fd = des;
+    ist->read = basic_read;
+    ist->close = basic_close;
+    return ist;
 }
 
 struct InputStream*
@@ -104,18 +124,18 @@ ist_from_fp(FILE* f, int (*closep)(FILE*))
 {
     if (f == NULL)
         return NULL;
-    struct InputStream* stream = NewWithoutGC(struct InputStream);
-    alloc_buffer(&stream->stream, NULL, STREAM_BUF_SIZE);
-    stream->iseos = false;
-    stream->unclose = false;
-    stream->type = IST_FILE;
-    stream->handle.file = (struct io_file_handle) {
+    struct InputStream* ist = NewWithoutGC(struct InputStream);
+    alloc_buffer(&ist->stream, NULL, STREAM_BUF_SIZE);
+    ist->iseos = false;
+    ist->unclose = false;
+    ist->type = IST_FILE;
+    ist->handle.file = (struct io_file_handle) {
         .f = f,
         .close = (closep) ? closep : fclose
     };
-    stream->read = file_read;
-    stream->close = file_close;
-    return stream;
+    ist->read = file_read;
+    ist->close = file_close;
+    return ist;
 }
 
 static int
@@ -130,14 +150,14 @@ ist_from_buffer(const char* s, int len)
     if (s == NULL)
         return NULL;
 
-    struct InputStream* stream = NewWithoutGC(struct InputStream);
-    alloc_buffer(&stream->stream, (const uint8_t*)s, len);
-    stream->iseos = false;
-    stream->unclose = false;
-    stream->type = IST_BUFFER;
-    stream->read = nop_read;
-    stream->close = NULL;
-    return stream;
+    struct InputStream* ist = NewWithoutGC(struct InputStream);
+    alloc_buffer(&ist->stream, (const uint8_t*)s, len);
+    ist->iseos = false;
+    ist->unclose = false;
+    ist->type = IST_BUFFER;
+    ist->read = nop_read;
+    ist->close = NULL;
+    return ist;
 }
 
 struct InputStream*
@@ -145,35 +165,35 @@ ist_from_tcp(SSL* ssl, int sock)
 {
     if (sock < 0)
         return NULL;
-    struct InputStream* stream = NewWithoutGC(struct InputStream);
-    alloc_buffer(&stream->stream, NULL, SSL_BUF_SIZE);
-    stream->iseos = false;
-    stream->unclose = false;
-    stream->type = IST_SSL;
-    stream->handle.ssl = (struct ssl_handle) {
+    struct InputStream* ist = NewWithoutGC(struct InputStream);
+    alloc_buffer(&ist->stream, NULL, SSL_BUF_SIZE);
+    ist->iseos = false;
+    ist->unclose = false;
+    ist->type = IST_SSL;
+    ist->handle.ssl = (struct ssl_handle) {
         .ssl = ssl,
         .sock = sock,
     };
-    stream->read = ssl_read;
-    stream->close = ssl_close;
-    return stream;
+    ist->read = ssl_read;
+    ist->close = ssl_close;
+    return ist;
 }
 
-bool ist_close(struct InputStream* stream)
+bool ist_close(struct InputStream* ist)
 {
     void (*prevtrap)(int);
-    if (stream == NULL)
+    if (ist == NULL)
         return -1;
-    if (stream->close != NULL) {
-        if (stream->unclose) {
+    if (ist->close != NULL) {
+        if (ist->unclose) {
             return -1;
         }
         prevtrap = signal(SIGINT, SIG_IGN);
-        stream->close(&stream->handle);
+        ist->close(&ist->handle);
         signal(SIGINT, prevtrap);
     }
-    xfree(stream->stream.buf);
-    xfree(stream);
+    xfree(ist->stream.buf);
+    xfree(ist);
     return 0;
 }
 
@@ -215,19 +235,19 @@ int ist_read(struct InputStream* ist, char* dst, int count)
     return len;
 }
 
-int ist_fd(struct InputStream* stream)
+int ist_fd(struct InputStream* ist)
 {
-    if (stream == NULL)
+    if (ist == NULL)
         return -1;
-    switch (stream->type) {
+    switch (ist->type) {
     case IST_FD:
-        return stream->handle.fd;
+        return ist->handle.fd;
     case IST_FILE:
-        return fileno(stream->handle.file.f);
+        return fileno(ist->handle.file.f);
     case IST_SSL:
-        return stream->handle.ssl.sock;
+        return ist->handle.ssl.sock;
     case IST_ENCODED:
-        return ist_fd(stream->handle.ens.is);
+        return ist_fd(ist->handle.ens.is);
     default:
         return -1;
     }

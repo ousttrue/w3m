@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+#include <stdint.h>
 
 enum InputStreamType {
     IST_BUFFER = 0,
@@ -16,7 +17,12 @@ struct InputStream* ist_from_path(const char* path);
 struct InputStream* ist_from_fp(FILE* f, int (*closep)(FILE*));
 struct InputStream* ist_from_buffer(const char* s, int len);
 struct InputStream* ist_from_tcp(struct ssl_st* ssl, int sock);
-
+bool ist_drain(struct InputStream* s);
+struct InputSpan {
+    const uint8_t* ptr;
+    size_t length;
+};
+struct InputSpan ist_buffered_until(struct InputStream* stream, const char* needles);
 enum InputStreamType ist_type(struct InputStream* stream);
 bool ist_close(struct InputStream* stream);
 void ist_set_unclose(struct InputStream* stream, bool unclose);
