@@ -59,6 +59,7 @@ ist_from_path(const char* path)
 {
     return ist_from_fd(open((path), O_RDONLY));
 }
+
 static void file_close(union input_handle* handle)
 {
     handle->file.close(handle->file.f);
@@ -112,7 +113,7 @@ ist_from_buffer(const char* s, int len)
 }
 
 struct InputStream*
-ist_from_ssl(SSL* ssl, int sock)
+ist_from_tcp(SSL* ssl, int sock)
 {
     if (sock < 0)
         return NULL;

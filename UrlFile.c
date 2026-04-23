@@ -708,7 +708,7 @@ retry:
             *status = HTST_NORMAL;
         }
         if (pu->scheme == SCM_HTTPS) {
-            uf.stream = ist_from_ssl(sslh, sock);
+            uf.stream = ist_from_tcp(sslh, sock);
             if (sslh)
                 SSL_write(sslh, tmp->ptr, tmp->length);
             else
@@ -837,7 +837,7 @@ retry:
     default:
         return uf;
     }
-    uf.stream = ist_from_fd(sock);
+    uf.stream = ist_from_tcp(0, sock);
     return uf;
 }
 void UFclose(struct URLFile* f)

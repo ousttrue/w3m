@@ -12,11 +12,10 @@ enum InputStreamType {
 struct InputStream;
 struct ssl_st;
 
-struct InputStream* ist_from_fd(int des);
 struct InputStream* ist_from_path(const char* path);
 struct InputStream* ist_from_fp(FILE* f, int (*closep)(FILE*));
 struct InputStream* ist_from_buffer(const char* s, int len);
-struct InputStream* ist_from_ssl(struct ssl_st* ssl, int sock);
+struct InputStream* ist_from_tcp(struct ssl_st* ssl, int sock);
 
 enum InputStreamType ist_type(struct InputStream* stream);
 bool ist_close(struct InputStream* stream);

@@ -14,10 +14,10 @@ pub fn main(init: std.process.Init) !u8 {
     w3m.init(init);
     defer w3m.deinit();
 
-    var argv: []const [:0]const u8 = try init.minimal.args.toSlice(init.gpa);
+    const argv = init.minimal.args.vector;
     defer init.gpa.free(argv);
 
-    if (!c.w3m_args(null, @intCast(argv.len), @ptrCast(@constCast(&argv[0])))) {
+    if (!c.w3m_args(null, @intCast(argv.len), @ptrCast(@constCast(argv.ptr)))) {
         return 0;
     }
 

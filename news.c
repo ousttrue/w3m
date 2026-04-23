@@ -86,7 +86,7 @@ news_open(News* news)
     sock = openSocket(news->host, "nntp", news->port);
     if (sock < 0)
         goto open_err;
-    news->rf = ist_from_fd(sock);
+    news->rf = ist_from_tcp(0, sock);
     if ((fd = dup(sock)) < 0)
         goto open_err;
     news->wf = fdopen(fd, "wb");

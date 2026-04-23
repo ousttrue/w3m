@@ -153,7 +153,7 @@ ftp_login(FTP ftp)
             }
         }
     }
-    ftp->rf = ist_from_fd(sock);
+    ftp->rf = ist_from_tcp(0, sock);
     if ((sock_wf = dup(sock)) >= 0)
         ftp->wf = fdopen(sock_wf, "wb");
     else
