@@ -42,13 +42,5 @@ struct InputStream {
     CloseFunc close;
     union input_handle handle;
 };
-static inline void
-do_update(struct InputStream* base)
-{
-    base->stream.cur = base->stream.next = 0;
-    int len = (*base->read)(&base->handle, base->stream.buf, base->stream.size);
-    if (len <= 0)
-        base->iseos = true;
-    else
-        base->stream.next += len;
-}
+
+bool ist_drain(struct InputStream* s);

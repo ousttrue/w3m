@@ -4,7 +4,6 @@
 
 void alloc_buffer(struct StreamBuffer* sb, const uint8_t* buf, int bufsize)
 {
-    // struct StreamBuffer *sb = &base->stream;
     sb->size = bufsize;
     sb->cur = 0;
     sb->buf = malloc(bufsize);

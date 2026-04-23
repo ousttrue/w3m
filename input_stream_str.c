@@ -17,15 +17,14 @@ Str StrISgets2(struct InputStream* stream, char crnl)
     return s;
 }
 
-void ist_gets_to_growbuf(struct InputStream* base, struct growbuf* gb, bool check_crnl)
+void ist_gets_to_growbuf(struct InputStream* ist, struct growbuf* gb, bool check_crnl)
 {
-    struct StreamBuffer* sb = &base->stream;
+    struct StreamBuffer* sb = &ist->stream;
 
     gb->length = 0;
 
-    while (!base->iseos) {
-        if (MUST_BE_UPDATED(base)) {
-            do_update(base);
+    while (!ist->iseos) {
+        if (ist_drain(ist)) {
             continue;
         }
         if (check_crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {

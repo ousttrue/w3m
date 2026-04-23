@@ -12,6 +12,34 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+static bool MUST_BE_UPDATED(struct StreamBuffer* b)
+{
+    return b->cur == b->next;
+}
+
+static void
+do_update(struct InputStream* ist)
+{
+    ist->stream.cur = ist->stream.next = 0;
+    int len = (*ist->read)(&ist->handle, ist->stream.buf, ist->stream.size);
+    if (len <= 0)
+        ist->iseos = true;
+    else
+        ist->stream.next += len;
+}
+
+bool ist_drain(struct InputStream* s)
+{
+    if (s->iseos) {
+        return false;
+    }
+    if (!MUST_BE_UPDATED(&s->stream)) {
+        return false;
+    }
+    do_update(s);
+    return true;
+}
+
 enum InputStreamType ist_type(struct InputStream* stream)
 {
     return stream->type;
@@ -153,8 +181,7 @@ int ist_getc(struct InputStream* s)
 {
     if (s == NULL)
         return '\0';
-    if (!s->iseos && MUST_BE_UPDATED(s))
-        do_update(s);
+    ist_drain(s);
     return POP_CHAR(s);
 }
 
@@ -168,19 +195,19 @@ int ist_peek(struct InputStream* s)
     return c;
 }
 
-int ist_read(struct InputStream* base, char* dst, int count)
+int ist_read(struct InputStream* ist, char* dst, int count)
 {
-    if (base == NULL || count <= 0)
+    if (ist == NULL || count <= 0)
         return -1;
 
-    if (base->iseos)
+    if (ist->iseos)
         return 0;
 
-    int len = buffer_read(&base->stream, dst, count);
-    if (MUST_BE_UPDATED(base)) {
-        int l = (*base->read)(&base->handle, (uint8_t*)&dst[len], count - len);
+    int len = buffer_read(&ist->stream, dst, count);
+    if (MUST_BE_UPDATED(&ist->stream)) {
+        int l = (*ist->read)(&ist->handle, (uint8_t*)&dst[len], count - len);
         if (l <= 0) {
-            base->iseos = true;
+            ist->iseos = true;
         } else {
             len += l;
         }
@@ -206,11 +233,10 @@ int ist_fd(struct InputStream* stream)
     }
 }
 
-int ist_eos(struct InputStream* base)
+int ist_eos(struct InputStream* ist)
 {
-    if (!base->iseos && MUST_BE_UPDATED(base))
-        do_update(base);
-    return base->iseos;
+    ist_drain(ist);
+    return ist->iseos;
 }
 
 void ssl_close(union input_handle* handle)
