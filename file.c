@@ -263,20 +263,6 @@ setModtime(const char* path, time_t modtime)
     return utime(path, &t);
 }
 
-/*
- * convert line
- */
-Str convertLine(struct URLFile* uf, Str line, enum LineMode mode, wc_ces* charset,
-    wc_ces doc_charset)
-{
-    line = Strnew_wc_output(wc_Str_conv_with_detect(WcOption, line->ptr, line->length, charset, doc_charset, InnerCharset));
-    if (mode != RAW_MODE)
-        cleanup_line(line, mode);
-    if (uf && uf->scheme == SCM_NEWS)
-        Strchop(line);
-    return line;
-}
-
 int matchattr(const char* p, const char* attr, int len, Str* value)
 {
     if (strncasecmp(p, attr, len) == 0) {
@@ -367,10 +353,11 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 /* header line is continued */
                 continue;
             lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-            lineBuf2 = convertLine(NULL, lineBuf2, RAW_MODE,
+            lineBuf2 = convertLine(lineBuf2->ptr, lineBuf2->length, RAW_MODE,
                 mime_charset ? &mime_charset : &charset,
                 mime_charset ? mime_charset
-                             : DocumentCharset);
+                             : DocumentCharset,
+                false);
             /* separated with line and stored */
             tmp = Strnew_size(lineBuf2->length);
             for (p = lineBuf2->ptr; *p; p = q) {
@@ -6506,7 +6493,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
             }
             meta_charset = 0;
         }
-        lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(lineBuf2->ptr, lineBuf2->length, HTML_MODE, &charset, doc_charset, f->scheme == SCM_NEWS);
         cur_document_charset = charset;
         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
     }
@@ -6592,8 +6579,9 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
-    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
-        charset, doc_charset);
+    const char* unq = file_unquote(tmp->ptr);
+    tmp = convertLine(unq, strlen(unq), RAW_MODE,
+        charset, doc_charset, false);
     q = html_quote(tmp->ptr);
     tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
         "</title>\n</head>\n<body>\n<h1>Index of ", q,
@@ -6609,7 +6597,7 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
             break;
         if (lbuf->ptr[0] == '.' && (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
             break;
-        lbuf = convertLine(uf, lbuf, HTML_MODE, charset, doc_charset);
+        lbuf = convertLine(lbuf->ptr, lbuf->length, HTML_MODE, charset, doc_charset, uf->scheme == SCM_NEWS);
         p = lbuf->ptr;
         for (q = p; *q && *q != '\t'; q++)
             ;
@@ -6703,15 +6691,14 @@ gopher_end:
 
 Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset)
 {
-    Str tmp;
-    char* volatile p, * volatile q;
     wc_ces doc_charset = DocumentCharset;
 
-    tmp = parsedURL2Str(pu);
-    p = html_quote(tmp->ptr);
-    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
-        charset, doc_charset);
-    q = html_quote(tmp->ptr);
+    Str tmp = parsedURL2Str(pu);
+    char* p = html_quote(tmp->ptr);
+    const char* unq = file_unquote(tmp->ptr);
+    tmp = convertLine(unq, strlen(unq), RAW_MODE,
+        charset, doc_charset, false);
+    char* q = html_quote(tmp->ptr);
     tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
         "</title>\n</head>\n<body>\n<h1>Search ", q,
         "</h1>\n<form role=\"search\">\n<div>\n"
@@ -6782,7 +6769,7 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
         showProgress(&linelen, &trbyte);
         if (frame_source)
             continue;
-        lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, uf->scheme == SCM_NEWS);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
                 ++nlines;
@@ -7151,7 +7138,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
         }
         linelen += lineBuf2->length;
         showProgress(&linelen, &trbyte);
-        lineBuf2 = convertLine(&uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
+        lineBuf2 = convertLine(lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, uf.scheme == SCM_NEWS);
         if (squeezeBlankLine) {
             squeeze_flag = FALSE;
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {

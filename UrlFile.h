@@ -56,7 +56,6 @@ struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* pu, st
 
 void UFclose(struct URLFile* f);
 void UFhalfclose(struct URLFile* f);
-Str convertLine(struct URLFile* uf, Str line, enum LineMode mode, wc_ces* charset, wc_ces doc_charset);
 void check_compression(struct URLFile* uf, const char* path);
 const char* uncompressed_file_type(const char* path, const char** ext);
 const char* compress_application_type(enum ContentCompression compression);

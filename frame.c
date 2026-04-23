@@ -529,8 +529,8 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                     Str tmp;
                     fprintf(f1, "<pre>\n");
                     while ((tmp = StrmyISgets(f2.stream)) && tmp->length) {
-                        tmp = convertLine(NULL, tmp, HTML_MODE, &charset,
-                            doc_charset);
+                        tmp = convertLine(tmp->ptr, tmp->length, HTML_MODE, &charset,
+                            doc_charset, false);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
                     }
                     fprintf(f1, "</pre>\n");
@@ -547,8 +547,8 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                             Str tmp = StrmyISgets(f2.stream);
                             if (!tmp || tmp->length == 0)
                                 break;
-                            tmp = convertLine(NULL, tmp, HTML_MODE, &charset,
-                                doc_charset);
+                            tmp = convertLine(tmp->ptr, tmp->length, HTML_MODE, &charset,
+                                doc_charset, false);
                             p = tmp->ptr;
                         }
                         read_token(tok, &p, &status, 1, status != R_ST_NORMAL);

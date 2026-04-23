@@ -406,14 +406,14 @@ Str loadNewsgroup(struct CmdArgs* args, struct Url* pu, wc_ces* charset)
                 continue;
             *q = '\0';
             tmp = decodeMIME(Strnew_charp(s), &mime_charset);
-            s = convertLine(&f, tmp, HEADER_MODE,
+            s = convertLine(tmp->ptr, tmp->length, HEADER_MODE,
                 mime_charset ? &mime_charset : charset,
-                mime_charset ? mime_charset : doc_charset)
+                mime_charset ? mime_charset : doc_charset, f.scheme == SCM_NEWS)
                     ->ptr;
             tmp = decodeMIME(Strnew_charp(n), &mime_charset);
-            n = convertLine(&f, tmp, HEADER_MODE,
+            n = convertLine(tmp->ptr, tmp->length, HEADER_MODE,
                 mime_charset ? &mime_charset : charset,
-                mime_charset ? mime_charset : doc_charset)
+                mime_charset ? mime_charset : doc_charset, f.scheme == SCM_NEWS)
                     ->ptr;
             add_news_message(page, i, t, n, s, p, scheme,
                 pu->scheme == SCM_NNTP_GROUP ? qgroup : NULL);

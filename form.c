@@ -575,7 +575,7 @@ static Str editor_input(struct CmdArgs* args, Str value, bool readonly)
             Strshrink(tmp, 1);
             Strcat_charp(tmp, "\r\n");
         }
-        tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset);
+        tmp = convertLine(tmp->ptr, tmp->length, RAW_MODE, &charset, DisplayCharset, false);
         Strcat(out, tmp);
     }
     WcOption.auto_detect = auto_detect;

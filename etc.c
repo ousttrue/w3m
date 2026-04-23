@@ -930,7 +930,7 @@ char* url_unquote_conv(const char* url, wc_ces charset)
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
-    tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset);
+    tmp = convertLine(tmp->ptr, tmp->length, RAW_MODE, &charset, charset, false);
     WcOption.auto_detect = old_auto_detect;
     return tmp->ptr;
 }
@@ -1307,5 +1307,3 @@ Str unescape_spaces(Str s)
         return tmp;
     return s;
 }
-
-
