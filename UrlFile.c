@@ -8,6 +8,7 @@
 #include "url.h"
 #include "content_type.h"
 #include "input_stream.h"
+#include "input_stream_str.h"
 #include "ftp.h"
 #include "news.h"
 #include "indep.h"
@@ -199,7 +200,7 @@ struct URLFile examineFile(const char* path)
         return uf;
     }
 
-    uf.stream = openIS(path);
+    uf.stream = ist_from_path(path);
     if (!do_download) {
         if (use_lessopen && getenv("LESSOPEN") != NULL) {
             uf.guess_type = guessContentType(path);
@@ -210,7 +211,7 @@ struct URLFile examineFile(const char* path)
             FILE* fp;
             if ((fp = lessopen_stream(path))) {
                 UFclose(&uf);
-                uf.stream = newFileStream(fp, pclose);
+                uf.stream = ist_from_fp(fp, pclose);
                 uf.guess_type = "text/plain";
                 return uf;
             }
@@ -572,11 +573,11 @@ retry:
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
-            uf.stream = newFileStream(localcgi_post(pu->real_file, pu->query, request, option->referer),
+            uf.stream = ist_from_fp(localcgi_post(pu->real_file, pu->query, request, option->referer),
                 fclose);
         else
             /* lodal CGI: GET */
-            uf.stream = newFileStream(localcgi_get(pu->real_file, pu->query, option->referer), fclose);
+            uf.stream = ist_from_fp(localcgi_get(pu->real_file, pu->query, option->referer), fclose);
         if (uf.stream) {
             uf.is_cgi = true;
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
@@ -652,7 +653,7 @@ retry:
             && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
-                sock = ssl_socket_of(ouf->stream);
+                sock = ist_fd(ouf->stream);
                 if (!(sslh = openSSLHandle(args, sock, pu->host,
                           &uf.ssl_certificate))) {
                     *status = HTST_MISSING;
@@ -707,7 +708,7 @@ retry:
             *status = HTST_NORMAL;
         }
         if (pu->scheme == SCM_HTTPS) {
-            uf.stream = newSSLStream(sslh, sock);
+            uf.stream = ist_from_ssl(sslh, sock);
             if (sslh)
                 SSL_write(sslh, tmp->ptr, tmp->length);
             else
@@ -829,19 +830,19 @@ retry:
             uf.encoding = ENC_BASE64;
         } else
             tmp = Str_url_unquote(tmp, false, false);
-        uf.stream = newStrStream(tmp->ptr, tmp->length);
+        uf.stream = ist_from_buffer(tmp->ptr, tmp->length);
         uf.guess_type = (*p != '\0') ? p : "text/plain";
         return uf;
     case SCM_UNKNOWN:
     default:
         return uf;
     }
-    uf.stream = newInputStream(sock);
+    uf.stream = ist_from_fd(sock);
     return uf;
 }
 void UFclose(struct URLFile* f)
 {
-    if (ISclose(f->stream) == 0) {
+    if (ist_close(f->stream)) {
         (f)->stream = NULL;
     }
 }
@@ -952,8 +953,8 @@ void uncompress_stream(struct URLFile* uf, const char** src)
     struct compression_decoder* d;
     int use_d_arg = 0;
 
-    if (uf->stream->type != IST_ENCODED) {
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
+    if (ist_type(uf->stream) != IST_ENCODED) {
+        uf->stream = ist_decode(uf->stream, uf->encoding);
         uf->encoding = ENC_7BIT;
     }
     for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
@@ -998,10 +999,10 @@ void uncompress_stream(struct URLFile* uf, const char** src)
             int count;
             FILE* f = NULL;
 
-            setup_child(true, 2, ISfd(uf->stream));
+            setup_child(true, 2, ist_fd(uf->stream));
             if (tmpf)
                 f = fopen(tmpf, "wb");
-            while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+            while ((count = ist_read(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
                 if (fwrite(buf, 1, count, stdout) != count)
                     break;
                 if (f && fwrite(buf, 1, count, f) != count)
@@ -1029,7 +1030,7 @@ void uncompress_stream(struct URLFile* uf, const char** src)
             uf->scheme = SCM_LOCAL;
     }
     UFhalfclose(uf);
-    uf->stream = newFileStream(f1, fclose);
+    uf->stream = ist_from_fp(f1, fclose);
 }
 
 static Str accept_this_site;
@@ -1196,7 +1197,7 @@ Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
     char buf[2048];
     Str amsg = NULL;
     Str emsg;
-    char* ans;
+    const char* ans;
 
     if (ssl == NULL)
         return NULL;
@@ -1311,32 +1312,3 @@ Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
     return s;
 }
 
-void ssl_close(union input_handle* handle)
-{
-    close(handle->ssl.sock);
-    if (handle->ssl.ssl)
-        SSL_free(handle->ssl.ssl);
-}
-
-int ssl_read(union input_handle* handle, uint8_t* buf, int len)
-{
-    int status;
-    if (handle->ssl.ssl) {
-        for (;;) {
-            status = SSL_read(handle->ssl.ssl, buf, len);
-            if (status > 0)
-                break;
-            switch (SSL_get_error(handle->ssl.ssl, status)) {
-            case SSL_ERROR_WANT_READ:
-            case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see SSL_get_error(3) */
-                continue;
-            default:
-                break;
-            }
-            break;
-        }
-    } else {
-        status = read(handle->ssl.sock, buf, len);
-    }
-    return status;
-}

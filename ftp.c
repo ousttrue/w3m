@@ -103,8 +103,8 @@ ftp_close(FTP ftp)
     if (!ftp->host)
         return;
     if (ftp->rf) {
-        ftp->rf->unclose = false;
-        ISclose(ftp->rf);
+        ist_set_unclose(ftp->rf, false);
+        ist_close(ftp->rf);
         ftp->rf = NULL;
     }
     if (ftp->wf) {
@@ -153,14 +153,14 @@ ftp_login(FTP ftp)
             }
         }
     }
-    ftp->rf = newInputStream(sock);
+    ftp->rf = ist_from_fd(sock);
     if ((sock_wf = dup(sock)) >= 0)
         ftp->wf = fdopen(sock_wf, "wb");
     else
         goto open_err;
     if (!ftp->rf || !ftp->wf)
         goto open_err;
-    ftp->rf->unclose = true;
+    ist_set_unclose(ftp->rf, true);
     ftp_command(ftp, NULL, NULL, &status);
     if (status != 220)
         goto open_err;
@@ -426,7 +426,7 @@ ftp_read:
     uf->modtime = ftp_modtime(&current_ftp, realpathname);
     ftp_command(&current_ftp, "RETR", realpathname, &status);
     if (status == 125 || status == 150)
-        return newFileStream(current_ftp.data, closeFTPdata);
+        return ist_from_fp(current_ftp.data, closeFTPdata);
 
 ftp_dir:
     pu->scheme = SCM_FTPDIR;

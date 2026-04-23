@@ -362,8 +362,8 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             } else {
                 lineBuf2 = tmp;
             }
-            c = ISgetc(uf->stream);
-            ISundogetc(uf->stream);
+            c = ist_getc(uf->stream);
+            ist_undogetc(uf->stream);
             if (c == ' ' || c == '\t')
                 /* header line is continued */
                 continue;
@@ -397,7 +397,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 if (src) {
                     struct Line* l;
                     wc_ces old_charset = newBuf->document_charset;
-                    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(src->ptr, src->length));
+                    struct URLFile f = init_stream(SCM_LOCAL, ist_from_buffer(src->ptr, src->length));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
                     UFclose(&f);
                     for (l = newBuf->lastLine; l && l->real_linenumber;
@@ -526,7 +526,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 err = add_cookie(pu, name, value, expires, domain, path, flag,
                     comment, version, port, commentURL);
                 if (err) {
-                    char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
+                    const char* ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
                         ? "y"
                         : NULL;
                     if (fmInitialized && (err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
@@ -1711,8 +1711,8 @@ page_loaded:
         /* download only */
         const char* file;
         TRAP_OFF;
-        if (DecodeCTE && f.stream->type != IST_ENCODED)
-            f.stream = newEncodedStream(f.stream, f.encoding);
+        if (DecodeCTE && ist_type(f.stream) != IST_ENCODED)
+            f.stream = ist_decode(f.stream, f.encoding);
         if (pu.scheme == SCM_LOCAL) {
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
@@ -1743,8 +1743,8 @@ page_loaded:
     }
     if (image_source) {
         struct Buffer* b = NULL;
-        if (f.stream->type != IST_ENCODED)
-            f.stream = newEncodedStream(f.stream, f.encoding);
+        if (ist_type(f.stream) != IST_ENCODED)
+            f.stream = ist_decode(f.stream, f.encoding);
         if (save2tmp(f.stream, f.scheme, image_source) == 0) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = image_source;
@@ -1773,8 +1773,8 @@ page_loaded:
                 _doFileCopy(args, pu.real_file,
                     conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
             } else {
-                if (DecodeCTE && f.stream->type != IST_ENCODED)
-                    f.stream = newEncodedStream(f.stream, f.encoding);
+                if (DecodeCTE && ist_type(f.stream) != IST_ENCODED)
+                    f.stream = ist_decode(f.stream, f.encoding);
                 if (doFileSave(args, f, guess_save_name(t_buf, pu.file)) == 0)
                     UFhalfclose(&f);
                 else
@@ -5579,7 +5579,7 @@ file_feed(void)
     Str s;
     s = StrISgets(_file_lp2);
     if (s && s->length == 0) {
-        ISclose(_file_lp2);
+        ist_close(_file_lp2);
         return NULL;
     }
     return s;
@@ -6476,8 +6476,8 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
         doc_charset = WC_CES_UTF_8;
     meta_charset = 0;
-    if (f->stream->type != IST_ENCODED)
-        f->stream = newEncodedStream(f->stream, f->encoding);
+    if (ist_type(f->stream) != IST_ENCODED)
+        f->stream = ist_decode(f->stream, f->encoding);
     while ((lineBuf2 = StrmyISgets(f->stream)) && lineBuf2->length) {
         if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
@@ -6552,7 +6552,7 @@ loadHTMLString(Str page)
     SignalFunc prevtrap = NULL;
     struct Buffer* newBuf;
 
-    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(page->ptr, page->length));
+    struct URLFile f = init_stream(SCM_LOCAL, ist_from_buffer(page->ptr, page->length));
 
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
@@ -6761,8 +6761,8 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
         doc_charset = content_charset;
 
     nlines = 0;
-    if (uf->stream->type != IST_ENCODED)
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
+    if (ist_type(uf->stream) != IST_ENCODED)
+        uf->stream = ist_decode(uf->stream, uf->encoding);
     while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
         if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
@@ -6831,8 +6831,8 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
 
         SignalFunc prevtrap = NULL;
 
-        if (uf->stream->type != IST_ENCODED)
-            uf->stream = newEncodedStream(uf->stream, uf->encoding);
+        if (ist_type(uf->stream) != IST_ENCODED)
+            uf->stream = ist_decode(uf->stream, uf->encoding);
         TRAP_ON;
         if (save2tmp(uf->stream, uf->scheme, cache->file) < 0) {
             TRAP_OFF;
@@ -6857,7 +6857,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     newBuf->mailcap_source = tmpf;
 
     Str tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    struct URLFile f = init_stream(SCM_LOCAL, newStrStream(tmp->ptr, tmp->length));
+    struct URLFile f = init_stream(SCM_LOCAL, ist_from_buffer(tmp->ptr, tmp->length));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
     if (src)
@@ -6958,7 +6958,7 @@ loadcmdout(struct CmdArgs* args, const char* cmd,
     if (f == NULL)
         return NULL;
 
-    struct URLFile uf = init_stream(SCM_UNKNOWN, newFileStream(f, pclose));
+    struct URLFile uf = init_stream(SCM_UNKNOWN, ist_from_fp(f, pclose));
     struct Buffer* buf = loadproc(args, &uf, defaultbuf);
     UFclose(&uf);
     return buf;
@@ -6996,7 +6996,7 @@ getpipe(const char* cmd)
     if (f == NULL)
         return NULL;
     buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->pagerSource = newFileStream(f, pclose);
+    buf->pagerSource = ist_from_fp(f, pclose);
     buf->filename = cmd;
     buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
         conv_from_system(cmd))
@@ -7064,8 +7064,8 @@ openGeneralPagerBuffer(struct CmdArgs* args, struct InputStream* stream)
         buf = loadHTMLBuffer(args, &uf, t_buf);
         buf->type = "text/html";
     } else if (is_plain_text_type(t)) {
-        if (stream->type != IST_ENCODED)
-            stream = newEncodedStream(stream, uf.encoding);
+        if (ist_type(stream) != IST_ENCODED)
+            stream = ist_decode(stream, uf.encoding);
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
     } else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
@@ -7078,8 +7078,8 @@ openGeneralPagerBuffer(struct CmdArgs* args, struct InputStream* stream)
             if (buf == NULL || buf == NO_BUFFER)
                 return buf;
         } else { /* unknown type is regarded as text/plain */
-            if (stream->type != IST_ENCODED)
-                stream = newEncodedStream(stream, uf.encoding);
+            if (ist_type(stream) != IST_ENCODED)
+                stream = ist_decode(stream, uf.encoding);
             buf = openPagerBuffer(stream, t_buf);
             buf->type = "text/plain";
         }
@@ -7228,7 +7228,7 @@ int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf
         char c;
         if (!stream)
             return -1;
-        while (c = ISgetc(stream), !stream->iseos) {
+        while (c = ist_getc(stream), !ist_eos(stream)) {
             if (c == '\n') {
                 if (check == 0)
                     check++;
@@ -7248,7 +7248,7 @@ int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf
         int count;
 
         buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-        while ((count = ISread_n(stream, buf, SAVE_BUF_SIZE)) > 0) {
+        while ((count = ist_read(stream, buf, SAVE_BUF_SIZE)) > 0) {
             if (fwrite(buf, 1, count, ff) != count) {
                 retval = -2;
                 goto _end;
@@ -7285,8 +7285,8 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
     }
     const char* tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
 
-    if (uf.stream->type != IST_ENCODED)
-        uf.stream = newEncodedStream(uf.stream, uf.encoding);
+    if (ist_type(uf.stream) != IST_ENCODED)
+        uf.stream = ist_decode(uf.stream, uf.encoding);
     header = checkHeader(defaultbuf, "Content-Type:");
     if (header)
         header = conv_to_system(header);
@@ -7299,7 +7299,7 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
         flush_tty();
         if (!fork()) {
-            setup_child(FALSE, 0, ISfd(uf.stream));
+            setup_child(FALSE, 0, ist_fd(uf.stream));
             if (save2tmp(uf.stream, uf.scheme, tmpf) < 0)
                 exit(1);
             UFclose(&uf);
@@ -7359,16 +7359,16 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
 static int
 _MoveFile(const char* path1, const char* path2)
 {
-    struct InputStream* f1;
     FILE* f2;
     int is_pipe;
     int64_t linelen = 0, trbyte = 0;
     char* buf = NULL;
     int count;
 
-    f1 = openIS(path1);
+    struct InputStream* f1 = ist_from_path(path1);
     if (f1 == NULL)
         return -1;
+
     if (*path2 == '|' && PermitSaveToPipe) {
         is_pipe = TRUE;
         f2 = popen(path2 + 1, "w");
@@ -7377,18 +7377,18 @@ _MoveFile(const char* path1, const char* path2)
         f2 = fopen(path2, "wb");
     }
     if (f2 == NULL) {
-        ISclose(f1);
+        ist_close(f1);
         return -1;
     }
     current_content_length = 0;
     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-    while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+    while ((count = ist_read(f1, buf, SAVE_BUF_SIZE)) > 0) {
         fwrite(buf, 1, count, f2);
         linelen += count;
         showProgress(&linelen, &trbyte);
     }
     xfree(buf);
-    ISclose(f1);
+    ist_close(f1);
     if (is_pipe)
         pclose(f2);
     else
@@ -7541,7 +7541,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
         if (checkOverWrite(args, p) < 0)
             return -1;
 
-        if (checkSaveFile(ISfd(uf.stream), p) < 0) {
+        if (checkSaveFile(ist_fd(uf.stream), p) < 0) {
             /* FIXME: gettextize? */
             msg = Sprintf("Can't save. Load file and %s are identical.",
                 conv_from_system(p));
@@ -7566,7 +7566,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
                 if (tmpf)
                     unlink(tmpf);
             }
-            setup_child(FALSE, 0, ISfd(uf.stream));
+            setup_child(FALSE, 0, ist_fd(uf.stream));
             err = save2tmp(uf.stream, uf.scheme, p);
             if (err == 0 && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
@@ -7596,7 +7596,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
         p = expandPath(q);
         if (checkOverWrite(args, p) < 0)
             return -1;
-        if (checkSaveFile(ISfd(uf.stream), p) < 0) {
+        if (checkSaveFile(ist_fd(uf.stream), p) < 0) {
             /* FIXME: gettextize? */
             printf("Can't save. Load file and %s are identical.", p);
             return -1;

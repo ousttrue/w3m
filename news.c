@@ -67,8 +67,8 @@ news_close(News* news)
     if (!news->host)
         return;
     if (news->rf) {
-        news->rf->unclose = false;
-        ISclose(news->rf);
+        ist_set_unclose(news->rf, false);
+        ist_close(news->rf);
         news->rf = NULL;
     }
     if (news->wf) {
@@ -86,13 +86,13 @@ news_open(News* news)
     sock = openSocket(news->host, "nntp", news->port);
     if (sock < 0)
         goto open_err;
-    news->rf = newInputStream(sock);
+    news->rf = ist_from_fd(sock);
     if ((fd = dup(sock)) < 0)
         goto open_err;
     news->wf = fdopen(fd, "wb");
     if (!news->rf || !news->wf)
         goto open_err;
-    news->rf->unclose = true;
+    ist_set_unclose(news->rf, true);
     news_command(news, NULL, NULL, &status);
     if (status != 200 && status != 201)
         goto open_err;
