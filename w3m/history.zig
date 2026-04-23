@@ -257,7 +257,7 @@ export fn unshiftHist(_hist: c.HistoryType, ptr: [*c]const u8) void {
     //     return;
 }
 
-export fn pushHist(hist: c.HistoryType, ptr: [*c]const u8) void {
+pub export fn pushHist(hist: c.HistoryType, ptr: [*c]const u8) void {
     _ = hist;
     _ = ptr;
     // _pushHist(getHistory(hist), ptr);
@@ -294,7 +294,7 @@ export fn pushUrlHist(ptr: [*c]const u8) void {
     // pushHashHist(getHistory(HistoryURL), ptr);
 }
 
-export fn lastHist(_hist: c.HistoryType) [*c]const u8 {
+pub export fn lastHist(_hist: c.HistoryType) [*c]const u8 {
     _ = _hist;
     return "";
 
@@ -308,7 +308,7 @@ export fn lastHist(_hist: c.HistoryType) [*c]const u8 {
     //     return NULL;
 }
 
-export fn nextHist(_hist: c.HistoryType) [*c]const u8 {
+pub export fn nextHist(_hist: c.HistoryType) [*c]const u8 {
     _ = _hist;
     return "";
 
@@ -322,7 +322,7 @@ export fn nextHist(_hist: c.HistoryType) [*c]const u8 {
     //     return NULL;
 }
 
-export fn prevHist(_hist: c.HistoryType) [*c]const u8 {
+pub export fn prevHist(_hist: c.HistoryType) [*c]const u8 {
     _ = _hist;
     return "";
 

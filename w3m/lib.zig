@@ -10,6 +10,7 @@ const terminfo_entry = @import("terminfo_entry.zig");
 const input_dispatcher = @import("input_dispatcher.zig");
 const image = @import("image.zig");
 const history = @import("history.zig");
+const LineInput = @import("LineInput.zig");
 
 pub export fn _dummy_() void {
     // export symbols ?
@@ -18,6 +19,7 @@ pub export fn _dummy_() void {
     std.log.debug("{}", .{content_type});
     std.log.debug("{}", .{image});
     std.log.debug("{}", .{history});
+    std.log.debug("{}", .{LineInput});
 }
 
 comptime {
@@ -135,4 +137,50 @@ export fn tmpfname(tmp_type: c.TmpFileType, _ext: ?[*:0]const u8) [*c]const u8 {
     tmpf_seq[tmp_type] += 1;
     addDeleteFile(tmpf);
     return &tmpf[0];
+}
+
+// #define CLEN (COLS - 2)
+
+export fn do_lineinput(
+    args: ?*c.CmdArgs,
+    prompt: [*c]const u8,
+    def_str: [*c]const u8,
+    flag: c.InputLineFlags,
+    hist: c.HistoryType,
+    incrfunc: c.IncrFunc,
+) c.LineInputResult {
+    var li = LineInput.init(
+        runtime.allocator,
+        std.mem.span(def_str),
+        flag,
+        hist,
+    ) catch @panic("LineInput.init");
+    defer li.deinit();
+
+    li.process(args.?, std.mem.span(prompt), flag, incrfunc);
+
+    var p: []const u8 = std.mem.span(li.strBuf.*.ptr);
+    if (flag & (c.IN_FILENAME | c.IN_COMMAND) != 0) {
+        p = std.mem.trimStart(u8, p, &std.ascii.whitespace);
+    }
+
+    if (hist != c.HistoryNone and 0 == (flag & c.IN_URL) and p.len > 0) {
+        const q = history.lastHist(hist);
+        if (q == null or std.mem.eql(u8, std.mem.span(q), p)) {
+            history.pushHist(hist, p.ptr);
+        }
+    }
+
+    const pz: [:0]const u8 = if (p.len > 0)
+        li.allocator.dupeZ(u8, p) catch @panic("OOM")
+    else
+        "";
+    return .{
+        .str = if (flag & c.IN_FILENAME != 0)
+            c.expandPath(pz.ptr)
+        else
+            c.allocStr(pz.ptr, -1),
+        .i_broken = li.i_broken,
+        .need_redraw = li.need_redraw,
+    };
 }

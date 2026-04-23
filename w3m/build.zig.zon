@@ -6,6 +6,9 @@
             .url = "git+https://github.com/cloudwu/coroutine.git#a6263031e6ee3d3e10e613f0c0c3af886465170e",
             .hash = "N-V-__8AANIaAAAKhM84rEQvWB49X3jKLxlGEyEJNETKE8On",
         },
+        .wc = .{
+            .path = "../libwc",
+        },
     },
     .paths = .{""},
     .fingerprint = 0x6997df120553d7e8,

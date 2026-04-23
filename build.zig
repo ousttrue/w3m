@@ -35,7 +35,6 @@ const w3m_srcs = [_][]const u8{
     "etc.c",
     "search.c",
     "line_input.c",
-    "LineInput.c",
     "table.c",
     "local_cgi.c",
     "form.c",
@@ -111,20 +110,13 @@ pub fn build(b: *std.Build) void {
 
     const w3m_lib = w3m_dep.artifact("w3m");
     exe.root_module.addImport("w3m", w3m_lib.root_module);
-    // exe.root_module.addIncludePath(w3m_lib.getEmittedIncludeTree());
+    exe.root_module.addIncludePath(w3m_lib.getEmittedIncludeTree());
     // exe.root_module.linkLibrary(w3m_lib);
 
     exe.root_module.addCSourceFiles(.{
         .files = &w3m_srcs,
         .flags = &flags,
     });
-
-    const wc_dep = b.dependency("wc", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const libwc = wc_dep.artifact("wc");
-    exe.root_module.linkLibrary(libwc);
 
     for (system_libs) |lib| {
         exe.root_module.linkSystemLibrary(lib, .{});

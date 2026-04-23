@@ -62,7 +62,10 @@ Str Strfgetall(FILE*);
 
 void Strgrow(Str s);
 
-#define Strcat_char(x, y) (((x)->length + 1 >= STR_SIZE_MAX) ? 0 : (((x)->length + 1 >= (x)->area_size) ? Strgrow(x), 0 : 0, (x)->ptr[(x)->length++] = (y), (x)->ptr[(x)->length] = 0))
+inline static void Strcat_char(Str x, char y)
+{
+    (((x)->length + 1 >= STR_SIZE_MAX) ? 0 : (((x)->length + 1 >= (x)->area_size) ? Strgrow(x), 0 : 0, (x)->ptr[(x)->length++] = (y), (x)->ptr[(x)->length] = 0));
+}
 #define Strcatc(x, y) ((x)->ptr[(x)->length++] = (y))
 #define Strnulterm(x) ((x)->ptr[(x)->length] = 0)
 #define Strcmp(x, y) strcmp((x)->ptr, (y)->ptr)

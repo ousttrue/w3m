@@ -30,6 +30,13 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
     });
 
+    const wc_dep = b.dependency("wc", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const libwc = wc_dep.artifact("wc");
+    mod.linkLibrary(libwc);
+
     const options = b.addOptions();
     options.addOption(TaskBackend, "task_backend", TASK_BACKEND);
     mod.addOptions("config", options);
@@ -41,6 +48,7 @@ pub fn build(b: *std.Build) void {
         .root_module = mod,
         .use_llvm = true,
     });
+    lib.installHeadersDirectory(libwc.getEmittedIncludeTree(), "", .{});
 
     if (TASK_BACKEND == .coroutine) {
         const co = build_coroutine(b, target, optimize);

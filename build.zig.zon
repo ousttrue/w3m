@@ -9,9 +9,6 @@
         .w3m = .{
             .path = "./w3m",
         },
-        .wc = .{
-            .path = "./libwc",
-        },
     },
     .paths = .{""},
     .fingerprint = 0x6997df12af4d1950,
