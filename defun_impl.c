@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "html_loader.h"
 #include "UrlFile.h"
 #include "content_type.h"
 #include "term_tty.h"

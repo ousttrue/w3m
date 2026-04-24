@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "html_loader.h"
 #include "wc_util.h"
 #include "alarm.h"
 #include "defun_impl.h"

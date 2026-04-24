@@ -11,8 +11,6 @@
 struct Hist;
 extern int main(int argc, char** argv);
 extern void pushEvent(const char* cmd, void* data);
-extern struct _AlarmEvent* setAlarmEvent(struct _AlarmEvent* event, int sec, short status,
-    const char* cmd, const void* data);
 
 struct Buffer;
 
@@ -22,32 +20,11 @@ extern struct Buffer* loadGeneralFile(struct CmdArgs* args, const char* path, st
     int flag, struct Form* request);
 extern int is_boundary(unsigned char*, unsigned char*);
 extern int is_blank_line(char* line, int indent);
-struct HtmlTag;
-extern Str process_img(struct HtmlTag* tag, int width);
-extern Str process_anchor(struct HtmlTag* tag, char* tagbuf);
-extern Str process_input(struct HtmlTag* tag);
-extern Str process_button(struct HtmlTag* tag);
-extern Str process_n_button(void);
-extern Str process_select(struct HtmlTag* tag);
-extern Str process_n_select(void);
-extern void feed_select(const char* str);
-extern void process_option(void);
-extern Str process_textarea(struct HtmlTag* tag, int width);
-extern Str process_n_textarea(void);
-extern void feed_textarea(char* str);
-extern Str process_form(struct HtmlTag* tag);
-extern Str process_n_form(void);
-extern int getMetaRefreshParam(char* q, Str* refresh_uri);
+
 
 struct _textlinelist;
-extern void HTMLlineproc2(struct Buffer* buf, struct _textlinelist* tl);
 struct URLFile;
 extern struct Buffer* loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf);
-extern char* convert_size(int64_t size, int usefloat);
-extern char* convert_size2(int64_t size1, int64_t size2, int usefloat);
-extern void showProgress(int64_t* linelen, int64_t* trbyte);
-extern void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src,
-    int internal);
 extern struct Buffer* loadHTMLString(Str page);
 extern Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 extern Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
@@ -62,10 +39,7 @@ extern int checkCopyFile(const char* path1, const char* path2);
 extern int checkOverWrite(struct CmdArgs* args, const char* path);
 extern int matchattr(const char* p, const char* attr, int len, Str* value);
 extern void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
-extern char* checkHeader(struct Buffer* buf, char* field);
-
 extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);
 extern int visible_length(char* str);
-

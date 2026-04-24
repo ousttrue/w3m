@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "html_loader.h"
 #include "UrlFile.h"
 #include "growbuf.h"
 #include "term_tty.h"
@@ -552,7 +553,7 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                             struct str_view gv = growbuf_str_view(gb);
                             if (gv.len > 0) {
                                 // Str tmp = Strnew_m_charp((const char*)gb.ptr, gb.length);
-                                Str tmp = convertLine(gv.ptr, gv.len, HTML_MODE, &charset, doc_charset, false);
+                                Str tmp = convertLine((const uint8_t*)gv.ptr, gv.len, HTML_MODE, &charset, doc_charset, false);
                                 p = tmp->ptr;
                             }
                             growbuf_destroy(gb);

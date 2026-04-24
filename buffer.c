@@ -102,8 +102,8 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->pagerSource){
-        if(ist_destroy(buf->pagerSource)){
+    if (buf->pagerSource) {
+        if (ist_destroy(buf->pagerSource)) {
             buf->pagerSource = NULL;
         }
     }
@@ -590,7 +590,6 @@ prevBuffer(struct Buffer* first, struct Buffer* buf)
 
 int writeBufferCache(struct Buffer* buf)
 {
-    Str tmp;
     FILE* cache = NULL;
     struct Line* l;
     int colorflag;
@@ -601,8 +600,7 @@ int writeBufferCache(struct Buffer* buf)
     if (buf->firstLine == NULL)
         goto _error1;
 
-    tmp = tmpfname(TMPF_CACHE, NULL);
-    buf->savecache = tmp->ptr;
+    buf->savecache = tmpfname(TMPF_CACHE, NULL);
     cache = fopen(buf->savecache, "w");
     if (!cache)
         goto _error1;
@@ -731,5 +729,93 @@ void showImageProgress(struct Buffer* buf)
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
         refresh();
+    }
+}
+
+static void
+addnewline2(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
+    int nlines)
+{
+    struct Line* l;
+    l = New(struct Line);
+    l->next = NULL;
+    l->lineBuf = line;
+    l->propBuf = prop;
+    l->colorBuf = color;
+    l->len = pos;
+    l->width = -1;
+    l->size = pos;
+    l->bpos = 0;
+    l->bwidth = 0;
+    l->prev = buf->currentLine;
+    if (buf->currentLine) {
+        l->next = buf->currentLine->next;
+        buf->currentLine->next = l;
+    } else
+        l->next = NULL;
+    if (buf->lastLine == NULL || buf->lastLine == buf->currentLine)
+        buf->lastLine = l;
+    buf->currentLine = l;
+    if (buf->firstLine == NULL)
+        buf->firstLine = l;
+    l->linenumber = ++buf->allLine;
+    if (nlines < 0) {
+        /*     l->real_linenumber = l->linenumber;     */
+        l->real_linenumber = 0;
+    } else {
+        l->real_linenumber = nlines;
+    }
+    l = NULL;
+}
+
+void addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines)
+{
+    char* s;
+    Lineprop* p;
+    Linecolor* c;
+    struct Line* l;
+    int i, bpos, bwidth;
+
+    if (pos > 0) {
+        s = allocStr(line, pos);
+        p = NewAtom_N(Lineprop, pos);
+        bcopy((void*)prop, (void*)p, pos * sizeof(Lineprop));
+    } else {
+        s = NullLine;
+        p = NullProp;
+    }
+    if (pos > 0 && color) {
+        c = NewAtom_N(Linecolor, pos);
+        bcopy((void*)color, (void*)c, pos * sizeof(Linecolor));
+    } else {
+        c = NULL;
+    }
+    addnewline2(buf, s, p, c, pos, nlines);
+    if (pos <= 0 || width <= 0)
+        return;
+    bpos = 0;
+    bwidth = 0;
+    while (1) {
+        l = buf->currentLine;
+        l->bpos = bpos;
+        l->bwidth = bwidth;
+        i = columnLen(l, width);
+        if (i == 0) {
+            i++;
+            while (i < l->len && p[i] & PC_WCHAR2)
+                i++;
+        }
+        l->len = i;
+        l->width = COLPOS(l, l->len);
+        if (pos <= i)
+            return;
+        bpos += l->len;
+        bwidth += l->width;
+        s += i;
+        p += i;
+        if (c)
+            c += i;
+        pos -= i;
+        addnewline2(buf, s, p, c, pos, nlines);
     }
 }

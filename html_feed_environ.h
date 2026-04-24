@@ -159,5 +159,3 @@ void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env,
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 void init_henv(struct html_feed_environ*, struct readbuffer*,
     struct environment*, int, struct _textlinelist*, int, int);
-void completeHTMLstream(struct html_feed_environ*,
-    struct readbuffer*);

@@ -1,4 +1,5 @@
 #include "growbuf.h"
+#include "html_loader.h"
 #include "terms.h"
 #include "UrlFile.h"
 #include "indep.h"

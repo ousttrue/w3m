@@ -93,7 +93,7 @@ struct Buffer {
     wc_uint8 auto_detect;
     struct _textlist* document_header;
     struct FormItem* form_submit;
-    char* savecache;
+    const char* savecache;
     const char* edit;
     struct mailcap* mailcap;
     const char* mailcap_source;
@@ -193,3 +193,5 @@ extern void chkNMIDBuffer(struct Buffer* buf);
 extern int currentLn(struct Buffer* buf);
 extern void tmpClearBuffer(struct Buffer* buf);
 void showImageProgress(struct Buffer* buf);
+
+void addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos, int width, int nlines);
