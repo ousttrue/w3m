@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "http_response.h"
 #include "content_type.h"
 #include "UrlFile.h"
 #include "main.h"
@@ -819,3 +820,14 @@ void addnewline(struct Buffer* buf, char* line, Lineprop* prop, Linecolor* color
         addnewline2(buf, s, p, c, pos, nlines);
     }
 }
+
+int currentLn(struct Buffer* buf)
+{
+    if (buf->currentLine)
+        /*     return buf->currentLine->real_linenumber + 1;      */
+        return buf->currentLine->linenumber + 1;
+    else
+        return 1;
+}
+
+

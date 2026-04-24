@@ -3,6 +3,14 @@
 
 struct CmdArgs;
 
+#define DUMP_BUFFER 0x01
+#define DUMP_HEAD 0x02
+#define DUMP_SOURCE 0x04
+#define DUMP_EXTRA 0x08
+#define DUMP_HALFDUMP 0x10
+#define DUMP_FRAME 0x20
+#define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
+
 enum StreamEncoding {
     ENC_7BIT = 0,
     ENC_BASE64 = 1,

@@ -1,11 +1,24 @@
 const std = @import("std");
 const zcc = @import("compile_commands");
 
+const flags = [_][]const u8{
+    "-D_GNU_SOURCE",
+    // "-D_POSIX_SOURCE=200112L",
+    "-D_XOPEN_SOURCE=600",
+    "-DOPENSSL_API_COMPAT=0x010101000L",
+    // "-Wno-implicit-int",
+    // "-Wno-int-conversion",
+    // "-DHAVE_CONFIG_H",
+    // "-Wall",
+    "-std=c23",
+};
+
 const system_libs = [_][]const u8{
     "ssl", "ncurses", "crypto",
 };
 
 const w3m_srcs = [_][]const u8{
+    "http_response.c",
     "html_loader.c",
     "filepath.c",
     "StreamBuffer.c",
@@ -68,16 +81,6 @@ const w3m_srcs = [_][]const u8{
     "parsetag.c",
     "myctype.c",
     "hash.c",
-};
-const flags = [_][]const u8{
-    // "-D_POSIX_SOURCE=200112L",
-    "-D_XOPEN_SOURCE=600",
-    "-DOPENSSL_API_COMPAT=0x010101000L",
-    // "-Wno-implicit-int",
-    // "-Wno-int-conversion",
-    // "-DHAVE_CONFIG_H",
-    // "-Wall",
-    "-std=c23",
 };
 
 pub fn build(b: *std.Build) void {

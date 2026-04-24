@@ -2,6 +2,7 @@
 #include "alloc.h"
 #include "html.h"
 #include "hash.h"
+#include "http_response.h"
 #include "indep.h"
 #include "global.h"
 #include "proto.h"
@@ -238,7 +239,7 @@ const char* acceptableMimeTypes(void)
     static Str types = NULL;
     TextList* l;
     Hash_si* mhash;
-    char* p;
+    const char* p;
     int i;
 
     if (types != NULL)
@@ -346,7 +347,7 @@ unquote_mailcap_loop(const char* qstr, const char* type, const char* name, const
     int* mc_stat, int flag0)
 {
     Str str, tmp, test, then;
-    char* p;
+    const char* p;
     int status = MC_NORMAL, prev_status = MC_NORMAL, sp = 0, flag;
 
     if (mc_stat)

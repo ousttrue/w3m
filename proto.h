@@ -10,7 +10,6 @@
 
 struct Hist;
 extern int main(int argc, char** argv);
-extern void pushEvent(const char* cmd, void* data);
 
 struct Buffer;
 
@@ -37,8 +36,6 @@ extern int doFileMove(struct CmdArgs* args, const char* tmpf, const char* defstr
 extern int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr);
 extern int checkCopyFile(const char* path1, const char* path2);
 extern int checkOverWrite(struct CmdArgs* args, const char* path);
-extern int matchattr(const char* p, const char* attr, int len, Str* value);
-extern void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu);
 extern double log_like(int x);
 extern struct table* newTable(void);
 extern void pushdata(struct table* t, int row, int col, char* data);

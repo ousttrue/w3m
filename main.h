@@ -3,14 +3,6 @@
 #include "Str.h"
 #include <stdint.h>
 
-#define DUMP_BUFFER 0x01
-#define DUMP_HEAD 0x02
-#define DUMP_SOURCE 0x04
-#define DUMP_EXTRA 0x08
-#define DUMP_HALFDUMP 0x10
-#define DUMP_FRAME 0x20
-#define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
-
 #define FRAME_WIDTH 2
 
 typedef struct _AlarmEvent {
@@ -101,3 +93,4 @@ void dump_extra(struct Buffer* buf);
 void dump_head(struct Buffer* buf);
 void dump_source(struct Buffer* buf);
 void escdmap(struct CmdArgs* args);
+void pushEvent(const char* cmd, void* data);

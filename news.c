@@ -1,4 +1,5 @@
 #include "growbuf.h"
+#include "http_response.h"
 #include "html_loader.h"
 #include "terms.h"
 #include "UrlFile.h"
