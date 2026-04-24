@@ -8,7 +8,6 @@
 #include "url.h"
 #include "content_type.h"
 #include "input_stream.h"
-#include "input_stream_str.h"
 #include "ftp.h"
 #include "news.h"
 #include "indep.h"
@@ -708,7 +707,7 @@ retry:
             *status = HTST_NORMAL;
         }
         if (pu->scheme == SCM_HTTPS) {
-            uf.stream = ist_from_tcp(sslh, sock);
+            uf.stream = ist_from_socket(sock, sslh);
             if (sslh)
                 SSL_write(sslh, tmp->ptr, tmp->length);
             else
@@ -837,13 +836,13 @@ retry:
     default:
         return uf;
     }
-    uf.stream = ist_from_tcp(0, sock);
+    uf.stream = ist_from_socket(sock, 0);
     return uf;
 }
 void UFclose(struct URLFile* f)
 {
-    if (ist_close(f->stream)) {
-        (f)->stream = NULL;
+    if (ist_destroy(f->stream)) {
+        f->stream = NULL;
     }
 }
 
@@ -1311,4 +1310,3 @@ Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
     X509_free(x);
     return s;
 }
-

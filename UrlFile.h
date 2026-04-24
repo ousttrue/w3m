@@ -3,7 +3,6 @@
 #include "url_scheme.h"
 #include "Str.h"
 #include "line.h"
-#include "stream_encoding.h"
 #include <time.h>
 
 #define NO_REFERER ((char*)-1)

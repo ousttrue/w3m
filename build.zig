@@ -59,7 +59,6 @@ const w3m_srcs = [_][]const u8{
     "anchor.c",
     "tagtable.c",
     "input_stream.c",
-    "input_stream_str.c",
 
     "Str.c",
     "indep.c",

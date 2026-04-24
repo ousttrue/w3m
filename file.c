@@ -1,7 +1,7 @@
 #include "display.h"
 #include "UrlFile.h"
+#include "growbuf.h"
 #include "input_stream.h"
-#include "input_stream_str.h"
 #include "auth.h"
 #include "w3m.h"
 #include "indep.h"
@@ -7406,7 +7406,7 @@ _MoveFile(const char* path1, const char* path2)
         f2 = fopen(path2, "wb");
     }
     if (f2 == NULL) {
-        ist_close(f1);
+        ist_destroy(f1);
         return -1;
     }
     current_content_length = 0;
@@ -7417,7 +7417,7 @@ _MoveFile(const char* path1, const char* path2)
         showProgress(&linelen, &trbyte);
     }
     xfree(buf);
-    ist_close(f1);
+    ist_destroy(f1);
     if (is_pipe)
         pclose(f2);
     else

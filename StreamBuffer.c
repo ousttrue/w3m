@@ -15,7 +15,7 @@ void alloc_buffer(struct StreamBuffer* sb, const uint8_t* buf, int bufsize)
     }
 }
 
-int buffer_read(struct StreamBuffer* sb, char* obuf, int count)
+int buffer_read(struct StreamBuffer* sb, uint8_t* obuf, int count)
 {
     int len = sb->next - sb->cur;
     if (len > 0) {

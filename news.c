@@ -1,3 +1,4 @@
+#include "growbuf.h"
 #include "terms.h"
 #include "UrlFile.h"
 #include "indep.h"
@@ -6,7 +7,6 @@
 #include "term_tty.h"
 #include "html.h"
 #include "input_stream.h"
-#include "input_stream_str.h"
 #include "signal_util.h"
 #include "wc_util.h"
 #include "buffer.h"
@@ -74,8 +74,9 @@ news_close(News* news)
         return;
     if (news->rf) {
         ist_set_unclose(news->rf, false);
-        ist_close(news->rf);
-        news->rf = NULL;
+        if (ist_destroy(news->rf)) {
+            news->rf = NULL;
+        }
     }
     if (news->wf) {
         fclose(news->wf);
@@ -87,28 +88,34 @@ news_close(News* news)
 static int
 news_open(News* news)
 {
-    int sock, status, fd;
-
-    sock = openSocket(news->host, "nntp", news->port);
-    if (sock < 0)
-        goto open_err;
-    news->rf = ist_from_tcp(0, sock);
-    if ((fd = dup(sock)) < 0)
-        goto open_err;
-    news->wf = fdopen(fd, "wb");
-    if (!news->rf || !news->wf)
-        goto open_err;
-    ist_set_unclose(news->rf, true);
-    news_command(news, NULL, NULL, &status);
-    if (status != 200 && status != 201)
-        goto open_err;
-    if (news->mode) {
-        news_command(news, "MODE", news->mode, &status);
-        if (status != 200 && status != 201)
-            goto open_err;
+    int sock = openSocket(news->host, "nntp", news->port);
+    while (true) {
+        if (sock < 0) {
+            break;
+        }
+        news->rf = ist_from_socket(sock, 0);
+        int fd = dup(sock);
+        if (fd < 0) {
+            break;
+        }
+        news->wf = fdopen(fd, "wb");
+        if (!news->rf || !news->wf) {
+            break;
+        }
+        ist_set_unclose(news->rf, true);
+        int status;
+        news_command(news, NULL, NULL, &status);
+        if (status != 200 && status != 201) {
+            break;
+        }
+        if (news->mode) {
+            news_command(news, "MODE", news->mode, &status);
+            if (status != 200 && status != 201) {
+                break;
+            }
+        }
+        return true;
     }
-    return true;
-open_err:
     news_close(news);
     return false;
 }
@@ -478,7 +485,7 @@ news_list:
         growbuf_clear(gb);
         ist_gets_to_growbuf(current_news.rf, gb, false);
         struct str_view gv = growbuf_str_view(gb);
-        if (gv.len== 0)
+        if (gv.len == 0)
             break;
 
         tmp = Strnew_charp_n(gv.ptr, gv.len);

@@ -1,13 +1,13 @@
 #include "ftp.h"
 #include "UrlFile.h"
 #include "auth.h"
+#include "growbuf.h"
 #include "qsort_util.h"
 #include "indep.h"
 #include "alloc.h"
 #include "term_tty.h"
 #include "terms.h"
 #include "input_stream.h"
-#include "input_stream_str.h"
 #include "signal_util.h"
 #include "etc.h"
 #include "url.h"
@@ -120,8 +120,9 @@ ftp_close(FTP ftp)
         return;
     if (ftp->rf) {
         ist_set_unclose(ftp->rf, false);
-        ist_close(ftp->rf);
-        ftp->rf = NULL;
+        if (ist_destroy(ftp->rf)) {
+            ftp->rf = NULL;
+        }
     }
     if (ftp->wf) {
         fclose(ftp->wf);
@@ -169,7 +170,7 @@ ftp_login(FTP ftp)
             }
         }
     }
-    ftp->rf = ist_from_tcp(0, sock);
+    ftp->rf = ist_from_socket(sock, 0);
     if ((sock_wf = dup(sock)) >= 0)
         ftp->wf = fdopen(sock_wf, "wb");
     else

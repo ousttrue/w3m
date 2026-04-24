@@ -3,6 +3,13 @@
 
 struct CmdArgs;
 
+enum StreamEncoding {
+    ENC_7BIT = 0,
+    ENC_BASE64 = 1,
+    ENC_QUOTE = 2,
+    ENC_UUENCODE = 3,
+};
+
 enum InputLineFlags {
     IN_STRING = 0x10,
     IN_FILENAME = 0x20,

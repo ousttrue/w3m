@@ -1,12 +1,12 @@
 #include "frame.h"
 #include "UrlFile.h"
+#include "growbuf.h"
 #include "term_tty.h"
 #include "html_token.h"
 #include "html_feed_environ.h"
 #include "form.h"
 #include "terms.h"
 #include "input_stream.h"
-#include "input_stream_str.h"
 #include "indep.h"
 #include "alloc.h"
 #include "signal_util.h"
@@ -532,7 +532,7 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                     ist_gets_to_growbuf(f2.stream, gb, true);
                     while (true) {
                         struct str_view gv = growbuf_str_view(gb);
-                        Str tmp = convertLine(gv.ptr, gv.len, HTML_MODE, &charset, doc_charset, false);
+                        Str tmp = convertLine((const uint8_t*)gv.ptr, gv.len, HTML_MODE, &charset, doc_charset, false);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
                     }
                     growbuf_destroy(gb);

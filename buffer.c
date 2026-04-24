@@ -102,8 +102,11 @@ void discardBuffer(struct Buffer* buf)
         unlink(buf->savecache);
     if (--(*buf->clone))
         return;
-    if (buf->pagerSource)
-        ist_close(buf->pagerSource);
+    if (buf->pagerSource){
+        if(ist_destroy(buf->pagerSource)){
+            buf->pagerSource = NULL;
+        }
+    }
     if (buf->sourcefile && (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
         if (buf->real_scheme != SCM_LOCAL || buf->bufferprop & BP_FRAME)
             unlink(buf->sourcefile);
