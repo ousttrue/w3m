@@ -1,21 +1,11 @@
 #include "input_stream.h"
-#include "StreamBuffer.h"
 #include "growbuf.h"
-#include "mimehead.h"
 #include "input_stream_impl.h"
-
 #include <signal.h>
-#include <strings.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
-#include <openssl/ssl.h>
-
-bool ist_drain(struct InputStream* ist)
+static bool ist_drain(struct InputStream* ist)
 {
-    struct input_stream_base* sb = ist->handle;
+    struct input_stream_base* sb = &ist->base;
     if (sb->iseos) {
         return false;
     }
@@ -24,7 +14,7 @@ bool ist_drain(struct InputStream* ist)
     }
 
     sb->stream.cur = sb->stream.next = 0;
-    int len = ist_read(ist, sb->stream.buf, sb->stream.size);
+    int len = ist_read(ist, sb->stream.buf, sb->stream.capacity);
     if (len <= 0)
         sb->iseos = true;
     else
@@ -35,7 +25,7 @@ bool ist_drain(struct InputStream* ist)
 
 static struct span ist_buffered_until(struct InputStream* ist, const char* needles)
 {
-    struct StreamBuffer* sb = ist->handle;
+    struct StreamBuffer* sb = &ist->base.stream;
     bool found = false;
     int i = sb->cur;
     for (; !found && i < sb->next; ++i) {
@@ -60,11 +50,9 @@ enum InputStreamType ist_type(struct InputStream* ist)
 
 void ist_set_unclose(struct InputStream* ist, bool unclose)
 {
-    struct input_stream_base* sb = ist->handle;
+    struct input_stream_base* sb = &ist->base;
     sb->unclose = unclose;
 }
-
-#define POP_CHAR(bs) ((bs)->iseos ? '\0' : (bs)->stream.buf[(bs)->stream.cur++])
 
 void ist_close(struct InputStream* ist)
 {
@@ -74,7 +62,6 @@ void ist_close(struct InputStream* ist)
 
     void (*prevtrap)(int);
     prevtrap = signal(SIGINT, SIG_IGN);
-    // ist->close(&ist->handle);
     switch (ist_type(ist)) {
     case IST_BUFFER: {
         // donothing
@@ -98,13 +85,12 @@ void ist_close(struct InputStream* ist)
     }
     }
     signal(SIGINT, prevtrap);
-    // }
 }
 
 bool ist_destroy(struct InputStream* ist)
 {
     if (ist) {
-        struct input_stream_base* base = ist->handle;
+        struct input_stream_base* base = &ist->base;
         if (base->unclose) {
             return false;
         }
@@ -120,14 +106,14 @@ int ist_getc(struct InputStream* ist)
     if (ist == NULL)
         return '\0';
     ist_drain(ist);
-    struct input_stream_base* base = ist->handle;
+    struct input_stream_base* base = &ist->base;
     return POP_CHAR(base);
 }
 
 int ist_peek(struct InputStream* ist)
 {
     int c = ist_getc(ist);
-    struct input_stream_base* base = ist->handle;
+    struct input_stream_base* base = &ist->base;
     if (base->stream.cur > 0) {
         base->stream.cur--;
     }
@@ -139,7 +125,7 @@ int ist_read(struct InputStream* ist, uint8_t* dst, int count)
     if (ist == NULL || count <= 0)
         return -1;
 
-    struct input_stream_base* base = ist->handle;
+    struct input_stream_base* base = &ist->base;
     if (base->iseos)
         return 0;
 
@@ -183,37 +169,37 @@ int ist_fd(struct InputStream* ist)
     if (ist == NULL)
         return -1;
 
-    struct input_stream_base* base = ist->handle;
+    struct input_stream_base* base = &ist->base;
     switch (ist->type) {
     case IST_FILE_DESC:
-        return ((struct input_stream_fd*)ist->handle)->fd;
+        return fd_fd(ist->handle);
     case IST_FILE_PIPE:
-        return fileno(((struct input_stream_fp*)ist->handle)->f);
+        return fp_fd(ist->handle);
     case IST_SOCK:
-        return ((struct input_stream_sock*)ist->handle)->sock;
+        return sock_fd(ist->handle);
     case IST_ENCODED:
-        return ist_fd(((struct input_stream_encoded*)ist->handle)->is);
+        return ens_fd(ist->handle);
     default:
         return -1;
     }
 }
 
-int ist_eos(struct InputStream* ist)
+bool ist_eos(struct InputStream* ist)
 {
     ist_drain(ist);
-    struct input_stream_base* base = ist->handle;
+    struct input_stream_base* base = &ist->base;
     return base->iseos;
+    return false;
 }
 
 void ist_gets_to_growbuf(struct InputStream* ist, struct growbuf* gb, bool check_crnl)
 {
     growbuf_clear(gb);
-    struct str_view gv;
     while (!ist_eos(ist)) {
         if (ist_drain(ist)) {
             continue;
         }
-        gv = growbuf_str_view(gb);
+        struct str_view gv = growbuf_str_view(gb);
         if (check_crnl && gv.len > 0 && gv.ptr[gv.len - 1] == '\r') {
             if (ist_peek(ist) == '\n') {
                 growbuf_add_char(gb, '\n');
@@ -230,5 +216,4 @@ void ist_gets_to_growbuf(struct InputStream* ist, struct growbuf* gb, bool check
             break;
     }
     growbuf_add_char(gb, '\0');
-    return;
 }

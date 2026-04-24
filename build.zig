@@ -59,6 +59,7 @@ const w3m_srcs = [_][]const u8{
     "anchor.c",
     "tagtable.c",
     "input_stream.c",
+    "input_stream_impl.c",
 
     "Str.c",
     "indep.c",
@@ -68,7 +69,8 @@ const w3m_srcs = [_][]const u8{
     "hash.c",
 };
 const flags = [_][]const u8{
-    "-D_POSIX_SOURCE=200112L",
+    // "-D_POSIX_SOURCE=200112L",
+    "-D_XOPEN_SOURCE=600",
     "-DOPENSSL_API_COMPAT=0x010101000L",
     // "-Wno-implicit-int",
     // "-Wno-int-conversion",

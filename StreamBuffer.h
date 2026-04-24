@@ -5,7 +5,7 @@
 #define STREAM_BUF_SIZE 8192
 struct StreamBuffer {
     uint8_t* buf;
-    int size;
+    int capacity;
     int cur;
     int next;
 };
