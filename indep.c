@@ -293,7 +293,7 @@ char* url_quote(const char* str)
     return str;
 }
 
-char* file_quote(char* str)
+char* file_quote(const char* str)
 {
     Str tmp = NULL;
     char* p;
@@ -312,7 +312,7 @@ char* file_quote(char* str)
     }
     if (tmp)
         return tmp->ptr;
-    return str;
+    return allocStr(str, -1);
 }
 
 char* file_unquote(const char* str)

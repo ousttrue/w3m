@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "filepath.h"
 #include "ctrlcode.h"
 #include "html.h"
 #include "form.h"
@@ -359,7 +360,7 @@ append_map_info(struct Buffer* buf, Str tmp, struct FormItem* fi)
         p = html_quote(url_decode2(a->url, buf));
         Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
             q, "\">",
-            html_quote(*a->alt ? a->alt : mybasename(a->url)),
+            html_quote(*a->alt ? a->alt : fpath_basename(a->url)),
             "</a><td>", p, "\n", NULL);
     }
     Strcat_charp(tmp, "</table>");

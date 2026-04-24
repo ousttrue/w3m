@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "filepath.h"
 #include "UrlFile.h"
 #include "auth.h"
 #include "growbuf.h"
@@ -52,7 +53,7 @@ static struct _FTP current_ftp = {
 };
 
 static Str
-ftp_command(FTP ftp, char* cmd, char* arg, int* status)
+ftp_command(FTP ftp, const char* cmd, const char* arg, int* status)
 {
     if (!ftp->host)
         return NULL;
@@ -317,8 +318,7 @@ ftp_quit(FTP ftp)
     return 0;
 }
 
-static int ex_ftpdir_name_size_date(char*, char**, char**, char**,
-    char**);
+static int ex_ftpdir_name_size_date(const char*, const char**, const char**, const char**, const char**);
 
 #define SERVER_NONE 0
 #define UNIXLIKE_SERVER 1
@@ -456,8 +456,8 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset)
     Str tmp;
     int status;
     volatile int sv_type;
-    char *realpathname, *fn, *q;
-    char** flist;
+    const char *realpathname, *fn, *q;
+    const char** flist;
     int i, nfile, nfile_max;
     SignalFunc prevtrap = NULL;
     wc_ces doc_charset = DocumentCharset;
@@ -497,7 +497,7 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset)
         Strcat_char(tmp, '/');
     fn = html_quote(tmp->ptr);
     char* unq = file_unquote(tmp->ptr);
-    tmp = convertLine(unq, strlen(unq), RAW_MODE, charset, doc_charset, false);
+    tmp = convertLine((const uint8_t*)unq, strlen(unq), RAW_MODE, charset, doc_charset, false);
     q = html_quote(tmp->ptr);
     FTPDIRtmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", fn,
         "\">\n<title>", q,
@@ -524,13 +524,15 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset)
     flist = New_N(char*, nfile_max);
     nfile = 0;
     if (sv_type == UNIXLIKE_SERVER) {
-        char *name, *link, *date, *size, *type_str;
+        const char *name, *link;
+        const char* date;
+        const char *size, *type_str;
         int ftype, max_len, len, j;
 
         max_len = 20;
         while (tmp = Strfgets(current_ftp.data), tmp->length > 0) {
             Strchop(tmp);
-            if ((ftype = ex_ftpdir_name_size_date(tmp->ptr, &name, &link, &date,
+            if ((ftype = ex_ftpdir_name_size_date(tmp->ptr, &name, &link, (const char**)&date,
                      &size))
                 == FTPDIR_NONE)
                 continue;
@@ -564,16 +566,16 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset)
             date = strchr(fn, '\n');
             if (*(date - 1) == '/') {
                 ftype = FTPDIR_DIR;
-                *date = '\0';
+                *(char*)date = '\0';
             } else if (*(date - 1) == '@') {
                 ftype = FTPDIR_LINK;
-                *(date - 1) = '\0';
+                *((char*)date - 1) = '\0';
             } else {
                 ftype = FTPDIR_FILE;
-                *(date - 1) = '\0';
+                *((char*)date - 1) = '\0';
             }
             date++;
-            tmp = convertLine(fn, strlen(fn), RAW_MODE, charset, doc_charset, false);
+            tmp = convertLine((const uint8_t*)fn, strlen(fn), RAW_MODE, charset, doc_charset, false);
             if (ftype == FTPDIR_LINK)
                 Strcat_char(tmp, '@');
             Strcat_m_charp(FTPDIRtmp, "<a href=\"", html_quote(file_quote(fn)),
@@ -584,14 +586,14 @@ Str loadFTPDir(struct Url* pu, wc_ces* charset)
                 else
                     Strcat_char(FTPDIRtmp, ' ');
             }
-            tmp = convertLine(date, strlen(date), RAW_MODE, charset, doc_charset, false);
+            tmp = convertLine((const uint8_t*)date, strlen(date), RAW_MODE, charset, doc_charset, false);
             Strcat_m_charp(FTPDIRtmp, html_quote(tmp->ptr), "\n", NULL);
         }
         Strcat_charp(FTPDIRtmp, "</pre>\n");
     } else {
         while (tmp = Strfgets(current_ftp.data), tmp->length > 0) {
             Strchop(tmp);
-            flist[nfile++] = mybasename(tmp->ptr);
+            flist[nfile++] = fpath_basename(tmp->ptr);
             if (nfile == nfile_max) {
                 nfile_max *= 2;
                 flist = New_Reuse(char*, flist, nfile_max);
@@ -646,8 +648,8 @@ void disconnectFTP(void)
 static Str size_int2str(int64_t);
 
 static int
-ex_ftpdir_name_size_date(char* line, char** name, char** link, char** date,
-    char** sizep)
+ex_ftpdir_name_size_date(const char* line, const char** name, const char** link, const char** date,
+    const char** sizep)
 {
     int ftype = FTPDIR_NONE;
     char *cp = line, *p;

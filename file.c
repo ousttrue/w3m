@@ -1,4 +1,5 @@
 #include "display.h"
+#include "filepath.h"
 #include "UrlFile.h"
 #include "growbuf.h"
 #include "input_stream.h"
@@ -78,7 +79,6 @@
 static int frame_source = 0;
 static int need_number = 0;
 
-static const char* guess_filename(const char* file);
 static int _MoveFile(const char* path1, const char* path2);
 static struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
     struct Buffer* (*loadproc)(struct CmdArgs* args, struct URLFile*, struct Buffer*),
@@ -1674,7 +1674,7 @@ page_loaded:
         if (do_download || gopher_download) {
             if (!src)
                 return NULL;
-            const char* file = guess_filename(pu.file);
+            const char* file = alloc_guess_filename(pu.file);
             if (f.scheme == SCM_GOPHER)
                 file = Sprintf("%s.html", file)->ptr;
             if (f.scheme == SCM_NEWS_GROUP)
@@ -6623,7 +6623,7 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
             break;
         if (gv.ptr[0] == '.' && (gv.ptr[1] == '\n' || gv.ptr[1] == '\r'))
             break;
-        Str lbuf = convertLine(gv.ptr, gv.len, HTML_MODE, charset, doc_charset, uf->scheme == SCM_NEWS);
+        Str lbuf = convertLine((const uint8_t*)gv.ptr, gv.len, HTML_MODE, charset, doc_charset, uf->scheme == SCM_NEWS);
         p = lbuf->ptr;
         for (q = p; *q && *q != '\t'; q++)
             ;
@@ -7180,7 +7180,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
         }
         linelen += lineBuf2->length;
         showProgress(&linelen, &trbyte);
-        lineBuf2 = convertLine(lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, uf.scheme == SCM_NEWS);
+        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, uf.scheme == SCM_NEWS);
         if (squeezeBlankLine) {
             squeeze_flag = FALSE;
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
@@ -7235,24 +7235,24 @@ pager_end:
 
 int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf)
 {
-    FILE* ff;
     int64_t linelen = 0, trbyte = 0;
     SignalFunc prevtrap = NULL;
     static sigjmp_buf env_bak;
     volatile int retval = 0;
-    char* volatile buf = NULL;
 
-    ff = fopen(tmpf, "wb");
+    FILE* ff = fopen(tmpf, "wb");
     if (ff == NULL) {
         /* fclose(f); */
         return -1;
     }
-    bcopy(AbortLoading, env_bak, sizeof(sigjmp_buf));
+
+    memcpy(env_bak, AbortLoading , sizeof(sigjmp_buf));
     if (SETJMP(AbortLoading) != 0) {
         goto _end;
     }
     TRAP_ON;
     int check = 0;
+    uint8_t* buf = NULL;
     if (scheme == SCM_NEWS) {
         char c;
         if (!stream)
@@ -7274,9 +7274,8 @@ int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf
             showProgress(&linelen, &trbyte);
         }
     } else {
+        buf = NewWithoutGC_N(uint8_t, SAVE_BUF_SIZE);
         int count;
-
-        buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
         while ((count = ist_read(stream, buf, SAVE_BUF_SIZE)) > 0) {
             if (fwrite(buf, 1, count, ff) != count) {
                 retval = -2;
@@ -7289,7 +7288,7 @@ int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf
 _end:
     bcopy(env_bak, AbortLoading, sizeof(sigjmp_buf));
     TRAP_OFF;
-    xfree(buf);
+    free(buf);
     fclose(ff);
     current_content_length = 0;
     return retval;
@@ -7391,7 +7390,7 @@ _MoveFile(const char* path1, const char* path2)
     FILE* f2;
     int is_pipe;
     int64_t linelen = 0, trbyte = 0;
-    char* buf = NULL;
+    uint8_t* buf = NULL;
     int count;
 
     struct InputStream* f1 = ist_from_path(path1);
@@ -7410,7 +7409,7 @@ _MoveFile(const char* path1, const char* path2)
         return -1;
     }
     current_content_length = 0;
-    buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+    buf = NewWithoutGC_N(uint8_t, SAVE_BUF_SIZE);
     while ((count = ist_read(f1, buf, SAVE_BUF_SIZE)) > 0) {
         fwrite(buf, 1, count, f2);
         linelen += count;
@@ -7554,7 +7553,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
     Str filen;
     const char *p, *q;
     pid_t pid;
-    char* lock;
+    const char* lock;
     const char* tmpf = NULL;
 
     if (fmInitialized) {
@@ -7664,36 +7663,11 @@ int checkOverWrite(struct CmdArgs* args, const char* path)
     if (stat(path, &st) < 0)
         return 0;
 
-    /* FIXME: gettextize? */
-    char* ans = inputAnswer(args, "File exists. Overwrite? (y/n)");
+    const char* ans = inputAnswer(args, "File exists. Overwrite? (y/n)");
     if (ans && TOLOWER(*ans) == 'y')
         return 0;
     else
         return -1;
-}
-
-#define DEF_SAVE_FILE "index.html"
-
-static const char*
-guess_filename(const char* file)
-{
-    char *p = NULL, *s;
-
-    if (file != NULL)
-        p = mybasename(file);
-    if (p == NULL || *p == '\0')
-        return DEF_SAVE_FILE;
-    s = p;
-    if (*p == '#')
-        p++;
-    while (*p != '\0') {
-        if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-            *p = '\0';
-            break;
-        }
-        p++;
-    }
-    return s;
 }
 
 const char* guess_save_name(struct Buffer* buf, const char* path)
@@ -7706,10 +7680,5 @@ const char* guess_save_name(struct Buffer* buf, const char* path)
         else if ((p = checkHeader(buf, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
             path = name->ptr;
     }
-    return guess_filename(path);
+    return alloc_guess_filename(path);
 }
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "filepath.h"
 #include "global.h"
 #include "constants.h"
 #include "content_type.h"
@@ -168,7 +169,7 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
     // int c, i, j, m, t;
 
     if (!(type && !strcasecmp(type, "image/png"))) {
-        char* tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(url))->ptr;
+        char* tmpf = Sprintf("%s/%s.png", tmp_dir, fpath_basename(url))->ptr;
 
         bool is_anim = type && !strcasecmp(type, "image/gif");
 

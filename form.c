@@ -1,4 +1,5 @@
 #include "form.h"
+#include "filepath.h"
 #include "UrlFile.h"
 #include "auth.h"
 #include "content_type.h"
@@ -575,7 +576,7 @@ static Str editor_input(struct CmdArgs* args, Str value, bool readonly)
             Strshrink(tmp, 1);
             Strcat_charp(tmp, "\r\n");
         }
-        tmp = convertLine(tmp->ptr, tmp->length, RAW_MODE, &charset, DisplayCharset, false);
+        tmp = convertLine((const uint8_t*)tmp->ptr, tmp->length, RAW_MODE, &charset, DisplayCharset, false);
         Strcat(out, tmp);
     }
     WcOption.auto_detect = auto_detect;
@@ -706,7 +707,7 @@ void form_write_from_file(FILE* f, const char* boundary, const char* name, const
     fprintf(f, "--%s\r\n", boundary);
     fprintf(f,
         "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n",
-        name, mybasename(filename));
+        name, fpath_basename(filename));
 
     const char* type = guessContentType(file);
     fprintf(f, "Content-Type: %s\r\n\r\n",

@@ -1,4 +1,5 @@
 #include "local_cgi.h"
+#include "filepath.h"
 #include "UrlFile.h"
 #include "qsort_util.h"
 #include "w3m.h"
@@ -304,7 +305,7 @@ FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, con
         uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
 
     const char* cgi_dir = mydirname(file);
-    const char* cgi_basename = mybasename(file);
+    const char* cgi_basename = fpath_basename(file);
     FILE* fr = NULL;
     pid_t pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
     /* Don't invoke gc after here, or the program might crash in some platforms */

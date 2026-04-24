@@ -9,7 +9,6 @@ pid_t open_pipe_rw(FILE** fr, FILE** fw);
 char* lastFileName(const char* path);
 
 char* mydirname(const char* s);
-char* mybasename(const char* s);
 Str myEditor(const char* cmd, const char* file, int line);
 Str myExtCommand(const char* cmd, const char* arg, int redirect);
 void setup_child(int child, int i, int f);
