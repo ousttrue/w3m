@@ -47,7 +47,7 @@ int fd_fd(struct input_stream_fd* handle);
 // FILE
 //
 struct input_stream_fp;
-struct InputStream* ist_from_fp(FILE* f, bool use_pipe);
+struct InputStream* ist_from_fp(FILE* f, FpCloseFunc func);
 void fp_close(struct input_stream_fp* handle);
 int fp_read(struct input_stream_fp* handle, uint8_t* buf, int len);
 int fp_fd(struct input_stream_fp* handle);

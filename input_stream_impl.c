@@ -83,15 +83,13 @@ ist_from_path(const char* path)
 //
 struct input_stream_fp {
     FILE* fp;
-    bool use_pipe;
+    FpCloseFunc close_func;
 };
 
 void fp_close(struct input_stream_fp* handle)
 {
-    if (handle->use_pipe) {
-        pclose(handle->fp);
-    } else {
-        fclose(handle->fp);
+    if (handle->close_func) {
+        handle->close_func(handle->fp);
     }
 }
 
@@ -105,7 +103,7 @@ int fp_fd(struct input_stream_fp* handle)
     return fileno(handle->fp);
 }
 
-struct InputStream* ist_from_fp(FILE* fp, bool use_pipe)
+struct InputStream* ist_from_fp(FILE* fp, FpCloseFunc func)
 {
     if (fp == NULL)
         return NULL;
@@ -113,7 +111,7 @@ struct InputStream* ist_from_fp(FILE* fp, bool use_pipe)
     struct input_stream_fp* handle = malloc(sizeof(struct input_stream_fp));
     *handle = (struct input_stream_fp) {
         .fp = fp,
-        .use_pipe = use_pipe,
+        .close_func = func,
     };
 
     struct InputStream* ist = malloc(sizeof(struct InputStream));

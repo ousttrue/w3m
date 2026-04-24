@@ -15,7 +15,8 @@ struct InputStream;
 struct ssl_st;
 
 struct InputStream* ist_from_path(const char* path);
-struct InputStream* ist_from_fp(FILE* f, bool use_pipe);
+typedef int(*FpCloseFunc)(FILE*);
+struct InputStream* ist_from_fp(FILE* f, FpCloseFunc func);
 struct InputStream* ist_from_buffer(const char* s, int len);
 struct InputStream* ist_from_socket(int sock, struct ssl_st* ssl);
 struct InputStream* ist_decode(struct InputStream* is, enum StreamEncoding encoding);
