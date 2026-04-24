@@ -16,5 +16,5 @@ struct span growbuf_span(struct growbuf* gb);
 
 void growbuf_clear(struct growbuf* gb);
 void growbuf_reserve(struct growbuf* gb, int leastarea);
-void growbuf_append(struct growbuf* gb, const unsigned char* src, int len);
+void growbuf_append(struct growbuf* gb, const unsigned char* src, size_t len);
 void growbuf_add_char(struct growbuf* gb, int ch);

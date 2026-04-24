@@ -9,7 +9,6 @@ const w3m_srcs = [_][]const u8{
     "StreamBuffer.c",
     "UrlFile.c",
     "auth.c",
-    "growbuf.c",
     "alloc.c",
     "line.c",
     "quote.c",

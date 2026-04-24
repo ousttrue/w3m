@@ -11,6 +11,7 @@ const input_dispatcher = @import("input_dispatcher.zig");
 const image = @import("image.zig");
 const history = @import("history.zig");
 const LineInput = @import("LineInput.zig");
+const Growbuf = @import("Growbuf.zig");
 
 pub export fn _dummy_() void {
     // export symbols ?
@@ -20,6 +21,7 @@ pub export fn _dummy_() void {
     std.log.debug("{}", .{image});
     std.log.debug("{}", .{history});
     std.log.debug("{}", .{LineInput});
+    std.log.debug("{}", .{Growbuf});
 }
 
 comptime {
@@ -183,4 +185,59 @@ export fn do_lineinput(
         .i_broken = li.i_broken,
         .need_redraw = li.need_redraw,
     };
+}
+
+export fn growbuf_create() ?*Growbuf {
+    const gb = Growbuf.create(runtime.allocator) catch {
+        return null;
+    };
+    return gb;
+}
+
+export fn growbuf_destroy(_gb: ?*Growbuf) void {
+    const gb = _gb orelse {
+        return;
+    };
+    gb.destroy(runtime.allocator);
+}
+
+export fn growbuf_clear(_gb: ?*Growbuf) void {
+    const gb = _gb orelse {
+        return;
+    };
+    gb.buf.clearRetainingCapacity();
+}
+
+export fn growbuf_reserve(_gb: ?*Growbuf, leastarea: usize) void {
+    const gb = _gb orelse {
+        return;
+    };
+    gb.buf.ensureTotalCapacity(runtime.allocator, leastarea) catch {};
+}
+
+export fn growbuf_str_view(_gb: ?*Growbuf) c.str_view {
+    const gb = _gb orelse {
+        return .{};
+    };
+    return gb.strView();
+}
+
+export fn growbuf_add_char(_gb: ?*Growbuf, ch: c_int) void {
+    const gb = _gb orelse {
+        return;
+    };
+    gb.buf.append(runtime.allocator, @intCast(ch)) catch {};
+}
+
+export fn growbuf_append(_gb: ?*Growbuf, _src: ?[*]const u8, len: usize) void {
+    const gb = _gb orelse {
+        return;
+    };
+    if (len == 0) {
+        return;
+    }
+    const src = _src orelse {
+        return;
+    };
+    gb.buf.appendSlice(runtime.allocator, src[0..len]) catch {};
 }
