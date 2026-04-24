@@ -41,7 +41,7 @@ enum LineMode {
 };
 
 void cleanup_line(Str s, enum LineMode mode);
-Str convertLine(const char* line, int len, enum LineMode mode, wc_ces* charset, wc_ces doc_charset, bool do_chop);
+Str convertLine(const uint8_t* line, int len, enum LineMode mode, wc_ces* charset, wc_ces doc_charset, bool do_chop);
 
 void addStr(char* p, Lineprop* pr, int len, int offset, int limit);
 void addPasswd(char* p, Lineprop* pr, int len, int offset, int limit);

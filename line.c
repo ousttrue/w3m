@@ -21,7 +21,7 @@ void cleanup_line(Str s, enum LineMode mode)
 }
 
 /// do_chop if SCM_NEWS
-Str convertLine(const char* p, int len, enum LineMode mode, wc_ces* charset, wc_ces doc_charset, bool do_chop)
+Str convertLine(const uint8_t* p, int len, enum LineMode mode, wc_ces* charset, wc_ces doc_charset, bool do_chop)
 {
     Str line = Strnew_wc_output(wc_Str_conv_with_detect(WcOption, p, len, charset, doc_charset, InnerCharset));
     if (mode != RAW_MODE)

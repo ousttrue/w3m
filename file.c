@@ -54,6 +54,7 @@
 
 #include <libwc/charset.h>
 
+#include <strings.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -303,7 +304,6 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
     char* emsg;
     char c;
     Str lineBuf2 = NULL;
-    Str tmp;
     TextList* headerlist;
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
     FILE* src = NULL;
@@ -323,14 +323,16 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
         if (src)
             newBuf->header_source = tmpf;
     }
+
+    struct growbuf* gb = growbuf_create();
     while (true) {
-        struct growbuf gb;
-        growbuf_init(&gb);
-        ist_gets_to_growbuf(uf->stream, &gb, true);
-        if (gb.length == 0) {
+        growbuf_clear(gb);
+        ist_gets_to_growbuf(uf->stream, gb, true);
+        struct str_view gv = growbuf_str_view(gb);
+        if (gv.len == 0) {
             break;
         }
-        tmp = Strnew_charp_n((const char*)gb.ptr, gb.length);
+        Str tmp = Strnew_charp_n(gv.ptr, gv.len);
         if (uf->scheme == SCM_NEWS && tmp->ptr[0] == '.')
             Strshrinkfirst(tmp, 1);
         if (w3m_reqlog) {
@@ -360,7 +362,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 /* header line is continued */
                 continue;
             lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-            lineBuf2 = convertLine(lineBuf2->ptr, lineBuf2->length, RAW_MODE,
+            lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, RAW_MODE,
                 mime_charset ? &mime_charset : &charset,
                 mime_charset ? mime_charset
                              : DocumentCharset,
@@ -449,9 +451,6 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 p = lineBuf2->ptr + 11;
                 version = 0;
             }
-#ifdef DEBUG
-            fprintf(stderr, "Set-Cookie: [%s]\n", p);
-#endif /* DEBUG */
             SKIP_BLANKS(p);
             while (*p != '=' && !IS_ENDT(*p))
                 Strcat_char(name, *(p++));
@@ -570,6 +569,8 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
         Strfree(lineBuf2);
         lineBuf2 = NULL;
     }
+    growbuf_destroy(gb);
+
     if (thru)
         addnewline(newBuf, "", propBuffer, NULL, 0, -1, -1);
     if (src)
@@ -5569,14 +5570,17 @@ static struct InputStream* _file_lp2;
 static Str
 file_feed(void)
 {
-    struct growbuf gb;
-    growbuf_init(&gb);
-    ist_gets_to_growbuf(_file_lp2, &gb, false);
-    if (gb.length == 0) {
+    struct growbuf* gb = growbuf_create();
+    ist_gets_to_growbuf(_file_lp2, gb, false);
+    struct str_view gv = growbuf_str_view(gb);
+    Str tmp = NULL;
+    if (gv.len > 0) {
+        tmp = Strnew_charp_n(gv.ptr, gv.len);
+    } else {
         ist_close(_file_lp2);
-        return NULL;
     }
-    return Strnew_charp_n(gb.ptr, gb.length);
+    growbuf_destroy(gb);
+    return tmp;
 }
 
 static void
@@ -6472,14 +6476,15 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     meta_charset = 0;
     if (ist_type(f->stream) != IST_ENCODED)
         f->stream = ist_decode(f->stream, f->encoding);
+    struct growbuf* gb = growbuf_create();
     while (true) {
-        struct growbuf gb;
-        growbuf_init(&gb);
-        ist_gets_to_growbuf(f->stream, &gb, true);
-        if (gb.length == 0) {
+        growbuf_clear(gb);
+        ist_gets_to_growbuf(f->stream, gb, true);
+        struct str_view gv = growbuf_str_view(gb);
+        if (gv.len == 0) {
             break;
         }
-        lineBuf2 = Strnew_charp_n((const char*)gb.ptr, gb.length);
+        lineBuf2 = Strnew_charp_n(gv.ptr, gv.len);
         if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
             if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
@@ -6508,10 +6513,11 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
             }
             meta_charset = 0;
         }
-        lineBuf2 = convertLine(lineBuf2->ptr, lineBuf2->length, HTML_MODE, &charset, doc_charset, f->scheme == SCM_NEWS);
+        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, HTML_MODE, &charset, doc_charset, f->scheme == SCM_NEWS);
         cur_document_charset = charset;
         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
     }
+    growbuf_destroy(gb);
     if (obuf.status != R_ST_NORMAL) {
         HTMLlineproc0("\n", &htmlenv1, internal);
     }
@@ -6595,7 +6601,7 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
     const char* unq = file_unquote(tmp->ptr);
-    tmp = convertLine(unq, strlen(unq), RAW_MODE,
+    tmp = convertLine((const uint8_t*)unq, strlen(unq), RAW_MODE,
         charset, doc_charset, false);
     q = html_quote(tmp->ptr);
     tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
@@ -6607,16 +6613,17 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
     TRAP_ON;
 
     pre = 0;
+
+    struct growbuf* gb = growbuf_create();
     while (1) {
-        struct growbuf gb;
-        growbuf_init(&gb);
-        ist_gets_to_growbuf(uf->stream, &gb, false);
-        if (gb.length == 0)
+        growbuf_clear(gb);
+        ist_gets_to_growbuf(uf->stream, gb, false);
+        struct str_view gv = growbuf_str_view(gb);
+        if (gv.len == 0)
             break;
-        lbuf = Strnew_charp_n((const char*)gb.ptr, gb.length);
-        if (lbuf->ptr[0] == '.' && (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
+        if (gv.ptr[0] == '.' && (gv.ptr[1] == '\n' || gv.ptr[1] == '\r'))
             break;
-        lbuf = convertLine(lbuf->ptr, lbuf->length, HTML_MODE, charset, doc_charset, uf->scheme == SCM_NEWS);
+        Str lbuf = convertLine(gv.ptr, gv.len, HTML_MODE, charset, doc_charset, uf->scheme == SCM_NEWS);
         p = lbuf->ptr;
         for (q = p; *q && *q != '\t'; q++)
             ;
@@ -6698,6 +6705,7 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
             Strcat_m_charp(tmp, html_quote(name->ptr + 1), "\n", NULL);
         }
     }
+    growbuf_destroy(gb);
 
 gopher_end:
     TRAP_OFF;
@@ -6715,7 +6723,7 @@ Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset)
     Str tmp = parsedURL2Str(pu);
     char* p = html_quote(tmp->ptr);
     const char* unq = file_unquote(tmp->ptr);
-    tmp = convertLine(unq, strlen(unq), RAW_MODE,
+    tmp = convertLine((const uint8_t*)unq, strlen(unq), RAW_MODE,
         charset, doc_charset, false);
     char* q = html_quote(tmp->ptr);
     tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
@@ -6768,14 +6776,15 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     nlines = 0;
     if (ist_type(uf->stream) != IST_ENCODED)
         uf->stream = ist_decode(uf->stream, uf->encoding);
+    struct growbuf* gb = growbuf_create();
     while (true) {
-        struct growbuf gb;
-        growbuf_init(&gb);
-        ist_gets_to_growbuf(uf->stream, &gb, true);
-        if (gb.length == 0) {
+        growbuf_clear(gb);
+        ist_gets_to_growbuf(uf->stream, gb, true);
+        struct str_view gv = growbuf_str_view(gb);
+        if (gv.len == 0) {
             break;
         }
-        lineBuf2 = Strnew_charp_n(gb.ptr, gb.length);
+        lineBuf2 = Strnew_charp_n(gv.ptr, gv.len);
         if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
             if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
@@ -6795,7 +6804,7 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
         showProgress(&linelen, &trbyte);
         if (frame_source)
             continue;
-        lineBuf2 = convertLine(lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, uf->scheme == SCM_NEWS);
+        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, uf->scheme == SCM_NEWS);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
                 ++nlines;
@@ -6809,6 +6818,8 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
         addnewline(newBuf, lineBuf2->ptr, propBuffer, colorBuffer,
             lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
     }
+    growbuf_destroy(gb);
+
 _end:
     TRAP_OFF;
     newBuf->topLine = newBuf->firstLine;
@@ -7147,13 +7158,14 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     TRAP_ON;
 
     uf = init_stream(SCM_UNKNOWN, NULL);
+    struct growbuf* gb = growbuf_create();
     for (i = 0; i < plen; i++) {
-        struct growbuf gb;
-        growbuf_init(&gb);
-        ist_gets_to_growbuf(buf->pagerSource, &gb, true);
-        if (!gb.length == 0)
+        growbuf_clear(gb);
+        ist_gets_to_growbuf(buf->pagerSource, gb, true);
+        struct str_view gv = growbuf_str_view(gb);
+        if (gv.len == 0)
             return NULL;
-        lineBuf2 = Strnew_charp_n((const char*)gb.ptr, gb.length);
+        lineBuf2 = Strnew_charp_n(gv.ptr, gv.len);
         if (lineBuf2->length == 0) {
             /* Assume that `cmd == buf->filename' */
             if (buf->filename)
@@ -7205,6 +7217,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
                 buf->firstLine->prev = NULL;
         }
     }
+    growbuf_destroy(gb);
 pager_end:
     TRAP_OFF;
 

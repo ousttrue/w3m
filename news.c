@@ -55,15 +55,15 @@ news_command(News* news, const char* cmd, const char* arg, int* status)
         return NULL;
     *status = -1;
 
+    struct growbuf* gb = growbuf_create();
+    ist_gets_to_growbuf(news->rf, gb, false);
+    struct str_view gv = growbuf_str_view(gb);
     Str tmp = NULL;
-    struct growbuf gb;
-    growbuf_init(&gb);
-    ist_gets_to_growbuf(news->rf, &gb, false);
-
-    if (gb.length) {
-        tmp = Strnew_charp_n((const char*)gb.ptr, gb.length);
+    if (gv.len) {
+        tmp = Strnew_charp_n(gv.ptr, gv.len);
         sscanf(tmp->ptr, "%d", status);
     }
+    growbuf_destroy(gb);
     return tmp;
 }
 
@@ -387,14 +387,15 @@ Str loadNewsgroup(struct CmdArgs* args, struct Url* pu, wc_ces* charset)
     struct URLFile f;
     if (status == 224) {
         f.scheme = SCM_NEWS;
+        struct growbuf* gb = growbuf_create();
         while (1) {
-            struct growbuf gb;
-            growbuf_init(&gb);
-            ist_gets_to_growbuf(current_news.rf, &gb, false);
-            if (gb.length == 0)
+            growbuf_clear(gb);
+            ist_gets_to_growbuf(current_news.rf, gb, false);
+            struct str_view gv = growbuf_str_view(gb);
+            if (gv.len == 0)
                 break;
 
-            tmp = Strnew_charp_n((const char*)gb.ptr, gb.length);
+            tmp = Strnew_charp_n(gv.ptr, gv.len);
             if (NEWS_ENDLINE(tmp->ptr))
                 break;
             if (sscanf(tmp->ptr, "%d", &i) != 1)
@@ -417,18 +418,19 @@ Str loadNewsgroup(struct CmdArgs* args, struct Url* pu, wc_ces* charset)
                 continue;
             *q = '\0';
             tmp = decodeMIME(Strnew_charp(s), &mime_charset);
-            s = convertLine(tmp->ptr, tmp->length, HEADER_MODE,
+            s = convertLine((const uint8_t*)tmp->ptr, tmp->length, HEADER_MODE,
                 mime_charset ? &mime_charset : charset,
                 mime_charset ? mime_charset : doc_charset, f.scheme == SCM_NEWS)
                     ->ptr;
             tmp = decodeMIME(Strnew_charp(n), &mime_charset);
-            n = convertLine(tmp->ptr, tmp->length, HEADER_MODE,
+            n = convertLine((const uint8_t*)tmp->ptr, tmp->length, HEADER_MODE,
                 mime_charset ? &mime_charset : charset,
                 mime_charset ? mime_charset : doc_charset, f.scheme == SCM_NEWS)
                     ->ptr;
             add_news_message(page, i, t, n, s, p, scheme,
                 pu->scheme == SCM_NNTP_GROUP ? qgroup : NULL);
         }
+        growbuf_destroy(gb);
     } else {
         f = init_stream(SCM_NEWS, current_news.rf);
         buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -471,14 +473,15 @@ news_list:
     news_command(&current_news, "LIST", tmp->ptr, &status);
     if (status != 215)
         goto news_end;
+    struct growbuf* gb = growbuf_create();
     while (1) {
-        struct growbuf gb;
-        growbuf_init(&gb);
-        ist_gets_to_growbuf(current_news.rf, &gb, false);
-        if (gb.length == 0)
+        growbuf_clear(gb);
+        ist_gets_to_growbuf(current_news.rf, gb, false);
+        struct str_view gv = growbuf_str_view(gb);
+        if (gv.len== 0)
             break;
 
-        tmp = Strnew_charp_n((const char*)gb.ptr, gb.length);
+        tmp = Strnew_charp_n(gv.ptr, gv.len);
         if (NEWS_ENDLINE(tmp->ptr))
             break;
         if (flag < 2) {
@@ -499,6 +502,7 @@ news_list:
             Sprintf("<tr><td align=right>%d<td><a href=\"%s%s\">%s</a>\n", i,
                 scheme, html_quote(file_quote(p)), html_quote(p)));
     }
+    growbuf_destroy(gb);
     if (flag == 2)
         Strcat_charp(page, "</table>\n");
 

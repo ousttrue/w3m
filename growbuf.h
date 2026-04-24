@@ -1,28 +1,20 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include "str_view.h"
 
-typedef void* (*GrowbufReallocFunc)(void*, size_t);
-typedef void (*GrowbufFreeFunc)(void*);
+struct growbuf;
+struct growbuf* growbuf_create();
+void growbuf_destroy(struct growbuf* gb);
+struct str_view growbuf_str_view(struct growbuf* gb);
 
-struct growbuf {
+struct span {
     uint8_t* ptr;
-    int length;
-    int area_size;
-    GrowbufReallocFunc realloc_proc;
-    GrowbufFreeFunc free_proc;
+    size_t len;
 };
+struct span growbuf_span(struct growbuf* gb);
 
-void growbuf_init(struct growbuf* gb);
-void growbuf_init_without_GC(struct growbuf* gb);
 void growbuf_clear(struct growbuf* gb);
 void growbuf_reserve(struct growbuf* gb, int leastarea);
 void growbuf_append(struct growbuf* gb, const unsigned char* src, int len);
-
-static inline void GROWBUF_ADD_CHAR(struct growbuf* gb, int ch)
-{
-    if (gb->length >= gb->area_size) {
-        growbuf_reserve(gb, gb->length + 1);
-    }
-    gb->ptr[gb->length++] = ch;
-}
+void growbuf_add_char(struct growbuf* gb, int ch);

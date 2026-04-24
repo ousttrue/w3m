@@ -1,7 +1,6 @@
 #pragma once
 #include "input_stream.h"
 #include <stdio.h>
-#include "growbuf.h"
 #include "stream_encoding.h"
 #include "StreamBuffer.h"
 
@@ -18,7 +17,7 @@ struct ssl_handle {
 
 struct encoded_stream_handle {
     struct InputStream* is;
-    struct growbuf gb;
+    struct growbuf *gb;
     int pos;
     enum StreamEncoding encoding;
 };

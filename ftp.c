@@ -69,13 +69,15 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
         return NULL;
     *status = -1; /* error */
 
-    struct growbuf gb;
-    growbuf_init(&gb);
-    ist_gets_to_growbuf(ftp->rf, &gb, false);
-    if (gb.length == 0)
+    struct growbuf* gb = growbuf_create();
+    ist_gets_to_growbuf(ftp->rf, gb, false);
+    struct str_view gv = growbuf_str_view(gb);
+    if (gv.len == 0) {
+        growbuf_destroy(gb);
         return NULL;
-
-    Str tmp = Strnew_m_charp((const char*)gb.ptr, gb.length);
+    }
+    Str tmp = Strnew_m_charp(gv.ptr, gv.len);
+    growbuf_destroy(gb);
     if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ')
         sscanf(tmp->ptr, "%d", status);
 
@@ -90,18 +92,23 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
      * as Minus), followed by text.  The last line will begin
      * with the same code, followed immediately by Space <SP>,
      * optionally some text, and the Telnet end-of-line code. */
-    while (1) {
-        struct growbuf gb;
-        growbuf_init(&gb);
-        ist_gets_to_growbuf(ftp->rf, &gb, false);
-        if (gb.length == 0)
-            break;
 
-        tmp = Strnew_m_charp((const char*)gb.ptr, gb.length);
-        if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ') {
-            sscanf(tmp->ptr, "%d", status);
-            break;
+    {
+        struct growbuf* gb = growbuf_create();
+        while (1) {
+            growbuf_clear(gb);
+            ist_gets_to_growbuf(ftp->rf, gb, false);
+            struct str_view gv = growbuf_str_view(gb);
+            if (gv.len == 0)
+                break;
+
+            Str tmp = Strnew_m_charp(gv.ptr, gv.len);
+            if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ') {
+                sscanf(tmp->ptr, "%d", status);
+                break;
+            }
         }
+        growbuf_destroy(gb);
     }
     return tmp;
 }

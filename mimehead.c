@@ -59,12 +59,11 @@ ha2d(char x, char y)
 
 Str decodeB(char** ww)
 {
-    struct growbuf gb;
-    growbuf_init(&gb);
-    decodeB_to_growbuf(&gb, ww);
-
-    Str s = Strnew_size(gb.length);
-    Strcat_charp_n(s, (const char*)gb.ptr, gb.length);
+    struct growbuf* gb = growbuf_create();
+    decodeB_to_growbuf(gb, ww);
+    struct str_view gv = growbuf_str_view(gb);
+    Str s = Strnew_charp_n(gv.ptr, gv.len);
+    growbuf_destroy(gb);
     return s;
 }
 
@@ -106,43 +105,38 @@ void decodeB_to_growbuf(struct growbuf* gb, char** ww)
         d[1] = ((c[1] << 4) | (c[2] >> 2));
         d[2] = ((c[2] << 6) | c[3]);
         for (i = 0; i < 3 - n_pad; i++) {
-            GROWBUF_ADD_CHAR(gb, d[i]);
+            growbuf_add_char(gb, d[i]);
         }
         if (n_pad || *wp == '\0' || *wp == '?')
             break;
     }
 last:
-    growbuf_reserve(gb, gb->length + 1);
-    gb->ptr[gb->length] = '\0';
+    growbuf_add_char(gb, '\0');
     *ww = wp;
     return;
 }
 
 Str decodeU(char** ww)
 {
-    struct growbuf gb;
-    growbuf_init(&gb);
-    decodeU_to_growbuf(&gb, ww);
-
-    Str s = Strnew_size(gb.length);
-    Strcat_charp_n(s, (const char*)gb.ptr, gb.length);
+    struct growbuf* gb = growbuf_create();
+    decodeU_to_growbuf(gb, ww);
+    struct str_view gv = growbuf_str_view(gb);
+    Str s = Strnew_charp_n(gv.ptr, gv.len);
+    growbuf_destroy(gb);
     return s;
 }
 
 void decodeU_to_growbuf(struct growbuf* gb, char** ww)
 {
-    unsigned char c1, c2;
     char* w = *ww;
-    int n, i;
-
     if (*w <= 0x20 || *w >= 0x60)
         return;
-    n = *w - 0x20;
-    growbuf_reserve(gb, n + 1);
-    for (w++, i = 2; *w != '\0' && n; n--) {
-        c1 = (w[0] - 0x20) % 0x40;
-        c2 = (w[1] - 0x20) % 0x40;
-        gb->ptr[gb->length++] = (c1 << i) | (c2 >> (6 - i));
+    int n = *w - 0x20;
+    w++;
+    for (int i = 2; *w != '\0' && n; n--) {
+        unsigned char c1 = (w[0] - 0x20) % 0x40;
+        unsigned char c2 = (w[1] - 0x20) % 0x40;
+        growbuf_add_char(gb, (c1 << i) | (c2 >> (6 - i)));
         if (i == 6) {
             w += 2;
             i = 2;
@@ -151,7 +145,7 @@ void decodeU_to_growbuf(struct growbuf* gb, char** ww)
             i += 2;
         }
     }
-    gb->ptr[gb->length] = '\0';
+    growbuf_add_char(gb, '\0');
     return;
 }
 
@@ -178,20 +172,17 @@ Str decodeQ(char** ww)
 /* RFC2045 (6.7. Quoted-Printable Content-Transfer-Encoding) */
 Str decodeQP(char** ww)
 {
-    struct growbuf gb;
-    growbuf_init(&gb);
-    decodeQP_to_growbuf(&gb, ww);
-
-    Str s = Strnew_size(gb.length);
-    Strcat_charp_n(s, (const char*)gb.ptr, gb.length);
+    struct growbuf* gb = growbuf_create();
+    decodeQP_to_growbuf(gb, ww);
+    struct str_view gv = growbuf_str_view(gb);
+    Str s = Strnew_charp_n(gv.ptr, gv.len);
+    growbuf_destroy(gb);
     return s;
 }
 
 void decodeQP_to_growbuf(struct growbuf* gb, char** ww)
 {
     char* w = *ww;
-
-    growbuf_reserve(gb, strlen(w) + 1);
     for (; *w != '\0'; w++) {
         if (*w == '=') {
             w++;
@@ -203,13 +194,14 @@ void decodeQP_to_growbuf(struct growbuf* gb, char** ww)
             } else {
                 if (*w == '\0' || *(w + 1) == '\0')
                     break;
-                gb->ptr[gb->length++] = ha2d(*w, *(w + 1));
+                growbuf_add_char(gb, ha2d(*w, *(w + 1)));
                 w++;
             }
-        } else
-            gb->ptr[gb->length++] = *w;
+        } else {
+            growbuf_add_char(gb, *w);
+        }
     }
-    gb->ptr[gb->length] = '\0';
+    growbuf_add_char(gb, '\0');
     *ww = w;
     return;
 }

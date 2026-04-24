@@ -6,15 +6,16 @@
 
 void ist_gets_to_growbuf(struct InputStream* ist, struct growbuf* gb, bool check_crnl)
 {
-    gb->length = 0;
-
+    growbuf_clear(gb);
+    struct str_view gv;
     while (!ist_eos(ist)) {
         if (ist_drain(ist)) {
             continue;
         }
-        if (check_crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
+        gv = growbuf_str_view(gb);
+        if (check_crnl && gv.len > 0 && gv.ptr[gv.len - 1] == '\r') {
             if (ist_peek(ist) == '\n') {
-                GROWBUF_ADD_CHAR(gb, '\n');
+                growbuf_add_char(gb, '\n');
                 ist_getc(ist);
             }
             break;
@@ -23,12 +24,11 @@ void ist_gets_to_growbuf(struct InputStream* ist, struct growbuf* gb, bool check
             ? ist_buffered_until(ist, "\r\n")
             : ist_buffered_until(ist, "\n");
         growbuf_append(gb, span.ptr, span.length);
-        if (gb->length > 0 && gb->ptr[gb->length - 1] == '\n')
+        gv = growbuf_str_view(gb);
+        if (gv.len > 0 && gv.ptr[gv.len - 1] == '\n')
             break;
     }
-
-    growbuf_reserve(gb, gb->length + 1);
-    gb->ptr[gb->length] = '\0';
+    growbuf_add_char(gb, '\0');
     return;
 }
 
@@ -36,56 +36,44 @@ static void
 ens_close(union input_handle* handle)
 {
     ist_close(handle->ens.is);
-    growbuf_clear(&handle->ens.gb);
-}
-
-static void
-memchop(char* p, int* len)
-{
-    char* q;
-    for (q = p + *len; q > p; --q) {
-        if (q[-1] != '\n' && q[-1] != '\r')
-            break;
-    }
-    if (q != p + *len)
-        *q = '\0';
-    *len = q - p;
-    return;
+    growbuf_destroy(handle->ens.gb);
 }
 
 static int
 ens_read(union input_handle* handle, uint8_t* buf, int len)
 {
-    if (handle->ens.pos == handle->ens.gb.length) {
-        struct growbuf gbtmp;
-
-        ist_gets_to_growbuf(handle->ens.is, &handle->ens.gb, true);
-        if (handle->ens.gb.length == 0)
+    struct str_view gv = growbuf_str_view(handle->ens.gb);
+    if (handle->ens.pos == growbuf_str_view(handle->ens.gb).len) {
+        ist_gets_to_growbuf(handle->ens.is, handle->ens.gb, true);
+        gv = growbuf_str_view(handle->ens.gb);
+        if (gv.len == 0)
             return 0;
-        if (handle->ens.encoding == ENC_BASE64)
-            memchop(handle->ens.gb.ptr, &handle->ens.gb.length);
-        else if (handle->ens.encoding == ENC_UUENCODE) {
-            if (handle->ens.gb.length >= 5 && !strncmp(handle->ens.gb.ptr, "begin", 5))
-                ist_gets_to_growbuf(handle->ens.is, &handle->ens.gb, true);
-            memchop(handle->ens.gb.ptr, &handle->ens.gb.length);
+
+        if (handle->ens.encoding == ENC_BASE64) {
+            gv = sv_chop(gv);
+        } else if (handle->ens.encoding == ENC_UUENCODE) {
+            if (gv.len >= 5 && !strncmp(gv.ptr, "begin", 5))
+                ist_gets_to_growbuf(handle->ens.is, handle->ens.gb, true);
+            gv = sv_chop(growbuf_str_view(handle->ens.gb));
         }
-        growbuf_init_without_GC(&gbtmp);
-        char* p = (char*)handle->ens.gb.ptr;
+
+        struct growbuf* gbtmp = growbuf_create();
+        char* p = (char*)gv.ptr;
         if (handle->ens.encoding == ENC_QUOTE)
-            decodeQP_to_growbuf(&gbtmp, &p);
+            decodeQP_to_growbuf(gbtmp, &p);
         else if (handle->ens.encoding == ENC_BASE64)
-            decodeB_to_growbuf(&gbtmp, &p);
+            decodeB_to_growbuf(gbtmp, &p);
         else if (handle->ens.encoding == ENC_UUENCODE)
-            decodeU_to_growbuf(&gbtmp, &p);
-        growbuf_clear(&handle->ens.gb);
+            decodeU_to_growbuf(gbtmp, &p);
+        growbuf_destroy(handle->ens.gb);
         handle->ens.gb = gbtmp;
         handle->ens.pos = 0;
     }
 
-    if (len > handle->ens.gb.length - handle->ens.pos)
-        len = handle->ens.gb.length - handle->ens.pos;
+    if (len > gv.len - handle->ens.pos)
+        len = gv.len - handle->ens.pos;
 
-    memcpy(buf, &handle->ens.gb.ptr[handle->ens.pos], len);
+    memcpy(buf, &gv.ptr[handle->ens.pos], len);
     handle->ens.pos += len;
     return len;
 }
@@ -104,7 +92,7 @@ struct InputStream* ist_decode(struct InputStream* is, enum StreamEncoding encod
         .pos = 0,
         .encoding = encoding,
     };
-    growbuf_init_without_GC(&stream->handle.ens.gb);
+    stream->handle.ens.gb = growbuf_create();
     stream->read = ens_read;
     stream->close = ens_close;
     return stream;

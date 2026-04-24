@@ -87,7 +87,7 @@ Str Strnew_charp(const char* p)
         exit(1);
     x->area_size = n;
     x->length = len;
-    bcopy((void*)p, (void*)x->ptr, len);
+    memcpy(x->ptr, p, len);
     x->ptr[x->length] = '\0';
     return x;
 }
@@ -108,17 +108,14 @@ Str Strnew_m_charp(const char* p, ...)
 
 Str Strnew_charp_n(const char* p, int n)
 {
-    Str x;
-    int len;
-
     if (p == NULL)
         return Strnew_size(n);
-    x = malloc(sizeof(struct _Str));
+    Str x = malloc(sizeof(struct _Str));
     if (x == NULL)
         exit(1);
     if (n < 0 || n >= STR_SIZE_MAX)
         n = STR_SIZE_MAX - 1;
-    len = n;
+    int len = n;
     if (n + 1 < INITIAL_STR_SIZE)
         n = INITIAL_STR_SIZE - 1;
     x->ptr = malloc(n + 1);
@@ -126,7 +123,7 @@ Str Strnew_charp_n(const char* p, int n)
         exit(1);
     x->area_size = n + 1;
     x->length = len;
-    bcopy((void*)p, (void*)x->ptr, len);
+    memcpy(x->ptr, p, len);
     x->ptr[x->length] = '\0';
     return x;
 }
@@ -161,7 +158,7 @@ void Strcopy(Str x, Str y)
             exit(1);
         x->area_size = y->length + 1;
     }
-    bcopy((void*)y->ptr, (void*)x->ptr, y->length + 1);
+    memcpy(x->ptr, y->ptr, y->length + 1);
     x->length = y->length;
 }
 
@@ -184,7 +181,7 @@ void Strcopy_charp(Str x, const char* y)
             exit(1);
         x->area_size = len + 1;
     }
-    bcopy((void*)y, (void*)x->ptr, len);
+    memcpy(x->ptr, y, len);
     x->ptr[len] = '\0';
     x->length = len;
 }
@@ -207,7 +204,7 @@ void Strcopy_charp_n(Str x, const char* y, int n)
             exit(1);
         x->area_size = len + 1;
     }
-    bcopy((void*)y, (void*)x->ptr, len);
+    memcpy(x->ptr, y, len);
     x->ptr[len] = '\0';
     x->length = len;
 }
@@ -237,7 +234,7 @@ void Strcat_charp_n(Str x, const char* y, int n)
             exit(1);
         x->area_size = newlen;
     }
-    bcopy((void*)y, (void*)&x->ptr[x->length], n);
+    memcpy(&x->ptr[x->length], y, n);
     x->length += n;
     x->ptr[x->length] = '\0';
 }
