@@ -92,58 +92,8 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 /* there is no header */
                 break;
             /* last header */
-        } else if (!(w3m_dump & DUMP_HEAD)) {
-            if (lineBuf2) {
-                Strcat(lineBuf2, tmp);
-            } else {
-                lineBuf2 = tmp;
-            }
-            c = ist_peek(uf->stream);
-            if (c == ' ' || c == '\t')
-                /* header line is continued */
-                continue;
-            lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-            lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, RAW_MODE,
-                mime_charset ? &mime_charset : &charset,
-                mime_charset ? mime_charset
-                             : DocumentCharset,
-                false);
-            /* separated with line and stored */
-            tmp = Strnew_size(lineBuf2->length);
-            for (p = lineBuf2->ptr; *p; p = q) {
-                for (q = p; *q && *q != '\r' && *q != '\n'; q++)
-                    ;
-                lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer,
-                    NULL);
-                Strcat(tmp, lineBuf2);
-                if (thru)
-                    addnewline(newBuf, lineBuf2->ptr, propBuffer, NULL,
-                        lineBuf2->length, FOLD_BUFFER_WIDTH, -1);
-                for (; *q && (*q == '\r' || *q == '\n'); q++)
-                    ;
-            }
-            if (thru && activeImage && displayImage) {
-                Str src = NULL;
-                if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
-                    const char* tmpf = &tmp->ptr[12];
-                    SKIP_BLANKS(tmpf);
-                    src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
-                        "\" alt=\"X-Image-URL\">", NULL);
-                }
-                if (src) {
-                    struct Line* l;
-                    wc_ces old_charset = newBuf->document_charset;
-                    struct URLFile f = init_stream(SCM_LOCAL, ist_from_buffer(src->ptr, src->length));
-                    loadHTMLstream(&f, newBuf, NULL, TRUE);
-                    UFclose(&f);
-                    for (l = newBuf->lastLine; l && l->real_linenumber;
-                        l = l->prev)
-                        l->real_linenumber = 0;
-                    newBuf->document_charset = old_charset;
-                }
-            }
-            lineBuf2 = tmp;
-        } else {
+        }
+        else {
             lineBuf2 = tmp;
         }
         if ((uf->scheme == SCM_HTTP

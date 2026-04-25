@@ -561,11 +561,10 @@ page_loaded:
         return NO_BUFFER;
     }
 
-    if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress
-        && !(w3m_dump & DUMP_EXTRA)) {
+    if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
         uncompress_stream(&f, &pu.real_file);
     } else if (f.compression != CMP_NOCOMPRESS) {
-        if (!(w3m_dump & DUMP_SOURCE) && (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
+        if ((is_text_type(t) || searchExtViewer(t))) {
             if (t_buf == NULL)
                 t_buf = newBuffer(INIT_BUFFER_WIDTH);
             uncompress_stream(&f, &t_buf->sourcefile);
@@ -593,31 +592,8 @@ page_loaded:
         proc = loadHTMLBuffer;
     else if (is_plain_text_type(t))
         proc = loadBuffer;
-    else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
+    else if (activeImage && displayImage && !useExtImageViewer && !strncasecmp(t, "image/", 6))
         proc = loadImageBuffer;
-    else if (w3m_backend)
-        ;
-    else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
-        if (!do_download && !gopher_download && searchExtViewer(t) != NULL) {
-            proc = DO_EXTERNAL;
-        } else {
-            TRAP_OFF;
-            if (pu.scheme == SCM_LOCAL) {
-                UFclose(&f);
-                _doFileCopy(args, pu.real_file,
-                    conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
-            } else {
-                if (DecodeCTE && ist_type(f.stream) != IST_ENCODED)
-                    f.stream = ist_decode(f.stream, f.encoding);
-                if (doFileSave(args, f, guess_save_name(t_buf, pu.file)) == 0)
-                    UFhalfclose(&f);
-                else
-                    UFclose(&f);
-            }
-            return NO_BUFFER;
-        }
-    } else if (w3m_dump & DUMP_FRAME)
-        return NULL;
 
     if (t_buf == NULL)
         t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -639,8 +615,6 @@ page_loaded:
     if (b && b != NO_BUFFER) {
         b->real_scheme = f.scheme;
         b->real_type = real_type;
-        if (w3m_backend)
-            b->type = allocStr(t, -1);
         if (pu.label) {
             if (proc == loadHTMLBuffer) {
                 struct Anchor* a;
@@ -1005,10 +979,6 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        if (w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE));
-        if (w3m_dump & DUMP_SOURCE)
-            continue;
         showProgress(&linelen, &trbyte);
         if (frame_source)
             continue;
@@ -1299,7 +1269,7 @@ openGeneralPagerBuffer(struct CmdArgs* args, struct InputStream* stream)
             stream = ist_decode(stream, uf.encoding);
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
-    } else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
+    } else if (activeImage && displayImage && !useExtImageViewer && !strncasecmp(t, "image/", 6)) {
         buf = loadImageBuffer(args, &uf, t_buf);
         buf->type = "text/html";
     } else {

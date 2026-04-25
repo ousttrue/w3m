@@ -18,7 +18,6 @@
 #include "signal_util.h"
 #include "downloadlist.h"
 #include "alarm.h"
-#include "backend.h"
 #include "search.h"
 #include "wc_util.h"
 #include "maparea.h"
@@ -461,31 +460,6 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                     WrapDefault = FALSE;
                 else
                     WrapDefault = TRUE;
-            } else if (!strcmp("-dump", argv[i]))
-                w3m_dump = DUMP_BUFFER;
-            else if (!strcmp("-dump_source", argv[i]))
-                w3m_dump = DUMP_SOURCE;
-            else if (!strcmp("-dump_head", argv[i]))
-                w3m_dump = DUMP_HEAD;
-            else if (!strcmp("-dump_both", argv[i]))
-                w3m_dump = (DUMP_HEAD | DUMP_SOURCE);
-            else if (!strcmp("-dump_extra", argv[i]))
-                w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
-            else if (!strcmp("-halfdump", argv[i]))
-                w3m_dump = DUMP_HALFDUMP;
-            else if (!strcmp("-halfload", argv[i])) {
-                w3m_dump = 0;
-                w3m_halfload = TRUE;
-                DefaultType = default_type = "text/html";
-            } else if (!strcmp("-backend", argv[i])) {
-                w3m_backend = TRUE;
-            } else if (!strcmp("-backend_batch", argv[i])) {
-                w3m_backend = TRUE;
-                if (++i >= argc)
-                    usage();
-                if (!backend_batch_commands)
-                    backend_batch_commands = newTextList();
-                pushText(backend_batch_commands, argv[i]);
             } else if (!strcmp("-cols", argv[i])) {
                 if (++i >= argc)
                     usage();
@@ -606,35 +580,13 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK);
 
-    if (!isatty(1) && !w3m_dump) {
-        /* redirected output */
-        w3m_dump = DUMP_BUFFER;
-    }
-    if (w3m_dump) {
-        if (COLS == 0)
-            COLS = DEFAULT_COLS;
-    }
-
-    if (!w3m_dump && !w3m_backend) {
-        fmInit();
-        signal(SIGWINCH, resize_hook);
-    } else if (w3m_halfdump && displayImage)
-        activeImage = TRUE;
-
+    fmInit();
+    signal(SIGWINCH, resize_hook);
     sync_with_option(args);
     initCookie();
     if (UseHistory)
         loadHistory(HistoryURL);
 
-    /*  if (w3m_dump)
-     *    WcOption.pre_conv = WC_TRUE;
-     */
-
-    if (w3m_backend)
-        backend(args);
-
-    if (w3m_dump)
-        signal(SIGINT, SIG_IGN);
     signal(SIGCHLD, sig_chld);
     signal(SIGPIPE, SigPipe);
 
@@ -704,11 +656,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 url = file_to_url(load_argv[i]);
             else
                 url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
-            if (w3m_dump == DUMP_HEAD) {
-                request = New(struct Form);
-                request->method = FORM_METHOD_HEAD;
-                newbuf = loadGeneralFile(args, url, NULL, NO_REFERER, 0, request);
-            } else {
+            {
                 if (post_file && i == 0) {
                     FILE* fp;
                     Str body;
@@ -776,21 +724,9 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
             Currentbuf->nextBuffer = newbuf;
             Currentbuf = newbuf;
         }
-        if (!w3m_dump || w3m_dump == DUMP_BUFFER) {
-            if (Currentbuf->frameset != NULL && RenderFrame)
-                rFrame(args);
-        }
-        if (w3m_dump)
-            do_dump(Currentbuf);
-        else {
-            Currentbuf = newbuf;
-        }
-    }
-    if (w3m_dump) {
-        if (err_msg->length)
-            fprintf(stderr, "%s", err_msg->ptr);
-        save_cookies();
-        w3m_exit(0);
+        if (Currentbuf->frameset != NULL && RenderFrame)
+            rFrame(args);
+        Currentbuf = newbuf;
     }
 
     if (checkAddDownloadList()) {
@@ -869,44 +805,6 @@ void dump_source(struct Buffer* buf)
         putchar(c);
     }
     fclose(f);
-}
-
-void dump_head(struct Buffer* buf)
-{
-    if (buf->document_header == NULL) {
-        if (w3m_dump & DUMP_EXTRA)
-            printf("\n");
-        return;
-    }
-    for (TextListItem* ti = buf->document_header->first; ti; ti = ti->next) {
-        printf("%s", Strnew_wc_output(wc_conv_strict(WcOption, ti->ptr, InnerCharset, buf->document_charset))->ptr);
-    }
-    puts("");
-}
-
-void dump_extra(struct Buffer* buf)
-{
-    printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
-    if (buf->baseURL)
-        printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
-    printf("W3m-document-charset: %s\n",
-        wc_ces_to_charset(buf->document_charset));
-    if (buf->ssl_certificate) {
-        Str tmp = Strnew();
-        const char* p;
-        for (p = buf->ssl_certificate; *p; p++) {
-            Strcat_char(tmp, *p);
-            if (*p == '\n') {
-                for (; *(p + 1) == '\n'; p++)
-                    ;
-                if (*(p + 1))
-                    Strcat_char(tmp, '\t');
-            }
-        }
-        if (Strlastchar(tmp) != '\n')
-            Strcat_char(tmp, '\n');
-        printf("W3m-ssl-certificate: %s", tmp->ptr);
-    }
 }
 
 void pcmap(void)

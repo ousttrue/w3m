@@ -23,7 +23,6 @@
 #include "maparea.h"
 #include "myctype.h"
 #include "display.h"
-#include "backend.h"
 
 #include "wc_util.h"
 #include <libwc/charset.h>
@@ -1052,21 +1051,6 @@ process_form_int(struct HtmlTag* tag, int fid)
         form_stack = New_Reuse(int, form_stack, forms_size);
     }
     form_stack[form_sp] = fid;
-
-    if (w3m_halfdump) {
-        Str tmp = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"",
-            fid, html_quote(q), html_quote(p));
-        if (s)
-            Strcat(tmp, Sprintf(" enctype=\"%s\"", html_quote(s)));
-        if (tg)
-            Strcat(tmp, Sprintf(" target=\"%s\"", html_quote(tg)));
-        if (n)
-            Strcat(tmp, Sprintf(" name=\"%s\"", html_quote(n)));
-        if (r)
-            Strcat(tmp, Sprintf(" accept-charset=\"%s\"", html_quote(r)));
-        Strcat_charp(tmp, ">");
-        return tmp;
-    }
 
     forms[fid] = newFormList(q, p, r, s, tg, n, NULL);
     return NULL;
@@ -4527,10 +4511,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
 
     init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
 
-    if (w3m_halfdump)
-        htmlenv1.f = stdout;
-    else
-        htmlenv1.buf = newTextLineList();
+    htmlenv1.buf = newTextLineList();
 
     cur_baseURL = baseURL(newBuf);
 
@@ -4574,10 +4555,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
-        if (w3m_dump & DUMP_EXTRA)
-            printf("W3m-in-progress: %s\n", convert_size2(linelen, current_content_length, TRUE));
-        if (w3m_dump & DUMP_SOURCE)
-            continue;
         showProgress(&linelen, &trbyte);
         /*
          * if (frame_source)
@@ -4607,17 +4584,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     cur_document_charset = 0;
     if (htmlenv1.title)
         newBuf->buffername = htmlenv1.title;
-    if (w3m_halfdump) {
-        TRAP_OFF;
-        print_internal_information(&htmlenv1);
-        return;
-    }
-    if (w3m_backend) {
-        TRAP_OFF;
-        print_internal_information(&htmlenv1);
-        backend_halfdump_buf = htmlenv1.buf;
-        return;
-    }
+
 phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;

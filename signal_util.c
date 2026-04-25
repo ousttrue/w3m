@@ -60,32 +60,6 @@ void do_dump(struct Buffer* buf)
         signal(SIGINT, prevtrap);
         return;
     }
-    if (w3m_dump & DUMP_EXTRA)
-        dump_extra(buf);
-    if (w3m_dump & DUMP_HEAD)
-        dump_head(buf);
-    if (w3m_dump & DUMP_SOURCE)
-        dump_source(buf);
-    if (w3m_dump == DUMP_BUFFER) {
-        int i;
-        saveBuffer(buf, stdout, false);
-        if (displayLinkNumber && buf->href) {
-            int nanchor = buf->href->nanchor;
-            printf("\nReferences:\n\n");
-            struct Anchor** in_order = New_N(struct Anchor*, buf->href->nanchor);
-            for (i = 0; i < nanchor; i++)
-                in_order[i] = buf->href->anchors + i;
-            qsort(in_order, nanchor, sizeof(struct Anchor*), cmp_anchor_hseq);
-            for (i = 0; i < nanchor; i++) {
-                struct Url pu;
-                char* url;
-                if (in_order[i]->slave)
-                    continue;
-                pu = parseURL2(in_order[i]->url, baseURL(buf));
-                url = url_decode2(parsedURL2Str(&pu)->ptr, Currentbuf);
-                printf("[%d] %s\n", in_order[i]->hseq + 1, url);
-            }
-        }
-    }
+
     signal(SIGINT, prevtrap);
 }
