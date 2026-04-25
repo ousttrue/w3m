@@ -9,7 +9,6 @@
 #include "symbol.h"
 #include "global.h"
 #include "constants.h"
-#include "proto.h"
 #include "html.h"
 #include "html_tag.h"
 #include "Str.h"

@@ -18,7 +18,6 @@
 #include "url.h"
 #include "global.h"
 #include "myctype.h"
-#include "proto.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

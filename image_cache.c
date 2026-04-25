@@ -1,4 +1,5 @@
 #include "image_cache.h"
+#include "file.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "constants.h"
@@ -10,7 +11,6 @@
 #include "hash.h"
 #include "textlist.h"
 #include "term_tty.h"
-#include "proto.h"
 
 #include <w3m.h>
 

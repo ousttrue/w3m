@@ -19,7 +19,6 @@
 #include "etc.h"
 #include "global.h"
 #include "display.h"
-#include "proto.h"
 #include "html.h"
 #include "Str.h"
 #include "myctype.h"
@@ -811,4 +810,23 @@ char* url_decode2(const char* url, const struct Buffer* buf)
         return (char*)url;
     url_charset = buf ? url_to_charset(url, baseURL((struct Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset);
+}
+
+Str qstr_unquote(Str s)
+{
+    if (s == NULL)
+        return NULL;
+    char* p = s->ptr;
+    if (*p == '"') {
+        Str tmp = Strnew();
+        for (p++; *p != '\0'; p++) {
+            if (*p == '\\')
+                p++;
+            Strcat_char(tmp, *p);
+        }
+        if (Strlastchar(tmp) == '"')
+            Strshrink(tmp, 1);
+        return tmp;
+    } else
+        return s;
 }

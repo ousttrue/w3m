@@ -5,7 +5,6 @@
 #include "http_response.h"
 #include "indep.h"
 #include "global.h"
-#include "proto.h"
 #include "myctype.h"
 #include "textlist.h"
 #include <stdio.h>

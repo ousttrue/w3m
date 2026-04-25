@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "file.h"
 #include "html_loader.h"
 #include "wc_util.h"
 #include "alarm.h"
@@ -10,7 +11,6 @@
 #include "Str.h"
 #include "global.h"
 #include "indep.h"
-#include "proto.h"
 #include "parsetag.h"
 
 #include <time.h>

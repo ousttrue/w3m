@@ -15,7 +15,6 @@
 #include "display.h"
 #include "Str.h"
 #include "global.h"
-#include "proto.h"
 #include "html.h"
 #include "myctype.h"
 #include "line_input.h"

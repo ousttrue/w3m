@@ -1,4 +1,5 @@
 #include "backend.h"
+#include "file.h"
 #include "UrlFile.h"
 #include "content_type.h"
 #include "constants.h"
@@ -10,7 +11,6 @@
 #include "buffer.h"
 #include "url.h"
 #include "terms.h"
-#include "proto.h"
 
 #include "wc_util.h"
 #include <libwc/charset.h>

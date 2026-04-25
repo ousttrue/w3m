@@ -146,3 +146,6 @@ extern void feed_table1(struct table* tbl, Str tok, struct table_mode* mode,
     int width);
 extern void pushTable(struct table*, struct table*);
 extern void align(TextLine* lbuf, int width, int mode);
+extern struct table* newTable(void);
+extern void pushdata(struct table* t, int row, int col, char* data);
+extern int visible_length(char* str);

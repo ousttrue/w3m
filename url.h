@@ -43,3 +43,4 @@ char* url_quote(const char* str);
 Str Str_url_unquote(Str x, int is_form, int safe);
 Str Str_form_quote(Str x);
 #define Str_form_unquote(x) Str_url_unquote((x), true, false)
+Str qstr_unquote(Str s);

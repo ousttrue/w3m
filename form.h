@@ -110,5 +110,4 @@ char* url_unquote_conv(const char* url, wc_ces charset);
 char* expandName(char* name);
 struct parsed_tagarg;
 void change_charset(struct CmdArgs *args, struct parsed_tagarg* arg);
-const char* guess_save_name(struct Buffer* buf, const char* file);
 Str getLinkNumberStr(int correction);

@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "file.h"
 #include "html_loader.h"
 #include "UrlFile.h"
 #include "content_type.h"
@@ -32,7 +33,6 @@
 #include "line_input.h"
 #include "keybind.h"
 #include "main.h"
-#include "proto.h"
 #include "display.h"
 #include "util.h"
 #include "regex.h"

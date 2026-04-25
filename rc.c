@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "file.h"
 #include "UrlFile.h"
 #include "form.h"
 #include "auth.h"
@@ -20,7 +21,6 @@
 #include "history.h"
 #include "myctype.h"
 #include "defun_impl.h"
-#include "proto.h"
 #include "parsetag.h"
 #include "local_cgi.h"
 #include "regex.h"

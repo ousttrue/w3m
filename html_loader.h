@@ -51,3 +51,4 @@ void close_anchor(struct html_feed_environ* h_env, struct readbuffer* obuf);
 Str process_form(struct HtmlTag* tag);
 
 void completeHTMLstream(struct html_feed_environ*, struct readbuffer*);
+int is_boundary(unsigned char*, unsigned char*);

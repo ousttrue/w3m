@@ -1,20 +1,17 @@
-/*
- * References for version 0 cookie:
- *   [NETACAPE] http://www.netscape.com/newsref/std/cookie_spec.html
- *
- * References for version 1 cookie:
- *   [RFC 2109] http://www.ics.uci.edu/pub/ietf/http/rfc2109.txt
- *   [DRAFT 12] http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
- */
-
+// References for version 0 cookie:
+//   [NETACAPE] http://www.netscape.com/newsref/std/cookie_spec.html
+//
+// References for version 1 cookie:
+//   [RFC 2109] http://www.ics.uci.edu/pub/ietf/http/rfc2109.txt
+//   [DRAFT 12] http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
 #include "cookie.h"
+#include "file.h"
 #include "alloc.h"
 #include "parsetag.h"
 #include "indep.h"
 #include "rc.h"
 #include "url.h"
 #include "global.h"
-#include "proto.h"
 #include "html.h"
 #include "defun_impl.h"
 #include <time.h>
@@ -673,7 +670,7 @@ cookie_list_panel(void)
     return loadHTMLString(src);
 }
 
-void set_cookie_flag(struct CmdArgs *args, struct parsed_tagarg* arg)
+void set_cookie_flag(struct CmdArgs* args, struct parsed_tagarg* arg)
 {
     int n, v;
     struct cookie* p;

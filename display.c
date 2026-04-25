@@ -1,4 +1,5 @@
 #include "display.h"
+#include "file.h"
 #include "content_type.h"
 #include "alloc.h"
 #include "terminfo_entry.h"
@@ -17,7 +18,6 @@
 #include "global.h"
 #include "history.h"
 #include "defun_impl.h"
-#include "proto.h"
 #include <math.h>
 #include <signal.h>
 

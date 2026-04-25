@@ -1,4 +1,5 @@
 #include "main.h"
+#include "file.h"
 #include "UrlFile.h"
 #include "alloc.h"
 #include "term_tty.h"
@@ -36,7 +37,6 @@
 #include "terms.h"
 #include "defun_impl.h"
 #include "keybind.h"
-#include "proto.h"
 #include "display.h"
 #include "terms.h"
 #include "myctype.h"

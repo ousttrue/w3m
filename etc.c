@@ -13,7 +13,6 @@
 #include "main.h"
 #include "wc_util.h"
 #include "display.h"
-#include "proto.h"
 #include "buffer.h"
 #include "global.h"
 #include <pwd.h>

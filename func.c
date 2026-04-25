@@ -8,7 +8,6 @@
 #include "display.h"
 #include "constants.h"
 #include "keybind.h"
-#include "proto.h"
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"

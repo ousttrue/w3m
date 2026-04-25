@@ -1,4 +1,5 @@
 #include "maparea.h"
+#include "file.h"
 #include "filepath.h"
 #include "ctrlcode.h"
 #include "html.h"
@@ -13,7 +14,6 @@
 #include "etc.h"
 #include "url.h"
 #include "global.h"
-#include "proto.h"
 
 #include <libwc/ces.h>
 #include <libwc/charset.h>

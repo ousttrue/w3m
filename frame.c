@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "file.h"
 #include "html_loader.h"
 #include "UrlFile.h"
 #include "growbuf.h"
@@ -16,7 +17,6 @@
 #include "etc.h"
 #include "buffer.h"
 #include "url.h"
-#include "proto.h"
 #include "global.h"
 #include "html_tag.h"
 #include "myctype.h"

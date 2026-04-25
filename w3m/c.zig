@@ -20,7 +20,6 @@ pub const c = @cImport({
     // #include "display.h"
     // #include "history.h"
     @cInclude("url.h");
-    // #include "proto.h"
     // #include "indep.h"
     // #include "etc.h"
     // #include "alloc.h"

@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "file.h"
 #include "http_response.h"
 #include "content_type.h"
 #include "UrlFile.h"
@@ -16,7 +17,6 @@
 #include "etc.h"
 #include "display.h"
 #include "global.h"
-#include "proto.h"
 #include <unistd.h>
 
 char* NullLine = "";

@@ -13,7 +13,6 @@
 #include "defun_impl.h"
 #include "history.h"
 #include "line_input.h"
-#include "proto.h"
 #include "menu.h"
 #include "func.h"
 #include "myctype.h"
