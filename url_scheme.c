@@ -65,7 +65,7 @@ int getDefaultPort(enum UrlScheme scheme)
 enum UrlScheme getURLScheme(const char** url)
 {
     const char *p = *url, *q;
-    enum UrlScheme scheme = SCM_MISSING;
+    enum UrlScheme scheme = SCM_UNKNOWN;
 
     while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
         p++;

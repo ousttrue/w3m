@@ -643,7 +643,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
             int retry = 0;
 
             const char* url = load_argv[i];
-            if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
+            if (getURLScheme(&url) == SCM_UNKNOWN && !ArgvIsURL)
             retry_as_local_file:
                 url = file_to_url(load_argv[i]);
             else

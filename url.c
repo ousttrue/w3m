@@ -232,7 +232,7 @@ struct Url parseURL(const char* url, const struct Url* current)
 
     struct Url p_url = { 0 };
     // copyParsedURL(p_url, NULL);
-    p_url.scheme = SCM_MISSING;
+    p_url.scheme = SCM_UNKNOWN;
 
     /* RFC1808: Relative Uniform Resource Locators
      * 4.  Resolving Relative URLs
@@ -249,7 +249,7 @@ struct Url parseURL(const char* url, const struct Url* current)
 
     /* search for scheme */
     p_url.scheme = getURLScheme(&p);
-    if (p_url.scheme == SCM_MISSING) {
+    if (p_url.scheme == SCM_UNKNOWN) {
         /* scheme part is not found in the url. This means either
          * (a) the url is relative to the current or (b) the url
          * denotes a filename (therefore the scheme is SCM_LOCAL).
@@ -407,7 +407,7 @@ analyze_file:
                 p++;
             }
         }
-        if (p_url.scheme == SCM_LOCAL || p_url.scheme == SCM_MISSING)
+        if (p_url.scheme == SCM_LOCAL)
             p_url.file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
         else
             p_url.file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
@@ -421,7 +421,7 @@ do_query:
         p_url.query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
     }
 do_label:
-    if (p_url.scheme == SCM_MISSING) {
+    if (p_url.scheme == SCM_UNKNOWN) {
         p_url.scheme = SCM_LOCAL;
         p_url.file = allocStr(p, -1);
         p_url.label = NULL;
@@ -550,10 +550,8 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
     Str tmp;
     ;
 
-    if (pu->scheme == SCM_MISSING) {
+    if (pu->scheme == SCM_UNKNOWN) {
         return Strnew_charp("???");
-    } else if (pu->scheme == SCM_UNKNOWN) {
-        return Strnew_charp(pu->file);
     }
     if (pu->host == NULL && pu->file == NULL && label && pu->label != NULL) {
         /* local label */

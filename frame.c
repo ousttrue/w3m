@@ -760,7 +760,7 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                                     &base, charset);
                                 tag->need_reconstruct = true;
                                 url = parseURL2(tag->value[j], &base);
-                                if (url.scheme == SCM_UNKNOWN || url.scheme == SCM_MISSING)
+                                if (url.scheme == SCM_UNKNOWN)
                                     break;
                                 a_target |= 1;
                                 tag->value[j] = parsedURL2Str(&url)->ptr;

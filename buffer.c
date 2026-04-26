@@ -226,9 +226,6 @@ writeBufferName(struct Buffer* buf, int n)
                 Strcat_charp(msg, conv_from_system(buf->currentURL.real_file));
             }
             break;
-        case SCM_UNKNOWN:
-        case SCM_MISSING:
-            break;
         default:
             Strcat_char(msg, ' ');
             Strcat(msg, parsedURL2Str(&buf->currentURL));

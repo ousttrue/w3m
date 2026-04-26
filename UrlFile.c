@@ -515,7 +515,7 @@ openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* curre
     if (ouf) {
         uf = *ouf;
     } else {
-        uf = init_stream(SCM_MISSING, NULL);
+        uf = init_stream(SCM_UNKNOWN, NULL);
     }
 
     Str tmp;
@@ -528,7 +528,7 @@ openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* curre
 
     const char* u = url;
     enum UrlScheme scheme = getURLScheme(&u);
-    if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
+    if (current == NULL && scheme == SCM_UNKNOWN && !ArgvIsURL)
         u = file_to_url(url); /* force to local file */
     else
         u = url;
@@ -610,7 +610,7 @@ retry:
             }
         }
         if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
-            if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
+            if (scheme == SCM_UNKNOWN) {
                 /* retry it as "http://" */
                 u = Strnew_m_charp("http://", url, NULL)->ptr;
                 goto retry;

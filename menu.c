@@ -1058,9 +1058,6 @@ initSelectMenu(void)
                         conv_from_system(buf->currentURL.real_file));
                 }
                 break;
-                /* case SCM_UNKNOWN: */
-            case SCM_MISSING:
-                break;
             default:
                 Strcat_char(str, ' ');
                 p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
@@ -1193,8 +1190,6 @@ initSelTabMenu(void)
                 }
                 break;
                 /* case SCM_UNKNOWN: */
-            case SCM_MISSING:
-                break;
             default:
                 p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
                 Strcat_charp(str, p);
