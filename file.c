@@ -362,9 +362,8 @@ load_doc: {
         }
 
         f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
-    } else if (pu.scheme == SCM_DATA) {
-        t = f.guess_type;
-    } else if (searchHeader) {
+    } 
+    else if (searchHeader) {
         searchHeader = SearchHeader = FALSE;
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);

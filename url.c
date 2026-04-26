@@ -457,10 +457,6 @@ void copyParsedURL(struct Url* p, const struct Url* q)
 struct Url parseURL2(const char* url, const struct Url* current)
 {
     struct Url pu = parseURL(url, current);
-    if (pu.scheme == SCM_MAILTO)
-        return pu;
-    if (pu.scheme == SCM_DATA)
-        return pu;
 
     const char* p;
     if (pu.scheme == SCM_LOCAL) {
@@ -573,18 +569,6 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
     }
     tmp = Strnew_charp(schemeToStr(pu->scheme));
     Strcat_char(tmp, ':');
-    if (pu->scheme == SCM_MAILTO) {
-        Strcat_charp(tmp, pu->file);
-        if (pu->query) {
-            Strcat_char(tmp, '?');
-            Strcat_charp(tmp, pu->query);
-        }
-        return tmp;
-    }
-    if (pu->scheme == SCM_DATA) {
-        Strcat_charp(tmp, pu->file);
-        return tmp;
-    }
     Strcat_charp(tmp, "//");
     if (user && pu->user) {
         Strcat_charp(tmp, pu->user);

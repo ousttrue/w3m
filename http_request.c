@@ -100,7 +100,7 @@ otherinfo(struct Url* target, struct Url* current, const char* referer)
             cross_origin = true;
         if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
             /* Don't send Referer: if https:// -> http:// */
-        } else if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA && ((current->user == NULL && current->pass == NULL))) {
+        } else if (referer == NULL && current && current->scheme != SCM_LOCAL && current->scheme != SCM_LOCAL_CGI && ((current->user == NULL && current->pass == NULL))) {
             Strcat_charp(s, "Referer: ");
             if (cross_origin)
                 Strcat(s, parsedURL2RefererOriginStr(current));

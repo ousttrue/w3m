@@ -721,24 +721,6 @@ retry:
                 write_from_file(sock, request->body);
         }
         break;
-    case SCM_DATA:
-        if (pu->file == NULL)
-            return uf;
-        p = Strnew_charp(pu->file)->ptr;
-        q = strchr(p, ',');
-        if (q == NULL)
-            return uf;
-        *(char*)q++ = '\0';
-        tmp = Strnew_charp(q);
-        q = strrchr(p, ';');
-        if (q != NULL && !strcmp(q, ";base64")) {
-            *(char*)q = '\0';
-            uf.encoding = ENC_BASE64;
-        } else
-            tmp = Str_url_unquote(tmp, false, false);
-        uf.stream = ist_from_buffer(tmp->ptr, tmp->length);
-        uf.guess_type = (*p != '\0') ? p : "text/plain";
-        return uf;
     case SCM_UNKNOWN:
     default:
         return uf;

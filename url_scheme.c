@@ -19,8 +19,8 @@ struct NameMap schemetable[] = {
     /*  {"nntp", SCM_NNTP_GROUP}, */
     // { "news", SCM_NEWS },
     /*  {"news", SCM_NEWS_GROUP}, */
-    { "data", SCM_DATA },
-    { "mailto", SCM_MAILTO },
+    // { "data", SCM_DATA },
+    // { "mailto", SCM_MAILTO },
     { "https", SCM_HTTPS },
     { 0, SCM_UNKNOWN },
 };
@@ -37,9 +37,7 @@ static const char* scheme_str[] = {
     "http",
     "file",
     "file",
-    "exec",
-    "data",
-    "mailto",
+    // "mailto",
     "https",
 };
 const char* schemeToStr(enum UrlScheme scheme)
@@ -53,8 +51,6 @@ int DefaultPort[] = {
     80, /* http */
     0, /* local - not defined */
     0, /* local-CGI - not defined? */
-    0, /* exec - not defined? */
-    0, /* data - not defined */
     0, /* mailto - not defined */
     443, /* https */
 };

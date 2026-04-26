@@ -687,8 +687,6 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
             } else if (newbuf == NO_BUFFER)
                 continue;
             switch (newbuf->real_scheme) {
-            case SCM_MAILTO:
-                break;
             case SCM_LOCAL:
             case SCM_LOCAL_CGI:
                 unshiftHist(HistoryLoad, url);
@@ -1162,7 +1160,7 @@ struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* targe
 
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
     base = baseURL(Currentbuf);
-    if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI || base->scheme == SCM_DATA)
+    if ((no_referer_ptr && *no_referer_ptr) || base == NULL || base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI)
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
@@ -2011,7 +2009,7 @@ void goURL0(struct CmdArgs* args, char* prompt, int relative)
     if (relative) {
         no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
         current = baseURL(Currentbuf);
-        if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
+        if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI)
             referer = NO_REFERER;
         else
             referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
