@@ -10,20 +10,12 @@ struct NameMap {
 
 struct NameMap schemetable[] = {
     { "http", SCM_HTTP },
-    // { "gopher", SCM_GOPHER },
-    // { "ftp", SCM_FTP },
-    { "local", SCM_LOCAL },
-    { "file", SCM_LOCAL },
-    /*  {"exec", SCM_EXEC}, */
-    // { "nntp", SCM_NNTP },
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    // { "news", SCM_NEWS },
-    /*  {"news", SCM_NEWS_GROUP}, */
-    // { "data", SCM_DATA },
-    // { "mailto", SCM_MAILTO },
     { "https", SCM_HTTPS },
+    { "file", SCM_FILE },
+    { "cgi", SCM_LOCAL_CGI },
     { 0, SCM_UNKNOWN },
 };
+
 const char* schemeToName(enum UrlScheme scheme)
 {
     for (int i = 0; schemetable[i].name; i++) {
@@ -35,24 +27,21 @@ const char* schemeToName(enum UrlScheme scheme)
 
 static const char* scheme_str[] = {
     "http",
-    "file",
-    "file",
-    // "mailto",
     "https",
+    "file",
+    "cgi",
 };
+
 const char* schemeToStr(enum UrlScheme scheme)
 {
-
     return scheme_str[scheme];
 }
 
-/* XXX: note html.h SCM_ */
 int DefaultPort[] = {
     80, /* http */
-    0, /* local - not defined */
-    0, /* local-CGI - not defined? */
-    0, /* mailto - not defined */
     443, /* https */
+    0, /* file - not defined */
+    0, /* local-CGI - not defined */
 };
 
 int getDefaultPort(enum UrlScheme scheme)

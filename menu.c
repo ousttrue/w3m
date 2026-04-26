@@ -1051,7 +1051,7 @@ initSelectMenu(void)
         str = Sprintf("<%s>", buf->buffername);
         if (buf->filename != NULL) {
             switch (buf->currentURL.scheme) {
-            case SCM_LOCAL:
+            case SCM_FILE:
                 if (strcmp(buf->currentURL.file, "-")) {
                     Strcat_char(str, ' ');
                     Strcat_charp(str,
@@ -1182,7 +1182,7 @@ initSelTabMenu(void)
         str = Sprintf("<%s>", buf->buffername);
         if (buf->filename != NULL) {
             switch (buf->currentURL.scheme) {
-            case SCM_LOCAL:
+            case SCM_FILE:
                 if (strcmp(buf->currentURL.file, "-")) {
                     Strcat_char(str, ' ');
                     Strcat_charp(str,

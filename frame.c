@@ -345,7 +345,7 @@ frame_download_source(struct CmdArgs* args,
         baseURL = b->baseURL;
     url = parseURL2(b->url, currentURL);
     switch (url.scheme) {
-    case SCM_LOCAL:
+    case SCM_FILE:
         b->flags = 0;
     default:
         is_redisplay = true;
@@ -491,7 +491,7 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                 }
                 /* fall through */
             case F_BODY:
-                f2 = init_stream(SCM_LOCAL, NULL);
+                f2 = init_stream(SCM_FILE, NULL);
                 if (frame.body->source) {
                     fflush(f1);
                     f2 = examineFile(frame.body->source);

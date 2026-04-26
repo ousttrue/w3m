@@ -109,7 +109,7 @@ void discardBuffer(struct Buffer* buf)
         }
     }
     if (buf->sourcefile && (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
-        if (buf->real_scheme != SCM_LOCAL || buf->bufferprop & BP_FRAME)
+        if (buf->real_scheme != SCM_FILE || buf->bufferprop & BP_FRAME)
             unlink(buf->sourcefile);
     }
     if (buf->header_source)
@@ -219,7 +219,7 @@ writeBufferName(struct Buffer* buf, int n)
     msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
     if (buf->filename != NULL) {
         switch (buf->currentURL.scheme) {
-        case SCM_LOCAL:
+        case SCM_FILE:
         case SCM_LOCAL_CGI:
             if (strcmp(buf->currentURL.file, "-")) {
                 Strcat_char(msg, ' ');
@@ -509,7 +509,7 @@ void reshapeBuffer(struct CmdArgs* args, struct Buffer* buf)
         buf->imarklist->nmark = 0;
 
     if (buf->header_source) {
-        if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
+        if (buf->currentURL.scheme != SCM_FILE || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
             struct URLFile h = examineFile(buf->header_source);
             if (h.stream) {
                 readHeader(args, &h, buf, true, NULL);

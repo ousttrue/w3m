@@ -189,7 +189,7 @@ const char* uncompressed_file_type(const char* path, const char** ext)
 
 struct URLFile examineFile(const char* path)
 {
-    struct URLFile uf = init_stream(SCM_LOCAL, NULL);
+    struct URLFile uf = init_stream(SCM_FILE, NULL);
 
     struct stat stbuf;
     if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
@@ -535,7 +535,7 @@ openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* curre
 
 retry:
     *pu = parseURL2(u, current);
-    if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
+    if (pu->scheme == SCM_FILE && pu->file == NULL) {
         if (pu->label != NULL) {
             /* #hogege is not a label but a filename */
             Str tmp2 = Strnew_charp("#");
@@ -566,7 +566,7 @@ retry:
     hr->request = request;
 
     switch (pu->scheme) {
-    case SCM_LOCAL:
+    case SCM_FILE:
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
@@ -852,7 +852,7 @@ void uncompress_stream(struct URLFile* uf, const char** src)
     }
     uf->compression = CMP_NOCOMPRESS;
 
-    if (uf->scheme != SCM_LOCAL
+    if (uf->scheme != SCM_FILE
         && !image_source) {
         tmpf = tmpfname(TMPF_DFL, ext);
     }
@@ -908,7 +908,7 @@ void uncompress_stream(struct URLFile* uf, const char** src)
         if (src)
             *src = tmpf;
         else
-            uf->scheme = SCM_LOCAL;
+            uf->scheme = SCM_FILE;
     }
     UFhalfclose(uf);
     uf->stream = ist_from_fp(f1, fclose);

@@ -551,7 +551,7 @@ char* last_modified(struct Buffer* buf)
             }
         }
         return "unknown";
-    } else if (buf->currentURL.scheme == SCM_LOCAL) {
+    } else if (buf->currentURL.scheme == SCM_FILE) {
         if (stat(buf->currentURL.file, &st) < 0)
             return "unknown";
         return ctime(&st.st_mtime);

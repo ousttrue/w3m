@@ -78,7 +78,7 @@ DefaultFile(int scheme)
     case SCM_HTTP:
     case SCM_HTTPS:
         return allocStr(HTTP_DEFAULT_FILE, -1);
-    case SCM_LOCAL:
+    case SCM_FILE:
     case SCM_LOCAL_CGI:
     }
     return NULL;
@@ -243,7 +243,7 @@ struct Url parseURL(const char* url, const struct Url* current)
         goto do_label;
     }
     if (IS_ALPHA(*p) && (p[1] == ':' || p[1] == '|')) {
-        p_url.scheme = SCM_LOCAL;
+        p_url.scheme = SCM_FILE;
         goto analyze_file;
     }
 
@@ -252,20 +252,20 @@ struct Url parseURL(const char* url, const struct Url* current)
     if (p_url.scheme == SCM_UNKNOWN) {
         /* scheme part is not found in the url. This means either
          * (a) the url is relative to the current or (b) the url
-         * denotes a filename (therefore the scheme is SCM_LOCAL).
+         * denotes a filename (therefore the scheme is SCM_FILE).
          */
         if (current) {
             switch (current->scheme) {
-            case SCM_LOCAL:
+            case SCM_FILE:
             case SCM_LOCAL_CGI:
-                p_url.scheme = SCM_LOCAL;
+                p_url.scheme = SCM_FILE;
                 break;
             default:
                 p_url.scheme = current->scheme;
                 break;
             }
         } else
-            p_url.scheme = SCM_LOCAL;
+            p_url.scheme = SCM_FILE;
         p = url;
         if (!strncmp(p, "//", 2)) {
             /* URL begins with // */
@@ -288,7 +288,7 @@ struct Url parseURL(const char* url, const struct Url* current)
         goto analyze_file;
     }
     /* after here, p begins with // */
-    if (p_url.scheme == SCM_LOCAL) { /* file://foo           */
+    if (p_url.scheme == SCM_FILE) { /* file://foo           */
         if (p[2] == '/' || p[2] == '~'
             /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
             || (IS_ALPHA(p[2]) && (p[3] == ':' || p[3] == '|'))
@@ -357,7 +357,7 @@ analyze_file:
         p_url.file = "";
         goto do_query;
     }
-    if (p_url.scheme == SCM_LOCAL) {
+    if (p_url.scheme == SCM_FILE) {
         q = p;
         if (*q == '/')
             q++;
@@ -383,11 +383,11 @@ analyze_file:
     again:
         while (*p && *p != '#' && p != cgi)
             p++;
-        if (*p == '#' && p_url.scheme == SCM_LOCAL) {
+        if (*p == '#' && p_url.scheme == SCM_FILE) {
             /*
              * According to RFC2396, # means the beginning of
              * URI-reference, and # should be escaped.  But,
-             * if the scheme is SCM_LOCAL, the special
+             * if the scheme is SCM_FILE, the special
              * treatment will apply to # for convinience.
              */
             if (p > q && *(p - 1) == '/' && (cgi == NULL || p < cgi)) {
@@ -407,7 +407,7 @@ analyze_file:
                 p++;
             }
         }
-        if (p_url.scheme == SCM_LOCAL)
+        if (p_url.scheme == SCM_FILE)
             p_url.file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
         else
             p_url.file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
@@ -422,7 +422,7 @@ do_query:
     }
 do_label:
     if (p_url.scheme == SCM_UNKNOWN) {
-        p_url.scheme = SCM_LOCAL;
+        p_url.scheme = SCM_FILE;
         p_url.file = allocStr(p, -1);
         p_url.label = NULL;
     } else if (*p == '#')
@@ -459,7 +459,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
     struct Url pu = parseURL(url, current);
 
     const char* p;
-    if (pu.scheme == SCM_LOCAL) {
+    if (pu.scheme == SCM_FILE) {
         char* q = expandName(file_unquote(pu.file));
         Str drive;
         if (IS_ALPHA(q[0]) && q[1] == ':') {
@@ -471,7 +471,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
     }
 
     bool relative_uri = false;
-    if (current && (pu.scheme == current->scheme || (pu.scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
+    if (current && (pu.scheme == current->scheme || (pu.scheme == SCM_FILE && current->scheme == SCM_LOCAL_CGI))
         && pu.host == NULL) {
         /* Copy omitted element from the current URL */
         pu.user = current->user;
@@ -480,7 +480,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
         pu.port = current->port;
         if (pu.file && *pu.file) {
             if (pu.file[0] != '/'
-                && !(pu.scheme == SCM_LOCAL && IS_ALPHA(pu.file[0])
+                && !(pu.scheme == SCM_FILE && IS_ALPHA(pu.file[0])
                     && pu.file[1] == ':')) {
                 /* file is relative [process 1] */
                 p = pu.file;
@@ -505,7 +505,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
          * from the current URL. */
     }
     if (pu.file) {
-        if (pu.scheme == SCM_LOCAL && pu.file[0] != '/' &&
+        if (pu.scheme == SCM_FILE && pu.file[0] != '/' &&
 #ifdef SUPPORT_DOS_DRIVE_PREFIX /* for 'drive:' */
             !(IS_ALPHA(pu.file[0]) && pu.file[1] == ':') &&
 #endif
@@ -537,7 +537,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
              */
             pu.file = cleanupName(pu.file);
         }
-        if (pu.scheme == SCM_LOCAL) {
+        if (pu.scheme == SCM_FILE) {
             pu.real_file = cleanupName(file_unquote(pu.file));
         }
     }
@@ -557,7 +557,7 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
         /* local label */
         return Sprintf("#%s", pu->label);
     }
-    if (pu->scheme == SCM_LOCAL && !strcmp(pu->file, "-")) {
+    if (pu->scheme == SCM_FILE && !strcmp(pu->file, "-")) {
         tmp = Strnew_charp("-");
         if (label && pu->label) {
             Strcat_char(tmp, '#');
@@ -662,7 +662,7 @@ url_to_charset(const char* url, const struct Url* base, wc_ces doc_charset)
     } else {
         pu = base;
     }
-    if (pu && (pu->scheme == SCM_LOCAL || pu->scheme == SCM_LOCAL_CGI))
+    if (pu && (pu->scheme == SCM_FILE || pu->scheme == SCM_LOCAL_CGI))
         return SystemCharset;
     csptr = query_SCONF_URL_CHARSET(pu);
     return (csptr && *csptr) ? *csptr : doc_charset ? doc_charset

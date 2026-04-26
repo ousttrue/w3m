@@ -662,7 +662,7 @@ void editBf(struct CmdArgs* args)
 
     if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
         (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
-        Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
+        Currentbuf->real_scheme != SCM_FILE || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
         Currentbuf->bufferprop & BP_FRAME) { /* Frame */
         disp_err_message(args, "Can't edit other than local file", TRUE);
         return;
@@ -1383,7 +1383,7 @@ void svSrc(struct CmdArgs* args)
     CurrentKeyData = NULL; /* not allowed in w3m-control: */
     PermitSaveToPipe = TRUE;
     const char* file;
-    if (Currentbuf->real_scheme == SCM_LOCAL)
+    if (Currentbuf->real_scheme == SCM_FILE)
         file = conv_from_system(guess_save_name(NULL,
             Currentbuf->currentURL.real_file));
     else
@@ -1531,7 +1531,7 @@ void reload(struct CmdArgs* args)
         disp_err_message(args, "Can't reload...", TRUE);
         return;
     }
-    if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
+    if (Currentbuf->currentURL.scheme == SCM_FILE && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
         disp_err_message(args, "Can't reload stdin", TRUE);
@@ -1719,7 +1719,7 @@ void extbrz(struct CmdArgs* args)
         disp_err_message(args, "Can't browse...", TRUE);
         return;
     }
-    if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
+    if (Currentbuf->currentURL.scheme == SCM_FILE && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
         /* FIXME: gettextize? */
         disp_err_message(args, "Can't browse stdin", TRUE);

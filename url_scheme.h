@@ -2,9 +2,9 @@
 
 enum UrlScheme {
     SCM_HTTP,
-    SCM_LOCAL,
-    SCM_LOCAL_CGI,
     SCM_HTTPS,
+    SCM_FILE,
+    SCM_LOCAL_CGI,
     SCM_UNKNOWN = 255,
 };
 const char* schemeToName(enum UrlScheme scheme);

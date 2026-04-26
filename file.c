@@ -55,7 +55,7 @@ loadSomething(struct CmdArgs* args, struct URLFile* f, LoadProc loadproc, struct
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
         buf->currentURL.scheme = f->scheme;
-    if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
+    if (f->scheme == SCM_FILE && buf->sourcefile == NULL)
         buf->sourcefile = buf->filename;
     if (loadproc == loadHTMLBuffer
         || loadproc == loadImageBuffer)
@@ -212,7 +212,7 @@ load_doc: {
     content_charset = 0;
     if (f.stream == NULL) {
         switch (f.scheme) {
-        case SCM_LOCAL: {
+        case SCM_FILE: {
             struct stat st;
             if (stat(pu.real_file, &st) < 0)
                 return NULL;
@@ -465,7 +465,7 @@ page_loaded:
         TRAP_OFF;
         if (DecodeCTE && ist_type(f.stream) != IST_ENCODED)
             f.stream = ist_decode(f.stream, f.encoding);
-        if (pu.scheme == SCM_LOCAL) {
+        if (pu.scheme == SCM_FILE) {
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
                 f.modtime = st.st_mtime;
@@ -576,7 +576,7 @@ loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
     FILE* src = NULL;
-    if (newBuf->sourcefile == NULL && (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->sourcefile == NULL && (f->scheme != SCM_FILE || newBuf->mailcap)) {
         const char* tmpf = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmpf, "w");
         if (src)
@@ -657,7 +657,7 @@ loadHTMLString(Str page)
     SignalFunc prevtrap = NULL;
     struct Buffer* newBuf;
 
-    struct URLFile f = init_stream(SCM_LOCAL, ist_from_buffer(page->ptr, page->length));
+    struct URLFile f = init_stream(SCM_FILE, ist_from_buffer(page->ptr, page->length));
 
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
@@ -860,7 +860,7 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     }
     TRAP_ON;
 
-    if (newBuf->sourcefile == NULL && (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
+    if (newBuf->sourcefile == NULL && (uf->scheme != SCM_FILE || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf, "w");
         if (src)
@@ -955,7 +955,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
     cache->loaded |= IMG_FLAG_DONT_REMOVE;
-    if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL)
+    if (newBuf->sourcefile == NULL && uf->scheme != SCM_FILE)
         newBuf->sourcefile = cache->file;
 
     const char* tmpf = tmpfname(TMPF_SRC, ".html");
@@ -965,7 +965,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     newBuf->mailcap_source = tmpf;
 
     Str tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    struct URLFile f = init_stream(SCM_LOCAL, ist_from_buffer(tmp->ptr, tmp->length));
+    struct URLFile f = init_stream(SCM_FILE, ist_from_buffer(tmp->ptr, tmp->length));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
     if (src)
@@ -1148,7 +1148,7 @@ openGeneralPagerBuffer(struct CmdArgs* args, struct InputStream* stream)
 
     struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
     copyParsedURL(&t_buf->currentURL, NULL);
-    t_buf->currentURL.scheme = SCM_LOCAL;
+    t_buf->currentURL.scheme = SCM_FILE;
     t_buf->currentURL.file = "-";
 
     const char* t = "text/plain";
