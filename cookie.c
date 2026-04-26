@@ -321,7 +321,8 @@ match_cookie(ParsedURL *pu, struct cookie *cookie, char *domainname)
     if (strncmp(cookie->path->ptr, pu->file, cookie->path->length) != 0)
 	return 0;
 #ifdef USE_SSL
-    if (cookie->flag & COO_SECURE && pu->scheme != SCM_HTTPS)
+    if (cookie->flag & COO_SECURE && pu->scheme != SCM_HTTPS
+	&& !is_localhost(pu->host))
 	return 0;
 #else				/* not USE_SSL */
     if (cookie->flag & COO_SECURE)

@@ -5,6 +5,7 @@ Unreleased
 
 * bug fixes
   - Respect W3M_DIR when initializing the w3m config
+  - Ignore https requirements for secure cookies when connecting to localhost
 
 w3m 0.5.6 - 2026-01-23
 
