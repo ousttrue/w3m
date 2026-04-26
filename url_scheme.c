@@ -15,9 +15,9 @@ struct NameMap schemetable[] = {
     { "local", SCM_LOCAL },
     { "file", SCM_LOCAL },
     /*  {"exec", SCM_EXEC}, */
-    { "nntp", SCM_NNTP },
+    // { "nntp", SCM_NNTP },
     /*  {"nntp", SCM_NNTP_GROUP}, */
-    { "news", SCM_NEWS },
+    // { "news", SCM_NEWS },
     /*  {"news", SCM_NEWS_GROUP}, */
     { "data", SCM_DATA },
     { "mailto", SCM_MAILTO },
@@ -41,10 +41,6 @@ static const char* scheme_str[] = {
     "file",
     "file",
     "exec",
-    "nntp",
-    "nntp",
-    "news",
-    "news",
     "data",
     "mailto",
     "https",
@@ -64,10 +60,6 @@ int DefaultPort[] = {
     0, /* local - not defined */
     0, /* local-CGI - not defined? */
     0, /* exec - not defined? */
-    119, /* nntp */
-    119, /* nntp group */
-    119, /* news */
-    119, /* news group */
     0, /* data - not defined */
     0, /* mailto - not defined */
     443, /* https */

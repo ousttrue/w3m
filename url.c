@@ -12,7 +12,6 @@
 #include "http_request.h"
 #include "proxy.h"
 #include "signal_util.h"
-#include "news.h"
 #include "local_cgi.h"
 #include "cookie.h"
 #include "etc.h"
@@ -263,14 +262,6 @@ struct Url parseURL(const char* url, const struct Url* current)
             case SCM_LOCAL_CGI:
                 p_url.scheme = SCM_LOCAL;
                 break;
-            case SCM_NNTP:
-            case SCM_NNTP_GROUP:
-                p_url.scheme = SCM_NNTP;
-                break;
-            case SCM_NEWS:
-            case SCM_NEWS_GROUP:
-                p_url.scheme = SCM_NEWS;
-                break;
             default:
                 p_url.scheme = current->scheme;
                 break;
@@ -492,28 +483,6 @@ struct Url parseURL2(const char* url, const struct Url* current)
         return pu;
 
     const char* p;
-    if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NEWS_GROUP) {
-        if (pu.file && !strchr(pu.file, '@') && (!(p = strchr(pu.file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
-            pu.scheme = SCM_NEWS_GROUP;
-        else
-            pu.scheme = SCM_NEWS;
-        return pu;
-    }
-    if (pu.scheme == SCM_NNTP || pu.scheme == SCM_NNTP_GROUP) {
-        if (pu.file && *pu.file == '/')
-            pu.file = allocStr(pu.file + 1, -1);
-        if (pu.file && !strchr(pu.file, '@') && (!(p = strchr(pu.file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
-            pu.scheme = SCM_NNTP_GROUP;
-        else
-            pu.scheme = SCM_NNTP;
-        if (current && (current->scheme == SCM_NNTP || current->scheme == SCM_NNTP_GROUP)) {
-            if (pu.host == NULL) {
-                pu.host = current->host;
-                pu.port = current->port;
-            }
-        }
-        return pu;
-    }
     if (pu.scheme == SCM_LOCAL) {
         char* q = expandName(file_unquote(pu.file));
         Str drive;
@@ -641,9 +610,7 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
         Strcat_charp(tmp, pu->file);
         return tmp;
     }
-    if (pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP) {
-        Strcat_charp(tmp, "//");
-    }
+    Strcat_charp(tmp, "//");
     if (user && pu->user) {
         Strcat_charp(tmp, pu->user);
         if (pass && pu->pass) {
@@ -659,8 +626,7 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
             Strcat(tmp, Sprintf("%d", pu->port));
         }
     }
-    if (
-        pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP && (pu->file == NULL || (pu->file[0] != '/' && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL))))
+    if ((pu->file == NULL || (pu->file[0] != '/' && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL))))
         Strcat_char(tmp, '/');
     Strcat_charp(tmp, pu->file);
     if (pu->query) {

@@ -22,7 +22,6 @@
 #include "wc_util.h"
 #include "maparea.h"
 #include "etc.h"
-#include "news.h"
 #include "url.h"
 #include "buffer.h"
 #include "cookie.h"
@@ -375,10 +374,6 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
         FTP_proxy = p;
     if (!non_null(NO_proxy) && ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))
         NO_proxy = p;
-    if (!non_null(NNTP_server) && (p = getenv("NNTPSERVER")) != NULL)
-        NNTP_server = p;
-    if (!non_null(NNTP_mode) && (p = getenv("NNTPMODE")) != NULL)
-        NNTP_mode = p;
 
     if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
         Editor = p;
@@ -2470,7 +2465,6 @@ void w3m_exit(int i)
 
     deleteFiles();
     free_ssl_ctx();
-    disconnectNews();
     if (mkd_tmp_dir)
         if (rmdir(mkd_tmp_dir) != 0) {
             fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);

@@ -4543,15 +4543,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
             break;
         }
         lineBuf2 = Strnew_charp_n(gv.ptr, gv.len);
-        if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
-            Strshrinkfirst(lineBuf2, 1);
-            if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
-                /*
-                 * iseos(f->stream) = TRUE;
-                 */
-                break;
-            }
-        }
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
@@ -4567,7 +4558,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
             }
             meta_charset = 0;
         }
-        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, HTML_MODE, &charset, doc_charset, f->scheme == SCM_NEWS);
+        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, HTML_MODE, &charset, doc_charset, false);
         cur_document_charset = charset;
         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
     }

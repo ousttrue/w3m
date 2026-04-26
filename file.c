@@ -25,7 +25,6 @@
 #include "mailcap.h"
 #include "etc.h"
 #include "buffer.h"
-#include "news.h"
 #include "textlist.h"
 #include "symbol.h"
 #include "line_input.h"
@@ -234,10 +233,6 @@ load_doc: {
                 }
             }
         } break;
-        case SCM_NEWS_GROUP:
-            page = loadNewsgroup(args, &pu, &charset);
-            t = "news:group";
-            break;
         case SCM_UNKNOWN:
             /* FIXME: gettextize? */
             disp_err_message(args, Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr,
@@ -368,14 +363,8 @@ load_doc: {
         }
 
         f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
-    } else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
-        if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(args, &f, t_buf, TRUE, &pu);
-        t = checkContentType(t_buf);
-        if (t == NULL)
-            t = "text/plain";
-    } else if (pu.scheme == SCM_GOPHER) {
+    } 
+    else if (pu.scheme == SCM_GOPHER) {
         p = pu.file;
         while (*p == '/')
             ++p;
@@ -497,8 +486,6 @@ page_loaded:
             const char* file = alloc_guess_filename(pu.file);
             if (f.scheme == SCM_GOPHER)
                 file = Sprintf("%s.html", file)->ptr;
-            if (f.scheme == SCM_NEWS_GROUP)
-                file = Sprintf("%s.html", file)->ptr;
             doFileMove(args, tmpf, file);
             return NO_BUFFER;
         }
@@ -619,8 +606,6 @@ page_loaded:
     }
     if (header_string)
         header_string = NULL;
-    if (b && b != NO_BUFFER && (f.scheme == SCM_NNTP || f.scheme == SCM_NEWS))
-        reAnchorNewsheader(b);
     if (b && b != NO_BUFFER)
         preFormUpdateBuffer(b);
     TRAP_OFF;
@@ -785,7 +770,7 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
             break;
         if (gv.ptr[0] == '.' && (gv.ptr[1] == '\n' || gv.ptr[1] == '\r'))
             break;
-        Str lbuf = convertLine((const uint8_t*)gv.ptr, gv.len, HTML_MODE, charset, doc_charset, uf->scheme == SCM_NEWS);
+        Str lbuf = convertLine((const uint8_t*)gv.ptr, gv.len, HTML_MODE, charset, doc_charset, false);
         p = lbuf->ptr;
         for (q = p; *q && *q != '\t'; q++)
             ;
@@ -947,22 +932,13 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
             break;
         }
         lineBuf2 = Strnew_charp_n(gv.ptr, gv.len);
-        if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
-            Strshrinkfirst(lineBuf2, 1);
-            if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
-                /*
-                 * iseos(uf->stream) = TRUE;
-                 */
-                break;
-            }
-        }
         if (src)
             Strfputs(lineBuf2, src);
         linelen += lineBuf2->length;
         showProgress(&linelen, &trbyte);
         if (frame_source)
             continue;
-        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, uf->scheme == SCM_NEWS);
+        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, false);
         if (squeezeBlankLine) {
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
                 ++nlines;
@@ -1338,7 +1314,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
         }
         linelen += lineBuf2->length;
         showProgress(&linelen, &trbyte);
-        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, uf.scheme == SCM_NEWS);
+        lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, PAGER_MODE, &charset, doc_charset, false);
         if (squeezeBlankLine) {
             squeeze_flag = FALSE;
             if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
@@ -1411,27 +1387,7 @@ int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf
     TRAP_ON;
     int check = 0;
     uint8_t* buf = NULL;
-    if (scheme == SCM_NEWS) {
-        char c;
-        if (!stream)
-            return -1;
-        while (c = ist_getc(stream), !ist_eos(stream)) {
-            if (c == '\n') {
-                if (check == 0)
-                    check++;
-                else if (check == 3)
-                    break;
-            } else if (c == '.' && check == 1)
-                check++;
-            else if (c == '\r' && check == 2)
-                check++;
-            else
-                check = 0;
-            putc(c, ff);
-            linelen += sizeof(c);
-            showProgress(&linelen, &trbyte);
-        }
-    } else {
+    {
         buf = NewWithoutGC_N(uint8_t, SAVE_BUF_SIZE);
         int count;
         while ((count = ist_read(stream, buf, SAVE_BUF_SIZE)) > 0) {

@@ -8,7 +8,6 @@
 #include "url.h"
 #include "content_type.h"
 #include "input_stream.h"
-#include "news.h"
 #include "indep.h"
 #include "textlist.h"
 #include "etc.h"
@@ -783,16 +782,6 @@ retry:
             pu->file = gophertmp->ptr;
         }
         break;
-    case SCM_NNTP:
-    case SCM_NNTP_GROUP:
-    case SCM_NEWS:
-    case SCM_NEWS_GROUP:
-        if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NEWS)
-            uf.scheme = SCM_NEWS;
-        else
-            uf.scheme = SCM_NEWS_GROUP;
-        uf.stream = openNewsStream(pu);
-        return uf;
     case SCM_DATA:
         if (pu->file == NULL)
             return uf;
@@ -828,10 +817,6 @@ void UFclose(struct URLFile* f)
 void UFhalfclose(struct URLFile* f)
 {
     switch (f->scheme) {
-    case SCM_NEWS:
-    case SCM_NNTP:
-        closeNews();
-        break;
     default:
         UFclose(f);
         break;

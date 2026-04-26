@@ -611,10 +611,6 @@ struct param_ptr params9[] = {
         CMT_LOCALHOST_ONLY, NULL },
     { "dns_order", P_INT, PI_SEL_C, (void*)&DNS_order, CMT_DNS_ORDER,
         (void*)dnsorders },
-    { "nntpserver", P_STRING, PI_TEXT, (void*)&NNTP_server, CMT_NNTP_SERVER,
-        NULL },
-    { "nntpmode", P_STRING, PI_TEXT, (void*)&NNTP_mode, CMT_NNTP_MODE, NULL },
-    { "max_news", P_INT, PI_TEXT, (void*)&MaxNewsMessage, CMT_MAX_NEWS, NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 

@@ -65,7 +65,6 @@ const w3m_srcs = [_][]const u8{
     "url.c",
     "mimehead.c",
     "regex.c",
-    "news.c",
     "func.c",
     "cookie.c",
 
