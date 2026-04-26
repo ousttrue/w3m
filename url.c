@@ -13,7 +13,6 @@
 #include "proxy.h"
 #include "signal_util.h"
 #include "news.h"
-#include "ftp.h"
 #include "local_cgi.h"
 #include "cookie.h"
 #include "etc.h"
@@ -84,16 +83,9 @@ DefaultFile(int scheme)
         return allocStr("1", -1);
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
-    case SCM_FTP:
-    case SCM_FTPDIR:
-        return allocStr("/", -1);
     }
     return NULL;
 }
-
-
-
-
 
 struct Url*
 baseURL(struct Buffer* buf)
@@ -271,10 +263,6 @@ struct Url parseURL(const char* url, const struct Url* current)
             case SCM_LOCAL_CGI:
                 p_url.scheme = SCM_LOCAL;
                 break;
-            case SCM_FTP:
-            case SCM_FTPDIR:
-                p_url.scheme = SCM_FTP;
-                break;
             case SCM_NNTP:
             case SCM_NNTP_GROUP:
                 p_url.scheme = SCM_NNTP;
@@ -376,20 +364,6 @@ analyze_url:
         break;
     }
 analyze_file:
-    if (p_url.scheme == SCM_LOCAL && p_url.user == NULL && p_url.host != NULL && *p_url.host != '\0' && !is_localhost(p_url.host)) {
-        /*
-         * In the environments other than CYGWIN, a URL like
-         * file://host/file is regarded as ftp://host/file.
-         * On the other hand, file://host/file on CYGWIN is
-         * regarded as local access to the file //host/file.
-         * `host' is a netbios-hostname, drive, or any other
-         * name; It is CYGWIN system call who interprets that.
-         */
-
-        p_url.scheme = SCM_FTP; /* ftp://host/... */
-        if (p_url.port == 0)
-            p_url.port = getDefaultPort(SCM_FTP);
-    }
     if ((*p == '\0' || *p == '#' || *p == '?') && p_url.host == NULL) {
         p_url.file = "";
         goto do_query;
@@ -552,7 +526,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
     }
 
     bool relative_uri = false;
-    if (current && (pu.scheme == current->scheme || (pu.scheme == SCM_FTP && current->scheme == SCM_FTPDIR) || (pu.scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
+    if (current && (pu.scheme == current->scheme || (pu.scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
         && pu.host == NULL) {
         /* Copy omitted element from the current URL */
         pu.user = current->user;
@@ -689,8 +663,6 @@ Str _parsedURL2Str(struct Url* pu, bool pass, bool user, bool label)
         pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP && (pu->file == NULL || (pu->file[0] != '/' && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL))))
         Strcat_char(tmp, '/');
     Strcat_charp(tmp, pu->file);
-    if (pu->scheme == SCM_FTPDIR && Strlastchar(tmp) != '/')
-        Strcat_char(tmp, '/');
     if (pu->query) {
         Strcat_char(tmp, '?');
         Strcat_charp(tmp, pu->query);
@@ -713,7 +685,6 @@ Str parsedURL2RefererStr(struct Url* pu)
 }
 
 /* add index_file if exists */
-
 
 const char* filename_extension(const char* path, int is_url)
 {
@@ -750,9 +721,6 @@ schemeToProxy(int scheme)
         break;
     case SCM_HTTPS:
         pu = &HTTPS_proxy_parsed;
-        break;
-    case SCM_FTP:
-        pu = &FTP_proxy_parsed;
         break;
     case SCM_GOPHER:
         pu = &GOPHER_proxy_parsed;

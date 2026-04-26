@@ -39,32 +39,25 @@ char* violations[COO_EMAX] = {
     "RFC XXXX 4.3.2 rule 5"
 };
 
-void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf, int thru, struct Url* pu)
+void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url* pu)
 {
-    char *p, *q;
-    char* emsg;
-    char c;
-    Str lineBuf2 = NULL;
-    TextList* headerlist;
-    wc_ces charset = WC_CES_US_ASCII, mime_charset;
-    FILE* src = NULL;
-    Lineprop* propBuffer;
-
-    headerlist = newBuf->document_header = newTextList();
+    TextList* headerlist = newBuf->document_header = newTextList();
     if (uf->scheme == SCM_HTTP
         || uf->scheme == SCM_HTTPS)
         http_response_code = -1;
     else
         http_response_code = 0;
 
+    FILE* thru_src = NULL;
     if (thru && !newBuf->header_source
         && !image_source) {
         const char* tmpf = tmpfname(TMPF_DFL, NULL);
-        src = fopen(tmpf, "w");
-        if (src)
+        thru_src = fopen(tmpf, "w");
+        if (thru_src)
             newBuf->header_source = tmpf;
     }
 
+    Str lineBuf2 = NULL;
     struct growbuf* gb = growbuf_create();
     while (true) {
         growbuf_clear(gb);
@@ -84,22 +77,21 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 fclose(ff);
             }
         }
-        if (src)
-            Strfputs(tmp, src);
+        if (thru_src)
+            Strfputs(tmp, thru_src);
         cleanup_line(tmp, HEADER_MODE);
         if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
             if (!lineBuf2)
                 /* there is no header */
                 break;
             /* last header */
-        }
-        else {
+        } else {
             lineBuf2 = tmp;
         }
         if ((uf->scheme == SCM_HTTP
                 || uf->scheme == SCM_HTTPS)
             && http_response_code == -1) {
-            p = lineBuf2->ptr;
+            const char* p = lineBuf2->ptr;
             while (*p && !IS_SPACE(*p))
                 p++;
             while (*p && IS_SPACE(*p))
@@ -111,7 +103,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             }
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
-            p = lineBuf2->ptr + 26;
+            const char* p = lineBuf2->ptr + 26;
             while (IS_SPACE(*p))
                 p++;
             if (!strncasecmp(p, "base64", 6))
@@ -123,7 +115,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             else
                 uf->encoding = ENC_7BIT;
         } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
-            p = lineBuf2->ptr + 17;
+            const char* p = lineBuf2->ptr + 17;
             while (IS_SPACE(*p))
                 p++;
 
@@ -134,7 +126,8 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             int version, quoted, flag = 0;
             time_t expires = (time_t)-1;
 
-            q = NULL;
+            const char* q = NULL;
+            const char *p;
             if (lineBuf2->ptr[10] == '2') {
                 p = lineBuf2->ptr + 12;
                 version = 1;
@@ -225,6 +218,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                     }
                     if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(pu, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
                         err = (err & ~COO_OVERRIDE_OK) - 1;
+                        const char *emsg;
                         if (err >= 0 && err < COO_EMAX)
                             emsg = Sprintf("This cookie was rejected "
                                            "to prevent security violation. [%s]",
@@ -244,7 +238,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
         } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
 
-            p = lineBuf2->ptr + 12;
+            const char* p = lineBuf2->ptr + 12;
             SKIP_BLANKS(p);
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
@@ -260,12 +254,10 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
         Strfree(lineBuf2);
         lineBuf2 = NULL;
     }
-    growbuf_destroy(gb);
+    if (thru_src)
+        fclose(thru_src);
 
-    if (thru)
-        addnewline(newBuf, "", propBuffer, NULL, 0, -1, -1);
-    if (src)
-        fclose(src);
+    growbuf_destroy(gb);
 }
 
 bool matchattr(const char* p, const char* attr, int len, Str* value)

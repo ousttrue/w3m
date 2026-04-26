@@ -22,7 +22,6 @@
 #include "wc_util.h"
 #include "maparea.h"
 #include "etc.h"
-#include "ftp.h"
 #include "news.h"
 #include "url.h"
 #include "buffer.h"
@@ -1088,7 +1087,7 @@ int next_nonnull_line(struct Line* line)
 
 void _quitfm(struct CmdArgs* args, int confirm)
 {
-    char* ans = "y";
+    const char* ans = "y";
 
     if (checkDownloadList())
         /* FIXME: gettextize? */
@@ -1506,7 +1505,7 @@ static void followForm(struct CmdArgs* args)
 void _followForm(struct CmdArgs* args, int submit)
 {
     struct Anchor *a, *a2;
-    char* p;
+    const char* p;
     struct FormItem *fi, *f2;
     Str tmp, tmp2;
     int multipart = 0, i;
@@ -2471,7 +2470,6 @@ void w3m_exit(int i)
 
     deleteFiles();
     free_ssl_ctx();
-    disconnectFTP();
     disconnectNews();
     if (mkd_tmp_dir)
         if (rmdir(mkd_tmp_dir) != 0) {

@@ -24,7 +24,6 @@
 #include "main.h"
 #include "mailcap.h"
 #include "etc.h"
-#include "ftp.h"
 #include "buffer.h"
 #include "news.h"
 #include "textlist.h"
@@ -235,10 +234,6 @@ load_doc: {
                 }
             }
         } break;
-        case SCM_FTPDIR:
-            page = loadFTPDir(&pu, &charset);
-            t = "ftp:directory";
-            break;
         case SCM_NEWS_GROUP:
             page = loadNewsgroup(args, &pu, &charset);
             t = "news:group";
@@ -281,7 +276,7 @@ load_doc: {
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy && !check_no_proxy(pu.host))) {
+    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy))) && use_proxy && !check_no_proxy(pu.host))) {
 
         if (fmInitialized) {
             term_cbreak();
@@ -423,21 +418,6 @@ load_doc: {
         case '9':
             gopher_download = TRUE;
             break;
-        }
-    } else if (pu.scheme == SCM_FTP) {
-        check_compression(&f, path);
-        if (f.compression != CMP_NOCOMPRESS) {
-            const char* t1 = uncompressed_file_type(pu.file, NULL);
-            real_type = f.guess_type;
-            if (t1)
-                t = t1;
-            else
-                t = real_type;
-        } else {
-            real_type = guessContentType(pu.file);
-            if (real_type == NULL)
-                real_type = "text/plain";
-            t = real_type;
         }
     } else if (pu.scheme == SCM_DATA) {
         t = f.guess_type;

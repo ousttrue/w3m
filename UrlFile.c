@@ -8,7 +8,6 @@
 #include "url.h"
 #include "content_type.h"
 #include "input_stream.h"
-#include "ftp.h"
 #include "news.h"
 #include "indep.h"
 #include "textlist.h"
@@ -619,26 +618,6 @@ retry:
             }
         }
         return uf;
-    case SCM_FTP:
-    case SCM_FTPDIR:
-        if (pu->file == NULL)
-            pu->file = allocStr("/", -1);
-        if (non_null(FTP_proxy) && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
-            hr->flag |= HR_FLAG_PROXY;
-            sock = openSocket(FTP_proxy_parsed.host,
-                schemeToName(FTP_proxy_parsed.scheme),
-                FTP_proxy_parsed.port);
-            if (sock < 0)
-                return uf;
-            uf.scheme = SCM_HTTP;
-            tmp = HTTPrequest(pu, current, hr, extra_header);
-            write(sock, tmp->ptr, tmp->length);
-        } else {
-            uf.stream = openFTPStream(args, pu, &uf);
-            uf.scheme = pu->scheme;
-            return uf;
-        }
-        break;
     case SCM_HTTP:
     case SCM_HTTPS:
         if (pu->file == NULL)
@@ -849,9 +828,6 @@ void UFclose(struct URLFile* f)
 void UFhalfclose(struct URLFile* f)
 {
     switch (f->scheme) {
-    case SCM_FTP:
-        closeFTP();
-        break;
     case SCM_NEWS:
     case SCM_NNTP:
         closeNews();

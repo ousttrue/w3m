@@ -1,9 +1,9 @@
-#include <openssl/crypto.h>
 #pragma onece
 #include "url_scheme.h"
 #include "Str.h"
-#include "line.h"
+#include "constants.h"
 #include <time.h>
+#include <openssl/crypto.h>
 
 #define NO_REFERER ((char*)-1)
 
@@ -41,7 +41,7 @@ struct URLFile {
 };
 
 struct InputStream;
-struct URLFile init_stream(enum UrlScheme scheme, struct InputStream *stream);
+struct URLFile init_stream(enum UrlScheme scheme, struct InputStream* stream);
 struct URLFile examineFile(const char* path);
 struct Url;
 struct Form;
