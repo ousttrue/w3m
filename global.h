@@ -28,7 +28,6 @@ extern char QuietMessage;
 extern char TrapSignal;
 extern const char* HTTP_proxy;
 extern const char* HTTPS_proxy;
-extern const char* GOPHER_proxy;
 extern const char* FTP_proxy;
 extern const char* NO_proxy;
 extern int NOproxy_netaddr;

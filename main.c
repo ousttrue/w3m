@@ -368,8 +368,6 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
         HTTPS_proxy = p;
     if (HTTPS_proxy == NULL && non_null(HTTP_proxy))
         HTTPS_proxy = HTTP_proxy;
-    if (!non_null(GOPHER_proxy) && ((p = getenv("GOPHER_PROXY")) || (p = getenv("gopher_proxy")) || (p = getenv("GOPHER_proxy"))))
-        GOPHER_proxy = p;
     if (!non_null(FTP_proxy) && ((p = getenv("FTP_PROXY")) || (p = getenv("ftp_proxy")) || (p = getenv("FTP_proxy"))))
         FTP_proxy = p;
     if (!non_null(NO_proxy) && ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))

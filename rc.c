@@ -479,8 +479,6 @@ struct param_ptr params4[] = {
         NULL },
     { "https_proxy", P_STRING, PI_TEXT, (void*)&HTTPS_proxy, CMT_HTTPS_PROXY,
         NULL },
-    { "gopher_proxy", P_STRING, PI_TEXT, (void*)&GOPHER_proxy,
-        CMT_GOPHER_PROXY, NULL },
     { "ftp_proxy", P_STRING, PI_TEXT, (void*)&FTP_proxy, CMT_FTP_PROXY, NULL },
     { "no_proxy", P_STRING, PI_TEXT, (void*)&NO_proxy, CMT_NO_PROXY, NULL },
     { "noproxy_netaddr", P_INT, PI_ONOFF, (void*)&NOproxy_netaddr,

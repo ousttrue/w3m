@@ -721,67 +721,6 @@ retry:
                 write_from_file(sock, request->body);
         }
         break;
-    case SCM_GOPHER:
-        p = pu->file;
-        n = 0;
-        while (*p == '/') {
-            ++p;
-            ++n;
-        }
-        if (*p != '\0') {
-            type = pu->file[n];
-            switch (type) {
-            case '0':
-            case '1':
-            case 'm':
-            case 's':
-            case 'g':
-            case 'h':
-            case 'I':
-            case '5':
-            case '7':
-            case '9':
-                tmp = Strnew_charp(pu->file);
-                gophertmp = Strdup(tmp);
-                Strdelete(tmp, n, 1);
-                pu->file = tmp->ptr;
-                break;
-            default:
-                type = '\0';
-                break;
-            }
-        } else {
-            type = '\0';
-        }
-        if (pu->query != NULL) {
-            tmp = Strnew_charp(pu->file);
-            Strcat_char(tmp, '\t');
-            Strcat_charp(tmp, pu->query);
-            pu->file = tmp->ptr;
-        }
-        if (non_null(GOPHER_proxy) && use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
-            hr->flag |= HR_FLAG_PROXY;
-            sock = openSocket(GOPHER_proxy_parsed.host,
-                schemeToName(GOPHER_proxy_parsed.scheme),
-                GOPHER_proxy_parsed.port);
-            if (sock < 0)
-                return uf;
-            uf.scheme = SCM_HTTP;
-            tmp = HTTPrequest(pu, current, hr, extra_header);
-        } else {
-            sock = openSocket(pu->host, schemeToName(pu->scheme), pu->port);
-            if (sock < 0)
-                return uf;
-            if (pu->file == NULL)
-                pu->file = "1";
-            tmp = Strnew_charp(file_unquote(pu->file));
-            Strcat_char(tmp, '\n');
-        }
-        write(sock, tmp->ptr, tmp->length);
-        if (type != '\0') {
-            pu->file = gophertmp->ptr;
-        }
-        break;
     case SCM_DATA:
         if (pu->file == NULL)
             return uf;

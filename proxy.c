@@ -13,7 +13,6 @@
 
 struct Url HTTP_proxy_parsed;
 struct Url HTTPS_proxy_parsed;
-struct Url GOPHER_proxy_parsed;
 struct Url FTP_proxy_parsed;
 TextList* NO_proxy_domains;
 
@@ -30,8 +29,6 @@ void parse_proxy(void)
         HTTP_proxy_parsed = parseURL(HTTP_proxy, NULL);
     if (non_null(HTTPS_proxy))
         HTTPS_proxy_parsed = parseURL(HTTPS_proxy, NULL);
-    if (non_null(GOPHER_proxy))
-        GOPHER_proxy_parsed = parseURL(GOPHER_proxy, NULL);
     if (non_null(FTP_proxy))
         FTP_proxy_parsed = parseURL(FTP_proxy, NULL);
     if (non_null(NO_proxy))

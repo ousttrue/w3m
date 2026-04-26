@@ -29,7 +29,6 @@ pub export var QuietMessage: u8 = 0;
 pub export var TrapSignal: u8 = 1;
 pub export var HTTP_proxy: [*c]const u8 = null;
 pub export var HTTPS_proxy: [*c]const u8 = null;
-pub export var GOPHER_proxy: [*c]const u8 = null;
 pub export var FTP_proxy: [*c]const u8 = null;
 pub export var NO_proxy: [*c]const u8 = null;
 pub export var NOproxy_netaddr: c_int = 1;

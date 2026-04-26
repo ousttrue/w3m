@@ -78,8 +78,6 @@ DefaultFile(int scheme)
     case SCM_HTTP:
     case SCM_HTTPS:
         return allocStr(HTTP_DEFAULT_FILE, -1);
-    case SCM_GOPHER:
-        return allocStr("1", -1);
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
     }
@@ -373,32 +371,14 @@ analyze_file:
     }
 
     q = p;
-    if (p_url.scheme == SCM_GOPHER) {
-        if (*q == '/')
-            q++;
-        if (*q && q[0] != '/' && q[1] != '/' && q[2] == '/')
-            q++;
-    }
+
     if (*p == '/')
         p++;
     if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
         p_url.file = DefaultFile(p_url.scheme);
         goto do_query;
     }
-    if (p_url.scheme == SCM_GOPHER && *p == 'R') {
-        if (!*++p) {
-            p_url.file = "";
-            goto do_query;
-        }
-        tmp = Strnew();
-        Strcat_char(tmp, *(p++));
-        while (*p && *p != '/')
-            p++;
-        Strcat_charp(tmp, p);
-        while (*p)
-            p++;
-        p_url.file = copyPath(tmp->ptr, -1, COPYPATH_SPC_IGNORE);
-    } else {
+    {
         const char* cgi = strchr(p, '?');
     again:
         while (*p && *p != '#' && p != cgi)
@@ -503,8 +483,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
         pu.host = current->host;
         pu.port = current->port;
         if (pu.file && *pu.file) {
-            if (
-                pu.scheme != SCM_GOPHER && pu.file[0] != '/'
+            if (pu.file[0] != '/'
                 && !(pu.scheme == SCM_LOCAL && IS_ALPHA(pu.file[0])
                     && pu.file[1] == ':')) {
                 /* file is relative [process 1] */
@@ -520,9 +499,6 @@ struct Url parseURL2(const char* url, const struct Url* current)
                     pu.file = tmp->ptr;
                     relative_uri = true;
                 }
-            } else if (pu.scheme == SCM_GOPHER && pu.file[0] == '/') {
-                p = pu.file;
-                pu.file = allocStr(p + 1, -1);
             }
         } else { /* scheme:[?query][#label] */
             pu.file = current->file;
@@ -556,8 +532,7 @@ struct Url parseURL2(const char* url, const struct Url* current)
                  */
                 pu.file = cleanupName(pu.file);
             }
-        } else if (
-            pu.scheme != SCM_GOPHER && pu.file[0] == '/') {
+        } else if (pu.file[0] == '/') {
             /*
              * this happens on the following conditions:
              * (1) ftp scheme (2) local, looks like absolute path.
@@ -688,13 +663,6 @@ schemeToProxy(int scheme)
     case SCM_HTTPS:
         pu = &HTTPS_proxy_parsed;
         break;
-    case SCM_GOPHER:
-        pu = &GOPHER_proxy_parsed;
-        break;
-#ifdef DEBUG
-    default:
-        abort();
-#endif
     }
     return pu;
 }

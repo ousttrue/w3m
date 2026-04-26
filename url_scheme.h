@@ -2,7 +2,6 @@
 
 enum UrlScheme {
     SCM_HTTP,
-    SCM_GOPHER,
     SCM_LOCAL,
     SCM_LOCAL_CGI,
     SCM_EXEC,

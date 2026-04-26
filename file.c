@@ -271,8 +271,7 @@ load_doc: {
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy))) && use_proxy && !check_no_proxy(pu.host))) {
-
+    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS) {
         if (fmInitialized) {
             term_cbreak();
             /* FIXME: gettextize? */
@@ -363,51 +362,6 @@ load_doc: {
         }
 
         f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
-    } 
-    else if (pu.scheme == SCM_GOPHER) {
-        p = pu.file;
-        while (*p == '/')
-            ++p;
-        switch (*p) {
-        case '0':
-            t = "text/plain";
-            break;
-        case '1':
-        case 'm':
-            page = loadGopherDir(&f, &pu, &charset);
-            t = "gopher:directory";
-            TRAP_OFF;
-            goto page_loaded;
-        case '7':
-            if (pu.query != NULL) {
-                page = loadGopherDir(&f, &pu, &charset);
-                t = "gopher:directory";
-            } else {
-                page = loadGopherSearch(&f, &pu, &charset);
-                t = "gopher:search";
-            }
-            TRAP_OFF;
-            goto page_loaded;
-        case 's':
-            t = "audio/basic";
-            break;
-        case 'g':
-            t = "image/gif";
-            break;
-        case 'h':
-            t = "text/html";
-            break;
-        case 'I':
-            t = guessContentType(pu.file);
-            if (strncasecmp(t, "image/", 6) != 0) {
-                t = "image/png";
-            }
-            break;
-        case '5':
-        case '9':
-            gopher_download = TRUE;
-            break;
-        }
     } else if (pu.scheme == SCM_DATA) {
         t = f.guess_type;
     } else if (searchHeader) {
@@ -484,8 +438,6 @@ page_loaded:
             if (!src)
                 return NULL;
             const char* file = alloc_guess_filename(pu.file);
-            if (f.scheme == SCM_GOPHER)
-                file = Sprintf("%s.html", file)->ptr;
             doFileMove(args, tmpf, file);
             return NO_BUFFER;
         }
