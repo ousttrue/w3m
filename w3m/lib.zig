@@ -156,21 +156,21 @@ export fn tmpfname(tmp_type: c.TmpFileType, _ext: ?[*:0]const u8) [*c]const u8 {
 
 export fn do_lineinput(
     args: ?*c.CmdArgs,
-    prompt: [*c]const u8,
-    def_str: [*c]const u8,
+    _prompt: ?[*:0]const u8,
+    _def_str: ?[*:0]const u8,
     flag: c.InputLineFlags,
     hist: c.HistoryType,
     incrfunc: c.IncrFunc,
 ) c.LineInputResult {
     var li = LineInput.init(
         runtime.allocator,
-        std.mem.span(def_str),
+        if (_def_str) |def_str| std.mem.span(def_str) else "",
         flag,
         hist,
     ) catch @panic("LineInput.init");
     defer li.deinit();
 
-    li.process(args.?, std.mem.span(prompt), flag, incrfunc);
+    li.process(args.?, if (_prompt) |prompt| std.mem.span(prompt) else "", flag, incrfunc);
 
     var p: []const u8 = std.mem.span(li.strBuf.*.ptr);
     if (flag & (c.IN_FILENAME | c.IN_COMMAND) != 0) {
@@ -292,9 +292,9 @@ export fn MoveFile(path1: [*c]const u8, path2: [*c]const u8) bool {
 }
 
 export fn checkOverWrite(args: ?*c.CmdArgs, path: [*c]const u8) bool {
-    _ = std.Io.Dir.cwd().statFile(runtime.io, std.mem.span(path), .{}) catch {
+    if (std.Io.Dir.cwd().statFile(runtime.io, std.mem.span(path), .{})) |_| {
         return false;
-    };
+    } else |_| {}
     const _ans = c.inputAnswer(args, "File exists. Overwrite? (y/n)");
     const ans: [*:0]const u8 = _ans orelse {
         return false;
