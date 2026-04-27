@@ -37,8 +37,6 @@
 #include <sys/stat.h>
 #include <utime.h>
 
-#define SAVE_BUF_SIZE 1536
-
 typedef struct Buffer* (*LoadProc)(struct CmdArgs* args, struct URLFile*, struct Buffer*);
 
 static struct Buffer*
@@ -209,20 +207,19 @@ bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
         flush_tty();
         pid = fork();
         if (!pid) {
-            int err;
             if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
                 uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
                 if (tmpf)
                     unlink(tmpf);
             }
             setup_child(FALSE, 0, ist_fd(uf.stream));
-            err = save2tmp(uf.stream, uf.scheme, p);
-            if (err == 0 && PreserveTimestamp && uf.modtime != -1)
+            bool success = ist_save2tmp(uf.stream, uf.scheme, p);
+            if (success && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
             UFclose(&uf);
             unlink(lock);
-            if (err != 0)
-                exit(-err);
+            if (!success)
+                exit(1);
             exit(0);
         }
         addDownloadList(pid, uf.url, p, lock, current_content_length);
@@ -255,7 +252,7 @@ bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
             if (tmpf)
                 unlink(tmpf);
         }
-        if (save2tmp(uf.stream, uf.scheme, p) < 0) {
+        if (!ist_save2tmp(uf.stream, uf.scheme, p)) {
             /* FIXME: gettextize? */
             printf("Can't save to %s\n", p);
             return false;
@@ -610,7 +607,7 @@ page_loaded:
     }
     if (image_source) {
         struct Buffer* b = NULL;
-        if (save2tmp(f.stream, f.scheme, image_source) == 0) {
+        if (ist_save2tmp(f.stream, f.scheme, image_source)) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = image_source;
             b->real_type = t;
@@ -1043,7 +1040,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
         SignalFunc prevtrap = NULL;
 
         TRAP_ON;
-        if (save2tmp(uf->stream, uf->scheme, cache->file) < 0) {
+        if (!ist_save2tmp(uf->stream, uf->scheme, cache->file)) {
             TRAP_OFF;
             return NULL;
         }
@@ -1333,47 +1330,6 @@ pager_end:
     return last;
 }
 
-int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf)
-{
-    int64_t linelen = 0, trbyte = 0;
-    SignalFunc prevtrap = NULL;
-    static sigjmp_buf env_bak;
-    volatile int retval = 0;
-
-    FILE* ff = fopen(tmpf, "wb");
-    if (ff == NULL) {
-        /* fclose(f); */
-        return -1;
-    }
-
-    memcpy(env_bak, AbortLoading, sizeof(sigjmp_buf));
-    if (SETJMP(AbortLoading) != 0) {
-        goto _end;
-    }
-    TRAP_ON;
-    int check = 0;
-    uint8_t* buf = NULL;
-    {
-        buf = NewWithoutGC_N(uint8_t, SAVE_BUF_SIZE);
-        int count;
-        while ((count = ist_read(stream, buf, SAVE_BUF_SIZE)) > 0) {
-            if (fwrite(buf, 1, count, ff) != count) {
-                retval = -2;
-                goto _end;
-            }
-            linelen += count;
-            showProgress(&linelen, &trbyte);
-        }
-    }
-_end:
-    bcopy(env_bak, AbortLoading, sizeof(sigjmp_buf));
-    TRAP_OFF;
-    free(buf);
-    fclose(ff);
-    current_content_length = 0;
-    return retval;
-}
-
 struct Buffer*
 doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buffer* defaultbuf)
 {
@@ -1406,14 +1362,14 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
         flush_tty();
         if (!fork()) {
             setup_child(FALSE, 0, ist_fd(uf.stream));
-            if (save2tmp(uf.stream, uf.scheme, tmpf) < 0)
+            if (!ist_save2tmp(uf.stream, uf.scheme, tmpf))
                 exit(1);
             UFclose(&uf);
             myExec(command->ptr);
         }
         return NO_BUFFER;
     } else {
-        if (save2tmp(uf.stream, uf.scheme, tmpf) < 0) {
+        if (!ist_save2tmp(uf.stream, uf.scheme, tmpf)) {
             return NULL;
         }
     }

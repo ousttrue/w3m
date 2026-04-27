@@ -1,5 +1,9 @@
 #include "input_stream.h"
+#include "global.h"
+#include "alloc.h"
 #include "input_stream_impl.h"
+#include "setjmp_util.h"
+#include "html_loader.h"
 #include <signal.h>
 
 static void ist_drain(struct InputStream* ist)
@@ -219,4 +223,46 @@ struct str_view ist_gets(struct InputStream* ist, bool check_crnl)
         .ptr = (char*)span.ptr,
         .len = span.len,
     };
+}
+
+#define SAVE_BUF_SIZE 1536
+
+bool ist_save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf)
+{
+    int64_t linelen = 0, trbyte = 0;
+    SignalFunc prevtrap = NULL;
+    static sigjmp_buf env_bak;
+    volatile int retval = 0;
+
+    FILE* ff = fopen(tmpf, "wb");
+    if (ff == NULL) {
+        return false;
+    }
+
+    memcpy(env_bak, AbortLoading, sizeof(sigjmp_buf));
+    if (SETJMP(AbortLoading) != 0) {
+        goto _end;
+    }
+    TRAP_ON;
+    int check = 0;
+    uint8_t* buf = NULL;
+    {
+        buf = NewWithoutGC_N(uint8_t, SAVE_BUF_SIZE);
+        int count;
+        while ((count = ist_read(stream, buf, SAVE_BUF_SIZE)) > 0) {
+            if (fwrite(buf, 1, count, ff) != count) {
+                retval = -2;
+                goto _end;
+            }
+            linelen += count;
+            showProgress(&linelen, &trbyte);
+        }
+    }
+_end:
+    bcopy(env_bak, AbortLoading, sizeof(sigjmp_buf));
+    TRAP_OFF;
+    free(buf);
+    fclose(ff);
+    current_content_length = 0;
+    return retval;
 }

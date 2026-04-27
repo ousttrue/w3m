@@ -11,7 +11,6 @@ struct Url;
 struct Buffer;
 struct Form;
 
-int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf);
 bool doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr);
 
 struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,

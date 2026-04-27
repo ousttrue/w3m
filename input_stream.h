@@ -1,5 +1,5 @@
 #pragma once
-#include "constants.h"
+#include "url_scheme.h"
 #include "str_view.h"
 #include <stdio.h>
 #include <stdint.h>
@@ -32,3 +32,4 @@ int ist_read(struct InputStream* ist, uint8_t* dst, int bufsize);
 int ist_fd(struct InputStream* ist);
 bool ist_eos(struct InputStream* ist);
 struct str_view ist_gets(struct InputStream* stream, bool check_crnl);
+bool ist_save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf);
