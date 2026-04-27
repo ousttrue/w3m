@@ -11,7 +11,6 @@ struct Url;
 struct Buffer;
 struct Form;
 
-int _MoveFile(const char* path1, const char* path2);
 int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf);
 int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int download);
 #define doFileCopy(args, tmpf, defstr) _doFileCopy(args, tmpf, defstr, FALSE);

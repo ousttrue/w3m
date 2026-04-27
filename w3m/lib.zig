@@ -254,3 +254,39 @@ export fn growbuf_append(_gb: ?*Growbuf, _src: ?[*]const u8, len: usize) void {
     };
     gb.buf.appendSlice(runtime.allocator, src[0..len]) catch {};
 }
+
+export fn MoveFile(path1: [*c]const u8, path2: [*c]const u8) bool {
+    var f1 = std.Io.Dir.cwd().openFile(runtime.io, std.mem.span(path1), .{}) catch {
+        return false;
+    };
+    defer f1.close(runtime.io);
+    var read_buf: [128]u8 = undefined;
+    var r = f1.reader(runtime.io, &read_buf);
+
+    var f2 = std.Io.Dir.cwd().openFile(runtime.io, std.mem.span(path2), .{ .mode = .write_only }) catch {
+        return false;
+    };
+    defer f2.close(runtime.io);
+    var write_buf: [128]u8 = undefined;
+    var w = f2.writer(runtime.io, &write_buf);
+    defer w.flush() catch {};
+
+    var buf: [128]u8 = undefined;
+    var write_size: usize = 0;
+    while (true) {
+        if (r.interface.readSliceShort(&buf)) |size| {
+            w.interface.writeAll(buf[0..size]) catch {
+                return false;
+            };
+            if (size < buf.len) {
+                return true;
+            }
+            write_size += size;
+            // c.showProgress(&linelen, &trbyte);
+        } else |_| {
+            return false;
+        }
+    }
+
+    unreachable;
+}

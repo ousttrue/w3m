@@ -1350,47 +1350,6 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
     return buf;
 }
 
-
-
-int _MoveFile(const char* path1, const char* path2)
-{
-    FILE* f2;
-    int is_pipe;
-    int64_t linelen = 0, trbyte = 0;
-    uint8_t* buf = NULL;
-    int count;
-
-    struct InputStream* f1 = ist_from_path(path1);
-    if (f1 == NULL)
-        return -1;
-
-    if (*path2 == '|' && PermitSaveToPipe) {
-        is_pipe = TRUE;
-        f2 = popen(path2 + 1, "w");
-    } else {
-        is_pipe = FALSE;
-        f2 = fopen(path2, "wb");
-    }
-    if (f2 == NULL) {
-        ist_destroy(f1);
-        return -1;
-    }
-    current_content_length = 0;
-    buf = NewWithoutGC_N(uint8_t, SAVE_BUF_SIZE);
-    while ((count = ist_read(f1, buf, SAVE_BUF_SIZE)) > 0) {
-        fwrite(buf, 1, count, f2);
-        linelen += count;
-        showProgress(&linelen, &trbyte);
-    }
-    xfree(buf);
-    ist_destroy(f1);
-    if (is_pipe)
-        pclose(f2);
-    else
-        fclose(f2);
-    return 0;
-}
-
 static int checkCopyFile(const char* path1, const char* path2)
 {
     if (*path2 == '|' && PermitSaveToPipe)
@@ -1441,7 +1400,7 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
             return -1;
         }
         if (!download) {
-            if (_MoveFile(tmpf, p) < 0) {
+            if (!MoveFile(tmpf, p)) {
                 /* FIXME: gettextize? */
                 msg = Sprintf("Can't save to %s", conv_from_system(p));
                 disp_err_message(args, msg->ptr, FALSE);
@@ -1454,7 +1413,7 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
         pid = fork();
         if (!pid) {
             setup_child(FALSE, 0, -1);
-            if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+            if (MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
                 setModtime(p, st.st_mtime);
             unlink(lock);
             exit(0);
@@ -1491,7 +1450,7 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
             printf("Can't copy. %s and %s are identical.", tmpf, p);
             return -1;
         }
-        if (_MoveFile(tmpf, p) < 0) {
+        if (!MoveFile(tmpf, p)) {
             /* FIXME: gettextize? */
             printf("Can't save to %s\n", p);
             return -1;
