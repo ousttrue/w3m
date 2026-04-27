@@ -290,3 +290,17 @@ export fn MoveFile(path1: [*c]const u8, path2: [*c]const u8) bool {
 
     unreachable;
 }
+
+export fn checkOverWrite(args: ?*c.CmdArgs, path: [*c]const u8) bool {
+    _ = std.Io.Dir.cwd().statFile(runtime.io, std.mem.span(path), .{}) catch {
+        return false;
+    };
+    const _ans = c.inputAnswer(args, "File exists. Overwrite? (y/n)");
+    const ans: [*:0]const u8 = _ans orelse {
+        return false;
+    };
+    if (ans[0] != 'y') {
+        return false;
+    }
+    return true;
+}

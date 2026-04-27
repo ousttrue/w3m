@@ -45,7 +45,6 @@ struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* pu, st
     struct HttpRequest* hr, unsigned char* status);
 
 void UFclose(struct URLFile* f);
-void UFhalfclose(struct URLFile* f);
 
 Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname);
 void free_ssl_ctx(void);

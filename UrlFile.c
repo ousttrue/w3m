@@ -1,4 +1,5 @@
 #include "UrlFile.h"
+#include <w3m.h>
 #include "line_input.h"
 #include "display.h"
 #include "form.h"
@@ -629,15 +630,6 @@ void UFclose(struct URLFile* f)
     }
 }
 
-void UFhalfclose(struct URLFile* f)
-{
-    switch (f->scheme) {
-    default:
-        UFclose(f);
-        break;
-    }
-}
-
 static Str accept_this_site;
 
 static void ssl_accept_this_site(const char* hostname)
@@ -1007,6 +999,6 @@ void uncompress_and_reopen(struct URLFile* uf, struct CompressionDecoder* d, con
         else
             uf->scheme = SCM_FILE;
     }
-    UFhalfclose(uf);
+    UFclose(uf);
     uf->stream = ist_from_fp(f1, fclose);
 }

@@ -12,11 +12,7 @@ struct Buffer;
 struct Form;
 
 int save2tmp(struct InputStream* stream, enum UrlScheme scheme, const char* tmpf);
-int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int download);
-#define doFileCopy(args, tmpf, defstr) _doFileCopy(args, tmpf, defstr, FALSE);
-int doFileMove(struct CmdArgs* args, const char* tmpf, const char* defstr);
-int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr);
-int checkOverWrite(struct CmdArgs* args, const char* path);
+bool doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr);
 
 struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
     struct Buffer* (*loadproc)(struct CmdArgs* args, struct URLFile*, struct Buffer*),

@@ -1354,7 +1354,7 @@ void svBuf(struct CmdArgs* args)
             file = conv_to_system(file);
         }
         file = expandPath(file);
-        if (checkOverWrite(args, file) < 0) {
+        if (!checkOverWrite(args, file)) {
             displayBuffer(args, B_NORMAL);
             return;
         }

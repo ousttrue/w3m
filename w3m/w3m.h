@@ -48,3 +48,5 @@ enum TmpFileType {
 const char* tmpfname(enum TmpFileType type, const char* ext);
 
 bool MoveFile(const char* path1, const char* path2);
+
+int checkOverWrite(struct CmdArgs* args, const char* path);

@@ -152,6 +152,120 @@ checkRedirection(struct CmdArgs* args, struct Url* pu)
     return TRUE;
 }
 
+static bool checkSaveFile(int des, const char* path2)
+{
+    if (des < 0)
+        return true;
+
+    if (*path2 == '|' && PermitSaveToPipe)
+        return true;
+
+    struct stat st1, st2;
+    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
+        if (st1.st_ino == st2.st_ino)
+            return false;
+
+    return true;
+}
+
+bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
+{
+    Str msg;
+    Str filen;
+    const char *p, *q;
+    pid_t pid;
+    const char* lock;
+    const char* tmpf = NULL;
+
+    if (fmInitialized) {
+        p = searchKeyData();
+        if (p == NULL || *p == '\0') {
+            /* FIXME: gettextize? */
+            p = inputLineHist(args, "(Download)Save file to: ",
+                defstr, IN_FILENAME, HistorySave);
+            if (p == NULL || *p == '\0')
+                return false;
+            p = conv_to_system(p);
+        }
+        if (!checkOverWrite(args, p))
+            return false;
+
+        if (!checkSaveFile(ist_fd(uf.stream), p)) {
+            /* FIXME: gettextize? */
+            msg = Sprintf("Can't save. Load file and %s are identical.",
+                conv_from_system(p));
+            disp_err_message(args, msg->ptr, FALSE);
+            return false;
+        }
+        /*
+         * if (save2tmp(uf, p) < 0) {
+         * msg = Sprintf("Can't save to %s", conv_from_system(p));
+         * disp_err_message(msg->ptr, FALSE);
+         * }
+         */
+        lock = tmpfname(TMPF_DFL, ".lock");
+
+        symlink(p, lock);
+        flush_tty();
+        pid = fork();
+        if (!pid) {
+            int err;
+            if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
+                uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
+                if (tmpf)
+                    unlink(tmpf);
+            }
+            setup_child(FALSE, 0, ist_fd(uf.stream));
+            err = save2tmp(uf.stream, uf.scheme, p);
+            if (err == 0 && PreserveTimestamp && uf.modtime != -1)
+                setModtime(p, uf.modtime);
+            UFclose(&uf);
+            unlink(lock);
+            if (err != 0)
+                exit(-err);
+            exit(0);
+        }
+        addDownloadList(pid, uf.url, p, lock, current_content_length);
+    } else {
+        q = searchKeyData();
+        if (q == NULL || *q == '\0') {
+            /* FIXME: gettextize? */
+            printf("(Download)Save file to: ");
+            fflush(stdout);
+            filen = Strfgets(stdin);
+            if (filen->length == 0)
+                return false;
+            q = filen->ptr;
+        }
+        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+            ;
+        ((char*)p)[1] = '\0';
+        if (*q == '\0')
+            return false;
+        p = expandPath(q);
+        if (!checkOverWrite(args, p))
+            return false;
+        if (!checkSaveFile(ist_fd(uf.stream), p)) {
+            /* FIXME: gettextize? */
+            printf("Can't save. Load file and %s are identical.", p);
+            return false;
+        }
+        if (uf.compression != CMP_NOCOMPRESS && AutoUncompress) {
+            uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
+            if (tmpf)
+                unlink(tmpf);
+        }
+        if (save2tmp(uf.stream, uf.scheme, p) < 0) {
+            /* FIXME: gettextize? */
+            printf("Can't save to %s\n", p);
+            return false;
+        }
+        if (PreserveTimestamp && uf.modtime != -1)
+            setModtime(p, uf.modtime);
+    }
+    return true;
+}
+
 /*
  * loadGeneralFile: load file to buffer
  */
@@ -178,7 +292,6 @@ loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* volatile cur
     struct URLOption url_option;
     const char* tmpf;
     Str volatile page = NULL;
-    int gopher_download = FALSE;
     wc_ces charset = WC_CES_US_ASCII;
     struct HttpRequest hr;
     struct Url* volatile auth_pu;
@@ -437,11 +550,12 @@ page_loaded:
             Strfputs(s, src);
             fclose(src);
         }
-        if (do_download || gopher_download) {
+        if (do_download) {
             if (!src)
                 return NULL;
             const char* file = alloc_guess_filename(pu.file);
-            doFileMove(args, tmpf, file);
+            doFileCopy(args, tmpf, file);
+            unlink(tmpf);
             return NO_BUFFER;
         }
         b = loadHTMLString(page);
@@ -463,7 +577,7 @@ page_loaded:
     current_content_length = 0;
     if (t_buf && (p = http_response_get(&t_buf->http_response, "Content-Length:")) != NULL)
         current_content_length = strtoll(p, NULL, 10);
-    if (do_download || gopher_download) {
+    if (do_download) {
         /* download only */
         const char* file;
         TRAP_OFF;
@@ -474,10 +588,8 @@ page_loaded:
             file = conv_from_system(http_response_guess_save_name(NULL, pu.real_file));
         } else
             file = http_response_guess_save_name(&t_buf->http_response, pu.file);
-        if (doFileSave(args, f, file) == 0)
-            UFhalfclose(&f);
-        else
-            UFclose(&f);
+        doFileSave(args, f, file);
+        UFclose(&f);
         return NO_BUFFER;
     }
 
@@ -1350,18 +1462,18 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
     return buf;
 }
 
-static int checkCopyFile(const char* path1, const char* path2)
+static bool checkCopyFile(const char* path1, const char* path2)
 {
     if (*path2 == '|' && PermitSaveToPipe)
-        return 0;
+        return true;
     struct stat st1, st2;
     if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
         if (st1.st_ino == st2.st_ino)
-            return -1;
-    return 0;
+            return false;
+    return true;
 }
 
-int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int download)
+bool doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr)
 {
     Str msg;
     Str filen;
@@ -1389,23 +1501,23 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
                 p = conv_to_system(p);
             }
             p = expandPath(p);
-            if (checkOverWrite(args, p) < 0)
-                return -1;
+            if (!checkOverWrite(args, p))
+                return false;
         }
-        if (checkCopyFile(tmpf, p) < 0) {
+        if (!checkCopyFile(tmpf, p)) {
             /* FIXME: gettextize? */
             msg = Sprintf("Can't copy. %s and %s are identical.",
                 conv_from_system(tmpf), conv_from_system(p));
             disp_err_message(args, msg->ptr, FALSE);
-            return -1;
+            return false;
         }
-        if (!download) {
+        {
             if (!MoveFile(tmpf, p)) {
                 /* FIXME: gettextize? */
                 msg = Sprintf("Can't save to %s", conv_from_system(p));
                 disp_err_message(args, msg->ptr, FALSE);
             }
-            return -1;
+            return false;
         }
         lock = tmpfname(TMPF_DFL, ".lock");
         symlink(p, lock);
@@ -1429,168 +1541,34 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
             fflush(stdout);
             filen = Strfgets(stdin);
             if (filen->length == 0)
-                return -1;
+                return false;
             q = filen->ptr;
         }
         for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
             ;
         ((char*)p)[1] = '\0';
         if (*q == '\0')
-            return -1;
+            return false;
         p = q;
         if (*p == '|' && PermitSaveToPipe)
             is_pipe = TRUE;
         else {
             p = expandPath(p);
-            if (checkOverWrite(args, p) < 0)
-                return -1;
+            if (!checkOverWrite(args, p))
+                return false;
         }
-        if (checkCopyFile(tmpf, p) < 0) {
+        if (!checkCopyFile(tmpf, p)) {
             /* FIXME: gettextize? */
             printf("Can't copy. %s and %s are identical.", tmpf, p);
-            return -1;
+            return false;
         }
         if (!MoveFile(tmpf, p)) {
             /* FIXME: gettextize? */
             printf("Can't save to %s\n", p);
-            return -1;
+            return false;
         }
         if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
             setModtime(p, st.st_mtime);
     }
-    return 0;
-}
-
-int doFileMove(struct CmdArgs* args, const char* tmpf, const char* defstr)
-{
-    int ret = doFileCopy(args, tmpf, defstr);
-    unlink(tmpf);
-    return ret;
-}
-
-static int checkSaveFile(int des, const char* path2)
-{
-    if (des < 0)
-        return 0;
-
-    if (*path2 == '|' && PermitSaveToPipe)
-        return 0;
-
-    struct stat st1, st2;
-    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
-        if (st1.st_ino == st2.st_ino)
-            return -1;
-
-    return 0;
-}
-
-int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
-{
-    Str msg;
-    Str filen;
-    const char *p, *q;
-    pid_t pid;
-    const char* lock;
-    const char* tmpf = NULL;
-
-    if (fmInitialized) {
-        p = searchKeyData();
-        if (p == NULL || *p == '\0') {
-            /* FIXME: gettextize? */
-            p = inputLineHist(args, "(Download)Save file to: ",
-                defstr, IN_FILENAME, HistorySave);
-            if (p == NULL || *p == '\0')
-                return -1;
-            p = conv_to_system(p);
-        }
-        if (checkOverWrite(args, p) < 0)
-            return -1;
-
-        if (checkSaveFile(ist_fd(uf.stream), p) < 0) {
-            /* FIXME: gettextize? */
-            msg = Sprintf("Can't save. Load file and %s are identical.",
-                conv_from_system(p));
-            disp_err_message(args, msg->ptr, FALSE);
-            return -1;
-        }
-        /*
-         * if (save2tmp(uf, p) < 0) {
-         * msg = Sprintf("Can't save to %s", conv_from_system(p));
-         * disp_err_message(msg->ptr, FALSE);
-         * }
-         */
-        lock = tmpfname(TMPF_DFL, ".lock");
-
-        symlink(p, lock);
-        flush_tty();
-        pid = fork();
-        if (!pid) {
-            int err;
-            if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
-                uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
-                if (tmpf)
-                    unlink(tmpf);
-            }
-            setup_child(FALSE, 0, ist_fd(uf.stream));
-            err = save2tmp(uf.stream, uf.scheme, p);
-            if (err == 0 && PreserveTimestamp && uf.modtime != -1)
-                setModtime(p, uf.modtime);
-            UFclose(&uf);
-            unlink(lock);
-            if (err != 0)
-                exit(-err);
-            exit(0);
-        }
-        addDownloadList(pid, uf.url, p, lock, current_content_length);
-    } else {
-        q = searchKeyData();
-        if (q == NULL || *q == '\0') {
-            /* FIXME: gettextize? */
-            printf("(Download)Save file to: ");
-            fflush(stdout);
-            filen = Strfgets(stdin);
-            if (filen->length == 0)
-                return -1;
-            q = filen->ptr;
-        }
-        for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
-            ;
-        ((char*)p)[1] = '\0';
-        if (*q == '\0')
-            return -1;
-        p = expandPath(q);
-        if (checkOverWrite(args, p) < 0)
-            return -1;
-        if (checkSaveFile(ist_fd(uf.stream), p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't save. Load file and %s are identical.", p);
-            return -1;
-        }
-        if (uf.compression != CMP_NOCOMPRESS && AutoUncompress) {
-            uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
-            if (tmpf)
-                unlink(tmpf);
-        }
-        if (save2tmp(uf.stream, uf.scheme, p) < 0) {
-            /* FIXME: gettextize? */
-            printf("Can't save to %s\n", p);
-            return -1;
-        }
-        if (PreserveTimestamp && uf.modtime != -1)
-            setModtime(p, uf.modtime);
-    }
-    return 0;
-}
-
-int checkOverWrite(struct CmdArgs* args, const char* path)
-{
-    struct stat st;
-    if (stat(path, &st) < 0)
-        return 0;
-
-    const char* ans = inputAnswer(args, "File exists. Overwrite? (y/n)");
-    if (ans && TOLOWER(*ans) == 'y')
-        return 0;
-    else
-        return -1;
+    return true;
 }

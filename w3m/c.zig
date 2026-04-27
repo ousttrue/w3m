@@ -8,6 +8,7 @@ pub const c = @cImport({
     @cInclude("indep.h");
     @cInclude("alloc.h");
     @cInclude("growbuf.h");
+    @cInclude("line_input.h");
 
     // #include "LineInput.h"
     // #include "Str.h"

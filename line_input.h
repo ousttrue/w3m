@@ -1,8 +1,8 @@
 #pragma once
-#include <w3m.h>
 #include "constants.h"
 #include "LineInput.h"
 
+struct CmdArgs;
 const char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const char* def_str,
     enum InputLineFlags flag, enum HistoryType hist, IncrFunc incfunc);
 
