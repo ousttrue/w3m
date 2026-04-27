@@ -18,6 +18,4 @@ struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
     struct Buffer* defaultbuf);
 struct Buffer* loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf);
 struct Buffer* loadHTMLString(Str page);
-Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset);
-Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset);
 struct Buffer* loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* current, const char* referer, int flag, struct Form* request);

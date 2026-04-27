@@ -4,11 +4,9 @@
 #include "http_request.h"
 #include "http_auth.h"
 #include "auth.h"
-#include "http_response.h"
 #include "html_loader.h"
 #include "filepath.h"
 #include "UrlFile.h"
-#include "growbuf.h"
 #include "input_stream.h"
 #include "indep.h"
 #include "alloc.h"
@@ -19,7 +17,6 @@
 #include "terms.h"
 #include "html_feed_environ.h"
 #include "anchor.h"
-#include "proxy.h"
 #include "downloadlist.h"
 #include "main.h"
 #include "mailcap.h"
@@ -33,9 +30,9 @@
 #include "html.h"
 #include "local_cgi.h"
 #include "wc_util.h"
-#include <stdio.h>
 #include <sys/stat.h>
 #include <utime.h>
+#include <unistd.h>
 
 typedef struct Buffer* (*LoadProc)(struct CmdArgs* args, struct URLFile*, struct Buffer*);
 
@@ -166,7 +163,7 @@ static bool checkSaveFile(int des, const char* path2)
     return true;
 }
 
-bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
+static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
 {
     Str msg;
     Str filen;
@@ -793,151 +790,6 @@ loadHTMLString(Str page)
     if (n_textarea)
         formResetBuffer(newBuf, newBuf->formitem);
     return newBuf;
-}
-
-/*
- * loadGopherDir: get gopher directory
- */
-Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
-{
-    Str volatile tmp;
-    Str lbuf, name, file, host, port, type;
-    char* volatile p, * volatile q;
-    int link;
-    SignalFunc prevtrap = NULL;
-    wc_ces doc_charset = DocumentCharset;
-
-    tmp = parsedURL2Str(pu);
-    p = html_quote(tmp->ptr);
-    const char* unq = file_unquote(tmp->ptr);
-    tmp = convertLine((const uint8_t*)unq, strlen(unq), RAW_MODE,
-        charset, doc_charset, false);
-    q = html_quote(tmp->ptr);
-    tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
-        "</title>\n</head>\n<body>\n<h1>Index of ", q,
-        "</h1>\n<table>\n", NULL);
-
-    if (SETJMP(AbortLoading) != 0)
-        goto gopher_end;
-    TRAP_ON;
-
-    bool pre = false;
-    while (1) {
-        struct str_view gv = ist_gets(uf->stream, false);
-        if (gv.len == 0)
-            break;
-        if (gv.ptr[0] == '.' && (gv.ptr[1] == '\n' || gv.ptr[1] == '\r'))
-            break;
-        Str lbuf = convertLine((const uint8_t*)gv.ptr, gv.len, HTML_MODE, charset, doc_charset, false);
-        p = lbuf->ptr;
-        for (q = p; *q && *q != '\t'; q++)
-            ;
-        name = Strnew_charp_n(p, q - p);
-        if (!*q)
-            continue;
-        p = q + 1;
-        for (q = p; *q && *q != '\t'; q++)
-            ;
-        file = Strnew_charp_n(p, q - p);
-        if (!*q)
-            continue;
-        p = q + 1;
-        for (q = p; *q && *q != '\t'; q++)
-            ;
-        host = Strnew_charp_n(p, q - p);
-        if (!*q)
-            continue;
-        p = q + 1;
-        for (q = p; *q && *q != '\t' && *q != '\r' && *q != '\n'; q++)
-            ;
-        port = Strnew_charp_n(p, q - p);
-
-        link = 1;
-        switch (name->ptr[0]) {
-        case '0':
-            p = "[text file]";
-            break;
-        case '1':
-            p = "[directory]";
-            break;
-        case '5':
-            p = "[DOS binary]";
-            break;
-        case '7':
-            p = "[search]";
-            break;
-        case 'm':
-            p = "[message]";
-            break;
-        case 's':
-            p = "[sound]";
-            break;
-        case 'g':
-            p = "[gif]";
-            break;
-        case 'h':
-            p = "[HTML]";
-            break;
-        case 'i':
-            link = 0;
-            break;
-        case 'I':
-            p = "[image]";
-            break;
-        case '9':
-            p = "[binary]";
-            break;
-        default:
-            p = "[unsupported]";
-            break;
-        }
-        type = Strsubstr(name, 0, 1);
-        q = Strnew_m_charp("gopher://", host->ptr, ":", port->ptr, "/", type->ptr, file->ptr, NULL)->ptr;
-        if (link) {
-            if (pre) {
-                Strcat_charp(tmp, "</pre>");
-                pre = 0;
-            }
-            Strcat_m_charp(tmp, "<a href=\"",
-                html_quote(url_encode(q, NULL, *charset)),
-                "\">", p, " ", html_quote(name->ptr + 1), "</a><br>\n", NULL);
-        } else {
-            if (!pre) {
-                Strcat_charp(tmp, "<pre>");
-                pre = 1;
-            }
-
-            Strcat_m_charp(tmp, html_quote(name->ptr + 1), "\n", NULL);
-        }
-    }
-
-gopher_end:
-    TRAP_OFF;
-
-    if (pre)
-        Strcat_charp(tmp, "</pre>");
-    Strcat_charp(tmp, "</table>\n</body>\n</html>\n");
-    return tmp;
-}
-
-Str loadGopherSearch(struct URLFile* uf, struct Url* pu, wc_ces* charset)
-{
-    wc_ces doc_charset = DocumentCharset;
-
-    Str tmp = parsedURL2Str(pu);
-    char* p = html_quote(tmp->ptr);
-    const char* unq = file_unquote(tmp->ptr);
-    tmp = convertLine((const uint8_t*)unq, strlen(unq), RAW_MODE,
-        charset, doc_charset, false);
-    char* q = html_quote(tmp->ptr);
-    tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
-        "</title>\n</head>\n<body>\n<h1>Search ", q,
-        "</h1>\n<form role=\"search\">\n<div>\n"
-        "<input type=\"search\" name=\"\">"
-        "</div>\n</form>\n</body>",
-        NULL);
-
-    return tmp;
 }
 
 /*
