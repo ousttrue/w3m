@@ -49,7 +49,6 @@ extern int TabCols;
 extern int CurrentKey;
 extern const char* CurrentKeyData;
 extern const char* CurrentCmdData;
-extern const char* w3m_reqlog;
 extern const char* w3m_version;
 extern int enable_inline_image;
 extern int w3m_debug;

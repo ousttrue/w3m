@@ -551,9 +551,8 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 /* do nothing */
             } else if (!strcmp("-debug", argv[i])) {
                 w3m_debug = TRUE;
-            } else if (!strcmp("-reqlog", argv[i])) {
-                w3m_reqlog = rcFile("request.log");
-            } else {
+            } 
+            else {
                 usage();
             }
         } else if (*argv[i] == '+') {

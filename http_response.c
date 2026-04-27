@@ -64,14 +64,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             break;
         }
         Str tmp = Strnew_charp_n(gv.ptr, gv.len);
-        if (w3m_reqlog) {
-            FILE* ff;
-            ff = fopen(w3m_reqlog, "a");
-            if (ff) {
-                Strfputs(tmp, ff);
-                fclose(ff);
-            }
-        }
+
         if (thru_src)
             Strfputs(tmp, thru_src);
         cleanup_line(tmp, HEADER_MODE);

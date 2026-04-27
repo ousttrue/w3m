@@ -50,7 +50,6 @@ pub export var TabCols: c_int = 0;
 pub export var CurrentKey: c_int = 0;
 pub export var CurrentKeyData: [*c]const u8 = null;
 pub export var CurrentCmdData: [*c]const u8 = null;
-pub export var w3m_reqlog: [*c]const u8 = null;
 const CURRENT_VERSION = "w3m/0.5.3+gitYYYYMMDD";
 pub export var w3m_version: [*c]const u8 = CURRENT_VERSION;
 pub export var enable_inline_image: c_int = 0;
