@@ -1,33 +1,16 @@
 #include "http_response.h"
-#include "html_loader.h"
+#include "input_stream.h"
 #include "main.h"
 #include "display.h"
 #include "terms.h"
 #include "cookie.h"
 #include "etc.h"
-#include <w3m.h>
-#include <w3m/growbuf.h>
-#include "input_stream.h"
 #include "global.h"
-#include "Str.h"
-#include "mimehead.h"
-#include "textlist.h"
-#include "line.h"
-#include "buffer.h"
 #include "UrlFile.h"
 #include "myctype.h"
-#include "indep.h"
 #include "line_input.h"
 
-#include "wc_util.h"
-#include <libwc/wc_types.h>
-#include <libwc/ces.h>
-
-int http_response_code;
-
-/* This array should be somewhere else */
-/* FIXME: gettextize? */
-char* violations[COO_EMAX] = {
+const char* violations[COO_EMAX] = {
     "internal error",
     "tail match failed",
     "wrong number of dots",
@@ -39,36 +22,67 @@ char* violations[COO_EMAX] = {
     "RFC XXXX 4.3.2 rule 5"
 };
 
-void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf, bool thru, struct Url* pu)
+struct HttpResponse http_response_header(struct InputStream* stream, enum UrlScheme scheme)
 {
-    TextList* headerlist = newBuf->document_header = newTextList();
-    if (uf->scheme == SCM_HTTP
-        || uf->scheme == SCM_HTTPS)
-        http_response_code = -1;
-    else
-        http_response_code = 0;
+    struct HttpResponse res = {
+        .status_code = 0,
+        .headers = newTextList(),
+    };
 
-    FILE* thru_src = NULL;
-    if (thru && !newBuf->header_source
-        && !image_source) {
-        const char* tmpf = tmpfname(TMPF_DFL, NULL);
-        thru_src = fopen(tmpf, "w");
-        if (thru_src)
-            newBuf->header_source = tmpf;
+    if (scheme == SCM_HTTP
+        || scheme == SCM_HTTPS) {
+        res.status_code = -1;
+
+        struct str_view gv = ist_gets(stream, true);
+        const char* p = gv.ptr;
+        while (*p && !IS_SPACE(*p))
+            p++;
+        while (*p && IS_SPACE(*p))
+            p++;
+        res.status_code = atoi(p);
+        if (fmInitialized) {
+            message(gv.ptr, 0, 0);
+            refresh();
+        }
     }
 
-    Str lineBuf2 = NULL;
     while (true) {
-        struct str_view gv = ist_gets(uf->stream, true);
+        struct str_view gv = ist_gets(stream, true);
         if (gv.len == 0) {
             break;
         }
-        Str tmp = Strnew_charp_n(gv.ptr, gv.len);
+        pushText(res.headers, gv.ptr);
+    }
 
+    return res;
+}
+
+const char* http_response_save_header_source(struct HttpResponse* res)
+{
+    FILE* thru_src = NULL;
+    const char* tmpf = NULL;
+    if (!image_source) {
+        tmpf = tmpfname(TMPF_DFL, NULL);
+        thru_src = fopen(tmpf, "w");
+        // if (thru_src)
+        //     newBuf->header_source = tmpf;
+    }
+    for (TextListItem* ti = res->headers->first; ti; ti = ti->next) {
+        Str tmp = Strnew_charp(ti->ptr);
         if (thru_src)
             Strfputs(tmp, thru_src);
+    }
+    if (thru_src)
+        fclose(thru_src);
+    return tmpf;
+}
 
-        tmp = cleanup_line(tmp->ptr, tmp->length, HEADER_MODE);
+void http_response_process(struct HttpResponse* res, struct CmdArgs* args,
+    struct URLFile* uf, struct Url* pu)
+{
+    Str lineBuf2 = NULL;
+    for (TextListItem* ti = res->headers->first; ti; ti = ti->next) {
+        Str tmp = cleanup_line(ti->ptr, strlen(ti->ptr), HEADER_MODE);
         if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
             if (!lineBuf2)
                 /* there is no header */
@@ -77,20 +91,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
         } else {
             lineBuf2 = tmp;
         }
-        if ((uf->scheme == SCM_HTTP
-                || uf->scheme == SCM_HTTPS)
-            && http_response_code == -1) {
-            const char* p = lineBuf2->ptr;
-            while (*p && !IS_SPACE(*p))
-                p++;
-            while (*p && IS_SPACE(*p))
-                p++;
-            http_response_code = atoi(p);
-            if (fmInitialized) {
-                message(lineBuf2->ptr, 0, 0);
-                refresh();
-            }
-        }
+
         if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
             const char* p = lineBuf2->ptr + 17;
             while (IS_SPACE(*p))
@@ -233,13 +234,9 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                 pushEvent(funcname->ptr, tmp->ptr);
             }
         }
-        if (headerlist)
-            pushText(headerlist, lineBuf2->ptr);
         Strfree(lineBuf2);
         lineBuf2 = NULL;
     }
-    if (thru_src)
-        fclose(thru_src);
 }
 
 bool matchattr(const char* p, const char* attr, int len, Str* value)

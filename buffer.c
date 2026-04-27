@@ -512,11 +512,22 @@ void reshapeBuffer(struct CmdArgs* args, struct Buffer* buf)
         if (buf->currentURL.scheme != SCM_FILE || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
             struct URLFile h = examineFile(buf->header_source);
             if (h.stream) {
-                readHeader(args, &h, buf, true, NULL);
+                struct HttpResponse res = http_response_header(h.stream, h.scheme);
+                if (!buf->header_source) {
+                    buf->header_source = http_response_save_header_source(&res);
+                }
+                http_response_process(&res, args, &h, NULL);
+                buf->document_header = res.headers;
                 UFclose(&h);
             }
-        } else if (buf->search_header) /* -m option */
-            readHeader(args, &f, buf, true, NULL);
+        } else if (buf->search_header) { /* -m option */
+            struct HttpResponse res = http_response_header(f.stream, f.scheme);
+            if (!buf->header_source) {
+                buf->header_source = http_response_save_header_source(&res);
+            }
+            http_response_process(&res, args, &f, NULL);
+            buf->document_header = res.headers;
+        }
     }
 
     WcOption.auto_detect = WC_OPT_DETECT_OFF;
@@ -824,5 +835,3 @@ int currentLn(struct Buffer* buf)
     else
         return 1;
 }
-
-

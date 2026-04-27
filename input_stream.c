@@ -199,7 +199,8 @@ struct str_view ist_gets(struct InputStream* ist, bool check_crnl)
             growbuf_add_char(gb, ch);
             if (check_crnl && ch == '\r') {
                 if (ist_peek(ist) == '\n') {
-                    ist_getc(ist);
+                    ch = ist_getc(ist);
+                    growbuf_add_char(gb, ch);
                     break;
                 }
             } else if (ch == '\n') {

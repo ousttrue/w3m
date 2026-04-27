@@ -280,9 +280,11 @@ load_doc: {
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(args, &f, t_buf, FALSE, &pu);
-        if (((http_response_code >= 301 && http_response_code <= 303)
-                || http_response_code == 307)
+        struct HttpResponse res = http_response_header(f.stream, f.scheme);
+        http_response_process(&res, args, &f, &pu);
+        t_buf->document_header = res.headers;
+        if (((res.status_code >= 301 && res.status_code <= 303)
+                || res.status_code == 307)
             && (p = checkHeader(t_buf, "Location:")) != NULL
             && checkRedirection(args, &pu)) {
             /* document moved */
@@ -302,7 +304,7 @@ load_doc: {
         }
         t = checkContentType(t_buf);
         if (t == NULL && pu.file != NULL) {
-            if (!((http_response_code >= 400 && http_response_code <= 407) || (http_response_code >= 500 && http_response_code <= 505)))
+            if (!((res.status_code >= 400 && res.status_code <= 407) || (res.status_code >= 500 && res.status_code <= 505)))
                 t = guessContentType(pu.file);
         }
         if (t == NULL)
@@ -313,7 +315,7 @@ load_doc: {
                 0);
             add_auth_cookie_flag = 0;
         }
-        if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL && http_response_code == 401) {
+        if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL && res.status_code == 401) {
             /* Authentication needed */
             struct http_auth hauth;
             if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
@@ -332,7 +334,7 @@ load_doc: {
                 goto load_doc;
             }
         }
-        if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL && http_response_code == 407) {
+        if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL && res.status_code == 407) {
             /* Authentication needed */
             struct http_auth hauth;
             if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:")
@@ -366,7 +368,12 @@ load_doc: {
         searchHeader = SearchHeader = FALSE;
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        readHeader(args, &f, t_buf, searchHeader_through, &pu);
+        struct HttpResponse res = http_response_header(f.stream, f.scheme);
+        if (searchHeader_through && !t_buf->header_source) {
+            t_buf->header_source = http_response_save_header_source(&res);
+        }
+        http_response_process(&res, args, &f, &pu);
+        t_buf->document_header = res.headers;
         if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(args, &pu)) {
             /* document moved */
             tpath = url_encode(remove_space(p), NULL, 0);
