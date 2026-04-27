@@ -483,7 +483,8 @@ page_loaded:
             if (t_buf == NULL)
                 t_buf = newBuffer(INIT_BUFFER_WIDTH);
             uncompress_and_reopen(&f, compression_from_type(f.compression), &t_buf->sourcefile);
-            uncompressed_file_type(pu.file, &f.ext);
+            struct ContentTypeWithExt ce = compression_from_path_to_content_type(pu.file);
+            f.ext = ce.ext;
         } else {
             struct CompressionDecoder* d = compression_from_type(f.compression);
             t = d ? d->mime_type : NULL; // compress_application_type(f.compression);

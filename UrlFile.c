@@ -127,10 +127,9 @@ struct URLFile examineFile(const char* path)
         }
 
         if (uf.compression != CMP_NOCOMPRESS) {
-            const char* ext = uf.ext;
-            const char* t0 = uncompressed_file_type(path, &ext);
-            uf.guess_type = t0;
-            uf.ext = ext;
+            struct ContentTypeWithExt ce = compression_from_path_to_content_type(path);
+            uf.ext = ce.ext;
+            uf.guess_type = ce.content_type;
             uncompress_and_reopen(&uf, compression_from_type(uf.compression), NULL);
             return uf;
         }

@@ -1162,8 +1162,11 @@ Str process_img(struct HtmlTag* tag, int width)
                 .width = w,
                 .height = i,
             };
-            if (!uncompressed_file_type(u.file, &image.ext))
+            struct ContentTypeWithExt ce = compression_from_path_to_content_type(u.file);
+            image.ext = ce.ext;
+            if (!ce.content_type) {
                 image.ext = filename_extension(u.file, TRUE);
+            }
 
             image.cache = getImage(&image, cur_baseURL, IMG_FLAG_SKIP);
             if (image.cache && image.cache->width > 0 && image.cache->height > 0) {
@@ -3920,7 +3923,9 @@ void HTMLlineproc2body(struct Buffer* buf, Str (*feed)(), int llimit)
                             struct Image* image = New(struct Image);
                             a_img->image = image;
                             image->url = parsedURL2Str(&u)->ptr;
-                            if (!uncompressed_file_type(u.file, &image->ext))
+                            struct ContentTypeWithExt ce = compression_from_path_to_content_type(u.file);
+                            image->ext = ce.ext;
+                            if (!ce.content_type)
                                 image->ext = filename_extension(u.file, TRUE);
                             image->cache = NULL;
                             image->width = (w > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : w;

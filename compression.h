@@ -34,5 +34,9 @@ struct CompressionDecoder {
 struct CompressionDecoder* compression_from_type(enum ContentCompression compression);
 struct CompressionDecoder* compression_from_encodings(const char* p);
 struct CompressionDecoder* compression_from_path(const char* path);
-const char* uncompressed_file_type(const char* path, const char** ext);
+struct ContentTypeWithExt {
+    const char* content_type;
+    const char* ext;
+};
+struct ContentTypeWithExt compression_from_path_to_content_type(const char* path);
 const char* acceptableEncoding(void);

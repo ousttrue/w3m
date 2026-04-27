@@ -1,17 +1,10 @@
 #include "compression.h"
-#include "global.h"
-#include "etc.h"
+#include "Str.h"
 #include <w3m.h>
-#include "UrlFile.h"
 #include "url.h"
 #include "content_type.h"
 #include "textlist.h"
-#include "input_stream.h"
-#include "indep.h"
-
-#include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 static struct CompressionDecoder decoders[] = {
     { CMP_COMPRESS, ".gz", "application/x-gzip",
@@ -69,33 +62,20 @@ struct CompressionDecoder* compression_from_path(const char* path)
     return NULL;
 }
 
-const char* uncompressed_file_type(const char* path, const char** ext)
+struct ContentTypeWithExt compression_from_path_to_content_type(const char* path)
 {
-
-    if (path == NULL)
-        return NULL;
-
-    int slen = 0;
-    int len = strlen(path);
-    struct CompressionDecoder* d;
-    for (d = decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (d->ext == NULL)
-            continue;
-        slen = strlen(d->ext);
-        if (len > slen && strcasecmp(&path[len - slen], d->ext) == 0)
-            break;
+    struct ContentTypeWithExt ce = { 0 };
+    const struct CompressionDecoder* d = compression_from_path(path);
+    if (d) {
+        Str fn = Strnew_charp(path);
+        Strshrink(fn, strlen(d->ext));
+        ce.ext = filename_extension(fn->ptr, 0);
+        ce.content_type = guessContentType(fn->ptr);
+        if (ce.content_type == NULL) {
+            ce.content_type = "text/plain";
+        }
     }
-    if (d->type == CMP_NOCOMPRESS)
-        return NULL;
-
-    Str fn = Strnew_charp(path);
-    Strshrink(fn, slen);
-    if (ext)
-        *ext = filename_extension(fn->ptr, 0);
-    const char* t0 = guessContentType(fn->ptr);
-    if (t0 == NULL)
-        t0 = "text/plain";
-    return t0;
+    return ce;
 }
 
 #define PATH_SEPARATOR ':'
