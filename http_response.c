@@ -67,7 +67,8 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
 
         if (thru_src)
             Strfputs(tmp, thru_src);
-        cleanup_line(tmp, HEADER_MODE);
+
+        tmp = cleanup_line(tmp->ptr, tmp->length, HEADER_MODE);
         if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
             if (!lineBuf2)
                 /* there is no header */

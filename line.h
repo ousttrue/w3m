@@ -40,7 +40,7 @@ enum LineMode {
     HEADER_MODE = 3,
 };
 
-void cleanup_line(Str s, enum LineMode mode);
+Str cleanup_line(const char* s, int len, enum LineMode mode);
 Str convertLine(const uint8_t* line, int len, enum LineMode mode, wc_ces* charset, wc_ces doc_charset, bool do_chop);
 
 void addStr(char* p, Lineprop* pr, int len, int offset, int limit);

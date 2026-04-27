@@ -2,8 +2,9 @@
 #include "display.h"
 #include "wc_util.h"
 
-void cleanup_line(Str s, enum LineMode mode)
+Str cleanup_line(const char* ptr, int len, enum LineMode mode)
 {
+    Str s = Strnew_charp_n(ptr, len);
     if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
         Strshrink(s, 2);
         Strcat_char(s, '\n');
@@ -18,6 +19,7 @@ void cleanup_line(Str s, enum LineMode mode)
                 s->ptr[i] = ' ';
         }
     }
+    return s;
 }
 
 /// do_chop if SCM_NEWS
@@ -25,7 +27,7 @@ Str convertLine(const uint8_t* p, int len, enum LineMode mode, wc_ces* charset, 
 {
     Str line = Strnew_wc_output(wc_Str_conv_with_detect(WcOption, p, len, charset, doc_charset, InnerCharset));
     if (mode != RAW_MODE)
-        cleanup_line(line, mode);
+        line = cleanup_line(line->ptr, line->length, mode);
     if (do_chop)
         Strchop(line);
     return line;

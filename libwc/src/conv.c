@@ -99,7 +99,7 @@ struct wc_output wc_Str_conv_strict(struct wc_option opts, const char* is, int l
     return os;
 }
 
-struct wc_output wc_Str_conv_with_detect(struct wc_option opts, const char* is, int len, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
+struct wc_output wc_Str_conv_with_detect(struct wc_option opts, const uint8_t* is, int len, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
 {
     wc_ces detect;
     if (*f_ces == WC_CES_WTF || hint == WC_CES_WTF) {
