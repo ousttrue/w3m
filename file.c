@@ -487,7 +487,8 @@ page_loaded:
             uncompress_stream(&f, &t_buf->sourcefile);
             uncompressed_file_type(pu.file, &f.ext);
         } else {
-            t = compress_application_type(f.compression);
+            struct CompressionDecoder* d = compression_from_type(f.compression);
+            t = d ? d->mime_type : NULL; // compress_application_type(f.compression);
             f.compression = CMP_NOCOMPRESS;
         }
     }

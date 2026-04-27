@@ -118,7 +118,15 @@ struct URLFile examineFile(const char* path)
                 return uf;
             }
         }
-        check_compression(&uf, path);
+
+        // check_compression(&uf, path);
+        uf.compression = CMP_NOCOMPRESS;
+        struct CompressionDecoder* d = compression_from_path(path);
+        if (d) {
+            uf.compression = d->type;
+            uf.guess_type = d->mime_type;
+        }
+
         if (uf.compression != CMP_NOCOMPRESS) {
             const char* ext = uf.ext;
             const char* t0 = uncompressed_file_type(path, &ext);

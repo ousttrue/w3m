@@ -108,7 +108,14 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             while (IS_SPACE(*p))
                 p++;
 
-            parseCompression(uf, p);
+            uf->compression = CMP_NOCOMPRESS;
+            struct CompressionDecoder* d = compression_from_encodings(p);
+            if (d) {
+                uf->compression = d->type;
+            }
+            uf->content_encoding = uf->compression;
+
+            // parseCompression(uf, p);
         } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
