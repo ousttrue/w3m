@@ -20,10 +20,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#define CGIFN_NORMAL 0
-#define CGIFN_LIBDIR 1
-#define CGIFN_CGIBIN 2
-
 static Str Local_cookie = NULL;
 static const char* Local_cookie_file = NULL;
 
@@ -175,20 +171,32 @@ Str loadLocalDir(const char* dname)
     return tmp;
 }
 
-static int
-check_local_cgi(const char* file, int status)
-{
-    struct stat st;
+enum CgiDirType {
+    CGIFN_NORMAL = 0,
+    CGIFN_LIBDIR = 1,
+    CGIFN_CGIBIN = 2,
+};
 
+static bool check_local_cgi(const char* file, enum CgiDirType status)
+{
     if (status != CGIFN_LIBDIR && status != CGIFN_CGIBIN)
-        return -1;
+        return false;
+
+    struct stat st;
     if (stat(file, &st) < 0)
-        return -1;
+        return false;
+
     if (S_ISDIR(st.st_mode))
-        return -1;
-    if ((st.st_uid == geteuid() && (st.st_mode & S_IXUSR)) || (st.st_gid == getegid() && (st.st_mode & S_IXGRP)) || (st.st_mode & S_IXOTH)) /* executable */
-        return 0;
-    return -1;
+        return false;
+
+    if ((st.st_uid == geteuid() && (st.st_mode & S_IXUSR))
+        || (st.st_gid == getegid() && (st.st_mode & S_IXGRP))
+        || (st.st_mode & S_IXOTH)) {
+        // executable
+        return true;
+    }
+
+    return false;
 }
 
 void set_environ(const char* var, const char* value)
@@ -236,28 +244,25 @@ checkPath(const char* fn, const char* path)
     return NULL;
 }
 
-static int
+static enum CgiDirType
 cgi_filename(const char* uri, const char** fn, const char** name, const char** path_info)
 {
-    Str tmp;
-    int offset;
-
     *fn = uri;
     *name = uri;
     *path_info = NULL;
-
     if (cgi_bin != NULL && strncmp(uri, "/cgi-bin/", 9) == 0) {
-        offset = 9;
+        int offset = 9;
         if ((*path_info = strchr(uri + offset, '/')))
             *name = allocStr(uri, *path_info - uri);
-        tmp = checkPath(*name + offset, cgi_bin);
+        Str tmp = checkPath(*name + offset, cgi_bin);
         if (tmp == NULL)
             return CGIFN_NORMAL;
         *fn = tmp->ptr;
         return CGIFN_CGIBIN;
     }
 
-    tmp = Strnew_charp(w3m_lib_dir());
+    Str tmp = Strnew_charp(w3m_lib_dir());
+    int offset = 0;
     if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
     if (strncmp(uri, "/$LIB/", 6) == 0)
@@ -274,8 +279,10 @@ cgi_filename(const char* uri, const char** fn, const char** name, const char** p
         uri = tmp2->ptr;
         *name = uri;
         offset = tmp->length;
-    } else
+    } else {
         return CGIFN_NORMAL;
+    }
+
     if ((*path_info = strchr(uri + offset, '/')))
         *name = allocStr(uri, *path_info - uri);
     Strcat_charp(tmp, *name + offset);
@@ -288,8 +295,8 @@ FILE* localcgi_post(const char* uri, const char* qstr, struct Form* request, con
     const char* file = uri;
     const char* name = uri;
     const char* path_info = NULL;
-    int status = cgi_filename(uri, &file, &name, &path_info);
-    if (check_local_cgi(file, status) < 0)
+    enum CgiDirType status = cgi_filename(uri, &file, &name, &path_info);
+    if (!check_local_cgi(file, status))
         return NULL;
 
     writeLocalCookie();

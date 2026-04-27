@@ -40,6 +40,8 @@ pub fn tasks_pop() void {
 }
 
 extern var GlobalKeymap: [128][*c]const u8;
+extern var EscKeymap: [128][*c]const u8;
+
 extern fn setupCurrentBuffer() void;
 
 export fn w3mFunc(cmd: [*c]const u8) void {
@@ -51,6 +53,8 @@ export fn w3mFunc(cmd: [*c]const u8) void {
     tasks_push(func, .{});
 }
 
+var last_key: u8 = 0;
+
 pub fn dispatch_key(ch: u8) void {
     if (tasks_current()) |task| {
         task.enqueue(ch);
@@ -59,7 +63,6 @@ pub fn dispatch_key(ch: u8) void {
         }
     } else {
         // root
-        //         last_key = c;
         //         if (CurrentAlarm->sec > 0) {
         //             alarm(0);
         //         }
@@ -68,10 +71,16 @@ pub fn dispatch_key(ch: u8) void {
                 g.prec_num = g.prec_num * 10 + (ch - '0');
                 if (g.prec_num > c.PREC_LIMIT)
                     g.prec_num = c.PREC_LIMIT;
+            } else if (ch == 0x1b) {
+                // skip
             } else {
                 setupCurrentBuffer();
                 g.CurrentKey = ch;
-                w3mFunc(GlobalKeymap[ch]);
+                if (last_key == 0x1b) {
+                    w3mFunc(EscKeymap[ch]);
+                } else {
+                    w3mFunc(GlobalKeymap[ch]);
+                }
 
                 g.prec_num = 0;
             }
@@ -79,6 +88,7 @@ pub fn dispatch_key(ch: u8) void {
         // g.prev_key = g.CurrentKey;
         g.CurrentKey = -1;
         g.CurrentKeyData = null;
+        last_key = ch;
     }
 }
 

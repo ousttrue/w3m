@@ -22,7 +22,6 @@ typedef struct direct Directory;
 #define S_IFREG 0100000
 #endif /* not S_IFREG */
 
-
 #ifndef S_ISDIR
 #ifndef S_IFDIR
 #define S_IFDIR 0040000

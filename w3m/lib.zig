@@ -67,21 +67,32 @@ export fn w3m_loop() c_int {
         // TODO:
         // processResizeAndImage(&args);
 
-        const has_input = tty.epoll.next(80) catch {
+        const may_event = tty.epoll.next(80) catch {
             // error ?
             break;
         };
 
-        if (has_input) |_| {
-            var buf: [1]u8 = undefined;
-            const readsize = std.posix.read(
-                tty.tty_in.handle,
-                &buf,
-            ) catch @panic("getch");
-            std.debug.assert(readsize == 1);
+        if (may_event) |event| {
+            if (event.data.fd == tty.epoll.signal_fd) {
+                // singal
+                var info: std.os.linux.signalfd_siginfo = undefined;
+                const readsize = std.posix.read(tty.epoll.signal_fd, @ptrCast(&info)) catch
+                    @panic("posix.read(signal_fd)");
+                std.debug.assert(readsize == 1);
 
-            const ch: u8 = buf[0];
-            input_dispatcher.dispatch_key(ch);
+                std.log.info("resizeed", .{});
+            } else {
+                // stdin
+                var buf: [1]u8 = undefined;
+                const readsize = std.posix.read(
+                    tty.tty_in.handle,
+                    &buf,
+                ) catch @panic("posix.read(stdin)");
+                std.debug.assert(readsize == 1);
+
+                const ch: u8 = buf[0];
+                input_dispatcher.dispatch_key(ch);
+            }
         } else {
             input_dispatcher.dispatch_timeout();
         }

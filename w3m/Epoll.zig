@@ -2,16 +2,26 @@ const std = @import("std");
 const MAX_EVENT = 5;
 
 epoll_fd: i32,
+signal_fd: i32,
 events: [MAX_EVENT]std.os.linux.epoll_event = undefined,
 event_count: usize = 0,
 event_index: u32 = 0,
 
 pub fn init() @This() {
-    return .{
-        .epoll_fd = @intCast(std.os.linux.epoll_create1(
-            std.os.linux.EPOLL.CLOEXEC,
-        )),
+    const epoll_fd = std.os.linux.epoll_create1(std.os.linux.EPOLL.CLOEXEC);
+
+    var mask = std.os.linux.sigemptyset();
+    std.os.linux.sigaddset(&mask, .WINCH);
+    _ = std.os.linux.sigprocmask(std.os.linux.SIG.BLOCK, &mask, null);
+    const signal_fd = std.os.linux.signalfd(-1, &mask, std.os.linux.SFD.CLOEXEC);
+
+    var this: @This() = .{
+        .epoll_fd = @intCast(epoll_fd),
+        .signal_fd = @intCast(signal_fd),
     };
+    this.add_fd(this.signal_fd);
+
+    return this;
 }
 
 pub fn deinit(this: *@This()) void {
