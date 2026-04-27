@@ -34,7 +34,6 @@ struct URLFile init_stream(enum UrlScheme scheme, struct InputStream* stream)
         .scheme = scheme,
         .is_cgi = false,
         .compression = CMP_NOCOMPRESS,
-        .content_encoding = CMP_NOCOMPRESS,
         .guess_type = NULL,
         .ext = NULL,
         .modtime = -1,

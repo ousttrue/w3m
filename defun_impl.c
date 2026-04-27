@@ -669,7 +669,7 @@ void editBf(struct CmdArgs* args)
     }
     if (Currentbuf->edit)
         cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
-            checkHeader(Currentbuf, "Content-Type:"), NULL);
+            http_response_get(&Currentbuf->http_response, "Content-Type:"), NULL);
     else
         cmd = myEditor(Editor, shell_quote(fn),
             cur_real_linenumber(Currentbuf));
@@ -1384,10 +1384,10 @@ void svSrc(struct CmdArgs* args)
     PermitSaveToPipe = TRUE;
     const char* file;
     if (Currentbuf->real_scheme == SCM_FILE)
-        file = conv_from_system(guess_save_name(NULL,
+        file = conv_from_system(http_response_guess_save_name(NULL,
             Currentbuf->currentURL.real_file));
     else
-        file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
+        file = http_response_guess_save_name(&Currentbuf->http_response, Currentbuf->currentURL.file);
     doFileCopy(args, Currentbuf->sourcefile, file);
     PermitSaveToPipe = FALSE;
     displayBuffer(args, B_NORMAL);

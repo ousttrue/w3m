@@ -453,8 +453,7 @@ static const char* extract_auth_param(const char* q, struct auth_param* auth)
     return q;
 }
 
-struct http_auth* findAuthentication(struct http_auth* hauth,
-    struct Buffer* buf, const char* auth_field)
+struct http_auth* findAuthentication(struct HttpResponse *res, struct http_auth* hauth, const char* auth_field)
 {
     struct http_auth* ha;
     int len = strlen(auth_field), slen;
@@ -462,7 +461,7 @@ struct http_auth* findAuthentication(struct http_auth* hauth,
     const char *p0, *p;
 
     memset(hauth, 0, sizeof(struct http_auth));
-    for (i = buf->document_header->first; i != NULL; i = i->next) {
+    for (i = res->headers->first; i != NULL; i = i->next) {
         if (strncasecmp(i->ptr, auth_field, len) == 0) {
             for (p = i->ptr + len; p != NULL && *p != '\0';) {
                 SKIP_BLANKS(p);

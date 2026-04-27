@@ -509,8 +509,6 @@ char* lastFileName(const char* path)
     return allocStr(q, -1);
 }
 
-
-
 char* mydirname(const char* s)
 {
     const char* p = s;
@@ -539,19 +537,17 @@ char* strerror(int errno)
 #endif /* not HAVE_STRERROR */
 
 /* get last modified time */
-char* last_modified(struct Buffer* buf)
+const char* last_modified(struct Buffer* buf)
 {
-    TextListItem* ti;
-    struct stat st;
-
-    if (buf->document_header) {
-        for (ti = buf->document_header->first; ti; ti = ti->next) {
+    if (buf->http_response.headers) {
+        for (TextListItem* ti = buf->http_response.headers->first; ti; ti = ti->next) {
             if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
                 return ti->ptr + 15;
             }
         }
         return "unknown";
     } else if (buf->currentURL.scheme == SCM_FILE) {
+        struct stat st;
         if (stat(buf->currentURL.file, &st) < 0)
             return "unknown";
         return ctime(&st.st_mtime);

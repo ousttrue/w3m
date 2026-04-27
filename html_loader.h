@@ -24,11 +24,7 @@ char* convert_size2(int64_t size1, int64_t size2, int usefloat);
 
 void showProgress(int64_t* linelen, int64_t* trbyte);
 
-char* checkHeader(struct Buffer* buf, char* field);
-
 Str process_n_form(void);
-
-char* checkContentType(struct Buffer* buf);
 
 struct HtmlTag;
 extern Str process_img(struct HtmlTag* tag, int width);

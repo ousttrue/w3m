@@ -17,9 +17,7 @@ int _doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr, int 
 #define doFileCopy(args, tmpf, defstr) _doFileCopy(args, tmpf, defstr, FALSE);
 int doFileMove(struct CmdArgs* args, const char* tmpf, const char* defstr);
 int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr);
-int checkCopyFile(const char* path1, const char* path2);
 int checkOverWrite(struct CmdArgs* args, const char* path);
-const char* guess_save_name(struct Buffer* buf, const char* file);
 
 struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
     struct Buffer* (*loadproc)(struct CmdArgs* args, struct URLFile*, struct Buffer*),

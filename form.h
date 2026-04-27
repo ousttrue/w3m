@@ -102,7 +102,7 @@ void do_internal(struct CmdArgs *args, char* action, char* data);
 struct Buffer* page_info_panel(struct Buffer* buf);
 void loadPreForm(void);
 struct Url;
-char* last_modified(struct Buffer* buf);
+const char* last_modified(struct Buffer* buf);
 Str romanNumeral(int n);
 Str romanAlphabet(int n);
 void mySystem(char* command, int background);

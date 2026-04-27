@@ -1,4 +1,5 @@
 #include "http_response.h"
+#include "filepath.h"
 #include "input_stream.h"
 #include "main.h"
 #include "display.h"
@@ -9,6 +10,9 @@
 #include "UrlFile.h"
 #include "myctype.h"
 #include "line_input.h"
+#include "indep.h"
+
+#include <libwc/charset.h>
 
 const char* violations[COO_EMAX] = {
     "internal error",
@@ -77,9 +81,10 @@ const char* http_response_save_header_source(struct HttpResponse* res)
     return tmpf;
 }
 
-void http_response_process(struct HttpResponse* res, struct CmdArgs* args,
-    struct URLFile* uf, struct Url* pu)
+// uf->content_encoding = uf->compression;
+enum ContentCompression http_response_process(struct HttpResponse* res, struct CmdArgs* args, struct Url* pu)
 {
+    enum ContentCompression compression = CMP_NOCOMPRESS;
     Str lineBuf2 = NULL;
     for (TextListItem* ti = res->headers->first; ti; ti = ti->next) {
         Str tmp = cleanup_line(ti->ptr, strlen(ti->ptr), HEADER_MODE);
@@ -97,14 +102,10 @@ void http_response_process(struct HttpResponse* res, struct CmdArgs* args,
             while (IS_SPACE(*p))
                 p++;
 
-            uf->compression = CMP_NOCOMPRESS;
             struct CompressionDecoder* d = compression_from_encodings(p);
             if (d) {
-                uf->compression = d->type;
+                compression = d->type;
             }
-            uf->content_encoding = uf->compression;
-
-            // parseCompression(uf, p);
         } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
@@ -220,7 +221,7 @@ void http_response_process(struct HttpResponse* res, struct CmdArgs* args,
                             1, TRUE, FALSE);
                 }
             }
-        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
+        } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && pu->scheme == SCM_LOCAL_CGI) {
             Str funcname = Strnew();
 
             const char* p = lineBuf2->ptr + 12;
@@ -237,6 +238,7 @@ void http_response_process(struct HttpResponse* res, struct CmdArgs* args,
         Strfree(lineBuf2);
         lineBuf2 = NULL;
     }
+    return compression;
 }
 
 bool matchattr(const char* p, const char* attr, int len, Str* value)
@@ -271,4 +273,59 @@ bool matchattr(const char* p, const char* attr, int len, Str* value)
         }
     }
     return 0;
+}
+
+const char* http_response_get(struct HttpResponse* res, const char* field)
+{
+    // if (buf == NULL || field == NULL || buf->document_header == NULL)
+    //     return NULL;
+    int len = strlen(field);
+    for (TextListItem* ti = res->headers->first; ti; ti = ti->next) {
+        if (!strncasecmp(ti->ptr, field, len)) {
+            const char* p = ti->ptr + len;
+            return remove_space(p);
+        }
+    }
+    return NULL;
+}
+
+const char* http_response_get_content_type(struct HttpResponse* res, wc_ces* content_charset)
+{
+    const char* p = http_response_get(res, "Content-Type:");
+    if (p == NULL)
+        return NULL;
+
+    Str r = Strnew();
+    while (*p && *p != ';' && !IS_SPACE(*p))
+        Strcat_char(r, *p++);
+
+    if ((p = strcasestr(p, "charset")) != NULL) {
+        p += 7;
+        SKIP_BLANKS(p);
+        if (*p == '=') {
+            p++;
+            SKIP_BLANKS(p);
+            if (*p == '"')
+                p++;
+            if (content_charset) {
+                *content_charset = wc_guess_charset(p, 0);
+            }
+        }
+    }
+
+    return r->ptr;
+}
+
+const char* http_response_guess_save_name(struct HttpResponse* res, const char* path)
+{
+    if (res) {
+        Str name = NULL;
+        const char* p = http_response_get(res, "Content-Disposition:");
+        const char* q;
+        if (p != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
+            path = name->ptr;
+        else if ((p = http_response_get(res, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
+            path = name->ptr;
+    }
+    return alloc_guess_filename(path);
 }

@@ -9,6 +9,7 @@ struct auth_param {
 struct Url;
 struct http_auth;
 struct HttpRequest;
+struct HttpResponse;
 struct Form;
 typedef Str (*CredFunc)(struct http_auth* ha, Str uname, Str pw, struct Url* pu, struct HttpRequest* req, struct Form* post);
 
@@ -19,9 +20,7 @@ struct http_auth {
     CredFunc cred;
 };
 
-struct Buffer;
-struct http_auth* findAuthentication(struct http_auth* hauth,
-    struct Buffer* buf, const char* auth_field);
+struct http_auth* findAuthentication(struct HttpResponse* res, struct http_auth* hauth, const char* auth_field);
 Str get_auth_param(struct auth_param* auth, const char* name);
 struct CmdArgs;
 struct _textlist;

@@ -202,7 +202,7 @@ retrieveCurrentMap(struct Buffer* buf)
 }
 
 struct MapArea*
-follow_map_menu(struct CmdArgs *args, struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y)
+follow_map_menu(struct CmdArgs* args, struct Buffer* buf, const char* name, struct Anchor* a_img, int x, int y)
 {
     ListItem* al;
     int i, selected = -1;
@@ -459,7 +459,6 @@ page_info_panel(struct Buffer* buf)
     Str tmp = Strnew_size(1024);
     struct Anchor* a;
     struct Url pu;
-    TextListItem* ti;
     struct frameset* f_set = NULL;
     int all;
     char *p, *q;
@@ -550,9 +549,9 @@ page_info_panel(struct Buffer* buf)
 
     append_link_info(buf, tmp, buf->linklist);
 
-    if (buf->document_header != NULL) {
+    if (buf->http_response.headers != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-        for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
+        for (TextListItem* ti = buf->http_response.headers->first; ti; ti = ti->next)
             Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr),
                 "</pre_int>\n", NULL);
         Strcat_charp(tmp, "</pre>\n");

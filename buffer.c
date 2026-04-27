@@ -512,21 +512,19 @@ void reshapeBuffer(struct CmdArgs* args, struct Buffer* buf)
         if (buf->currentURL.scheme != SCM_FILE || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
             struct URLFile h = examineFile(buf->header_source);
             if (h.stream) {
-                struct HttpResponse res = http_response_header(h.stream, h.scheme);
+                buf->http_response = http_response_header(h.stream, h.scheme);
                 if (!buf->header_source) {
-                    buf->header_source = http_response_save_header_source(&res);
+                    buf->header_source = http_response_save_header_source(&buf->http_response);
                 }
-                http_response_process(&res, args, &h, NULL);
-                buf->document_header = res.headers;
+                h.compression = http_response_process(&buf->http_response, args, NULL);
                 UFclose(&h);
             }
         } else if (buf->search_header) { /* -m option */
-            struct HttpResponse res = http_response_header(f.stream, f.scheme);
+            buf->http_response = http_response_header(f.stream, f.scheme);
             if (!buf->header_source) {
-                buf->header_source = http_response_save_header_source(&res);
+                buf->header_source = http_response_save_header_source(&buf->http_response);
             }
-            http_response_process(&res, args, &f, NULL);
-            buf->document_header = res.headers;
+            f.compression = http_response_process(&buf->http_response, args, NULL);
         }
     }
 

@@ -3492,45 +3492,6 @@ table_start:
     }
 }
 
-char* checkHeader(struct Buffer* buf, char* field)
-{
-    int len;
-    TextListItem* i;
-    char* p;
-
-    if (buf == NULL || field == NULL || buf->document_header == NULL)
-        return NULL;
-    len = strlen(field);
-    for (i = buf->document_header->first; i != NULL; i = i->next) {
-        if (!strncasecmp(i->ptr, field, len)) {
-            p = i->ptr + len;
-            return remove_space(p);
-        }
-    }
-    return NULL;
-}
-char* checkContentType(struct Buffer* buf)
-{
-    char* p = checkHeader(buf, "Content-Type:");
-    if (p == NULL)
-        return NULL;
-    Str r = Strnew();
-    while (*p && *p != ';' && !IS_SPACE(*p))
-        Strcat_char(r, *p++);
-    if ((p = strcasestr(p, "charset")) != NULL) {
-        p += 7;
-        SKIP_BLANKS(p);
-        if (*p == '=') {
-            p++;
-            SKIP_BLANKS(p);
-            if (*p == '"')
-                p++;
-            content_charset = wc_guess_charset(p, 0);
-        }
-    }
-    return r->ptr;
-}
-
 static void
 addLink(struct Buffer* buf, struct HtmlTag* tag)
 {

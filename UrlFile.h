@@ -25,7 +25,6 @@ struct URLFile {
     struct InputStream* stream;
     const char* ext;
     enum ContentCompression compression;
-    int content_encoding;
     const char* guess_type;
     const char* ssl_certificate;
     const char* url;

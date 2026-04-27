@@ -4,6 +4,7 @@
 #include "line.h"
 #include "url.h"
 #include "image_cache.h"
+#include "http_response.h"
 
 #define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
@@ -47,7 +48,7 @@ typedef struct _BufferPos {
 struct InputStream;
 struct Buffer {
     const char* filename;
-    char* buffername;
+    const char* buffername;
     struct Line* firstLine;
     struct Line* topLine;
     struct Line* currentLine;
@@ -91,7 +92,7 @@ struct Buffer {
     char check_url;
     wc_ces document_charset;
     wc_uint8 auto_detect;
-    struct _textlist* document_header;
+    struct HttpResponse http_response;
     struct FormItem* form_submit;
     const char* savecache;
     const char* edit;
