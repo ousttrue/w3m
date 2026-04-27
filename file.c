@@ -462,8 +462,6 @@ page_loaded:
         /* download only */
         const char* file;
         TRAP_OFF;
-        if (DecodeCTE && ist_type(f.stream) != IST_ENCODED)
-            f.stream = ist_decode(f.stream, f.encoding);
         if (pu.scheme == SCM_FILE) {
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
@@ -494,8 +492,6 @@ page_loaded:
     }
     if (image_source) {
         struct Buffer* b = NULL;
-        if (ist_type(f.stream) != IST_ENCODED)
-            f.stream = ist_decode(f.stream, f.encoding);
         if (save2tmp(f.stream, f.scheme, image_source) == 0) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = image_source;
@@ -867,8 +863,6 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
         doc_charset = content_charset;
 
     nlines = 0;
-    if (ist_type(uf->stream) != IST_ENCODED)
-        uf->stream = ist_decode(uf->stream, uf->encoding);
     while (true) {
         struct str_view gv = ist_gets(uf->stream, true);
         if (gv.len == 0) {
@@ -930,8 +924,6 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
 
         SignalFunc prevtrap = NULL;
 
-        if (ist_type(uf->stream) != IST_ENCODED)
-            uf->stream = ist_decode(uf->stream, uf->encoding);
         TRAP_ON;
         if (save2tmp(uf->stream, uf->scheme, cache->file) < 0) {
             TRAP_OFF;
@@ -1283,8 +1275,6 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
     }
     const char* tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
 
-    if (ist_type(uf.stream) != IST_ENCODED)
-        uf.stream = ist_decode(uf.stream, uf.encoding);
     header = checkHeader(defaultbuf, "Content-Type:");
     if (header)
         header = conv_to_system(header);

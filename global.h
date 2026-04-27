@@ -16,7 +16,6 @@ extern const char* DefaultType;
 extern char RenderFrame;
 extern char TargetSelf;
 extern char PermitSaveToPipe;
-extern char DecodeCTE;
 extern char AutoUncompress;
 extern char PreserveTimestamp;
 extern char ArgvIsURL;

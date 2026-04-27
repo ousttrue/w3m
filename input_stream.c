@@ -78,10 +78,6 @@ void ist_close(struct InputStream* ist)
         sock_close(ist->handle);
         break;
     }
-    case IST_ENCODED: {
-        ens_close(ist->handle);
-        break;
-    }
     }
     signal(SIGINT, prevtrap);
 }
@@ -149,10 +145,6 @@ int ist_read(struct InputStream* ist, uint8_t* dst, int count)
             l = sock_read(ist->handle, dst + len, count - len);
             break;
         }
-        case IST_ENCODED: {
-            l = ens_read(ist->handle, dst + len, count - len);
-            break;
-        }
         }
 
         if (l <= 0) {
@@ -177,8 +169,6 @@ int ist_fd(struct InputStream* ist)
         return fp_fd(ist->handle);
     case IST_SOCK:
         return sock_fd(ist->handle);
-    case IST_ENCODED:
-        return ens_fd(ist->handle);
     default:
         return -1;
     }

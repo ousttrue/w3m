@@ -9,7 +9,6 @@ enum InputStreamType {
     IST_FILE_DESC = 1,
     IST_FILE_PIPE = 2,
     IST_SOCK = 3,
-    IST_ENCODED = 4,
 };
 
 struct InputStream;
@@ -20,7 +19,6 @@ typedef int (*FpCloseFunc)(FILE*);
 struct InputStream* ist_from_fp(FILE* f, FpCloseFunc func);
 struct InputStream* ist_from_buffer(const char* s, int len);
 struct InputStream* ist_from_socket(int sock, struct ssl_st* ssl);
-struct InputStream* ist_decode(struct InputStream* is, enum StreamEncoding encoding);
 
 /// return false if set unclose
 bool ist_destroy(struct InputStream* ist);

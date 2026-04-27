@@ -32,7 +32,6 @@ struct URLFile init_stream(enum UrlScheme scheme, struct InputStream* stream)
         // memset(uf, 0, sizeof(struct URLFile));
         .stream = stream,
         .scheme = scheme,
-        .encoding = ENC_7BIT,
         .is_cgi = false,
         .compression = CMP_NOCOMPRESS,
         .content_encoding = CMP_NOCOMPRESS,

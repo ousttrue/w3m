@@ -461,8 +461,6 @@ struct param_ptr params3[] = {
         CMT_IGNORE_CASE, NULL },
     { "clear_buffer", P_INT, PI_ONOFF, (void*)&clear_buffer, CMT_CLEAR_BUF,
         NULL },
-    { "decode_cte", P_CHARINT, PI_ONOFF, (void*)&DecodeCTE, CMT_DECODE_CTE,
-        NULL },
     { "auto_uncompress", P_CHARINT, PI_ONOFF, (void*)&AutoUncompress,
         CMT_AUTO_UNCOMPRESS, NULL },
     { "preserve_timestamp", P_CHARINT, PI_ONOFF, (void*)&PreserveTimestamp,

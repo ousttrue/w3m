@@ -17,7 +17,6 @@ pub export var DefaultType: [*c]const u8 = null;
 pub export var RenderFrame: u8 = 0;
 pub export var TargetSelf: u8 = 0;
 pub export var PermitSaveToPipe: u8 = 0;
-pub export var DecodeCTE: u8 = 0;
 pub export var AutoUncompress: u8 = 0;
 pub export var PreserveTimestamp: u8 = 1;
 pub export var ArgvIsURL: u8 = 1;

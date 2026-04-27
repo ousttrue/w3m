@@ -59,12 +59,3 @@ struct InputStream* ist_from_socket(int sock, SSL* ssl);
 void sock_close(struct input_stream_sock* handle);
 int sock_read(struct input_stream_sock* handle, uint8_t* buf, int len);
 int sock_fd(struct input_stream_sock* handle);
-
-//
-// ENCODED
-//
-struct input_stream_encoded;
-struct InputStream* ist_decode(struct InputStream* is, enum StreamEncoding encoding);
-void ens_close(struct input_stream_encoded* handle);
-int ens_read(struct input_stream_encoded* handle, uint8_t* buf, int len);
-int ens_fd(struct input_stream_encoded* handle);

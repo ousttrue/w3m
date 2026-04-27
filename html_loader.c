@@ -4529,8 +4529,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
         doc_charset = WC_CES_UTF_8;
     meta_charset = 0;
-    if (ist_type(f->stream) != IST_ENCODED)
-        f->stream = ist_decode(f->stream, f->encoding);
     while (true) {
         struct str_view gv = ist_gets(f->stream, true);
         if (ist_eos(f->stream)) {

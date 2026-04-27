@@ -22,7 +22,6 @@ struct URLOption {
 struct URLFile {
     enum UrlScheme scheme;
     bool is_cgi;
-    enum StreamEncoding encoding;
     struct InputStream* stream;
     const char* ext;
     enum ContentCompression compression;

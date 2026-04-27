@@ -173,11 +173,6 @@ static const char* auxbinFile(const char* base)
 
 void uncompress_stream(struct URLFile* uf, const char** src)
 {
-    if (ist_type(uf->stream) != IST_ENCODED) {
-        uf->stream = ist_decode(uf->stream, uf->encoding);
-        uf->encoding = ENC_7BIT;
-    }
-
     const char* expand_cmd = GUNZIP_CMDNAME;
     const char* expand_name = GUNZIP_NAME;
     const char* tmpf = NULL;
