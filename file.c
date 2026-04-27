@@ -362,8 +362,7 @@ load_doc: {
         }
 
         f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
-    } 
-    else if (searchHeader) {
+    } else if (searchHeader) {
         searchHeader = SearchHeader = FALSE;
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -692,7 +691,7 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
     Str volatile tmp;
     Str lbuf, name, file, host, port, type;
     char* volatile p, * volatile q;
-    int link, pre;
+    int link;
     SignalFunc prevtrap = NULL;
     wc_ces doc_charset = DocumentCharset;
 
@@ -710,13 +709,9 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
         goto gopher_end;
     TRAP_ON;
 
-    pre = 0;
-
-    struct growbuf* gb = growbuf_create();
+    bool pre = false;
     while (1) {
-        growbuf_clear(gb);
-        ist_gets_to_growbuf(uf->stream, gb, false);
-        struct str_view gv = growbuf_str_view(gb);
+        struct str_view gv = ist_gets(uf->stream, false);
         if (gv.len == 0)
             break;
         if (gv.ptr[0] == '.' && (gv.ptr[1] == '\n' || gv.ptr[1] == '\r'))
@@ -803,7 +798,6 @@ Str loadGopherDir(struct URLFile* uf, struct Url* pu, wc_ces* charset)
             Strcat_m_charp(tmp, html_quote(name->ptr + 1), "\n", NULL);
         }
     }
-    growbuf_destroy(gb);
 
 gopher_end:
     TRAP_OFF;
@@ -874,11 +868,8 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     nlines = 0;
     if (ist_type(uf->stream) != IST_ENCODED)
         uf->stream = ist_decode(uf->stream, uf->encoding);
-    struct growbuf* gb = growbuf_create();
     while (true) {
-        growbuf_clear(gb);
-        ist_gets_to_growbuf(uf->stream, gb, true);
-        struct str_view gv = growbuf_str_view(gb);
+        struct str_view gv = ist_gets(uf->stream, true);
         if (gv.len == 0) {
             break;
         }
@@ -903,7 +894,6 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
         addnewline(newBuf, lineBuf2->ptr, propBuffer, colorBuffer,
             lineBuf2->length, FOLD_BUFFER_WIDTH, nlines);
     }
-    growbuf_destroy(gb);
 
 _end:
     TRAP_OFF;
@@ -1243,11 +1233,8 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     TRAP_ON;
 
     uf = init_stream(SCM_UNKNOWN, NULL);
-    struct growbuf* gb = growbuf_create();
     for (i = 0; i < plen; i++) {
-        growbuf_clear(gb);
-        ist_gets_to_growbuf(buf->pagerSource, gb, true);
-        struct str_view gv = growbuf_str_view(gb);
+        struct str_view gv = ist_gets(buf->pagerSource, true);
         if (gv.len == 0)
             return NULL;
         lineBuf2 = Strnew_charp_n(gv.ptr, gv.len);
@@ -1302,7 +1289,6 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
                 buf->firstLine->prev = NULL;
         }
     }
-    growbuf_destroy(gb);
 pager_end:
     TRAP_OFF;
 

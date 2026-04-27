@@ -2,11 +2,13 @@
 #include "input_stream.h"
 #include <openssl/ssl.h>
 #include "StreamBuffer.h"
+#include "growbuf.h"
 
 struct input_stream_base {
     struct StreamBuffer stream;
     bool iseos;
     bool unclose;
+    struct growbuf* linebuf;
 };
 
 static inline int POP_CHAR(struct input_stream_base* bs)
@@ -28,10 +30,7 @@ struct InputStream {
 //
 // BUFFER
 //
-struct input_stream_base;
-
-struct InputStream*
-ist_from_buffer(const char* s, int len);
+struct InputStream* ist_from_buffer(const char* s, int len);
 
 //
 // FD

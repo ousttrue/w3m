@@ -4245,16 +4245,13 @@ static struct InputStream* _file_lp2;
 static Str
 file_feed(void)
 {
-    struct growbuf* gb = growbuf_create();
-    ist_gets_to_growbuf(_file_lp2, gb, false);
-    struct str_view gv = growbuf_str_view(gb);
+    struct str_view gv = ist_gets(_file_lp2, false);
     Str tmp = NULL;
     if (gv.len > 0) {
         tmp = Strnew_charp_n(gv.ptr, gv.len);
     } else {
         ist_close(_file_lp2);
     }
-    growbuf_destroy(gb);
     return tmp;
 }
 
@@ -4534,11 +4531,8 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     meta_charset = 0;
     if (ist_type(f->stream) != IST_ENCODED)
         f->stream = ist_decode(f->stream, f->encoding);
-    struct growbuf* gb = growbuf_create();
     while (true) {
-        growbuf_clear(gb);
-        ist_gets_to_growbuf(f->stream, gb, true);
-        struct str_view gv = growbuf_str_view(gb);
+        struct str_view gv = ist_gets(f->stream, true);
         if (gv.len == 0) {
             break;
         }
@@ -4562,7 +4556,6 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         cur_document_charset = charset;
         HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
     }
-    growbuf_destroy(gb);
     if (obuf.status != R_ST_NORMAL) {
         HTMLlineproc0("\n", &htmlenv1, internal);
     }

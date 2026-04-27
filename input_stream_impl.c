@@ -5,23 +5,29 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+struct input_stream_base base_init(const uint8_t* p, size_t len)
+{
+    struct input_stream_base base = {
+        .iseos = false,
+        .unclose = false,
+        .linebuf = growbuf_create(),
+    };
+    alloc_buffer(&base.stream, p, len);
+    return base;
+}
+
 struct InputStream*
 ist_from_buffer(const char* s, int len)
 {
-    if (s == NULL)
+    if (!s) {
         return NULL;
-
-    struct input_stream_base* base = malloc(sizeof(struct input_stream_base));
-    *base = (struct input_stream_base) {
-        .iseos = false,
-        .unclose = false,
-    };
-    alloc_buffer(&base->stream, (const uint8_t*)s, len);
+    }
 
     struct InputStream* ist = malloc(sizeof(struct InputStream));
     *ist = (struct InputStream) {
         .type = IST_BUFFER,
-        .handle = base,
+        .base = base_init((const uint8_t*)s, len),
+        .handle = 0,
     };
     return ist;
 }
@@ -62,13 +68,9 @@ ist_from_fd(int des)
     struct InputStream* ist = malloc(sizeof(struct InputStream));
     *ist = (struct InputStream) {
         .type = IST_FILE_DESC,
-        .base = (struct input_stream_base) {
-            .iseos = false,
-            .unclose = false,
-        },
+        .base = base_init(NULL, STREAM_BUF_SIZE),
         .handle = handle,
     };
-    alloc_buffer(&ist->base.stream, NULL, STREAM_BUF_SIZE);
     return ist;
 }
 
@@ -117,13 +119,9 @@ struct InputStream* ist_from_fp(FILE* fp, FpCloseFunc func)
     struct InputStream* ist = malloc(sizeof(struct InputStream));
     *ist = (struct InputStream) {
         .type = IST_FILE_PIPE,
-        .base = (struct input_stream_base) {
-            .iseos = false,
-            .unclose = false,
-        },
+        .base = base_init(NULL, STREAM_BUF_SIZE),
         .handle = handle,
     };
-    alloc_buffer(&ist->base.stream, NULL, STREAM_BUF_SIZE);
     return ist;
 }
 
@@ -187,13 +185,9 @@ ist_from_socket(int sock, SSL* ssl)
     struct InputStream* ist = malloc(sizeof(struct InputStream));
     *ist = (struct InputStream) {
         .type = IST_SOCK,
-        .base = (struct input_stream_base) {
-            .iseos = false,
-            .unclose = false,
-        },
+        .base = base_init(NULL, SSL_BUF_SIZE),
         .handle = handle,
     };
-    alloc_buffer(&ist->base.stream, NULL, SSL_BUF_SIZE);
     return ist;
 }
 
@@ -218,8 +212,9 @@ void ens_close(struct input_stream_encoded* handle)
 int ens_read(struct input_stream_encoded* handle, uint8_t* buf, int len)
 {
     struct str_view gv = growbuf_str_view(handle->gb);
-    if (handle->pos == growbuf_str_view(handle->gb).len) {
-        ist_gets_to_growbuf(handle->is, handle->gb, true);
+    if (handle->pos == gv.len) {
+        struct str_view line = ist_gets(handle->is, true);
+        growbuf_append(handle->gb, (const uint8_t*)line.ptr, line.len);
         gv = growbuf_str_view(handle->gb);
         if (gv.len == 0)
             return 0;
@@ -227,8 +222,10 @@ int ens_read(struct input_stream_encoded* handle, uint8_t* buf, int len)
         if (handle->encoding == ENC_BASE64) {
             gv = sv_chop(gv);
         } else if (handle->encoding == ENC_UUENCODE) {
-            if (gv.len >= 5 && !strncmp(gv.ptr, "begin", 5))
-                ist_gets_to_growbuf(handle->is, handle->gb, true);
+            if (gv.len >= 5 && !strncmp(gv.ptr, "begin", 5)) {
+                line = ist_gets(handle->is, true);
+                growbuf_append(handle->gb, (const uint8_t*)line.ptr, line.len);
+            }
             gv = sv_chop(growbuf_str_view(handle->gb));
         }
 
@@ -274,13 +271,9 @@ struct InputStream* ist_decode(struct InputStream* is, enum StreamEncoding encod
     struct InputStream* ist = malloc(sizeof(struct InputStream));
     *ist = (struct InputStream) {
         .type = IST_ENCODED,
-        .base = (struct input_stream_base) {
-            .iseos = false,
-            .unclose = false,
-        },
+        .base = base_init(NULL, STREAM_BUF_SIZE),
         .handle = handle,
     };
-    alloc_buffer(&ist->base.stream, NULL, STREAM_BUF_SIZE);
 
     return ist;
 }

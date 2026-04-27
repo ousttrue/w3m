@@ -527,14 +527,11 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                 t_stack = 0;
                 if (frame.body->type && !strcasecmp(frame.body->type, "text/plain")) {
                     fprintf(f1, "<pre>\n");
-                    struct growbuf* gb = growbuf_create();
-                    ist_gets_to_growbuf(f2.stream, gb, true);
                     while (true) {
-                        struct str_view gv = growbuf_str_view(gb);
+                        struct str_view gv = ist_gets(f2.stream, true);
                         Str tmp = convertLine((const uint8_t*)gv.ptr, gv.len, HTML_MODE, &charset, doc_charset, false);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
                     }
-                    growbuf_destroy(gb);
                     fprintf(f1, "</pre>\n");
                     UFclose(&f2);
                     break;
@@ -546,15 +543,12 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
 
                     do {
                         if (*p == '\0') {
-                            struct growbuf* gb = growbuf_create();
-                            ist_gets_to_growbuf(f2.stream, gb, true);
-                            struct str_view gv = growbuf_str_view(gb);
+                            struct str_view gv = ist_gets(f2.stream, true);
                             if (gv.len > 0) {
                                 // Str tmp = Strnew_m_charp((const char*)gb.ptr, gb.length);
                                 Str tmp = convertLine((const uint8_t*)gv.ptr, gv.len, HTML_MODE, &charset, doc_charset, false);
                                 p = tmp->ptr;
                             }
-                            growbuf_destroy(gb);
                         }
                         read_token(tok, &p, &status, 1, status != R_ST_NORMAL);
                     } while (status != R_ST_NORMAL);

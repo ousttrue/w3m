@@ -58,11 +58,8 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
     }
 
     Str lineBuf2 = NULL;
-    struct growbuf* gb = growbuf_create();
     while (true) {
-        growbuf_clear(gb);
-        ist_gets_to_growbuf(uf->stream, gb, true);
-        struct str_view gv = growbuf_str_view(gb);
+        struct str_view gv = ist_gets(uf->stream, true);
         if (gv.len == 0) {
             break;
         }
@@ -125,7 +122,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
             time_t expires = (time_t)-1;
 
             const char* q = NULL;
-            const char *p;
+            const char* p;
             if (lineBuf2->ptr[10] == '2') {
                 p = lineBuf2->ptr + 12;
                 version = 1;
@@ -216,7 +213,7 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
                     }
                     if (ans == NULL || TOLOWER(*ans) != 'y' || (err = add_cookie(pu, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
                         err = (err & ~COO_OVERRIDE_OK) - 1;
-                        const char *emsg;
+                        const char* emsg;
                         if (err >= 0 && err < COO_EMAX)
                             emsg = Sprintf("This cookie was rejected "
                                            "to prevent security violation. [%s]",
@@ -254,8 +251,6 @@ void readHeader(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf,
     }
     if (thru_src)
         fclose(thru_src);
-
-    growbuf_destroy(gb);
 }
 
 bool matchattr(const char* p, const char* attr, int len, Str* value)

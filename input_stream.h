@@ -15,7 +15,7 @@ struct InputStream;
 struct ssl_st;
 
 struct InputStream* ist_from_path(const char* path);
-typedef int(*FpCloseFunc)(FILE*);
+typedef int (*FpCloseFunc)(FILE*);
 struct InputStream* ist_from_fp(FILE* f, FpCloseFunc func);
 struct InputStream* ist_from_buffer(const char* s, int len);
 struct InputStream* ist_from_socket(int sock, struct ssl_st* ssl);
@@ -32,5 +32,4 @@ int ist_peek(struct InputStream* ist);
 int ist_read(struct InputStream* ist, uint8_t* dst, int bufsize);
 int ist_fd(struct InputStream* ist);
 bool ist_eos(struct InputStream* ist);
-struct growbuf;
-void ist_gets_to_growbuf(struct InputStream* stream, struct growbuf* gb, bool check_crnl);
+struct str_view ist_gets(struct InputStream* stream, bool check_crnl);

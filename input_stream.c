@@ -1,5 +1,4 @@
 #include "input_stream.h"
-#include "growbuf.h"
 #include "input_stream_impl.h"
 #include <signal.h>
 
@@ -192,8 +191,10 @@ bool ist_eos(struct InputStream* ist)
     return false;
 }
 
-void ist_gets_to_growbuf(struct InputStream* ist, struct growbuf* gb, bool check_crnl)
+struct str_view ist_gets(struct InputStream* ist, bool check_crnl)
 {
+    struct input_stream_base* base = &ist->base;
+    struct growbuf* gb = base->linebuf;
     growbuf_clear(gb);
     while (!ist_eos(ist)) {
         if (ist_drain(ist)) {
@@ -216,4 +217,5 @@ void ist_gets_to_growbuf(struct InputStream* ist, struct growbuf* gb, bool check
             break;
     }
     growbuf_add_char(gb, '\0');
+    return growbuf_str_view(gb);
 }
