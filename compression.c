@@ -13,16 +13,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define GUNZIP_NAME "gunzip"
-#define BUNZIP2_NAME "bunzip2"
-#define INFLATE_NAME "inflate"
-#define BROTLI_NAME "brotli"
-
-#define GUNZIP_CMDNAME "gunzip"
-#define BUNZIP2_CMDNAME "bunzip2"
-#define INFLATE_CMDNAME "inflate"
-#define BROTLI_CMDNAME "brotli"
-
 static struct CompressionDecoder decoders[] = {
     { CMP_COMPRESS, ".gz", "application/x-gzip",
         0, GUNZIP_CMDNAME, GUNZIP_NAME, "gzip",
@@ -162,97 +152,4 @@ const char* acceptableEncoding(void)
         Strcat_charp(encodings, p);
     }
     return encodings->ptr;
-}
-
-static const char* auxbinFile(const char* base)
-{
-    return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
-}
-
-#define SAVE_BUF_SIZE 1536
-
-void uncompress_stream(struct URLFile* uf, const char** src)
-{
-    const char* expand_cmd = GUNZIP_CMDNAME;
-    const char* expand_name = GUNZIP_NAME;
-    const char* tmpf = NULL;
-    const char* ext = NULL;
-    int use_d_arg = 0;
-    for (struct CompressionDecoder* d = decoders; d->type != CMP_NOCOMPRESS; d++) {
-        if (uf->compression == d->type) {
-            if (d->auxbin_p)
-                expand_cmd = auxbinFile(d->cmd);
-            else
-                expand_cmd = d->cmd;
-            expand_name = d->name;
-            ext = d->ext;
-            use_d_arg = d->use_d_arg;
-            break;
-        }
-    }
-    uf->compression = CMP_NOCOMPRESS;
-
-    if (uf->scheme != SCM_FILE
-        && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, ext);
-    }
-
-    /* child1 -- stdout|f1=uf -> parent */
-    FILE* f1;
-    pid_t pid1 = open_pipe_rw(&f1, NULL);
-    if (pid1 < 0) {
-        UFclose(uf);
-        return;
-    }
-    if (pid1 == 0) {
-        /* child */
-        pid_t pid2;
-        FILE* f2 = stdin;
-
-        /* uf -> child2 -- stdout|stdin -> child1 */
-        pid2 = open_pipe_rw(&f2, NULL);
-        if (pid2 < 0) {
-            UFclose(uf);
-            exit(1);
-        }
-        if (pid2 == 0) {
-            // child2
-            uint8_t* buf = NewWithoutGC_N(uint8_t, SAVE_BUF_SIZE);
-
-            setup_child(true, 2, ist_fd(uf->stream));
-
-            FILE* f = NULL;
-            if (tmpf)
-                f = fopen(tmpf, "wb");
-
-            int count;
-            while ((count = ist_read(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
-                if (fwrite(buf, 1, count, stdout) != count)
-                    break;
-                if (f && fwrite(buf, 1, count, f) != count)
-                    break;
-            }
-            UFclose(uf);
-            if (f)
-                fclose(f);
-            xfree(buf);
-            exit(0);
-        }
-        // child1
-        dup2(1, 2); /* stderr>&stdout */
-        setup_child(true, -1, -1);
-        if (use_d_arg)
-            execlp(expand_cmd, expand_name, "-d", NULL);
-        else
-            execlp(expand_cmd, expand_name, NULL);
-        exit(1);
-    }
-    if (tmpf) {
-        if (src)
-            *src = tmpf;
-        else
-            uf->scheme = SCM_FILE;
-    }
-    UFhalfclose(uf);
-    uf->stream = ist_from_fp(f1, fclose);
 }

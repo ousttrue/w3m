@@ -477,12 +477,12 @@ page_loaded:
     }
 
     if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-        uncompress_stream(&f, &pu.real_file);
+        uncompress_and_reopen(&f, compression_from_type(f.compression), &pu.real_file);
     } else if (f.compression != CMP_NOCOMPRESS) {
         if ((is_text_type(t) || searchExtViewer(t))) {
             if (t_buf == NULL)
                 t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            uncompress_stream(&f, &t_buf->sourcefile);
+            uncompress_and_reopen(&f, compression_from_type(f.compression), &t_buf->sourcefile);
             uncompressed_file_type(pu.file, &f.ext);
         } else {
             struct CompressionDecoder* d = compression_from_type(f.compression);
@@ -1549,7 +1549,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
         if (!pid) {
             int err;
             if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-                uncompress_stream(&uf, &tmpf);
+                uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
                 if (tmpf)
                     unlink(tmpf);
             }
@@ -1589,7 +1589,7 @@ int doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defstr)
             return -1;
         }
         if (uf.content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
-            uncompress_stream(&uf, &tmpf);
+            uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
             if (tmpf)
                 unlink(tmpf);
         }

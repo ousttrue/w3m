@@ -9,6 +9,16 @@ enum ContentCompression {
     CMP_BROTLI = 5,
 };
 
+#define GUNZIP_NAME "gunzip"
+#define BUNZIP2_NAME "bunzip2"
+#define INFLATE_NAME "inflate"
+#define BROTLI_NAME "brotli"
+
+#define GUNZIP_CMDNAME "gunzip"
+#define BUNZIP2_CMDNAME "bunzip2"
+#define INFLATE_CMDNAME "inflate"
+#define BROTLI_CMDNAME "brotli"
+
 struct CompressionDecoder {
     enum ContentCompression type;
     const char* ext;
@@ -24,29 +34,5 @@ struct CompressionDecoder {
 struct CompressionDecoder* compression_from_type(enum ContentCompression compression);
 struct CompressionDecoder* compression_from_encodings(const char* p);
 struct CompressionDecoder* compression_from_path(const char* path);
-// void check_compression(struct URLFile* uf, const char* path);
-// void check_compression(struct URLFile* uf, const char* path)
-// {
-//     if (path == NULL)
-//         return;
-//
-//     int len = strlen(path);
-//     uf->compression = CMP_NOCOMPRESS;
-//     for (struct CompressionDecoder* d = decoders; d->type != CMP_NOCOMPRESS; d++) {
-//         if (d->ext == NULL)
-//             continue;
-//         int elen = strlen(d->ext);
-//         if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
-//             uf->compression = d->type;
-//             uf->guess_type = d->mime_type;
-//             break;
-//         }
-//     }
-// }
-
-struct URLFile;
-
 const char* uncompressed_file_type(const char* path, const char** ext);
-
 const char* acceptableEncoding(void);
-void uncompress_stream(struct URLFile* uf, const char** src);
