@@ -166,8 +166,6 @@ extern void saveBufferBody(struct Buffer* buf, FILE* f, int cont);
 extern struct Buffer* getshell(struct CmdArgs* args, const char* cmd);
 extern struct Buffer* getpipe(const char* cmd);
 struct InputStream;
-extern struct Buffer* openPagerBuffer(struct InputStream *stream, struct Buffer* buf);
-extern struct Buffer* openGeneralPagerBuffer(struct CmdArgs* args, struct InputStream *stream);
 extern struct Line* getNextPage(struct Buffer* buf, int plen);
 extern struct Buffer* doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buffer* defaultbuf);
 extern void cursorUp0(struct Buffer* buf, int n);

@@ -551,8 +551,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 /* do nothing */
             } else if (!strcmp("-debug", argv[i])) {
                 w3m_debug = TRUE;
-            } 
-            else {
+            } else {
                 usage();
             }
         } else if (*argv[i] == '+') {
@@ -591,9 +590,8 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     if (load_argc == 0) {
         /* no URL specified */
         if (!isatty(0)) {
-            struct InputStream* redin = ist_from_fp(fdopen(dup(0), "rb"), pclose);
-            newbuf = openGeneralPagerBuffer(args, redin);
-            dup2(1, 0);
+            // this is removed
+            abort();
         } else if (load_bookmark) {
             newbuf = loadGeneralFile(args, BookmarkFile, NULL, NO_REFERER, 0, NULL);
             if (newbuf == NULL)
