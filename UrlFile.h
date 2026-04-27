@@ -2,6 +2,7 @@
 #include "url_scheme.h"
 #include "Str.h"
 #include "constants.h"
+#include "compression.h"
 #include <time.h>
 #include <openssl/crypto.h>
 
@@ -12,18 +13,10 @@ enum UrlOptionFlags {
     RG_FRAME = 2,
     RG_FRAME_SRC = 4,
 };
+
 struct URLOption {
     const char* referer;
     enum UrlOptionFlags flag;
-};
-
-enum ContentCompression {
-    CMP_NOCOMPRESS = 0,
-    CMP_COMPRESS = 1,
-    CMP_GZIP = 2,
-    CMP_BZIP2 = 3,
-    CMP_DEFLATE = 4,
-    CMP_BROTLI = 5,
 };
 
 struct URLFile {
@@ -55,12 +48,7 @@ struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* pu, st
 
 void UFclose(struct URLFile* f);
 void UFhalfclose(struct URLFile* f);
-void check_compression(struct URLFile* uf, const char* path);
-const char* uncompressed_file_type(const char* path, const char** ext);
-const char* compress_application_type(enum ContentCompression compression);
-const char* acceptableEncoding(void);
-void parseCompression(struct URLFile* uf, const char* p);
-void uncompress_stream(struct URLFile* uf, const char** src);
+
 Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname);
 void free_ssl_ctx(void);
 
