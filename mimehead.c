@@ -61,8 +61,8 @@ Str decodeB(char** ww)
 {
     struct growbuf* gb = growbuf_create();
     decodeB_to_growbuf(gb, ww);
-    struct str_view gv = growbuf_str_view(gb);
-    Str s = Strnew_charp_n(gv.ptr, gv.len);
+    struct span span = growbuf_span(gb);
+    Str s = Strnew_charp_n((const char*)span.ptr, span.len);
     growbuf_destroy(gb);
     return s;
 }
@@ -120,8 +120,8 @@ Str decodeU(char** ww)
 {
     struct growbuf* gb = growbuf_create();
     decodeU_to_growbuf(gb, ww);
-    struct str_view gv = growbuf_str_view(gb);
-    Str s = Strnew_charp_n(gv.ptr, gv.len);
+    struct span span = growbuf_span(gb);
+    Str s = Strnew_charp_n((const char*)span.ptr, span.len);
     growbuf_destroy(gb);
     return s;
 }
@@ -174,8 +174,8 @@ Str decodeQP(char** ww)
 {
     struct growbuf* gb = growbuf_create();
     decodeQP_to_growbuf(gb, ww);
-    struct str_view gv = growbuf_str_view(gb);
-    Str s = Strnew_charp_n(gv.ptr, gv.len);
+    struct span span = growbuf_span(gb);
+    Str s = Strnew_charp_n((const char*)span.ptr, span.len);
     growbuf_destroy(gb);
     return s;
 }

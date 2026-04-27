@@ -2,24 +2,24 @@
 #include "input_stream_impl.h"
 #include <signal.h>
 
-static bool ist_drain(struct InputStream* ist)
+static void ist_drain(struct InputStream* ist)
 {
     struct input_stream_base* sb = &ist->base;
     if (sb->iseos) {
-        return false;
+        return;
     }
     if (!MUST_BE_UPDATED(&sb->stream)) {
-        return false;
+        return;
     }
 
-    sb->stream.cur = sb->stream.next = 0;
+    sb->stream.cur = 0;
+    sb->stream.length = 0;
     int len = ist_read(ist, sb->stream.buf, sb->stream.capacity);
-    if (len <= 0)
+    if (len <= 0) {
         sb->iseos = true;
-    else
-        sb->stream.next += len;
-
-    return true;
+    } else {
+        sb->stream.length = len;
+    }
 }
 
 static struct span ist_buffered_until(struct InputStream* ist, const char* needles)
@@ -27,7 +27,7 @@ static struct span ist_buffered_until(struct InputStream* ist, const char* needl
     struct StreamBuffer* sb = &ist->base.stream;
     bool found = false;
     int i = sb->cur;
-    for (; !found && i < sb->next; ++i) {
+    for (; !found && i < sb->length; ++i) {
         for (const char* p = needles; *p; ++p) {
             if (sb->buf[i] == *p) {
                 found = true;
@@ -134,6 +134,7 @@ int ist_read(struct InputStream* ist, uint8_t* dst, int count)
         switch (ist_type(ist)) {
         case IST_BUFFER: {
             // donothing
+            l = 0;
             break;
         }
         case IST_FILE_DESC: {
@@ -196,26 +197,35 @@ struct str_view ist_gets(struct InputStream* ist, bool check_crnl)
     struct input_stream_base* base = &ist->base;
     struct growbuf* gb = base->linebuf;
     growbuf_clear(gb);
-    while (!ist_eos(ist)) {
-        if (ist_drain(ist)) {
-            continue;
+
+    while (true) {
+        ist_drain(ist);
+        if (ist->base.iseos) {
+            break;
         }
-        struct str_view gv = growbuf_str_view(gb);
-        if (check_crnl && gv.len > 0 && gv.ptr[gv.len - 1] == '\r') {
-            if (ist_peek(ist) == '\n') {
-                growbuf_add_char(gb, '\n');
-                ist_getc(ist);
+
+        int ch = ist_getc(ist);
+        if (ch > 0) {
+            growbuf_add_char(gb, ch);
+            if (check_crnl && ch == '\r') {
+                if (ist_peek(ist) == '\n') {
+                    ist_getc(ist);
+                    break;
+                }
+            } else if (ch == '\n') {
+                break;
+            } else {
             }
+        } else {
             break;
         }
-        struct span span = (check_crnl)
-            ? ist_buffered_until(ist, "\r\n")
-            : ist_buffered_until(ist, "\n");
-        growbuf_append(gb, span.ptr, span.len);
-        gv = growbuf_str_view(gb);
-        if (gv.len > 0 && gv.ptr[gv.len - 1] == '\n')
-            break;
     }
     growbuf_add_char(gb, '\0');
-    return growbuf_str_view(gb);
+
+    struct span span = growbuf_span(gb);
+    span = sv_chop(span);
+    return (struct str_view) {
+        .ptr = (char*)span.ptr,
+        .len = span.len,
+    };
 }

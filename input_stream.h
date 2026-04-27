@@ -1,5 +1,6 @@
 #pragma once
 #include "constants.h"
+#include "str_view.h"
 #include <stdio.h>
 #include <stdint.h>
 

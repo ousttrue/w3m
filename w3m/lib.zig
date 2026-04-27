@@ -205,6 +205,8 @@ export fn growbuf_clear(_gb: ?*Growbuf) void {
     const gb = _gb orelse {
         return;
     };
+    gb.buf.append(runtime.allocator, 0) catch {};
+    gb.buf.items[0] = 0;
     gb.buf.clearRetainingCapacity();
 }
 
@@ -215,11 +217,11 @@ export fn growbuf_reserve(_gb: ?*Growbuf, leastarea: usize) void {
     gb.buf.ensureTotalCapacity(runtime.allocator, leastarea) catch {};
 }
 
-export fn growbuf_str_view(_gb: ?*Growbuf) c.str_view {
+export fn growbuf_span(_gb: ?*Growbuf) c.span {
     const gb = _gb orelse {
         return .{};
     };
-    return gb.strView();
+    return gb.span();
 }
 
 export fn growbuf_add_char(_gb: ?*Growbuf, ch: c_int) void {

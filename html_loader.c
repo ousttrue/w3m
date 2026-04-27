@@ -4533,7 +4533,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         f->stream = ist_decode(f->stream, f->encoding);
     while (true) {
         struct str_view gv = ist_gets(f->stream, true);
-        if (gv.len == 0) {
+        if (ist_eos(f->stream)) {
             break;
         }
         lineBuf2 = Strnew_charp_n(gv.ptr, gv.len);

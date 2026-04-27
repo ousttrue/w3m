@@ -211,26 +211,26 @@ void ens_close(struct input_stream_encoded* handle)
 
 int ens_read(struct input_stream_encoded* handle, uint8_t* buf, int len)
 {
-    struct str_view gv = growbuf_str_view(handle->gb);
-    if (handle->pos == gv.len) {
+    struct span span = growbuf_span(handle->gb);
+    if (handle->pos == span.len) {
         struct str_view line = ist_gets(handle->is, true);
         growbuf_append(handle->gb, (const uint8_t*)line.ptr, line.len);
-        gv = growbuf_str_view(handle->gb);
-        if (gv.len == 0)
+        span = growbuf_span(handle->gb);
+        if (span.len == 0)
             return 0;
 
         if (handle->encoding == ENC_BASE64) {
-            gv = sv_chop(gv);
+            span = sv_chop(span);
         } else if (handle->encoding == ENC_UUENCODE) {
-            if (gv.len >= 5 && !strncmp(gv.ptr, "begin", 5)) {
+            if (span.len >= 5 && !strncmp((char*)span.ptr, "begin", 5)) {
                 line = ist_gets(handle->is, true);
                 growbuf_append(handle->gb, (const uint8_t*)line.ptr, line.len);
             }
-            gv = sv_chop(growbuf_str_view(handle->gb));
+            span = sv_chop(growbuf_span(handle->gb));
         }
 
         struct growbuf* gbtmp = growbuf_create();
-        char* p = (char*)gv.ptr;
+        char* p = (char*)span.ptr;
         if (handle->encoding == ENC_QUOTE)
             decodeQP_to_growbuf(gbtmp, &p);
         else if (handle->encoding == ENC_BASE64)
@@ -242,10 +242,10 @@ int ens_read(struct input_stream_encoded* handle, uint8_t* buf, int len)
         handle->pos = 0;
     }
 
-    if (len > gv.len - handle->pos)
-        len = gv.len - handle->pos;
+    if (len > span.len - handle->pos)
+        len = span.len - handle->pos;
 
-    memcpy(buf, &gv.ptr[handle->pos], len);
+    memcpy(buf, &span.ptr[handle->pos], len);
     handle->pos += len;
     return len;
 }

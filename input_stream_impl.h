@@ -14,7 +14,7 @@ struct input_stream_base {
 static inline int POP_CHAR(struct input_stream_base* bs)
 {
     if (!bs->iseos) {
-        if (bs->stream.cur < bs->stream.next) {
+        if (bs->stream.cur < bs->stream.length) {
             return bs->stream.buf[bs->stream.cur++];
         }
     }
