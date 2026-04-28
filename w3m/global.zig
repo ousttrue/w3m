@@ -233,7 +233,6 @@ pub export var set_pixel_per_line: c_int = 0;
 pub export var image_scale: f64 = 100;
 pub export var use_lessopen: c_int = 0;
 pub export var keymap_file: [*c]const u8 = c.KEYMAP_FILE;
-pub export var FollowRedirection: c_int = 10;
 pub export var ssl_forbid_method: [*c]const u8 = "2, 3, t, 5";
 
 // #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)

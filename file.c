@@ -1,4 +1,5 @@
 #include "file.h"
+#include "http_client.h"
 #include "global.h"
 #include "display.h"
 #include "http_request.h"
@@ -102,49 +103,6 @@ setModtime(const char* path, time_t modtime)
         t.actime = time(NULL);
     t.modtime = modtime;
     return utime(path, &t);
-}
-
-static int same_url_p(struct Url* pu1, struct Url* pu2)
-{
-    return (pu1->scheme == pu2->scheme && pu1->port == pu2->port && (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1)
-        && (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
-}
-
-static int
-checkRedirection(struct CmdArgs* args, struct Url* pu)
-{
-    static struct Url* puv = NULL;
-    static int nredir = 0;
-    static int nredir_size = 0;
-    Str tmp;
-
-    if (pu == NULL) {
-        nredir = 0;
-        nredir_size = 0;
-        puv = NULL;
-        return TRUE;
-    }
-    if (nredir >= FollowRedirection) {
-        /* FIXME: gettextize? */
-        tmp = Sprintf("Number of redirections exceeded %d at %s",
-            FollowRedirection, parsedURL2Str(pu)->ptr);
-        disp_err_message(args, tmp->ptr, FALSE);
-        return FALSE;
-    } else if (nredir_size > 0 && (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) || (!(nredir % 2) && same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
-        /* FIXME: gettextize? */
-        tmp = Sprintf("Redirection loop detected (%s)",
-            parsedURL2Str(pu)->ptr);
-        disp_err_message(args, tmp->ptr, FALSE);
-        return FALSE;
-    }
-    if (!puv) {
-        nredir_size = FollowRedirection / 2 + 1;
-        puv = New_N(struct Url, nredir_size);
-        memset(puv, 0, sizeof(struct Url) * nredir_size);
-    }
-    copyParsedURL(&puv[nredir % nredir_size], pu);
-    nredir++;
-    return TRUE;
 }
 
 static bool checkSaveFile(int des, const char* path2)
@@ -450,7 +408,7 @@ loadGeneralFile(struct CmdArgs* args, struct HttpClient http, const char* path)
     prevtrap = NULL;
     add_auth_cookie_flag = 0;
 
-    checkRedirection(args, NULL);
+    http_init(&http);
 
     struct HttpRequest hr = {
         .http_method = HR_COMMAND_GET,
@@ -464,7 +422,12 @@ load_doc:
     {
         struct Url pu = parseURL2(tpath, http.current);
         const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
-        if (sc_redirect && *sc_redirect && checkRedirection(args, &pu)) {
+        if (sc_redirect && *sc_redirect) {
+            enum HttpReidrectionStatus redirection = http_redirect(&http, pu);
+            if (redirection != HTTP_REDIRECTION_OK) {
+                return 0;
+            }
+
             tpath = (char*)sc_redirect;
             http.post = NULL;
             add_auth_cookie_flag = 0;
@@ -559,13 +522,18 @@ load_doc:
         f.compression = http_response_process(&t_buf->http_response, args, &f.url);
         if (((t_buf->http_response.status_code >= 301 && t_buf->http_response.status_code <= 303)
                 || t_buf->http_response.status_code == 307)
-            && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL
-            && checkRedirection(args, &f.url)) {
-            /* document moved */
-            /* 301: Moved Permanently */
-            /* 302: Found */
-            /* 303: See Other */
-            /* 307: Temporary Redirect (HTTP/1.1) */
+            && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL) {
+            // document moved
+            // 301: Moved Permanently
+            // 302: Found
+            // 303: See Other
+            // 307: Temporary Redirect (HTTP/1.1)
+
+            enum HttpReidrectionStatus redirection = http_redirect(&http, f.url);
+            if (redirection != HTTP_REDIRECTION_OK) {
+                return 0;
+            }
+
             tpath = url_encode(p, NULL, 0);
             http.post = NULL;
             UFclose(&f);
@@ -647,8 +615,13 @@ load_doc:
             t_buf->header_source = http_response_save_header_source(&t_buf->http_response);
         }
         f.compression = http_response_process(&t_buf->http_response, args, &f.url);
-        if (f.is_cgi && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL && checkRedirection(args, &f.url)) {
+        if (f.is_cgi && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL) {
             /* document moved */
+            enum HttpReidrectionStatus redirection = http_redirect(&http, f.url);
+            if (redirection != HTTP_REDIRECTION_OK) {
+                return 0;
+            }
+
             tpath = url_encode(remove_space(p), NULL, 0);
             http.post = NULL;
             UFclose(&f);

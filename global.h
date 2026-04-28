@@ -184,7 +184,6 @@ extern int set_pixel_per_line;
 extern double image_scale;
 extern int use_lessopen;
 extern const char* keymap_file;
-extern int FollowRedirection;
 extern const char* ssl_forbid_method;
 extern const char* ssl_cipher;
 extern const char* SearchString;
