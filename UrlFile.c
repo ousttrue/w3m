@@ -130,7 +130,16 @@ struct URLFile examineFile(const char* path)
             struct ContentTypeWithExt ce = compression_from_path_to_content_type(path);
             uf.ext = ce.ext;
             uf.guess_type = ce.content_type;
-            uncompress_and_reopen(&uf, compression_from_type(uf.compression), NULL);
+            struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression));
+            if (uncompressed.pipe) {
+                // if (uncompressed.tmpf) {
+                //     // if (src)
+                //     //     *src = tmpf;
+                //     // else
+                // }
+                uf.stream = ist_from_fp(uncompressed.pipe, fclose);
+                uf.scheme = SCM_FILE;
+            }
             return uf;
         }
     }
@@ -910,47 +919,29 @@ static const char* auxbinFile(const char* base)
 
 #define SAVE_BUF_SIZE 1536
 
-void uncompress_and_reopen(struct URLFile* uf, struct CompressionDecoder* d, const char** src)
+struct Uncompressed uncompressed_pipe(struct URLFile* uf, struct CompressionDecoder* d)
 {
-    const char* expand_cmd = GUNZIP_CMDNAME;
-    const char* expand_name = GUNZIP_NAME;
-    const char* tmpf = NULL;
-    const char* ext = NULL;
-    int use_d_arg = 0;
-    // for (struct CompressionDecoder* d = decoders; d->type != CMP_NOCOMPRESS; d++) {
-    //     if (uf->compression == d->type) {
-    if (d) {
-        if (d->auxbin_p)
-            expand_cmd = auxbinFile(d->cmd);
-        else
-            expand_cmd = d->cmd;
-        expand_name = d->name;
-        ext = d->ext;
-        use_d_arg = d->use_d_arg;
-        // break;
+    if (!d) {
+        return (struct Uncompressed) { 0 };
     }
-    // }
-    uf->compression = CMP_NOCOMPRESS;
 
+    const char* tmpf = NULL;
     if (uf->scheme != SCM_FILE
         && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, ext);
+        tmpf = tmpfname(TMPF_DFL, d->ext);
     }
 
-    /* child1 -- stdout|f1=uf -> parent */
+    // child1 --> stdout(f1)
     FILE* f1;
     pid_t pid1 = open_pipe_rw(&f1, NULL);
     if (pid1 < 0) {
         UFclose(uf);
-        return;
-    }
-    if (pid1 == 0) {
-        /* child */
-        pid_t pid2;
+        return (struct Uncompressed) { 0 };
+    } else if (pid1 == 0) {
+        // child
+        // uf -> child2 -- stdout|stdin -> child1
         FILE* f2 = stdin;
-
-        /* uf -> child2 -- stdout|stdin -> child1 */
-        pid2 = open_pipe_rw(&f2, NULL);
+        pid_t pid2 = open_pipe_rw(&f2, NULL);
         if (pid2 < 0) {
             UFclose(uf);
             exit(1);
@@ -967,8 +958,10 @@ void uncompress_and_reopen(struct URLFile* uf, struct CompressionDecoder* d, con
 
             int count;
             while ((count = ist_read(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+                // to pipe
                 if (fwrite(buf, 1, count, stdout) != count)
                     break;
+                // to tmpf
                 if (f && fwrite(buf, 1, count, f) != count)
                     break;
             }
@@ -981,18 +974,23 @@ void uncompress_and_reopen(struct URLFile* uf, struct CompressionDecoder* d, con
         // child1
         dup2(1, 2); /* stderr>&stdout */
         setup_child(true, -1, -1);
-        if (use_d_arg)
-            execlp(expand_cmd, expand_name, "-d", NULL);
+
+        const char* expand_cmd = GUNZIP_CMDNAME;
+        if (d->auxbin_p)
+            expand_cmd = auxbinFile(d->cmd);
         else
-            execlp(expand_cmd, expand_name, NULL);
+            expand_cmd = d->cmd;
+
+        if (d->use_d_arg)
+            execlp(expand_cmd, d->name, "-d", NULL);
+        else
+            execlp(expand_cmd, d->name, NULL);
         exit(1);
+    } else {
+        UFclose(uf);
+        return (struct Uncompressed) {
+            .tmpf = tmpf,
+            .pipe = f1,
+        };
     }
-    if (tmpf) {
-        if (src)
-            *src = tmpf;
-        else
-            uf->scheme = SCM_FILE;
-    }
-    UFclose(uf);
-    uf->stream = ist_from_fp(f1, fclose);
 }

@@ -205,9 +205,12 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
         pid = fork();
         if (!pid) {
             if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
-                uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
-                if (tmpf)
-                    unlink(tmpf);
+                struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression));
+                if (uncompressed.pipe) {
+                    unlink(uncompressed.tmpf);
+                    uf.stream = ist_from_fp(uncompressed.pipe, fclose);
+                    uf.scheme = SCM_FILE;
+                }
             }
             setup_child(FALSE, 0, ist_fd(uf.stream));
             bool success = ist_save2tmp(uf.stream, uf.scheme, p);
@@ -245,9 +248,12 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
             return false;
         }
         if (uf.compression != CMP_NOCOMPRESS && AutoUncompress) {
-            uncompress_and_reopen(&uf, compression_from_type(uf.compression), &tmpf);
-            if (tmpf)
-                unlink(tmpf);
+            struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression));
+            if (uncompressed.pipe) {
+                unlink(uncompressed.tmpf);
+                uf.stream = ist_from_fp(uncompressed.pipe, fclose);
+                uf.scheme = SCM_FILE;
+            }
         }
         if (!ist_save2tmp(uf.stream, uf.scheme, p)) {
             /* FIXME: gettextize? */
@@ -322,12 +328,22 @@ static struct Buffer* page_loaded(struct CmdArgs* args, Str page, wc_ces charset
     }
 
     if ((f.compression != CMP_NOCOMPRESS) && AutoUncompress) {
-        uncompress_and_reopen(&f, compression_from_type(f.compression), &url.real_file);
+        struct Uncompressed uncompressed = uncompressed_pipe(&f, compression_from_type(f.compression));
+        if (uncompressed.pipe) {
+            url.real_file = uncompressed.tmpf;
+            f.stream = ist_from_fp(uncompressed.pipe, fclose);
+            f.scheme = SCM_FILE;
+        }
     } else if (f.compression != CMP_NOCOMPRESS) {
         if ((is_text_type(t) || searchExtViewer(t))) {
             if (t_buf == NULL)
                 t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            uncompress_and_reopen(&f, compression_from_type(f.compression), &t_buf->sourcefile);
+            struct Uncompressed uncompressed = uncompressed_pipe(&f, compression_from_type(f.compression));
+            if (uncompressed.pipe) {
+                t_buf->sourcefile = uncompressed.tmpf;
+                f.stream = ist_from_fp(uncompressed.pipe, fclose);
+                f.scheme = SCM_FILE;
+            }
             struct ContentTypeWithExt ce = compression_from_path_to_content_type(url.file);
             f.ext = ce.ext;
         } else {

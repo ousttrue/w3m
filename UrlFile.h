@@ -42,4 +42,9 @@ void free_ssl_ctx(void);
 union input_handle;
 void ssl_close(union input_handle* _handle);
 int ssl_read(union input_handle* _handle, uint8_t* buf, int len);
-void uncompress_and_reopen(struct URLFile* uf, struct CompressionDecoder* d, const char** src);
+// decompress and return tmpfile name
+struct Uncompressed {
+    FILE* pipe;
+    const char* tmpf;
+};
+struct Uncompressed uncompressed_pipe(struct URLFile* uf, struct CompressionDecoder* d);
