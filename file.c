@@ -27,7 +27,7 @@
 #include "symbol.h"
 #include "line_input.h"
 #include "myctype.h"
-#include "signal_util.h"
+// #include "signal_util.h"
 #include "html.h"
 #include "local_cgi.h"
 #include "wc_util.h"
@@ -386,25 +386,23 @@ struct Buffer* loadGeneralFile(struct CmdArgs* args, const char* path, struct Ur
 {
     struct HttpMessageSession* m = NULL;
     struct URLFile* f = NULL;
-    // , *volatile of = NULL;
     struct Buffer* b = NULL;
-    const char* volatile t = "text/plain", *p, * volatile real_type = NULL;
-    struct Buffer* volatile t_buf = NULL;
-    int volatile searchHeader = SearchHeader;
-    int volatile searchHeader_through = TRUE;
-    SignalFunc prevtrap = NULL;
+    const char *t = "text/plain", *p, *real_type = NULL;
+    struct Buffer* t_buf = NULL;
+    int searchHeader = SearchHeader;
+    int searchHeader_through = TRUE;
+    // SignalFunc prevtrap = NULL;
     TextList* extra_header = newTextList();
-    volatile Str uname = NULL;
-    volatile Str pwd = NULL;
-    volatile Str realm = NULL;
-    int volatile add_auth_cookie_flag;
+    Str uname = NULL;
+    Str pwd = NULL;
+    Str realm = NULL;
+    int add_auth_cookie_flag;
     const char* tmpf;
-    Str volatile page = NULL;
+    Str page = NULL;
     wc_ces charset = WC_CES_US_ASCII;
-    struct Url* volatile auth_pu;
+    struct Url* auth_pu;
 
-    const char* volatile tpath = path;
-    prevtrap = NULL;
+    const char* tpath = path;
     add_auth_cookie_flag = 0;
 
     struct HttpClient http;
@@ -431,7 +429,7 @@ load_doc:
             goto load_doc;
         }
     }
-    TRAP_OFF;
+    // TRAP_OFF;
     m = http_open(&http, args, extra_header);
     f = &m->transport;
     // of = NULL;
@@ -474,20 +472,20 @@ load_doc:
     }
 
     if (m->transport_status == HTST_MISSING) {
-        TRAP_OFF;
+        // TRAP_OFF;
         UFclose(f);
         return NULL;
     }
 
     /* openURL() succeeded */
-    if (SETJMP(AbortLoading) != 0) {
-        /* transfer interrupted */
-        TRAP_OFF;
-        if (b)
-            discardBuffer(b);
-        UFclose(f);
-        return NULL;
-    }
+    // if (SETJMP(AbortLoading) != 0) {
+    //     /* transfer interrupted */
+    //     TRAP_OFF;
+    //     if (b)
+    //         discardBuffer(b);
+    //     UFclose(f);
+    //     return NULL;
+    // }
 
     b = NULL;
     if (f->is_cgi) {
@@ -497,7 +495,7 @@ load_doc:
     }
     if (header_string)
         header_string = NULL;
-    TRAP_ON;
+    // TRAP_ON;
     if (f->url.scheme == SCM_HTTP || f->url.scheme == SCM_HTTPS) {
         if (fmInitialized) {
             term_cbreak();
@@ -556,7 +554,7 @@ load_doc:
                     auth_pu, &m->req, m->req.post, &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
-                    TRAP_OFF;
+                    // TRAP_OFF;
                     return page_loaded(args, page, charset, f->url, t, real_type, t_buf, *f, http.flag);
                 }
                 UFclose(f);
@@ -577,7 +575,7 @@ load_doc:
                     &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
-                    TRAP_OFF;
+                    // TRAP_OFF;
                     return page_loaded(args, page, charset, f->url, t, real_type, t_buf, *f, http.flag);
                 }
                 UFclose(f);
@@ -735,25 +733,25 @@ void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
 struct Buffer*
 loadHTMLString(Str page)
 {
-    SignalFunc prevtrap = NULL;
+    // SignalFunc prevtrap = NULL;
     struct Buffer* newBuf;
 
     struct URLFile f = init_stream(SCM_FILE, ist_from_buffer(page->ptr, page->length));
 
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
-    if (SETJMP(AbortLoading) != 0) {
-        TRAP_OFF;
-        discardBuffer(newBuf);
-        UFclose(&f);
-        return NULL;
-    }
-    TRAP_ON;
+    // if (SETJMP(AbortLoading) != 0) {
+    //     TRAP_OFF;
+    //     discardBuffer(newBuf);
+    //     UFclose(&f);
+    //     return NULL;
+    // }
+    // TRAP_ON;
 
     newBuf->document_charset = InnerCharset;
     loadHTMLstream(&f, newBuf, NULL, TRUE);
     newBuf->document_charset = WC_CES_US_ASCII;
 
-    TRAP_OFF;
+    // TRAP_OFF;
     UFclose(&f);
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
@@ -781,15 +779,15 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     int64_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
-    SignalFunc prevtrap = NULL;
+    // SignalFunc prevtrap = NULL;
 
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
-    if (SETJMP(AbortLoading) != 0) {
-        goto _end;
-    }
-    TRAP_ON;
+    // if (SETJMP(AbortLoading) != 0) {
+    //     goto _end;
+    // }
+    // TRAP_ON;
 
     if (newBuf->sourcefile == NULL && (uf->url.scheme != SCM_FILE || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
@@ -831,7 +829,7 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     }
 
 _end:
-    TRAP_OFF;
+    // TRAP_OFF;
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
@@ -861,14 +859,14 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
         // goto image_buffer;
     } else {
 
-        SignalFunc prevtrap = NULL;
+        // SignalFunc prevtrap = NULL;
 
-        TRAP_ON;
-        if (!ist_save2tmp(uf->stream, uf->url.scheme, cache->file)) {
-            TRAP_OFF;
-            return NULL;
-        }
-        TRAP_OFF;
+        // TRAP_ON;
+        // if (!ist_save2tmp(uf->stream, uf->url.scheme, cache->file)) {
+        //     TRAP_OFF;
+        //     return NULL;
+        // }
+        // TRAP_OFF;
 
         cache->loaded = IMG_FLAG_LOADED;
         cache->index = 0;
@@ -1053,7 +1051,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     Lineprop* propBuffer = NULL;
 
     Linecolor* colorBuffer = NULL;
-    SignalFunc prevtrap = NULL;
+    // SignalFunc prevtrap = NULL;
 
     if (buf->pagerSource == NULL)
         return NULL;
@@ -1077,10 +1075,10 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     }
     WcOption.auto_detect = buf->auto_detect;
 
-    if (SETJMP(AbortLoading) != 0) {
-        goto pager_end;
-    }
-    TRAP_ON;
+    // if (SETJMP(AbortLoading) != 0) {
+    //     goto pager_end;
+    // }
+    // TRAP_ON;
 
     uf = init_stream(SCM_UNKNOWN, NULL);
     for (i = 0; i < plen; i++) {
@@ -1140,7 +1138,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
         }
     }
 pager_end:
-    TRAP_OFF;
+    // TRAP_OFF;
 
     buf->trbyte = trbyte + linelen;
     buf->document_charset = charset;
