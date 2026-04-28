@@ -55,14 +55,10 @@ parsedURL2RefererOriginStr(struct Url* pu)
     return s;
 }
 
-static char*
-otherinfo(struct Url* target, struct Url* current, const char* referer)
+static const char* otherinfo(struct Url url, struct Url* current, const char* referer)
 {
     Str s = Strnew();
-    const int* no_referer_ptr;
-    int no_referer;
-    const char* url_user_agent = query_SCONF_USER_AGENT(target);
-
+    const char* url_user_agent = query_SCONF_USER_AGENT(&url);
     if (!override_user_agent) {
         Strcat_charp(s, "User-Agent: ");
         if (url_user_agent)
@@ -78,27 +74,27 @@ otherinfo(struct Url* target, struct Url* current, const char* referer)
     Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding, "\r\n", NULL);
     Strcat_m_charp(s, "Accept-Language: ", AcceptLang, "\r\n", NULL);
 
-    if (target->host) {
+    if (url.host) {
         Strcat_charp(s, "Host: ");
-        Strcat_charp(s, target->host);
-        if (target->port != getDefaultPort(target->scheme))
-            Strcat(s, Sprintf(":%d", target->port));
+        Strcat_charp(s, url.host);
+        if (url.port != getDefaultPort(url.scheme))
+            Strcat(s, Sprintf(":%d", url.port));
         Strcat_charp(s, "\r\n");
     }
-    if (target->is_nocache || NoCache) {
+    if (url.is_nocache || NoCache) {
         Strcat_charp(s, "Pragma: no-cache\r\n");
         Strcat_charp(s, "Cache-control: no-cache\r\n");
     }
-    no_referer = NoSendReferer;
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(current);
+    int no_referer = NoSendReferer;
+    const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(current);
     no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
-    no_referer_ptr = query_SCONF_NO_REFERER_TO(target);
+    no_referer_ptr = query_SCONF_NO_REFERER_TO(&url);
     no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
     if (!no_referer) {
         bool cross_origin = false;
-        if (CrossOriginReferer && current && current->host && (!target || !target->host || strcasecmp(current->host, target->host) != 0 || current->port != target->port || current->scheme != target->scheme))
+        if (CrossOriginReferer && current && current->host && (!url.host || strcasecmp(current->host, url.host) != 0 || current->port != url.port || current->scheme != url.scheme))
             cross_origin = true;
-        if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
+        if (current && current->scheme == SCM_HTTPS && url.scheme != SCM_HTTPS) {
             /* Don't send Referer: if https:// -> http:// */
         } else if (referer == NULL && current && current->scheme != SCM_FILE && current->scheme != SCM_LOCAL_CGI && ((current->user == NULL && current->pass == NULL))) {
             Strcat_charp(s, "Referer: ");
@@ -129,9 +125,9 @@ Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, Tex
     Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
     Strcat_charp(tmp, " HTTP/1.0\r\n");
     if (hr->referer == NO_REFERER)
-        Strcat_charp(tmp, otherinfo(pu, NULL, NULL));
+        Strcat_charp(tmp, otherinfo(*pu, NULL, NULL));
     else
-        Strcat_charp(tmp, otherinfo(pu, current, hr->referer));
+        Strcat_charp(tmp, otherinfo(*pu, current, hr->referer));
     if (extra != NULL)
         for (i = extra->first; i != NULL; i = i->next) {
             if (strncasecmp(i->ptr, "Authorization:",

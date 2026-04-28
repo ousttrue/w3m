@@ -492,27 +492,6 @@ load_doc: {
             status = HTST_NORMAL;
             goto load_doc;
         }
-#ifdef AUTH_DEBUG
-        if ((p = http_response_get(t_buf, "WWW-Authenticate:")) != NULL) {
-            /* Authentication needed */
-            struct http_auth hauth;
-            if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
-                && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-                auth_pu = &pu;
-                getAuthCookie(&hauth, "Authorization:", extra_header,
-                    auth_pu, &hr, request, &uname, &pwd);
-                if (uname == NULL) {
-                    /* abort */
-                    TRAP_OFF;
-                    goto page_loaded;
-                }
-                UFclose(&f);
-                add_auth_cookie_flag = 1;
-                status = HTST_NORMAL;
-                goto load_doc;
-            }
-        }
-#endif /* defined(AUTH_DEBUG) */
         t = http_response_get_content_type(&t_buf->http_response, &content_charset);
         if (t == NULL)
             t = "text/plain";
