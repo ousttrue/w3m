@@ -8,24 +8,6 @@
 #include "rc.h"
 #include <strings.h>
 
-Str HTTPrequestMethod(struct HttpRequest* hr)
-{
-    switch (hr->http_method) {
-    case HR_COMMAND_CONNECT:
-        return Strnew_charp("CONNECT");
-    case HR_COMMAND_POST:
-        return Strnew_charp("POST");
-        break;
-    case HR_COMMAND_HEAD:
-        return Strnew_charp("HEAD");
-        break;
-    case HR_COMMAND_GET:
-    default:
-        return Strnew_charp("GET");
-    }
-    return NULL;
-}
-
 Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr)
 {
     Str tmp = Strnew();
@@ -117,10 +99,7 @@ static const char* otherinfo(struct Url url, struct Url* current, const char* re
 
 Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra)
 {
-    Str tmp;
-    TextListItem* i;
-    Str cookie;
-    tmp = HTTPrequestMethod(hr);
+    Str tmp = Strnew_charp(HTTPrequestMethod(hr));
     Strcat_charp(tmp, " ");
     Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
     Strcat_charp(tmp, " HTTP/1.0\r\n");
@@ -129,7 +108,7 @@ Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, Tex
     else
         Strcat_charp(tmp, otherinfo(*pu, current, hr->referer));
     if (extra != NULL)
-        for (i = extra->first; i != NULL; i = i->next) {
+        for (TextListItem* i = extra->first; i != NULL; i = i->next) {
             if (strncasecmp(i->ptr, "Authorization:",
                     sizeof("Authorization:") - 1)
                 == 0) {
@@ -146,6 +125,7 @@ Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, Tex
             Strcat_charp(tmp, i->ptr);
         }
 
+    Str cookie;
     if (hr->http_method != HR_COMMAND_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
         Strcat_charp(tmp, "Cookie: ");
         Strcat(tmp, cookie);

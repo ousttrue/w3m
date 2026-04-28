@@ -198,7 +198,7 @@ static Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* p
     }
 
     /* A2 = Method ":" digest-uri-value */
-    tmp = Strnew_m_charp(HTTPrequestMethod(hr)->ptr, ":", uri->ptr, NULL);
+    tmp = Strnew_m_charp(HTTPrequestMethod(hr), ":", uri->ptr, NULL);
     if (qop_i == QOP_AUTH_INT) {
         /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */
         if (post && post->body) {

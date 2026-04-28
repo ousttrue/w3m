@@ -20,7 +20,21 @@ struct HttpRequest {
     struct Form* request;
 };
 
-Str HTTPrequestMethod(struct HttpRequest* hr);
+static inline const char* HTTPrequestMethod(struct HttpRequest* hr)
+{
+    switch (hr->http_method) {
+    case HR_COMMAND_CONNECT:
+        return "CONNECT";
+    case HR_COMMAND_POST:
+        return "POST";
+    case HR_COMMAND_HEAD:
+        return "HEAD";
+    case HR_COMMAND_GET:
+        return "GET";
+    }
+    return NULL;
+}
+
 struct Url;
 Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr);
 struct _textlist;
