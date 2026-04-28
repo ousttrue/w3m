@@ -2,6 +2,8 @@
 #include "url.h"
 #include "http_request.h"
 #include "UrlFile.h"
+#include "http_response.h"
+#include <libwc/wc_types.h>
 
 enum UrlOptionFlags {
     RG_NOCACHE = 1,
@@ -26,10 +28,25 @@ enum OpenStatus {
 
 /// HttpRequest and HttpResponse pair
 struct HttpMessageSession {
+    // request
     struct Url url;
     struct HttpRequest req;
+    // connect
     struct URLFile transport;
     enum OpenStatus transport_status;
+    // response
+    struct HttpResponse res;
+    const char* t; // = "text/plain";
+    const char* real_type; // = NULL;
+    Str page; // = NULL;
+    wc_ces charset; // = WC_CES_US_ASCII;
+    // auth
+    struct _textlist* extra_header; // = newTextList();
+    Str uname; // = NULL;
+    Str pwd; // = NULL;
+    Str realm; // = NULL;
+    bool add_auth_cookie_flag; // = false;
+    struct Url* auth_pu; //= NULL;
 };
 
 struct HttpClient {
@@ -38,15 +55,22 @@ struct HttpClient {
     enum UrlOptionFlags flag;
 };
 void http_init(struct HttpClient* http, struct Url* current, enum UrlOptionFlags flag);
-static inline struct Url* http_current(struct HttpClient *http)
+/// session_count-1
+static inline struct HttpMessageSession* http_session_current(struct HttpClient* http)
 {
-    if(http->session_count==0){
+    if (http->session_count < 1) {
         return NULL;
     }
-    else{
-        return &http->message_sessions[http->session_count-1].url;
-    }
+    return &http->message_sessions[http->session_count - 1];
 }
-enum HttpReidrectionStatus http_redirect(struct HttpClient* http, const char* target,
+/// session_count-2 or NULL
+static inline struct HttpMessageSession* http_session_base(struct HttpClient* http)
+{
+    if (http->session_count < 2) {
+        return NULL;
+    }
+    return &http->message_sessions[http->session_count - 2];
+}
+struct HttpMessageSession* http_redirect(struct HttpClient* http, const char* target,
     struct Form* post, const char* referer);
-struct HttpMessageSession* http_open(struct HttpClient* http, struct CmdArgs* args, struct _textlist* extra_header);
+void http_open(struct HttpClient* http, struct CmdArgs* args);

@@ -851,7 +851,6 @@ struct Buffer*
 renderFrame(struct CmdArgs* args, struct Buffer* Cbuf, int force_reload)
 {
     struct Buffer* buf;
-    int flag;
     struct frameset* fset;
     wc_ces doc_charset = DocumentCharset;
 
@@ -867,7 +866,7 @@ renderFrame(struct CmdArgs* args, struct Buffer* Cbuf, int force_reload)
         return NULL;
     }
     fclose(f);
-    flag = RG_FRAME;
+    enum UrlOptionFlags flag = RG_FRAME;
     if ((Cbuf->currentURL).is_nocache)
         flag |= RG_NOCACHE;
     renderFrameSet = Cbuf->frameset;

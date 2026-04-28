@@ -19,6 +19,6 @@ struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
 struct Buffer* loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf);
 struct Buffer* loadHTMLString(Str page);
 
-struct Buffer* loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* current, struct Form* post,
+struct Buffer* loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* base_url, struct Form* post,
     const char* referer,
     enum UrlOptionFlags flag);

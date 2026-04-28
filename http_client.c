@@ -525,6 +525,7 @@ void http_init(struct HttpClient* http, struct Url* current, enum UrlOptionFlags
     http->flag = flag;
     http->session_count = 0;
     memset(http->message_sessions, 0, sizeof(http->message_sessions));
+
     if (current) {
         http->message_sessions[0] = (struct HttpMessageSession) {
             .url = *current,
@@ -533,7 +534,7 @@ void http_init(struct HttpClient* http, struct Url* current, enum UrlOptionFlags
     }
 }
 
-enum HttpReidrectionStatus http_redirect(struct HttpClient* http, const char* target,
+struct HttpMessageSession* http_redirect(struct HttpClient* http, const char* target,
     struct Form* post, const char* referer)
 {
     const char* u = target;
@@ -550,12 +551,12 @@ enum HttpReidrectionStatus http_redirect(struct HttpClient* http, const char* ta
     struct Url url = parseURL2(u, lastUrl);
 
     if (http->session_count + 1 >= FollowRedirection) {
-        return HTTP_REDIRECTION_EXCEEDED;
+        return NULL; // HTTP_REDIRECTION_EXCEEDED;
     }
 
     for (int i = 0; i < http->session_count; ++i) {
         if (same_url_p(&http->message_sessions[i].url, &url)) {
-            return HTTP_REDIRECTION_LOOP_DETECTED;
+            return NULL; // HTTP_REDIRECTION_LOOP_DETECTED;
         }
     }
 
@@ -574,7 +575,7 @@ enum HttpReidrectionStatus http_redirect(struct HttpClient* http, const char* ta
     //     return FALSE;
     // }
 
-    http->message_sessions[http->session_count++] = (struct HttpMessageSession) {
+    http->message_sessions[http->session_count] = (struct HttpMessageSession) {
         .url = url,
         .req = (struct HttpRequest) {
             .http_method = HR_COMMAND_GET,
@@ -584,6 +585,19 @@ enum HttpReidrectionStatus http_redirect(struct HttpClient* http, const char* ta
         },
         .transport = init_stream(SCM_UNKNOWN, NULL),
         .transport_status = HTST_UNKNOWN,
+
+        // response
+        .res = (struct HttpResponse) { 0 },
+        .t = "text/plain",
+        .real_type = NULL,
+        .extra_header = newTextList(),
+        .uname = NULL,
+        .pwd = NULL,
+        .realm = NULL,
+        .add_auth_cookie_flag = false,
+        .auth_pu = NULL,
+        .page = NULL,
+        .charset = WC_CES_US_ASCII,
     };
 
     // if (!puv) {
@@ -592,7 +606,8 @@ enum HttpReidrectionStatus http_redirect(struct HttpClient* http, const char* ta
     // }
     // copyParsedURL(&puv[nredir % nredir_size], pu);
 
-    return HTTP_REDIRECTION_OK;
+    // return HTTP_REDIRECTION_OK;
+    return &http->message_sessions[http->session_count++];
 }
 
 static void
@@ -706,35 +721,34 @@ write_from_file(int sock, const char* file)
     }
 }
 
-void openHttp(struct CmdArgs* args, struct HttpMessageSession* m,
-    struct Url* current,
-    TextList* extra_header,
-    struct URLFile* ouf)
+void openHttp(struct CmdArgs* args,
+    struct HttpMessageSession* current,
+    struct HttpMessageSession* base)
 {
-    if (m->url.file == NULL)
-        m->url.file = allocStr("/", -1);
-    if (m->req.post && m->req.post->method == FORM_METHOD_POST && m->req.post->body)
-        m->req.http_method = HR_COMMAND_POST;
-    if (m->req.post && m->req.post->method == FORM_METHOD_HEAD)
-        m->req.http_method = HR_COMMAND_HEAD;
+    if (current->url.file == NULL)
+        current->url.file = allocStr("/", -1);
+    if (current->req.post && current->req.post->method == FORM_METHOD_POST && current->req.post->body)
+        current->req.http_method = HR_COMMAND_POST;
+    if (current->req.post && current->req.post->method == FORM_METHOD_HEAD)
+        current->req.http_method = HR_COMMAND_HEAD;
 
     int sock = 0;
     SSL* sslh = NULL;
     const char* ssl_certificate = NULL;
     Str tmp = NULL;
     if ((
-            (m->url.scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
-        && use_proxy && m->url.host != NULL && !check_no_proxy(m->url.host)) {
-        m->req.flag |= HR_FLAG_PROXY;
-        if (m->url.scheme == SCM_HTTPS && m->transport_status == HTST_CONNECT) {
-            sock = ist_fd(ouf->stream);
-            if (!(sslh = openSSLHandle(args, sock, m->url.host,
+            (current->url.scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) : non_null(HTTP_proxy))
+        && use_proxy && current->url.host != NULL && !check_no_proxy(current->url.host)) {
+        current->req.flag |= HR_FLAG_PROXY;
+        if (current->url.scheme == SCM_HTTPS && current->transport_status == HTST_CONNECT) {
+            sock = ist_fd(base->transport.stream);
+            if (!(sslh = openSSLHandle(args, sock, current->url.host,
                       &ssl_certificate))) {
-                m->transport_status = HTST_MISSING;
-                m->transport = init_stream(SCM_UNKNOWN, NULL);
+                current->transport_status = HTST_MISSING;
+                current->transport = init_stream(SCM_UNKNOWN, NULL);
                 return;
             }
-        } else if (m->url.scheme == SCM_HTTPS) {
+        } else if (current->url.scheme == SCM_HTTPS) {
             sock = openSocket(HTTPS_proxy_parsed.host,
                 schemeToName(HTTPS_proxy_parsed.scheme),
                 HTTPS_proxy_parsed.port);
@@ -746,44 +760,44 @@ void openHttp(struct CmdArgs* args, struct HttpMessageSession* m,
             sslh = NULL;
         }
         if (sock < 0) {
-            m->transport = init_stream(SCM_UNKNOWN, NULL);
+            current->transport = init_stream(SCM_UNKNOWN, NULL);
             return;
         }
-        if (m->url.scheme == SCM_HTTPS) {
-            if (m->transport_status == HTST_NORMAL) {
-                m->req.http_method = HR_COMMAND_CONNECT;
-                tmp = HTTPrequest(m->url, current, &m->req, extra_header);
-                m->transport_status = HTST_CONNECT;
+        if (current->url.scheme == SCM_HTTPS) {
+            if (current->transport_status == HTST_NORMAL) {
+                current->req.http_method = HR_COMMAND_CONNECT;
+                tmp = HTTPrequest(current->url, base ? &base->url : NULL, &current->req, current->extra_header);
+                current->transport_status = HTST_CONNECT;
             } else {
-                m->req.flag |= HR_FLAG_LOCAL;
-                tmp = HTTPrequest(m->url, current, &m->req, extra_header);
-                m->transport_status = HTST_NORMAL;
+                current->req.flag |= HR_FLAG_LOCAL;
+                tmp = HTTPrequest(current->url, base ? &base->url : NULL, &current->req, current->extra_header);
+                current->transport_status = HTST_NORMAL;
             }
         } else {
-            tmp = HTTPrequest(m->url, current, &m->req, extra_header);
-            m->transport_status = HTST_NORMAL;
+            tmp = HTTPrequest(current->url, base ? &base->url : NULL, &current->req, current->extra_header);
+            current->transport_status = HTST_NORMAL;
         }
     } else {
-        sock = openSocket(m->url.host, schemeToName(m->url.scheme), m->url.port);
+        sock = openSocket(current->url.host, schemeToName(current->url.scheme), current->url.port);
         if (sock < 0) {
-            m->transport_status = HTST_MISSING;
-            m->transport = init_stream(SCM_UNKNOWN, NULL);
+            current->transport_status = HTST_MISSING;
+            current->transport = init_stream(SCM_UNKNOWN, NULL);
             return;
         }
-        if (m->url.scheme == SCM_HTTPS) {
-            if (!(sslh = openSSLHandle(args, sock, m->url.host, &ssl_certificate))) {
-                m->transport_status = HTST_MISSING;
-                m->transport = init_stream(SCM_UNKNOWN, NULL);
+        if (current->url.scheme == SCM_HTTPS) {
+            if (!(sslh = openSSLHandle(args, sock, current->url.host, &ssl_certificate))) {
+                current->transport_status = HTST_MISSING;
+                current->transport = init_stream(SCM_UNKNOWN, NULL);
                 return;
             }
         }
-        m->req.flag |= HR_FLAG_LOCAL;
-        tmp = HTTPrequest(m->url, current, &m->req, extra_header);
-        m->transport_status = HTST_NORMAL;
+        current->req.flag |= HR_FLAG_LOCAL;
+        tmp = HTTPrequest(current->url, base ? &base->url : NULL, &current->req, current->extra_header);
+        current->transport_status = HTST_NORMAL;
     }
 
     struct InputStream* stream = NULL;
-    if (m->url.scheme == SCM_HTTPS) {
+    if (current->url.scheme == SCM_HTTPS) {
         if (sslh) {
             SSL_write(sslh, tmp->ptr, tmp->length);
         } else {
@@ -791,88 +805,79 @@ void openHttp(struct CmdArgs* args, struct HttpMessageSession* m,
             write(sock, tmp->ptr, tmp->length);
         }
 
-        if (m->req.http_method == HR_COMMAND_POST && m->req.post->enctype == FORM_ENCTYPE_MULTIPART) {
+        if (current->req.http_method == HR_COMMAND_POST && current->req.post->enctype == FORM_ENCTYPE_MULTIPART) {
             if (sslh)
-                SSL_write_from_file(sslh, m->req.post->body);
+                SSL_write_from_file(sslh, current->req.post->body);
             else
-                write_from_file(sock, m->req.post->body);
+                write_from_file(sock, current->req.post->body);
         }
 
         stream = ist_from_socket(sock, sslh);
     } else {
         write(sock, tmp->ptr, tmp->length);
 
-        if (m->req.http_method == HR_COMMAND_POST && m->req.post->enctype == FORM_ENCTYPE_MULTIPART)
-            write_from_file(sock, m->req.post->body);
+        if (current->req.http_method == HR_COMMAND_POST && current->req.post->enctype == FORM_ENCTYPE_MULTIPART)
+            write_from_file(sock, current->req.post->body);
 
         stream = ist_from_socket(sock, 0);
     }
 
-    m->transport = init_stream(SCM_UNKNOWN, NULL);
-    if (ouf) {
-        m->transport = *ouf;
+    current->transport = init_stream(SCM_UNKNOWN, NULL);
+    if (base && base->transport_status == HTST_CONNECT) {
+        current->transport = base->transport;
     }
-    m->transport.url = m->url;
-    m->transport.stream = stream;
-    m->transport.ssl_certificate = ssl_certificate;
+    current->transport.url = current->url;
+    current->transport.stream = stream;
+    current->transport.ssl_certificate = ssl_certificate;
 }
 
-struct HttpMessageSession* http_open(struct HttpClient* http, struct CmdArgs* args,
-    struct _textlist* extra_header)
+void http_open(struct HttpClient* http, struct CmdArgs* args)
 {
-    struct HttpMessageSession* m = &http->message_sessions[http->session_count - 1];
+    struct HttpMessageSession* current = http_session_current(http);
+    struct HttpMessageSession* base = http_session_base(http);
 
-    if (m->url.scheme == SCM_FILE && m->url.file == NULL) {
-        if (m->url.label != NULL) {
+    if (current->url.scheme == SCM_FILE && current->url.file == NULL) {
+        if (current->url.label != NULL) {
             /* #hogege is not a label but a filename */
             Str tmp2 = Strnew_charp("#");
-            Strcat_charp(tmp2, m->url.label);
-            m->url.file = tmp2->ptr;
-            m->url.real_file = cleanupName(file_unquote(m->url.file));
-            m->url.label = NULL;
+            Strcat_charp(tmp2, current->url.label);
+            current->url.file = tmp2->ptr;
+            current->url.real_file = cleanupName(file_unquote(current->url.file));
+            current->url.label = NULL;
         } else {
             /* given URL must be null string */
-            return m;
+            return;
         }
     }
 
-    if (LocalhostOnly && m->url.host && !is_localhost(m->url.host))
-        m->url.host = NULL;
-    m->url.is_nocache = (http->flag & RG_NOCACHE);
+    if (LocalhostOnly && current->url.host && !is_localhost(current->url.host))
+        current->url.host = NULL;
+    current->url.is_nocache = (http->flag & RG_NOCACHE);
 
-    switch (m->url.scheme) {
+    switch (current->url.scheme) {
     case SCM_FILE:
     case SCM_LOCAL_CGI: {
-        openLocal(m);
-        if (m->transport.stream == NULL && retryAsHttp && m->url.file[0] != '/') {
-            if (m->url.scheme == SCM_UNKNOWN) {
+        openLocal(current);
+        if (current->transport.stream == NULL && retryAsHttp && current->url.file[0] != '/') {
+            if (current->url.scheme == SCM_UNKNOWN) {
                 /* retry it as "http://" */
-                const char* u = Strnew_m_charp("http://", m->url.file, NULL)->ptr;
+                const char* u = Strnew_m_charp("http://", current->url.file, NULL)->ptr;
                 // goto retry;
-                m->url = parseURL2(u, NULL);
-                openHttp(args, m, NULL, extra_header, NULL);
+                current->url = parseURL2(u, NULL);
+                openHttp(args, current, base);
             }
         }
-        return m;
+        break;
     }
 
     case SCM_HTTP:
     case SCM_HTTPS: {
-        struct Url* current = NULL;
-        struct URLFile* ouf = NULL;
-        if (http->session_count > 1) {
-            struct HttpMessageSession* last = &http->message_sessions[http->session_count - 2];
-            current = &last->url;
-            if (last->transport_status == HTST_CONNECT) {
-                ouf = &last->transport;
-            }
-        }
-        openHttp(args, m, current, extra_header, ouf);
-        return m;
+        openHttp(args, current, base);
+        break;
     }
 
     default:
-        m->transport = init_stream(SCM_UNKNOWN, NULL);
-        return m;
+        current->transport = init_stream(SCM_UNKNOWN, NULL);
+        break;
     }
 }
