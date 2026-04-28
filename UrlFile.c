@@ -27,12 +27,10 @@
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 
-struct URLFile init_stream(enum UrlScheme scheme, struct InputStream* stream)
+struct URLFile init_stream(struct Url url, struct InputStream* stream)
 {
     return (struct URLFile) {
-        .url = (struct Url) {
-            .scheme = scheme,
-        },
+        .url = url,
         .stream = stream,
         .is_cgi = false,
         .compression = CMP_NOCOMPRESS,
@@ -94,7 +92,7 @@ lessopen_stream(const char* path)
 
 struct URLFile examineFile(const char* path)
 {
-    struct URLFile uf = init_stream(SCM_FILE, NULL);
+    struct URLFile uf = init_stream((struct Url) { 0 }, NULL);
 
     struct stat stbuf;
     if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 || NOT_REGULAR(stbuf.st_mode)) {
@@ -147,24 +145,12 @@ struct URLFile examineFile(const char* path)
     return uf;
 }
 
-
-
-
-
 void UFclose(struct URLFile* f)
 {
     if (ist_destroy(f->stream)) {
         f->stream = NULL;
     }
 }
-
-
-
-
-
-
-
-
 
 static const char* auxbinFile(const char* base)
 {

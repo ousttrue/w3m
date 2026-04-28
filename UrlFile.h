@@ -20,7 +20,7 @@ struct URLFile {
 };
 
 struct InputStream;
-struct URLFile init_stream(enum UrlScheme scheme, struct InputStream* stream);
+struct URLFile init_stream(struct Url url, struct InputStream* stream);
 struct URLFile examineFile(const char* path);
 struct Url;
 struct Form;

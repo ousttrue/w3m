@@ -583,7 +583,7 @@ struct HttpMessageSession* http_redirect(struct HttpClient* http, const char* ta
             .referer = referer,
             .flag = 0,
         },
-        .transport = init_stream(SCM_UNKNOWN, NULL),
+        .transport = init_stream((struct Url) { 0 }, NULL),
         .transport_status = HTST_UNKNOWN,
 
         // response
@@ -645,7 +645,7 @@ static void openLocal(struct HttpMessageSession* m)
         stream = ist_from_fp(localcgi_get(m->url.real_file, m->url.query, m->req.referer), fclose);
 
     if (stream) {
-        m->transport = init_stream(SCM_UNKNOWN, NULL);
+        m->transport = init_stream((struct Url) { 0 }, NULL);
         m->transport.is_cgi = true;
         m->url.scheme = SCM_LOCAL_CGI;
         m->transport.url = m->url;
@@ -688,7 +688,7 @@ static void openLocal(struct HttpMessageSession* m)
         return;
     }
 
-    m->transport = init_stream(SCM_UNKNOWN, NULL);
+    m->transport = init_stream((struct Url) { 0 }, NULL);
 }
 
 static void
@@ -745,7 +745,7 @@ void openHttp(struct CmdArgs* args,
             if (!(sslh = openSSLHandle(args, sock, current->url.host,
                       &ssl_certificate))) {
                 current->transport_status = HTST_MISSING;
-                current->transport = init_stream(SCM_UNKNOWN, NULL);
+                current->transport = init_stream((struct Url) { 0 }, NULL);
                 return;
             }
         } else if (current->url.scheme == SCM_HTTPS) {
@@ -760,7 +760,7 @@ void openHttp(struct CmdArgs* args,
             sslh = NULL;
         }
         if (sock < 0) {
-            current->transport = init_stream(SCM_UNKNOWN, NULL);
+            current->transport = init_stream((struct Url) { 0 }, NULL);
             return;
         }
         if (current->url.scheme == SCM_HTTPS) {
@@ -781,13 +781,13 @@ void openHttp(struct CmdArgs* args,
         sock = openSocket(current->url.host, schemeToName(current->url.scheme), current->url.port);
         if (sock < 0) {
             current->transport_status = HTST_MISSING;
-            current->transport = init_stream(SCM_UNKNOWN, NULL);
+            current->transport = init_stream((struct Url) { 0 }, NULL);
             return;
         }
         if (current->url.scheme == SCM_HTTPS) {
             if (!(sslh = openSSLHandle(args, sock, current->url.host, &ssl_certificate))) {
                 current->transport_status = HTST_MISSING;
-                current->transport = init_stream(SCM_UNKNOWN, NULL);
+                current->transport = init_stream((struct Url) { 0 }, NULL);
                 return;
             }
         }
@@ -822,7 +822,7 @@ void openHttp(struct CmdArgs* args,
         stream = ist_from_socket(sock, 0);
     }
 
-    current->transport = init_stream(SCM_UNKNOWN, NULL);
+    current->transport = init_stream((struct Url) { 0 }, NULL);
     if (base && base->transport_status == HTST_CONNECT) {
         current->transport = base->transport;
     }
@@ -877,7 +877,7 @@ void http_open(struct HttpClient* http, struct CmdArgs* args)
     }
 
     default:
-        current->transport = init_stream(SCM_UNKNOWN, NULL);
+        current->transport = init_stream((struct Url){0}, NULL);
         break;
     }
 }

@@ -719,7 +719,7 @@ loadHTMLString(Str page)
     // SignalFunc prevtrap = NULL;
     struct Buffer* newBuf;
 
-    struct URLFile f = init_stream(SCM_FILE, ist_from_buffer(page->ptr, page->length));
+    struct URLFile f = init_stream((struct Url) { 0 }, ist_from_buffer(page->ptr, page->length));
 
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
     // if (SETJMP(AbortLoading) != 0) {
@@ -868,7 +868,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     newBuf->mailcap_source = tmpf;
 
     Str tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    struct URLFile f = init_stream(SCM_FILE, ist_from_buffer(tmp->ptr, tmp->length));
+    struct URLFile f = init_stream((struct Url){0}, ist_from_buffer(tmp->ptr, tmp->length));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
     if (src)
@@ -969,7 +969,7 @@ loadcmdout(struct CmdArgs* args, const char* cmd,
     if (f == NULL)
         return NULL;
 
-    struct URLFile uf = init_stream(SCM_UNKNOWN, ist_from_fp(f, pclose));
+    struct URLFile uf = init_stream((struct Url){0}, ist_from_fp(f, pclose));
     struct Buffer* buf = loadproc(args, &uf, defaultbuf);
     UFclose(&uf);
     return buf;
@@ -1063,7 +1063,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     // }
     // TRAP_ON;
 
-    uf = init_stream(SCM_UNKNOWN, NULL);
+    uf = init_stream((struct Url){0}, NULL);
     for (i = 0; i < plen; i++) {
         struct str_view gv = ist_gets(buf->pagerSource, true);
         if (gv.len == 0)

@@ -492,7 +492,7 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                 }
                 /* fall through */
             case F_BODY:
-                f2 = init_stream(SCM_FILE, NULL);
+                f2 = init_stream((struct Url){0}, NULL);
                 if (frame.body->source) {
                     fflush(f1);
                     f2 = examineFile(frame.body->source);
