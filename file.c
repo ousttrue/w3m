@@ -443,11 +443,10 @@ loadGeneralFile(struct CmdArgs* args, struct HttpClient http, const char* path)
     volatile Str pwd = NULL;
     volatile Str realm = NULL;
     int volatile add_auth_cookie_flag;
-    unsigned char status = HTST_NORMAL;
+    enum OpenStatus status = HTST_NORMAL;
     const char* tmpf;
     Str volatile page = NULL;
     wc_ces charset = WC_CES_US_ASCII;
-    struct HttpRequest hr;
     struct Url* volatile auth_pu;
 
     const char* volatile tpath = path;
@@ -455,6 +454,13 @@ loadGeneralFile(struct CmdArgs* args, struct HttpClient http, const char* path)
     add_auth_cookie_flag = 0;
 
     checkRedirection(args, NULL);
+
+    struct HttpRequest hr = {
+        .http_method = HR_COMMAND_GET,
+        .flag = 0,
+        .referer = http.referer,
+        .request = http.post,
+    };
 
 load_doc: {
     const char* sc_redirect;

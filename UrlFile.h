@@ -29,10 +29,18 @@ struct Form;
 struct _textlist;
 struct HttpRequest;
 struct CmdArgs;
+
+enum OpenStatus {
+    HTST_UNKNOWN,
+    HTST_NORMAL,
+    HTST_CONNECT,
+    HTST_MISSING,
+};
+
 struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* current,
     struct HttpClient option, struct Form* request,
     struct _textlist* extra_header, struct URLFile* ouf,
-    struct HttpRequest* hr, unsigned char* status);
+    struct HttpRequest* hr, enum OpenStatus* status);
 
 void UFclose(struct URLFile* f);
 

@@ -40,7 +40,4 @@ Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr);
 struct _textlist;
 Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, struct _textlist* extra);
 
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
+
