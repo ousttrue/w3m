@@ -19,4 +19,6 @@ struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
 struct Buffer* loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf);
 struct Buffer* loadHTMLString(Str page);
 
-struct Buffer* loadGeneralFile(struct CmdArgs* args, struct HttpClient http, const char* path);
+struct Buffer* loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* current, struct Form* post,
+    const char* referer,
+    enum UrlOptionFlags flag);

@@ -14,7 +14,5 @@ Str myExtCommand(const char* cmd, const char* arg, int redirect);
 void setup_child(int child, int i, int f);
 void myExec(const char* command);
 Str base64_encode(const char* src, size_t len);
-int is_localhost(const char* host);
 time_t mymktime(const char* timestr);
-char* file_to_url(const char* file);
 Str unescape_spaces(Str s);

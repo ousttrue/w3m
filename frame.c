@@ -349,13 +349,10 @@ frame_download_source(struct CmdArgs* args,
         b->flags = 0;
     default:
         is_redisplay = true;
-        buf = loadGeneralFile(args, (struct HttpClient) {
-                                        .current = baseURL ? baseURL : currentURL,
-                                        .referer = b->referer,
-                                        .flag = flag | RG_FRAME_SRC,
-                                        .post = b->request,
-                                    },
-            b->url);
+        buf = loadGeneralFile(args, b->url, baseURL ? baseURL : currentURL,
+            b->request,
+            b->referer,
+            flag | RG_FRAME_SRC);
         /* XXX certificate? */
         if (buf && buf != NO_BUFFER)
             b->ssl_certificate = buf->ssl_certificate;
@@ -876,13 +873,7 @@ renderFrame(struct CmdArgs* args, struct Buffer* Cbuf, int force_reload)
     renderFrameSet = Cbuf->frameset;
     flushFrameSet(renderFrameSet);
     DocumentCharset = InnerCharset;
-    buf = loadGeneralFile(args, (struct HttpClient) {
-                                    .current = NULL,
-                                    .referer = NULL,
-                                    .flag = flag,
-                                    .post = NULL,
-                                },
-        tmp);
+    buf = loadGeneralFile(args, tmp, NULL, NULL, NULL, flag);
     DocumentCharset = doc_charset;
     renderFrameSet = NULL;
     if (buf == NULL || buf == NO_BUFFER)

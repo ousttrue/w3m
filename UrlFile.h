@@ -9,16 +9,8 @@
 
 #define NO_REFERER ((char*)-1)
 
-enum OpenStatus {
-    HTST_UNKNOWN,
-    HTST_NORMAL,
-    HTST_CONNECT,
-    HTST_MISSING,
-};
-
 struct URLFile {
     struct Url url;
-    enum OpenStatus status;
     bool is_cgi;
     struct InputStream* stream;
     enum ContentCompression compression;
@@ -36,13 +28,8 @@ struct _textlist;
 struct HttpRequest;
 struct CmdArgs;
 
-struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* current,
-    struct HttpClient option, struct _textlist* extra_header, struct URLFile* ouf,
-    struct HttpRequest* hr);
-
 void UFclose(struct URLFile* f);
 
-Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname);
 void free_ssl_ctx(void);
 
 union input_handle;

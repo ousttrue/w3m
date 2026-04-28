@@ -1,4 +1,5 @@
 #include "image_cache.h"
+#include <w3m.h>
 #include "file.h"
 #include "buffer.h"
 #include "anchor.h"
@@ -247,7 +248,7 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
         memset(image_cache, 0, sizeof(struct ImageCache*) * MAX_LOAD_IMAGE);
     }
 
-    int draw = FALSE;
+    bool draw = false;
     for (int i = 0; i < n_load_image; i++) {
         struct ImageCache* cache = image_cache[i];
         if (!cache || !cache->touch)
@@ -270,9 +271,9 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
             cache->loaded = IMG_FLAG_LOADED;
             if (getImageSize(cache)) {
                 if (image_buffer)
-                    image_buffer->need_reshape = TRUE;
+                    image_buffer->need_reshape = true;
             }
-            draw = TRUE;
+            draw = true;
         } else
             cache->loaded = IMG_FLAG_ERROR;
         unlink(cache->touch);
@@ -351,13 +352,7 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
              */
             setup_child(FALSE, 0, -1);
             image_source = cache->file;
-            loadGeneralFile(0, (struct HttpClient) {
-                                   .current = cache->current,
-                                   .referer = NULL,
-                                   .flag = 0,
-                                   .post = NULL,
-                               },
-                cache->url);
+            loadGeneralFile(0, cache->url, cache->current, NULL, NULL, 0);
             /* TODO make sure removing this didn't break anything
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);

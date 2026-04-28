@@ -593,13 +593,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
             // this is removed
             abort();
         } else if (load_bookmark) {
-            newbuf = loadGeneralFile(args, (struct HttpClient) {
-                                               .current = NULL,
-                                               .referer = NO_REFERER,
-                                               .flag = 0,
-                                               .post = NULL,
-                                           },
-                BookmarkFile);
+            newbuf = loadGeneralFile(args, BookmarkFile, NULL, NULL, NO_REFERER, 0);
             if (newbuf == NULL)
                 Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
         } else if (visual_start) {
@@ -618,13 +612,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
             else if (newbuf != NO_BUFFER)
                 newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         } else if ((p = getenv("HTTP_HOME")) != NULL || (p = getenv("WWW_HOME")) != NULL) {
-            newbuf = loadGeneralFile(args, (struct HttpClient) {
-                                               .current = NULL,
-                                               .referer = NO_REFERER,
-                                               .flag = 0,
-                                               .post = NULL,
-                                           },
-                p);
+            newbuf = loadGeneralFile(args, p, NULL, NULL, NO_REFERER, 0);
             if (newbuf == NULL)
                 Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
             else if (newbuf != NO_BUFFER)
@@ -682,13 +670,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 } else {
                     request = NULL;
                 }
-                newbuf = loadGeneralFile(args, (struct HttpClient) {
-                                                   .current = NULL,
-                                                   .referer = NO_REFERER,
-                                                   .flag = 0,
-                                                   .post = request,
-                                               },
-                    url);
+                newbuf = loadGeneralFile(args, url, NULL, request, NO_REFERER, 0);
             }
             if (newbuf == NULL) {
                 if (ArgvIsURL && !retry) {
@@ -987,13 +969,7 @@ void shiftvisualpos(struct Buffer* buf, int shift)
 
 void cmd_loadfile(struct CmdArgs* args, const char* fn)
 {
-    struct Buffer* buf = loadGeneralFile(args, (struct HttpClient) {
-                                                   .current = NULL,
-                                                   .referer = NO_REFERER,
-                                                   .flag = 0,
-                                                   .post = NULL,
-                                               },
-        file_to_url(fn));
+    struct Buffer* buf = loadGeneralFile(args, file_to_url(fn), NULL, NULL, NO_REFERER, 0);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -1185,13 +1161,7 @@ struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* targe
         referer = NO_REFERER;
     if (referer == NULL)
         referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-    buf = loadGeneralFile(args, (struct HttpClient) {
-                                    .current = baseURL(Currentbuf),
-                                    .referer = referer,
-                                    .flag = flag,
-                                    .post = request,
-                                },
-        url);
+    buf = loadGeneralFile(args, url, baseURL(Currentbuf), request, referer, flag);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
         disp_err_message(args, emsg, FALSE);
@@ -1987,13 +1957,7 @@ void cmd_loadURL(struct CmdArgs* args, const char* url, struct Url* current, cha
         return;
 
     refresh();
-    struct Buffer* buf = loadGeneralFile(args, (struct HttpClient) {
-                                                   .current = current,
-                                                   .referer = referer,
-                                                   .flag = 0,
-                                                   .post = request,
-                                               },
-        url);
+    struct Buffer* buf = loadGeneralFile(args, url, current, request, referer, 0);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
@@ -2385,13 +2349,7 @@ void execdict(struct CmdArgs* args, const char* word)
     dictcmd = Sprintf("%s?%s", DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
                   ->ptr;
-    buf = loadGeneralFile(args, (struct HttpClient) {
-                                    .current = NULL,
-                                    .referer = NO_REFERER,
-                                    .flag = 0,
-                                    .post = NULL,
-                                },
-        dictcmd);
+    buf = loadGeneralFile(args, dictcmd, NULL, NULL, NO_REFERER, 0);
     if (buf == NULL) {
         disp_message(args, "Execution failed", TRUE);
         return;

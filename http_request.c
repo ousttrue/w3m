@@ -135,12 +135,12 @@ Str HTTPrequest(struct Url pu, struct Url* current, struct HttpRequest* hr, Text
             Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
     }
     if (hr->http_method == HR_COMMAND_POST) {
-        if (hr->request->enctype == FORM_ENCTYPE_MULTIPART) {
+        if (hr->post->enctype == FORM_ENCTYPE_MULTIPART) {
             Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
-            Strcat_charp(tmp, hr->request->boundary);
+            Strcat_charp(tmp, hr->post->boundary);
             Strcat_charp(tmp, "\r\n");
             Strcat(tmp,
-                Sprintf("Content-Length: %ld\r\n", hr->request->length));
+                Sprintf("Content-Length: %ld\r\n", hr->post->length));
             Strcat_charp(tmp, "\r\n");
         } else {
             if (!override_content_type) {
@@ -148,11 +148,11 @@ Str HTTPrequest(struct Url pu, struct Url* current, struct HttpRequest* hr, Text
                     "Content-Type: application/x-www-form-urlencoded\r\n");
             }
             Strcat(tmp,
-                Sprintf("Content-Length: %ld\r\n", hr->request->length));
+                Sprintf("Content-Length: %ld\r\n", hr->post->length));
             if (header_string)
                 Strcat(tmp, header_string);
             Strcat_charp(tmp, "\r\n");
-            Strcat_charp_n(tmp, hr->request->body, hr->request->length);
+            Strcat_charp_n(tmp, hr->post->body, hr->post->length);
             Strcat_charp(tmp, "\r\n");
         }
     } else {
