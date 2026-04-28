@@ -351,7 +351,13 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
              */
             setup_child(FALSE, 0, -1);
             image_source = cache->file;
-            loadGeneralFile(0, cache->url, cache->current, NULL, 0, NULL);
+            loadGeneralFile(0, (struct HttpClient) {
+                                   .current = cache->current,
+                                   .referer = NULL,
+                                   .flag = 0,
+                                   .post = NULL,
+                               },
+                cache->url);
             /* TODO make sure removing this didn't break anything
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);
@@ -405,4 +411,3 @@ void deleteImage(struct Buffer* buf)
     }
     loadImage(NULL, IMG_FLAG_STOP);
 }
-

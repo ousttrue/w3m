@@ -3,21 +3,11 @@
 #include "Str.h"
 #include "constants.h"
 #include "compression.h"
+#include "http_client.h"
 #include <time.h>
 #include <openssl/crypto.h>
 
 #define NO_REFERER ((char*)-1)
-
-enum UrlOptionFlags {
-    RG_NOCACHE = 1,
-    RG_FRAME = 2,
-    RG_FRAME_SRC = 4,
-};
-
-struct URLOption {
-    const char* referer;
-    enum UrlOptionFlags flag;
-};
 
 struct URLFile {
     enum UrlScheme scheme;
@@ -40,7 +30,7 @@ struct _textlist;
 struct HttpRequest;
 struct CmdArgs;
 struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* current,
-    struct URLOption* option, struct Form* request,
+    struct HttpClient option, struct Form* request,
     struct _textlist* extra_header, struct URLFile* ouf,
     struct HttpRequest* hr, unsigned char* status);
 

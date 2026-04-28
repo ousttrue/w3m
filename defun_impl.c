@@ -887,7 +887,13 @@ void followI(struct CmdArgs* args)
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
     refresh();
-    buf = loadGeneralFile(args, a->url, baseURL(Currentbuf), NULL, 0, NULL);
+    buf = loadGeneralFile(args, (struct HttpClient) {
+                                    .current = baseURL(Currentbuf),
+                                    .referer = NULL,
+                                    .flag = 0,
+                                    .post = NULL,
+                                },
+        a->url);
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -1588,7 +1594,13 @@ void reload(struct CmdArgs* args)
         DocumentCharset = Currentbuf->document_charset;
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
-    buf = loadGeneralFile(args, url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
+    buf = loadGeneralFile(args, (struct HttpClient) {
+                                    .current = NULL,
+                                    .referer = NO_REFERER,
+                                    .flag = RG_NOCACHE,
+                                    .post = request,
+                                },
+        url->ptr);
     DocumentCharset = old_charset;
     SearchHeader = FALSE;
     DefaultType = NULL;

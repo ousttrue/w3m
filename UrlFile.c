@@ -415,7 +415,7 @@ write_from_file(int sock, const char* file)
 }
 struct URLFile
 openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* current,
-    struct URLOption* option, struct Form* request, TextList* extra_header,
+    struct HttpClient http, struct Form* request, TextList* extra_header,
     struct URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
     struct HttpRequest hr0;
@@ -456,9 +456,6 @@ retry:
             pu->label = NULL;
         } else {
             /* given URL must be null string */
-#ifdef SOCK_DEBUG
-            sock_log("given URL must be null string\n");
-#endif
             return uf;
         }
     }
@@ -468,12 +465,12 @@ retry:
 
     uf.scheme = pu->scheme;
     uf.url = parsedURL2Str(pu)->ptr;
-    pu->is_nocache = (option->flag & RG_NOCACHE);
+    pu->is_nocache = (http.flag & RG_NOCACHE);
     uf.ext = filename_extension(pu->file, 1);
 
     hr->http_method = HR_COMMAND_GET;
     hr->flag = 0;
-    hr->referer = option->referer;
+    hr->referer = http.referer;
     hr->request = request;
 
     switch (pu->scheme) {
@@ -481,11 +478,11 @@ retry:
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
-            uf.stream = ist_from_fp(localcgi_post(pu->real_file, pu->query, request, option->referer),
+            uf.stream = ist_from_fp(localcgi_post(pu->real_file, pu->query, request, http.referer),
                 fclose);
         else
             /* lodal CGI: GET */
-            uf.stream = ist_from_fp(localcgi_get(pu->real_file, pu->query, option->referer), fclose);
+            uf.stream = ist_from_fp(localcgi_get(pu->real_file, pu->query, http.referer), fclose);
         if (uf.stream) {
             uf.is_cgi = true;
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
@@ -559,9 +556,6 @@ retry:
                 sslh = NULL;
             }
             if (sock < 0) {
-#ifdef SOCK_DEBUG
-                sock_log("Can't open socket\n");
-#endif
                 return uf;
             }
             if (pu->scheme == SCM_HTTPS) {

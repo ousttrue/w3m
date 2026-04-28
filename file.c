@@ -412,8 +412,7 @@ static struct Buffer* page_loaded(struct CmdArgs* args, Str page, wc_ces charset
  * loadGeneralFile: load file to buffer
  */
 struct Buffer*
-loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* volatile current, const char* referer,
-    int flag, struct Form* volatile request)
+loadGeneralFile(struct CmdArgs* args, struct HttpClient http, const char* path)
 {
     struct URLFile f, *volatile of = NULL;
     struct Url pu;
@@ -429,7 +428,6 @@ loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* volatile cur
     volatile Str realm = NULL;
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
-    struct URLOption url_option;
     const char* tmpf;
     Str volatile page = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -444,22 +442,20 @@ loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* volatile cur
 
 load_doc: {
     const char* sc_redirect;
-    pu = parseURL2(tpath, current);
+    pu = parseURL2(tpath, http.current);
     sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
     if (sc_redirect && *sc_redirect && checkRedirection(args, &pu)) {
         tpath = (char*)sc_redirect;
-        request = NULL;
+        http.post = NULL;
         add_auth_cookie_flag = 0;
-        current = New(struct Url);
-        *current = pu;
+        http.current = New(struct Url);
+        *http.current = pu;
         status = HTST_NORMAL;
         goto load_doc;
     }
 }
     TRAP_OFF;
-    url_option.referer = referer;
-    url_option.flag = flag;
-    f = openURL(args, tpath, &pu, current, &url_option, request, extra_header, of,
+    f = openURL(args, tpath, &pu, http.current, http, http.post, extra_header, of,
         &hr, &status);
     of = NULL;
     content_charset = 0;
@@ -473,7 +469,13 @@ load_doc: {
                 if (UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         DirBufferCommand, pu.file);
-                    b = loadGeneralFile(args, cmd->ptr, NULL, NO_REFERER, 0, NULL);
+                    b = loadGeneralFile(args, (struct HttpClient) {
+                                                  .current = NULL,
+                                                  .referer = NO_REFERER,
+                                                  .flag = 0,
+                                                  .post = NULL,
+                                              },
+                        cmd->ptr);
                     if (b != NULL && b != NO_BUFFER) {
                         copyParsedURL(&b->currentURL, &pu);
                         b->filename = b->currentURL.real_file;
@@ -495,7 +497,7 @@ load_doc: {
             break;
         }
         if (page && page->length > 0) {
-            return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, flag);
+            return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
         }
         return NULL;
     }
@@ -546,10 +548,10 @@ load_doc: {
             /* 303: See Other */
             /* 307: Temporary Redirect (HTTP/1.1) */
             tpath = url_encode(p, NULL, 0);
-            request = NULL;
+            http.post = NULL;
             UFclose(&f);
-            current = New(struct Url);
-            copyParsedURL(current, &pu);
+            http.current = New(struct Url);
+            copyParsedURL(http.current, &pu);
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
             status = HTST_NORMAL;
@@ -575,16 +577,16 @@ load_doc: {
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = &pu;
                 getAuthCookie(args, &hauth, "Authorization:", extra_header,
-                    auth_pu, &hr, request, &uname, &pwd);
+                    auth_pu, &hr, http.post, &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, flag);
+                    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
                 }
                 UFclose(&f);
                 add_auth_cookie_flag = 1;
                 status = HTST_NORMAL;
-                return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, flag);
+                return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
             }
         }
         if ((p = http_response_get(&t_buf->http_response, "Proxy-Authenticate:")) != NULL && t_buf->http_response.status_code == 407) {
@@ -595,12 +597,12 @@ load_doc: {
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 auth_pu = schemeToProxy(pu.scheme);
                 getAuthCookie(args, &hauth, "Proxy-Authorization:",
-                    extra_header, auth_pu, &hr, request,
+                    extra_header, auth_pu, &hr, http.post,
                     &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, flag);
+                    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
                 }
                 UFclose(&f);
                 add_auth_cookie_flag = 1;
@@ -629,11 +631,11 @@ load_doc: {
         if (f.is_cgi && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL && checkRedirection(args, &pu)) {
             /* document moved */
             tpath = url_encode(remove_space(p), NULL, 0);
-            request = NULL;
+            http.post = NULL;
             UFclose(&f);
             add_auth_cookie_flag = 0;
-            current = New(struct Url);
-            copyParsedURL(current, &pu);
+            http.current = New(struct Url);
+            copyParsedURL(http.current, &pu);
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
             status = HTST_NORMAL;
@@ -658,7 +660,7 @@ load_doc: {
      *      to support default utf8 encoding for XHTML here? */
     f.guess_type = (char*)t;
 
-    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, flag);
+    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
 }
 
 extern char* NullLine;

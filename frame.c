@@ -349,9 +349,13 @@ frame_download_source(struct CmdArgs* args,
         b->flags = 0;
     default:
         is_redisplay = true;
-        buf = loadGeneralFile(args, b->url,
-            baseURL ? baseURL : currentURL,
-            b->referer, flag | RG_FRAME_SRC, b->request);
+        buf = loadGeneralFile(args, (struct HttpClient) {
+                                        .current = baseURL ? baseURL : currentURL,
+                                        .referer = b->referer,
+                                        .flag = flag | RG_FRAME_SRC,
+                                        .post = b->request,
+                                    },
+            b->url);
         /* XXX certificate? */
         if (buf && buf != NO_BUFFER)
             b->ssl_certificate = buf->ssl_certificate;
@@ -849,15 +853,13 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
 struct Buffer*
 renderFrame(struct CmdArgs* args, struct Buffer* Cbuf, int force_reload)
 {
-    Str tmp;
-    FILE* f;
     struct Buffer* buf;
     int flag;
     struct frameset* fset;
     wc_ces doc_charset = DocumentCharset;
 
-    tmp = tmpfname(TMPF_FRAME, ".html");
-    f = fopen(tmp->ptr, "w");
+    const char* tmp = tmpfname(TMPF_FRAME, ".html");
+    FILE* f = fopen(tmp, "w");
     if (f == NULL)
         return NULL;
     /*
@@ -874,12 +876,18 @@ renderFrame(struct CmdArgs* args, struct Buffer* Cbuf, int force_reload)
     renderFrameSet = Cbuf->frameset;
     flushFrameSet(renderFrameSet);
     DocumentCharset = InnerCharset;
-    buf = loadGeneralFile(args, tmp->ptr, NULL, NULL, flag, NULL);
+    buf = loadGeneralFile(args, (struct HttpClient) {
+                                    .current = NULL,
+                                    .referer = NULL,
+                                    .flag = flag,
+                                    .post = NULL,
+                                },
+        tmp);
     DocumentCharset = doc_charset;
     renderFrameSet = NULL;
     if (buf == NULL || buf == NO_BUFFER)
         return NULL;
-    buf->sourcefile = tmp->ptr;
+    buf->sourcefile = tmp;
     buf->document_charset = Cbuf->document_charset;
     copyParsedURL(&buf->currentURL, &Cbuf->currentURL);
     preFormUpdateBuffer(buf);
