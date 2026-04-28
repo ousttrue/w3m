@@ -49,8 +49,8 @@ loadSomething(struct CmdArgs* args, struct URLFile* f, LoadProc loadproc, struct
             buf->buffername = conv_from_system(lastFileName(buf->filename));
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
-        buf->currentURL.scheme = f->scheme;
-    if (f->scheme == SCM_FILE && buf->sourcefile == NULL)
+        buf->currentURL = f->url;
+    if (f->url.scheme == SCM_FILE && buf->sourcefile == NULL)
         buf->sourcefile = buf->filename;
     if (loadproc == loadHTMLBuffer
         || loadproc == loadImageBuffer)
@@ -209,11 +209,11 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
                 if (uncompressed.pipe) {
                     unlink(uncompressed.tmpf);
                     uf.stream = ist_from_fp(uncompressed.pipe, fclose);
-                    uf.scheme = SCM_FILE;
+                    uf.url.scheme = SCM_FILE;
                 }
             }
             setup_child(FALSE, 0, ist_fd(uf.stream));
-            bool success = ist_save2tmp(uf.stream, uf.scheme, p);
+            bool success = ist_save2tmp(uf.stream, uf.url.scheme, p);
             if (success && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
             UFclose(&uf);
@@ -222,7 +222,7 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
                 exit(1);
             exit(0);
         }
-        addDownloadList(pid, uf.url, p, lock, current_content_length);
+        addDownloadList(pid, parsedURL2Str(&uf.url)->ptr, p, lock, current_content_length);
     } else {
         q = searchKeyData();
         if (q == NULL || *q == '\0') {
@@ -252,10 +252,10 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
             if (uncompressed.pipe) {
                 unlink(uncompressed.tmpf);
                 uf.stream = ist_from_fp(uncompressed.pipe, fclose);
-                uf.scheme = SCM_FILE;
+                uf.url.scheme = SCM_FILE;
             }
         }
-        if (!ist_save2tmp(uf.stream, uf.scheme, p)) {
+        if (!ist_save2tmp(uf.stream, uf.url.scheme, p)) {
             /* FIXME: gettextize? */
             printf("Can't save to %s\n", p);
             return false;
@@ -332,7 +332,7 @@ static struct Buffer* page_loaded(struct CmdArgs* args, Str page, wc_ces charset
         if (uncompressed.pipe) {
             url.real_file = uncompressed.tmpf;
             f.stream = ist_from_fp(uncompressed.pipe, fclose);
-            f.scheme = SCM_FILE;
+            f.url.scheme = SCM_FILE;
         }
     } else if (f.compression != CMP_NOCOMPRESS) {
         if ((is_text_type(t) || searchExtViewer(t))) {
@@ -342,10 +342,9 @@ static struct Buffer* page_loaded(struct CmdArgs* args, Str page, wc_ces charset
             if (uncompressed.pipe) {
                 t_buf->sourcefile = uncompressed.tmpf;
                 f.stream = ist_from_fp(uncompressed.pipe, fclose);
-                f.scheme = SCM_FILE;
+                f.url.scheme = SCM_FILE;
             }
             struct ContentTypeWithExt ce = compression_from_path_to_content_type(url.file);
-            f.ext = ce.ext;
         } else {
             struct CompressionDecoder* d = compression_from_type(f.compression);
             t = d ? d->mime_type : NULL; // compress_application_type(f.compression);
@@ -354,7 +353,7 @@ static struct Buffer* page_loaded(struct CmdArgs* args, Str page, wc_ces charset
     }
     if (image_source) {
         struct Buffer* b = NULL;
-        if (ist_save2tmp(f.stream, f.scheme, image_source)) {
+        if (ist_save2tmp(f.stream, f.url.scheme, image_source)) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = image_source;
             b->real_type = t;
@@ -392,7 +391,7 @@ static struct Buffer* page_loaded(struct CmdArgs* args, Str page, wc_ces charset
     UFclose(&f);
     frame_source = 0;
     if (b && b != NO_BUFFER) {
-        b->real_scheme = f.scheme;
+        b->real_scheme = f.url.scheme;
         b->real_type = real_type;
         if (url.label) {
             if (proc == loadHTMLBuffer) {
@@ -431,7 +430,6 @@ struct Buffer*
 loadGeneralFile(struct CmdArgs* args, struct HttpClient http, const char* path)
 {
     struct URLFile f, *volatile of = NULL;
-    struct Url pu;
     struct Buffer* b = NULL;
     const char* volatile t = "text/plain", *p, * volatile real_type = NULL;
     struct Buffer* volatile t_buf = NULL;
@@ -443,7 +441,6 @@ loadGeneralFile(struct CmdArgs* args, struct HttpClient http, const char* path)
     volatile Str pwd = NULL;
     volatile Str realm = NULL;
     int volatile add_auth_cookie_flag;
-    enum OpenStatus status = HTST_NORMAL;
     const char* tmpf;
     Str volatile page = NULL;
     wc_ces charset = WC_CES_US_ASCII;
@@ -462,35 +459,35 @@ loadGeneralFile(struct CmdArgs* args, struct HttpClient http, const char* path)
         .request = http.post,
     };
 
-load_doc: {
-    const char* sc_redirect;
-    pu = parseURL2(tpath, http.current);
-    sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
-    if (sc_redirect && *sc_redirect && checkRedirection(args, &pu)) {
-        tpath = (char*)sc_redirect;
-        http.post = NULL;
-        add_auth_cookie_flag = 0;
-        http.current = New(struct Url);
-        *http.current = pu;
-        status = HTST_NORMAL;
-        goto load_doc;
+load_doc:
+    //
+    {
+        struct Url pu = parseURL2(tpath, http.current);
+        const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
+        if (sc_redirect && *sc_redirect && checkRedirection(args, &pu)) {
+            tpath = (char*)sc_redirect;
+            http.post = NULL;
+            add_auth_cookie_flag = 0;
+            http.current = New(struct Url);
+            *http.current = pu;
+            f.status = HTST_NORMAL;
+            goto load_doc;
+        }
     }
-}
     TRAP_OFF;
-    f = openURL(args, tpath, &pu, http.current, http, http.post, extra_header, of,
-        &hr, &status);
+    f = openURL(args, tpath, http.current, http, extra_header, of, &hr);
     of = NULL;
     content_charset = 0;
     if (f.stream == NULL) {
-        switch (f.scheme) {
+        switch (f.url.scheme) {
         case SCM_FILE: {
             struct stat st;
-            if (stat(pu.real_file, &st) < 0)
+            if (stat(f.url.real_file, &st) < 0)
                 return NULL;
             if (S_ISDIR(st.st_mode)) {
                 if (UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
-                        DirBufferCommand, pu.file);
+                        DirBufferCommand, f.url.file);
                     b = loadGeneralFile(args, (struct HttpClient) {
                                                   .current = NULL,
                                                   .referer = NO_REFERER,
@@ -499,12 +496,12 @@ load_doc: {
                                               },
                         cmd->ptr);
                     if (b != NULL && b != NO_BUFFER) {
-                        copyParsedURL(&b->currentURL, &pu);
+                        copyParsedURL(&b->currentURL, &f.url);
                         b->filename = b->currentURL.real_file;
                     }
                     return b;
                 } else {
-                    page = loadLocalDir(pu.real_file);
+                    page = loadLocalDir(f.url.real_file);
                     t = "local:directory";
                     charset = SystemCharset;
                 }
@@ -512,19 +509,19 @@ load_doc: {
         } break;
         case SCM_UNKNOWN:
             /* FIXME: gettextize? */
-            disp_err_message(args, Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr,
+            disp_err_message(args, Sprintf("Unknown URI: %s", parsedURL2Str(&f.url)->ptr)->ptr,
                 FALSE);
             break;
         default:
             break;
         }
         if (page && page->length > 0) {
-            return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
+            return page_loaded(args, page, charset, f.url, t, real_type, t_buf, f, http.flag);
         }
         return NULL;
     }
 
-    if (status == HTST_MISSING) {
+    if (f.status == HTST_MISSING) {
         TRAP_OFF;
         UFclose(&f);
         return NULL;
@@ -549,21 +546,21 @@ load_doc: {
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS) {
+    if (f.url.scheme == SCM_HTTP || f.url.scheme == SCM_HTTPS) {
         if (fmInitialized) {
             term_cbreak();
             /* FIXME: gettextize? */
-            message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0, 0);
+            message(Sprintf("%s contacted. Waiting for reply...", f.url.host)->ptr, 0, 0);
             refresh();
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        t_buf->http_response = http_response_header(f.stream, f.scheme);
-        f.compression = http_response_process(&t_buf->http_response, args, &pu);
+        t_buf->http_response = http_response_header(f.stream, f.url.scheme);
+        f.compression = http_response_process(&t_buf->http_response, args, &f.url);
         if (((t_buf->http_response.status_code >= 301 && t_buf->http_response.status_code <= 303)
                 || t_buf->http_response.status_code == 307)
             && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL
-            && checkRedirection(args, &pu)) {
+            && checkRedirection(args, &f.url)) {
             /* document moved */
             /* 301: Moved Permanently */
             /* 302: Found */
@@ -573,22 +570,22 @@ load_doc: {
             http.post = NULL;
             UFclose(&f);
             http.current = New(struct Url);
-            copyParsedURL(http.current, &pu);
+            copyParsedURL(http.current, &f.url);
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
-            status = HTST_NORMAL;
+            f.status = HTST_NORMAL;
             goto load_doc;
         }
         t = http_response_get_content_type(&t_buf->http_response, &content_charset);
-        if (t == NULL && pu.file != NULL) {
+        if (t == NULL && f.url.file != NULL) {
             if (!((t_buf->http_response.status_code >= 400 && t_buf->http_response.status_code <= 407) || (t_buf->http_response.status_code >= 500 && t_buf->http_response.status_code <= 505)))
-                t = guessContentType(pu.file);
+                t = guessContentType(f.url.file);
         }
         if (t == NULL)
             t = "text/plain";
         if (add_auth_cookie_flag && realm && uname && pwd) {
             /* If authorization is required and passed */
-            add_auth_user_passwd(&pu, qstr_unquote(realm)->ptr, uname, pwd,
+            add_auth_user_passwd(&f.url, qstr_unquote(realm)->ptr, uname, pwd,
                 0);
             add_auth_cookie_flag = 0;
         }
@@ -597,18 +594,18 @@ load_doc: {
             struct http_auth hauth;
             if (findAuthentication(&t_buf->http_response, &hauth, "WWW-Authenticate:") != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-                auth_pu = &pu;
+                auth_pu = &f.url;
                 getAuthCookie(args, &hauth, "Authorization:", extra_header,
                     auth_pu, &hr, http.post, &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
+                    return page_loaded(args, page, charset, f.url, t, real_type, t_buf, f, http.flag);
                 }
                 UFclose(&f);
                 add_auth_cookie_flag = 1;
-                status = HTST_NORMAL;
-                return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
+                f.status = HTST_NORMAL;
+                return page_loaded(args, page, charset, f.url, t, real_type, t_buf, f, http.flag);
             }
         }
         if ((p = http_response_get(&t_buf->http_response, "Proxy-Authenticate:")) != NULL && t_buf->http_response.status_code == 407) {
@@ -617,25 +614,25 @@ load_doc: {
             if (findAuthentication(&t_buf->http_response, &hauth, "Proxy-Authenticate:")
                     != NULL
                 && (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-                auth_pu = schemeToProxy(pu.scheme);
+                auth_pu = schemeToProxy(f.url.scheme);
                 getAuthCookie(args, &hauth, "Proxy-Authorization:",
                     extra_header, auth_pu, &hr, http.post,
                     &uname, &pwd);
                 if (uname == NULL) {
                     /* abort */
                     TRAP_OFF;
-                    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
+                    return page_loaded(args, page, charset, f.url, t, real_type, t_buf, f, http.flag);
                 }
                 UFclose(&f);
                 add_auth_cookie_flag = 1;
-                status = HTST_NORMAL;
+                f.status = HTST_NORMAL;
                 add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
                 goto load_doc;
             }
         }
         /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
 
-        if (status == HTST_CONNECT) {
+        if (f.status == HTST_CONNECT) {
             of = &f;
             goto load_doc;
         }
@@ -645,22 +642,22 @@ load_doc: {
         searchHeader = SearchHeader = FALSE;
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        t_buf->http_response = http_response_header(f.stream, f.scheme);
+        t_buf->http_response = http_response_header(f.stream, f.url.scheme);
         if (searchHeader_through && !t_buf->header_source) {
             t_buf->header_source = http_response_save_header_source(&t_buf->http_response);
         }
-        f.compression = http_response_process(&t_buf->http_response, args, &pu);
-        if (f.is_cgi && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL && checkRedirection(args, &pu)) {
+        f.compression = http_response_process(&t_buf->http_response, args, &f.url);
+        if (f.is_cgi && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL && checkRedirection(args, &f.url)) {
             /* document moved */
             tpath = url_encode(remove_space(p), NULL, 0);
             http.post = NULL;
             UFclose(&f);
             add_auth_cookie_flag = 0;
             http.current = New(struct Url);
-            copyParsedURL(http.current, &pu);
+            copyParsedURL(http.current, &f.url);
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
-            status = HTST_NORMAL;
+            f.status = HTST_NORMAL;
             goto load_doc;
         }
         t = http_response_get_content_type(&t_buf->http_response, &content_charset);
@@ -670,7 +667,7 @@ load_doc: {
         t = DefaultType;
         DefaultType = NULL;
     } else {
-        t = guessContentType(pu.file);
+        t = guessContentType(f.url.file);
         if (t == NULL)
             t = "text/plain";
         real_type = t;
@@ -682,7 +679,7 @@ load_doc: {
      *      to support default utf8 encoding for XHTML here? */
     f.guess_type = (char*)t;
 
-    return page_loaded(args, page, charset, pu, t, real_type, t_buf, f, http.flag);
+    return page_loaded(args, page, charset, f.url, t, real_type, t_buf, f, http.flag);
 }
 
 extern char* NullLine;
@@ -698,7 +695,7 @@ loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
     FILE* src = NULL;
-    if (newBuf->sourcefile == NULL && (f->scheme != SCM_FILE || newBuf->mailcap)) {
+    if (newBuf->sourcefile == NULL && (f->url.scheme != SCM_FILE || newBuf->mailcap)) {
         const char* tmpf = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmpf, "w");
         if (src)
@@ -832,7 +829,7 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     }
     TRAP_ON;
 
-    if (newBuf->sourcefile == NULL && (uf->scheme != SCM_FILE || newBuf->mailcap)) {
+    if (newBuf->sourcefile == NULL && (uf->url.scheme != SCM_FILE || newBuf->mailcap)) {
         tmpf = tmpfname(TMPF_SRC, NULL);
         src = fopen(tmpf, "w");
         if (src)
@@ -891,8 +888,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
 
     loadImage(newBuf, IMG_FLAG_STOP);
     struct Image image = {
-        .url = uf->url,
-        .ext = uf->ext,
+        .url = parsedURL2RefererStr(&uf->url)->ptr,
         .width = -1,
         .height = -1,
         .cache = NULL,
@@ -906,7 +902,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
         SignalFunc prevtrap = NULL;
 
         TRAP_ON;
-        if (!ist_save2tmp(uf->stream, uf->scheme, cache->file)) {
+        if (!ist_save2tmp(uf->stream, uf->url.scheme, cache->file)) {
             TRAP_OFF;
             return NULL;
         }
@@ -919,7 +915,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
     cache->loaded |= IMG_FLAG_DONT_REMOVE;
-    if (newBuf->sourcefile == NULL && uf->scheme != SCM_FILE)
+    if (newBuf->sourcefile == NULL && uf->url.scheme != SCM_FILE)
         newBuf->sourcefile = cache->file;
 
     const char* tmpf = tmpfname(TMPF_SRC, ".html");
@@ -1203,7 +1199,8 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
     struct mailcap* mcap;
     int mc_stat;
     struct Buffer* buf = NULL;
-    const char *header, *src = NULL, *ext = uf.ext;
+    const char *header, *src = NULL;
+    const char* ext = NULL;
 
     if (!(mcap = searchExtViewer(type)))
         return NULL;
@@ -1228,14 +1225,14 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
         flush_tty();
         if (!fork()) {
             setup_child(FALSE, 0, ist_fd(uf.stream));
-            if (!ist_save2tmp(uf.stream, uf.scheme, tmpf))
+            if (!ist_save2tmp(uf.stream, uf.url.scheme, tmpf))
                 exit(1);
             UFclose(&uf);
             myExec(command->ptr);
         }
         return NO_BUFFER;
     } else {
-        if (!ist_save2tmp(uf.stream, uf.scheme, tmpf)) {
+        if (!ist_save2tmp(uf.stream, uf.url.scheme, tmpf)) {
             return NULL;
         }
     }

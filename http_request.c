@@ -8,20 +8,20 @@
 #include "rc.h"
 #include <strings.h>
 
-Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr)
+Str HTTPrequestURI(struct Url pu, struct HttpRequest* hr)
 {
     Str tmp = Strnew();
     if (hr->http_method == HR_COMMAND_CONNECT) {
-        Strcat_charp(tmp, pu->host);
-        Strcat(tmp, Sprintf(":%d", pu->port));
+        Strcat_charp(tmp, pu.host);
+        Strcat(tmp, Sprintf(":%d", pu.port));
     } else if (hr->flag & HR_FLAG_LOCAL) {
-        Strcat_charp(tmp, pu->file);
-        if (pu->query) {
+        Strcat_charp(tmp, pu.file);
+        if (pu.query) {
             Strcat_char(tmp, '?');
-            Strcat_charp(tmp, pu->query);
+            Strcat_charp(tmp, pu.query);
         }
     } else
-        Strcat(tmp, _parsedURL2Str(pu, true, true, false));
+        Strcat(tmp, _parsedURL2Str(&pu, true, true, false));
     return tmp;
 }
 
@@ -97,16 +97,16 @@ static const char* otherinfo(struct Url url, struct Url* current, const char* re
     return s->ptr;
 }
 
-Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, TextList* extra)
+Str HTTPrequest(struct Url pu, struct Url* current, struct HttpRequest* hr, TextList* extra)
 {
     Str tmp = Strnew_charp(HTTPrequestMethod(hr));
     Strcat_charp(tmp, " ");
     Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
     Strcat_charp(tmp, " HTTP/1.0\r\n");
     if (hr->referer == NO_REFERER)
-        Strcat_charp(tmp, otherinfo(*pu, NULL, NULL));
+        Strcat_charp(tmp, otherinfo(pu, NULL, NULL));
     else
-        Strcat_charp(tmp, otherinfo(*pu, current, hr->referer));
+        Strcat_charp(tmp, otherinfo(pu, current, hr->referer));
     if (extra != NULL)
         for (TextListItem* i = extra->first; i != NULL; i = i->next) {
             if (strncasecmp(i->ptr, "Authorization:",
@@ -118,7 +118,7 @@ Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, Tex
             if (strncasecmp(i->ptr, "Proxy-Authorization:",
                     sizeof("Proxy-Authorization:") - 1)
                 == 0) {
-                if (pu->scheme == SCM_HTTPS
+                if (pu.scheme == SCM_HTTPS
                     && hr->http_method != HR_COMMAND_CONNECT)
                     continue;
             }
@@ -126,7 +126,7 @@ Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, Tex
         }
 
     Str cookie;
-    if (hr->http_method != HR_COMMAND_CONNECT && use_cookie && (cookie = find_cookie(pu))) {
+    if (hr->http_method != HR_COMMAND_CONNECT && use_cookie && (cookie = find_cookie(&pu))) {
         Strcat_charp(tmp, "Cookie: ");
         Strcat(tmp, cookie);
         Strcat_charp(tmp, "\r\n");
@@ -160,8 +160,5 @@ Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, Tex
             Strcat(tmp, header_string);
         Strcat_charp(tmp, "\r\n");
     }
-#ifdef DEBUG
-    fprintf(stderr, "HTTPrequest: [ %s ]\n\n", tmp->ptr);
-#endif /* DEBUG */
     return tmp;
 }

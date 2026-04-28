@@ -1,5 +1,5 @@
 #pragma onece
-#include "url_scheme.h"
+#include "url.h"
 #include "Str.h"
 #include "constants.h"
 #include "compression.h"
@@ -9,15 +9,21 @@
 
 #define NO_REFERER ((char*)-1)
 
+enum OpenStatus {
+    HTST_UNKNOWN,
+    HTST_NORMAL,
+    HTST_CONNECT,
+    HTST_MISSING,
+};
+
 struct URLFile {
-    enum UrlScheme scheme;
+    struct Url url;
+    enum OpenStatus status;
     bool is_cgi;
     struct InputStream* stream;
-    const char* ext;
     enum ContentCompression compression;
     const char* guess_type;
     const char* ssl_certificate;
-    const char* url;
     time_t modtime;
 };
 
@@ -30,17 +36,9 @@ struct _textlist;
 struct HttpRequest;
 struct CmdArgs;
 
-enum OpenStatus {
-    HTST_UNKNOWN,
-    HTST_NORMAL,
-    HTST_CONNECT,
-    HTST_MISSING,
-};
-
-struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* pu, struct Url* current,
-    struct HttpClient option, struct Form* request,
-    struct _textlist* extra_header, struct URLFile* ouf,
-    struct HttpRequest* hr, enum OpenStatus* status);
+struct URLFile openURL(struct CmdArgs* args, const char* url, struct Url* current,
+    struct HttpClient option, struct _textlist* extra_header, struct URLFile* ouf,
+    struct HttpRequest* hr);
 
 void UFclose(struct URLFile* f);
 

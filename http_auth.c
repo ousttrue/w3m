@@ -121,7 +121,7 @@ static Str AuthDigestCred(struct http_auth* ha, Str uname, Str pw, struct Url* p
 {
     Str tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
-    Str uri = HTTPrequestURI(pu, hr);
+    Str uri = HTTPrequestURI(*pu, hr);
     char nc[] = "00000001";
     FILE* fp;
 

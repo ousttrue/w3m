@@ -36,8 +36,8 @@ static inline const char* HTTPrequestMethod(struct HttpRequest* hr)
 }
 
 struct Url;
-Str HTTPrequestURI(struct Url* pu, struct HttpRequest* hr);
+Str HTTPrequestURI(struct Url pu, struct HttpRequest* hr);
 struct _textlist;
-Str HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, struct _textlist* extra);
+Str HTTPrequest(struct Url pu, struct Url* current, struct HttpRequest* hr, struct _textlist* extra);
 
 
