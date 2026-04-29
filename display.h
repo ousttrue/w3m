@@ -3,9 +3,6 @@
 
 #define disp_message_nomouse disp_message
 
-void fmInit(void);
-void fmTerm(void);
-
 struct CmdArgs;
 struct Buffer;
 

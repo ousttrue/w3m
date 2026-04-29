@@ -94,3 +94,8 @@ void dump_head(struct Buffer* buf);
 void dump_source(struct Buffer* buf);
 void escdmap(struct CmdArgs* args);
 void pushEvent(const char* cmd, void* data);
+
+void tty_init(void);
+void tty_deinit(void);
+int initscr(void);
+void tty_reset(void);

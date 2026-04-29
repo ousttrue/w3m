@@ -345,7 +345,7 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
             continue;
         }
 
-        flush_tty();
+        tty_flush();
         if ((cache->pid = fork()) == 0) {
             /*
              * setup_child(TRUE, 0, -1);

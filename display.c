@@ -156,36 +156,6 @@ static void EFFECT_VISITED_END
     }
 }
 
-/* *INDENT-ON* */
-
-void fmTerm(void)
-{
-    if (fmInitialized) {
-        sc_move((LINES - 1), 0);
-        clrtoeolx();
-        refresh();
-        if (activeImage)
-            loadImage(NULL, IMG_FLAG_STOP);
-        reset_tty();
-        fmInitialized = false;
-    }
-}
-
-/*
- * Initialize routine.
- */
-void fmInit(void)
-{
-    if (!fmInitialized) {
-        initscr();
-        term_raw();
-        term_noecho();
-        if (displayImage)
-            initImage();
-    }
-    fmInitialized = true;
-}
-
 /*
  * Display some lines.
  */

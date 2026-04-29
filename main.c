@@ -1,4 +1,5 @@
 #include "main.h"
+#include "terminfo_entry.h"
 #include "file.h"
 #include "UrlFile.h"
 #include "alloc.h"
@@ -53,6 +54,47 @@
 #include <locale.h>
 #include <sys/wait.h>
 #include <time.h>
+
+void tty_init(void)
+{
+    if (!fmInitialized) {
+        initscr();
+        term_raw();
+        term_noecho();
+        if (displayImage)
+            initImage();
+    }
+    fmInitialized = true;
+}
+
+void tty_deinit(void)
+{
+    if (fmInitialized) {
+        sc_move((LINES - 1), 0);
+        clrtoeolx();
+        refresh();
+        if (activeImage)
+            loadImage(NULL, IMG_FLAG_STOP);
+        tty_reset();
+        fmInitialized = false;
+    }
+}
+
+int initscr(void)
+{
+    set_int();
+    getTCstr(&terminfo);
+    if (terminfo.T_ti && !Do_not_use_ti_te)
+        writestr(&write1, terminfo.T_ti);
+    setupscreen();
+    return 0;
+}
+
+void tty_reset(void)
+{
+    terminfo_reset(&write1, &terminfo, Do_not_use_ti_te);
+    tty_clear();
+}
 
 #define USE_IMAGE 1
 unsigned char last_key = 0;
@@ -570,7 +612,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK);
 
-    fmInit();
+    tty_init();
     signal(SIGWINCH, resize_hook);
     sync_with_option(args);
     initCookie();
@@ -621,12 +663,12 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 pushUrlHist(parsedURL2Str(&newbuf->currentURL)->ptr);
         } else {
             if (fmInitialized)
-                fmTerm();
+                tty_deinit();
             usage();
         }
         if (newbuf == NULL) {
             if (fmInitialized)
-                fmTerm();
+                tty_deinit();
             if (err_msg->length)
                 fprintf(stderr, "%s", err_msg->ptr);
             w3m_exit(2);
@@ -741,7 +783,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 inputChar(args, "Hit any key to quit w3m:");
         }
         if (fmInitialized)
-            fmTerm();
+            tty_deinit();
         if (err_msg->length)
             fprintf(stderr, "%s", err_msg->ptr);
         if (newbuf == NO_BUFFER) {
@@ -1095,7 +1137,7 @@ void _quitfm(struct CmdArgs* args, int confirm)
 
     if (activeImage)
         deinitImage();
-    fmTerm();
+    tty_deinit();
     save_cookies();
     if (UseHistory && SaveURLHist)
         saveHistory(HistoryURL);
@@ -2289,9 +2331,9 @@ void invoke_browser(struct CmdArgs* args, const char* url)
     }
     cmd = myExtCommand(browser, shell_quote(url), FALSE);
     Strremovetrailingspaces(cmd);
-    fmTerm();
+    tty_deinit();
     mySystem(cmd->ptr, bg);
-    fmInit();
+    tty_init();
     displayBuffer(args, B_FORCE_REDRAW);
 }
 

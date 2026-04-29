@@ -5,7 +5,7 @@
 
 int set_tty(void);
 void setlinescols(void);
-void clear_tty(void);
+void tty_clear(void);
 void set_cc(int spec, int val);
 void ttymode_add(int mode, int imode);
 void ttymode_remove(int mode, int imode);
@@ -19,7 +19,7 @@ void term_cbreak(void);
 void toggle_stand(void);
 void bell(void);
 
-void flush_tty(void);
+void tty_flush(void);
 bool get_pixel_per_cell(int* ppc, int* ppl);
 void writer(const uint8_t* str, size_t len);
 int write1(int c);

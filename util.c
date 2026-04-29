@@ -1,20 +1,20 @@
 #include "util.h"
-#include "display.h"
+#include "main.h"
 #include <w3m.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-int exec_cmd(struct CmdArgs *args, const char* cmd)
+int exec_cmd(struct CmdArgs* args, const char* cmd)
 {
-    fmTerm();
+    tty_deinit();
     int rv = system(cmd);
     if (rv) {
         printf("\n[Hit any key]");
         fflush(stdout);
-        fmInit();
+        tty_init();
         getch(args);
-        return rv;
+    } else {
+        tty_init();
     }
-    fmInit();
-    return 0;
+    return rv;
 }

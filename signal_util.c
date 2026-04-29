@@ -14,7 +14,7 @@ sigjmp_buf AbortLoading;
 
 static void reset_exit_with_value(int _, int rval)
 {
-    reset_tty();
+    tty_reset();
     w3m_exit(rval);
 }
 
@@ -31,7 +31,7 @@ void reset_exit(int _)
 void error_dump(int _)
 {
     signal(SIGIOT, SIG_DFL);
-    reset_tty();
+    tty_reset();
     abort();
 }
 

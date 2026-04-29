@@ -34,7 +34,7 @@ export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
     // int i;
     //
     // fputs("\x1b[14t\x1b[18t", ttyf);
-    // flush_tty();
+    // tty_flush();
     //
     // p = buf;
     // left = sizeof(buf) - 1;
@@ -244,7 +244,7 @@ export fn drawImage() void {
 //             if (stat(url, &st))
 //                 return;
 //
-//             flush_tty();
+//             tty_flush();
 //
 //             SignalFunc previntr = signal(SIGINT, SIG_IGN);
 //             SignalFunc prevquit = signal(SIGQUIT, SIG_IGN);
@@ -399,7 +399,7 @@ export fn drawImage() void {
 //         //             if (stat(path, &st))
 //         //                 return;
 //         //
-//         //             flush_tty();
+//         //             tty_flush();
 //         //
 //         //             previntr = signal(SIGINT, SIG_IGN);
 //         //             prevquit = signal(SIGQUIT, SIG_IGN);
@@ -580,7 +580,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     //     MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
 //     //
 //     //     MOVE(y, x);
-//     //     flush_tty();
+//     //     tty_flush();
 //     //
 //     //     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
 //     //
@@ -803,7 +803,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     int do_anim;
 //
 //     MOVE(&write1, &terminfo, y, x);
-//     flush_tty();
+//     tty_flush();
 //
 //     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
 //

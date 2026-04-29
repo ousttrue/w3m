@@ -358,13 +358,13 @@ void execsh(struct CmdArgs* args)
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
     if (cmd != NULL && *cmd != '\0') {
-        fmTerm();
+        tty_deinit();
         printf("\n");
         (void)!system(cmd); /* We do not care about the exit code here! */
         /* FIXME: gettextize? */
         printf("\n[Hit any key]");
         fflush(stdout);
-        fmInit();
+        tty_init();
         getch(args);
     }
     displayBuffer(args, B_FORCE_REDRAW);
@@ -594,7 +594,7 @@ void susp(struct CmdArgs* args)
     sc_move((LINES - 1), 0);
     clrtoeolx();
     refresh();
-    fmTerm();
+    tty_deinit();
     signal(SIGTSTP, SIG_DFL); /* just in case */
     /*
      * Note: If susp() was called from SIGTSTP handler,
@@ -603,7 +603,7 @@ void susp(struct CmdArgs* args)
      */
     kill(0, SIGTSTP); /* stop whole job, not a single process */
 
-    fmInit();
+    tty_init();
     displayBuffer(args, B_FORCE_REDRAW);
 }
 

@@ -27,7 +27,7 @@ pub fn init(io: std.Io) void {
 }
 
 pub fn deinit() void {
-    flush_tty();
+    tty_flush();
 }
 
 pub fn ttyname_tty() [*c]const u8 {
@@ -42,12 +42,12 @@ pub fn puts(str: []const u8) !void {
     return try tty_writer.interface.writeAll(str);
 }
 
-export fn flush_tty() void {
+export fn tty_flush() void {
     tty_writer.flush() catch {};
 }
 
-export fn clear_tty() void {
-    flush_tty();
+export fn tty_clear() void {
+    tty_flush();
     tty.restore();
 }
 

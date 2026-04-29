@@ -714,7 +714,7 @@ pid_t open_pipe_rw(FILE** fr, FILE** fw)
     if (fw && pipe(fdw) < 0)
         goto err1;
 
-    flush_tty();
+    tty_flush();
     pid = fork();
     if (pid < 0)
         goto err2;
@@ -769,7 +769,7 @@ void myExec(const char* command)
 void mySystem(char* command, int background)
 {
     if (background) {
-        flush_tty();
+        tty_flush();
         if (!fork()) {
             setup_child(FALSE, 0, -1);
             myExec(command);

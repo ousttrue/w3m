@@ -1,6 +1,9 @@
 #pragma once
+#include "terminfo_entry.h"
 #include <stddef.h>
 #include <stdint.h>
+
+extern struct TermInfo terminfo;
 
 enum CellProperty : uint16_t {
     // struct ScreenLine properties
@@ -72,10 +75,8 @@ struct Cell {
 void mouse_active();
 void mouse_inactive();
 void mouse_end();
-void reset_tty(void);
 void set_int(void);
 void setupscreen(void);
-int initscr(void);
 void sc_move(int line, int column);
 void addmch(const uint8_t* p, size_t len);
 void addch(uint8_t c);

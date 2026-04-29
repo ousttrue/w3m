@@ -159,7 +159,7 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
     //     lock = tmpfname(TMPF_DFL, ".lock");
     //
     //     symlink(p, lock);
-    //     flush_tty();
+    //     tty_flush();
     //     pid = fork();
     //     if (!pid) {
     //         if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
@@ -931,7 +931,7 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
     }
 
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
-        flush_tty();
+        tty_flush();
         if (!fork()) {
             setup_child(FALSE, 0, ist_fd(uf.stream));
             if (!ist_save2tmp(uf.stream, uf.url.scheme, tmpf))
@@ -971,9 +971,9 @@ doExternal(struct CmdArgs* args, struct URLFile uf, const char* type, struct Buf
         }
     } else {
         if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-            fmTerm();
+            tty_deinit();
             mySystem(command->ptr, 0);
-            fmInit();
+            tty_init();
             if (CurrentTab && Currentbuf)
                 displayBuffer(args, B_FORCE_REDRAW);
         } else {
@@ -1049,7 +1049,7 @@ bool doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr)
         }
         lock = tmpfname(TMPF_DFL, ".lock");
         symlink(p, lock);
-        flush_tty();
+        tty_flush();
         pid = fork();
         if (!pid) {
             setup_child(FALSE, 0, -1);

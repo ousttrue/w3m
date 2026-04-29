@@ -5,7 +5,6 @@
 #include "content_type.h"
 #include "alloc.h"
 #include "term_tty.h"
-#include "terminfo_entry.h"
 #include "etc.h"
 #include "signal_util.h"
 #include "buffer.h"
@@ -14,6 +13,8 @@
 
 #include "wc_util.h"
 #include <libwc/putc.h>
+
+struct TermInfo terminfo;
 
 static enum CellProperty CHMODE(enum CellProperty c) { return ((c)&C_WHICHCHAR); }
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
@@ -55,13 +56,6 @@ static struct ScreenLine *ScreenElem = NULL, **ScreenImage = NULL;
 static enum CellProperty CurrentMode = 0;
 static int graph_enabled = 0;
 
-static struct TermInfo terminfo;
-
-void reset_tty(void)
-{
-    terminfo_reset(&write1, &terminfo, Do_not_use_ti_te);
-    clear_tty();
-}
 
 static uint8_t*
 skip_gif_header(uint8_t* p)
@@ -121,19 +115,6 @@ void setupscreen(void)
     }
 
     clear();
-}
-
-/*
- * struct ScreenLine initialize
- */
-int initscr(void)
-{
-    set_int();
-    getTCstr(&terminfo);
-    if (terminfo.T_ti && !Do_not_use_ti_te)
-        writestr(&write1, terminfo.T_ti);
-    setupscreen();
-    return 0;
 }
 
 void sc_move(int line, int column)
@@ -533,7 +514,7 @@ void refresh(void)
     }
     wc_putc_end(writer);
     MOVE(&write1, &terminfo, CurLine, CurColumn);
-    flush_tty();
+    tty_flush();
 }
 
 void clear(void)
