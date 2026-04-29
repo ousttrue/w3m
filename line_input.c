@@ -35,7 +35,7 @@ const char* inputAnswer(struct CmdArgs* args, const char* prompt)
         return "n";
 
     if (fmInitialized) {
-        term_raw();
+        tty_raw();
         return inputChar(args, prompt);
     } else {
         printf("%s", prompt);

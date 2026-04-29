@@ -552,7 +552,7 @@ void getAuthCookie(struct CmdArgs* args, struct http_auth* hauth,
         sleep(2);
         if (fmInitialized) {
             const char* pp;
-            term_raw();
+            tty_raw();
             /* FIXME: gettextize? */
             if ((pp = inputStr(args, Sprintf("Username for %s: ", realm)->ptr,
                      NULL))
@@ -566,7 +566,7 @@ void getAuthCookie(struct CmdArgs* args, struct http_auth* hauth,
                 return;
             }
             *pwd = Str_conv_to_system(pp, strlen(pp));
-            term_cbreak();
+            tty_cbreak();
         } else {
             /*
              * If post file is specified as '-', stdin is closed at this

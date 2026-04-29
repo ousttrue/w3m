@@ -279,7 +279,7 @@ int srchcore(const char* str, SrchFunc func)
 
     str = conv_search_string(SearchString, DisplayCharset);
     auto prevtrap = signal(SIGINT, intTrap);
-    crmode();
+    tty_crmode();
     if (SETJMP(IntReturn) == 0) {
         for (i = 0; i < PREC_NUM; i++) {
             result = func(Currentbuf, str);
@@ -288,7 +288,7 @@ int srchcore(const char* str, SrchFunc func)
         }
     }
     signal(SIGINT, prevtrap);
-    term_raw();
+    tty_raw();
     return result;
 }
 

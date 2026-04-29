@@ -1,5 +1,4 @@
 #include "main.h"
-#include "terminfo_entry.h"
 #include "file.h"
 #include "UrlFile.h"
 #include "alloc.h"
@@ -60,8 +59,8 @@ void tty_init(void)
 {
     if (!fmInitialized) {
         initscr();
-        term_raw();
-        term_noecho();
+        tty_raw();
+        tty_noecho();
         if (displayImage)
             initImage();
     }
@@ -86,14 +85,14 @@ int initscr(void)
     set_int();
     getTCstr(&terminfo);
     if (terminfo.T_ti && !Do_not_use_ti_te)
-        writestr(&write1, terminfo.T_ti);
+        writestr(&tty_write1, terminfo.T_ti);
     sc_init();
     return 0;
 }
 
 void tty_reset(void)
 {
-    terminfo_reset(&write1, &terminfo, Do_not_use_ti_te);
+    terminfo_reset(&tty_write1, &terminfo, Do_not_use_ti_te);
     tty_clear();
 }
 
@@ -937,7 +936,7 @@ static void
 resize_screen(struct CmdArgs* args)
 {
     need_resize_screen = FALSE;
-    setlinescols();
+    tty_linescols();
     sc_init();
     if (CurrentTab)
         displayBuffer(args, B_FORCE_REDRAW);
@@ -2991,25 +2990,25 @@ void tty_write_sc(void)
             if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
                 switch (moved) {
                 case RF_NEED_TO_MOVE:
-                    MOVE(&write1, &terminfo, line, 0);
+                    MOVE(&tty_write1, &terminfo, line, 0);
                     moved = RF_CR_OK;
                     break;
                 case RF_CR_OK:
-                    write1('\n');
-                    write1('\r');
+                    tty_write1('\n');
+                    tty_write1('\r');
                     break;
                 case RF_NONEED_TO_MOVE:
                     moved = RF_CR_OK;
                     break;
                 }
             } else {
-                MOVE(&write1, &terminfo, line, pcol);
+                MOVE(&tty_write1, &terminfo, line, pcol);
                 moved = RF_CR_OK;
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                writestr(&write1, terminfo.T_ce);
+                writestr(&tty_write1, terminfo.T_ce);
                 if (col != pcol)
-                    MOVE(&write1, &terminfo, line, col);
+                    MOVE(&tty_write1, &terminfo, line, col);
             }
             pline = line;
             pcol = col;
@@ -3034,55 +3033,55 @@ void tty_write_sc(void)
                     || (!(cells[col].prop & S_BCOLORED) && (mode & S_BCOLORED))
                     || (!(cells[col].prop & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED) || (mode & S_BCOLORED))
-                        writestr(&write1, terminfo.T_op);
+                        writestr(&tty_write1, terminfo.T_op);
                     if (mode & S_GRAPHICS)
-                        writestr(&write1, terminfo.T_ae);
-                    writestr(&write1, terminfo.T_me);
+                        writestr(&tty_write1, terminfo.T_ae);
+                    writestr(&tty_write1, terminfo.T_me);
                     mode &= ~M_MEND;
                 }
                 if ((*dirty & L_NEED_CE && col >= sc_lines()[line]->eol) ? sc_need_redraw(&cells[col], (CellCharBytes)SPACE, 0)
                                                                          : (cells[col].prop & S_DIRTY)) {
                     if (pcol == col - 1)
-                        writestr(&write1, terminfo.T_nd);
+                        writestr(&tty_write1, terminfo.T_nd);
                     else if (pcol != col)
-                        MOVE(&write1, &terminfo, line, col);
+                        MOVE(&tty_write1, &terminfo, line, col);
 
                     if ((cells[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                        writestr(&write1, terminfo.T_so);
+                        writestr(&tty_write1, terminfo.T_so);
                         mode |= S_STANDOUT;
                     }
                     if ((cells[col].prop & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                        writestr(&write1, terminfo.T_us);
+                        writestr(&tty_write1, terminfo.T_us);
                         mode |= S_UNDERLINE;
                     }
                     if ((cells[col].prop & S_BOLD) && !(mode & S_BOLD)) {
-                        writestr(&write1, terminfo.T_md);
+                        writestr(&tty_write1, terminfo.T_md);
                         mode |= S_BOLD;
                     }
                     if ((cells[col].prop & S_COLORED) && (cells[col].prop ^ mode) & COL_FCOLOR) {
                         color = (cells[col].prop & COL_FCOLOR);
                         mode = ((mode & ~COL_FCOLOR) | color);
-                        writestr(&write1, sc_color_seq(color));
+                        writestr(&tty_write1, sc_color_seq(color));
                     }
                     if ((cells[col].prop & S_BCOLORED)
                         && (cells[col].prop ^ mode) & COL_BCOLOR) {
                         bcolor = (cells[col].prop & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
-                        writestr(&write1, sc_bcolor_seq(bcolor));
+                        writestr(&tty_write1, sc_bcolor_seq(bcolor));
                     }
                     if ((cells[col].prop & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-                        wc_putc_end(&writer);
+                        wc_putc_end(&tty_write);
                         if (!graph_enabled) {
                             graph_enabled = true;
-                            writestr(&write1, terminfo.T_eA);
+                            writestr(&tty_write1, terminfo.T_eA);
                         }
-                        writestr(&write1, terminfo.T_as);
+                        writestr(&tty_write1, terminfo.T_as);
                         mode |= S_GRAPHICS;
                     }
                     if (cells[col].prop & S_GRAPHICS)
-                        write1(graphchar(cells[col].bytes[0]));
+                        tty_write1(graphchar(cells[col].bytes[0]));
                     else if (CHMODE(cells[col].prop) != C_WCHAR2)
-                        wc_putc(WcOption, (char*)cells[col].bytes, &writer);
+                        wc_putc(WcOption, (char*)cells[col].bytes, &tty_write);
                     pcol = col + 1;
                 }
             }
@@ -3094,16 +3093,16 @@ void tty_write_sc(void)
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
             if (mode & (S_COLORED | S_BCOLORED))
-                writestr(&write1, terminfo.T_op);
+                writestr(&tty_write1, terminfo.T_op);
             if (mode & S_GRAPHICS) {
-                writestr(&write1, terminfo.T_ae);
+                writestr(&tty_write1, terminfo.T_ae);
                 wc_putc_clear_status();
             }
-            writestr(&write1, terminfo.T_me);
+            writestr(&tty_write1, terminfo.T_me);
             mode &= ~M_MEND;
         }
     }
-    wc_putc_end(writer);
-    MOVE(&write1, &terminfo, sc_curline(), sc_curcol());
+    wc_putc_end(tty_write);
+    MOVE(&tty_write1, &terminfo, sc_curline(), sc_curcol());
     tty_flush();
 }

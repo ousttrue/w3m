@@ -11,7 +11,7 @@ export fn initImage() void {
     }
 }
 
-export fn get_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
+export fn tty_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
     if (tty.getTermSize()) |ws| {
         if (ws.ws_ypixel > 0 and ws.ws_row > 0 and ws.ws_xpixel > 0 and ws.ws_col > 0) {
             ppc.* = ws.ws_xpixel / ws.ws_col;
@@ -72,7 +72,7 @@ fn getCharSize() bool {
     if (g.enable_inline_image != 0) {
         var ppc: c_int = undefined;
         var ppl: c_int = undefined;
-        if (get_pixel_per_cell(&ppc, &ppl)) {
+        if (tty_pixel_per_cell(&ppc, &ppl)) {
             g.pixel_per_char_i = ppc;
             g.pixel_per_line_i = ppl;
             g.pixel_per_char = @floatFromInt(ppc);
@@ -297,7 +297,7 @@ export fn drawImage() void {
 //     if (!fp)
 //         return;
 //
-//     MOVE(&write1, &terminfo, y, x);
+//     MOVE(&tty_write1, &terminfo, y, x);
 //
 //     char* cbuf = malloc(3072); /* base64-encoded chunks of 4096 bytes */
 //     if (!cbuf)
@@ -317,7 +317,7 @@ export fn drawImage() void {
 //     Str buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
 //                       "%s\x1b\\",
 //         t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
-//     writestr(&write1, buf->ptr);
+//     writestr(&tty_write1, buf->ptr);
 //
 //     if (m) {
 //         i = 0;
@@ -326,7 +326,7 @@ export fn drawImage() void {
 //             if (j) {
 //                 base64 = base64_encode(cbuf, i);
 //                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
-//                 writestr(&write1, buf->ptr);
+//                 writestr(&tty_write1, buf->ptr);
 //                 i = 0;
 //                 j = 0;
 //             }
@@ -338,12 +338,12 @@ export fn drawImage() void {
 //         if (i) {
 //             base64 = base64_encode(cbuf, i);
 //             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
-//             writestr(&write1, buf->ptr);
+//             writestr(&tty_write1, buf->ptr);
 //         }
 //     }
 // cleanup:
 //     fclose(fp);
-//     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+//     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 // }
 // export fn put_image_kitty(
 //     url: [*c]const u8,
@@ -663,10 +663,10 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     else
 //         size = "";
 //
-//     MOVE(&write1, &terminfo, y, x);
+//     MOVE(&tty_write1, &terminfo, y, x);
 //     buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
-//     writestr(&write1, buf->ptr);
-//     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+//     writestr(&tty_write1, buf->ptr);
+//     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 // }
 
 // void put_image_iterm2(const char* url, int x, int y, int w, int h)
@@ -695,9 +695,9 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //                   ":",
 //         url, st.st_size, w, h);
 //
-//     MOVE(&write1, &terminfo, y, x);
+//     MOVE(&tty_write1, &terminfo, y, x);
 //
-//     writestr(&write1, buf->ptr);
+//     writestr(&tty_write1, buf->ptr);
 //
 //     cbuf = GC_MALLOC_ATOMIC(3072);
 //     if (!cbuf)
@@ -707,20 +707,20 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //         cbuf[i++] = c;
 //         if (i == 3072) {
 //             buf = base64_encode(cbuf, i);
-//             writestr(&write1, buf->ptr);
+//             writestr(&tty_write1, buf->ptr);
 //             i = 0;
 //         }
 //     }
 //
 //     if (i) {
 //         buf = base64_encode(cbuf, i);
-//         writestr(&write1, buf->ptr);
+//         writestr(&tty_write1, buf->ptr);
 //     }
 //
 // cleanup:
 //     fclose(fp);
-//     writestr(&write1, "\a");
-//     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+//     writestr(&tty_write1, "\a");
+//     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 // }
 
 // static void
@@ -802,7 +802,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     pid_t pid;
 //     int do_anim;
 //
-//     MOVE(&write1, &terminfo, y, x);
+//     MOVE(&tty_write1, &terminfo, y, x);
 //     tty_flush();
 //
 //     do_anim = (n_terminal_image == 1 && x == 0 && y == 0 && sx == 0 && sy == 0);
@@ -821,7 +821,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //
 //         close(STDERR_FILENO); /* Don't output error message. */
 //         if (do_anim) {
-//             writestr(&write1, "\x1b[?80h");
+//             writestr(&tty_write1, "\x1b[?80h");
 //         } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
 //             url = str_url->ptr;
 //         }
@@ -869,9 +869,9 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //         signal(SIGQUIT, prevquit);
 //         signal(SIGTSTP, prevstop);
 //         if (do_anim) {
-//             writestr(&write1, "\x1b[?80l");
+//             writestr(&tty_write1, "\x1b[?80l");
 //         }
 //     }
 //
-//     MOVE(&write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+//     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 // }

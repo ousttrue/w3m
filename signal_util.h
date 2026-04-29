@@ -25,12 +25,12 @@ void KeyAbort(int _);
     if (TrapSignal) {                        \
         prevtrap = signal(SIGINT, KeyAbort); \
         if (fmInitialized)                   \
-            term_cbreak();                   \
+            tty_cbreak();                   \
     }
 #define TRAP_OFF                      \
     if (TrapSignal) {                 \
         if (fmInitialized)            \
-            term_raw();               \
+            tty_raw();               \
         if (prevtrap)                 \
             signal(SIGINT, prevtrap); \
     }

@@ -988,7 +988,7 @@ load_doc:
     // TRAP_ON;
     if (current->transport.url.scheme == SCM_HTTP || current->transport.url.scheme == SCM_HTTPS) {
         if (fmInitialized) {
-            term_cbreak();
+            tty_cbreak();
             /* FIXME: gettextize? */
             message(Sprintf("%s contacted. Waiting for reply...", current->transport.url.host)->ptr, 0, 0);
             tty_write_sc();

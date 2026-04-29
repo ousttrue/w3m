@@ -340,7 +340,7 @@ fn next_compl(this: *@This(), next: c_int) void {
     //         return;
     //
     //     if (status != CPL_OK && status != CPL_MENU)
-    //         bell();
+    //         tty_bell();
     //     if (status == CPL_FAIL)
     //         return;
     //

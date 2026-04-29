@@ -331,10 +331,10 @@ void readsh(struct CmdArgs* args)
         return;
     }
     auto prevtrap = signal(SIGINT, intTrap);
-    crmode();
+    tty_crmode();
     struct Buffer* buf = getshell(args, cmd);
     signal(SIGINT, prevtrap);
-    term_raw();
+    tty_raw();
     if (buf == NULL) {
         /* FIXME: gettextize? */
         disp_message(args, "Execution failed", true);

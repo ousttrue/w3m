@@ -47,21 +47,21 @@ export fn tty_flush() void {
 }
 
 export fn tty_clear() void {
-    c.writestr(&write1, c.terminfo.T_cl);
+    c.writestr(&tty_write1, c.terminfo.T_cl);
     tty_flush();
     tty.restore();
 }
 
-export fn bell() void {
+export fn tty_bell() void {
     putc(7) catch @panic("putc");
 }
 
-export fn writer(str: [*]const u8, len: usize) void {
+export fn tty_write(str: [*]const u8, len: usize) void {
     puts(str[0..len]) catch {};
     tty_writer.flush() catch {};
 }
 
-export fn write1(ch: c_int) c_int {
+export fn tty_write1(ch: c_int) c_int {
     putc(@intCast(ch)) catch @panic("write1");
     tty_writer.flush() catch {};
     return 0;
@@ -83,29 +83,29 @@ pub fn getTermSize() !c.winsize {
     }
 }
 
-export fn setlinescols() void {
+export fn tty_linescols() void {
     const wins = getTermSize() catch @panic("getTermSize");
     g.LINES = wins.ws_row;
     g.COLS = wins.ws_col;
 }
 
-export fn crmode() void {
+export fn tty_crmode() void {
     tty.crmode(true) catch {};
 }
 
-export fn term_echo() void {
+export fn tty_echo() void {
     tty.echo(true) catch {};
 }
 
-export fn term_noecho() void {
+export fn tty_noecho() void {
     tty.echo(false) catch {};
 }
 
-export fn term_raw() void {
+export fn tty_raw() void {
     tty.raw() catch {};
 }
 
-export fn term_cbreak() void {
+export fn tty_cbreak() void {
     tty.cooked(.{ .echo = false }) catch {};
 }
 
