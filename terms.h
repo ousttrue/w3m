@@ -99,7 +99,7 @@ void clrtoeolx(void);
 void clrtobot(void);
 void clrtobotx(void);
 void no_clrtoeol(void);
-void addstr(const char* s);
+void sc_addstr(const char* s);
 void addnstr(const char* s, int n);
 void sc_addnstr_sup(const char* s, int n);
 
@@ -118,5 +118,5 @@ static inline void sc_mvaddch(int y, int x, int c)
 static inline void sc_mvaddstr(int y, int x, const char* str)
 {
     sc_move(y, x);
-    addstr(str);
+    sc_addstr(str);
 }

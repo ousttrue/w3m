@@ -619,12 +619,10 @@ void clrtobotx(void)
     clrtobot_eol(clrtoeolx);
 }
 
-void addstr(const char* s)
+void sc_addstr(const char* s)
 {
-    int len;
-
     while (*s != '\0') {
-        len = wtf_len((wc_uchar*)s);
+        int len = wtf_len((wc_uchar*)s);
         addmch((CellCharBytes)s, len);
         s += len;
     }

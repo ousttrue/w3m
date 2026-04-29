@@ -601,7 +601,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
             sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
         else
             sprintf(tmp, "%*s ", buf->rootX - 1, "");
-        addstr(tmp);
+        sc_addstr(tmp);
     }
     sc_move(i, buf->rootX);
     if (l->width < 0)
@@ -994,12 +994,12 @@ void addMChar(char* p, Lineprop mode, size_t len)
                 graph_mode = true;
             }
             if (w == 2 && WcOption.use_wide)
-                addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+                sc_addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
             else
                 addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
         } else {
             symbol = get_symbol(DisplayCharset, &w);
-            addstr(symbol[(unsigned char)c % N_SYMBOL]);
+            sc_addstr(symbol[(unsigned char)c % N_SYMBOL]);
         }
     } else if (mode & PC_CTRL) {
         switch (c) {
@@ -1012,7 +1012,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
         case '\r':
             break;
         case DEL_CODE:
-            addstr("^?");
+            sc_addstr("^?");
             break;
         default:
             addch('^');
@@ -1023,7 +1023,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
         char buf[5];
         sprintf(buf, "[%.2X]",
             (unsigned char)wtf_get_code((wc_uchar*)p) | 0x80);
-        addstr(buf);
+        sc_addstr(buf);
     } else
         addmch((const uint8_t*)p, len);
 }

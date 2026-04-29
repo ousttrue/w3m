@@ -831,7 +831,7 @@ pub fn process(
             }
         }
         c.sc_move((g.LINES - 1), 0);
-        c.addstr(prompt.ptr);
+        c.sc_addstr(prompt.ptr);
         if (this.is_passwd) {
             c.addPasswd(this.strBuf.*.ptr, &this.strProp, @intCast(this.CLen), @intCast(this.offset), g.COLS - opos);
         } else {
