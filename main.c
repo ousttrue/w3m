@@ -71,7 +71,7 @@ void tty_deinit(void)
 {
     if (fmInitialized) {
         sc_move((LINES - 1), 0);
-        clrtoeolx();
+        sc_clrtoeolx();
         refresh();
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
@@ -86,7 +86,7 @@ int initscr(void)
     getTCstr(&terminfo);
     if (terminfo.T_ti && !Do_not_use_ti_te)
         writestr(&write1, terminfo.T_ti);
-    setupscreen();
+    sc_init();
     return 0;
 }
 
@@ -937,7 +937,7 @@ resize_screen(struct CmdArgs* args)
 {
     need_resize_screen = FALSE;
     setlinescols();
-    setupscreen();
+    sc_init();
     if (CurrentTab)
         displayBuffer(args, B_FORCE_REDRAW);
 }
@@ -2924,3 +2924,20 @@ void setupCurrentBuffer(void)
     set_buffer_environ(Currentbuf);
     save_buffer_position(Currentbuf);
 }
+
+void set_int(void)
+{
+    signal(SIGHUP, reset_exit);
+    signal(SIGINT, reset_exit);
+    signal(SIGQUIT, reset_exit);
+    signal(SIGTERM, reset_exit);
+    signal(SIGILL, error_dump);
+    signal(SIGIOT, error_dump);
+    signal(SIGFPE, error_dump);
+#ifdef SIGBUS
+    signal(SIGBUS, error_dump);
+#endif /* SIGBUS */
+    /* signal(SIGSEGV, error_dump); */
+}
+
+

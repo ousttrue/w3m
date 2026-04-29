@@ -4281,7 +4281,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
     //     cur_time = time(0);
     //     if (*trbyte == 0) {
     //         move((LINES - 1), 0);
-    //         clrtoeolx();
+    //         sc_clrtoeolx();
     //         start_time = cur_time;
     //     }
     //     *trbyte += *linelen;
@@ -4323,7 +4323,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
         cur_time = time(0);
         if (*trbyte == 0) {
             sc_move((LINES - 1), 0);
-            clrtoeolx();
+            sc_clrtoeolx();
             start_time = cur_time;
         }
         *trbyte += *linelen;
@@ -4430,7 +4430,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     int volatile image_flag;
     SignalFunc prevtrap = NULL;
 
-    if (fmInitialized && graph_ok()) {
+    if (fmInitialized && graph_ok(&terminfo)) {
         symbol_width = symbol_width0 = 1;
     } else {
         symbol_width0 = 0;

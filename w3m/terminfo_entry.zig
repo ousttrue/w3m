@@ -1,7 +1,7 @@
 const std = @import("std");
-const c = @cImport({
-    @cInclude("terminfo_entry.h");
-});
+const c = @import("c.zig").c;
+
+const g = @import("global.zig");
 const runtime = @import("runtime.zig");
 
 extern fn tgetent(bp: [*c]u8, name: [*c]const u8) c_int;
@@ -99,4 +99,13 @@ export fn terminfo_reset(f: c.PutC, ti: *c.TermInfo, do_not_use_ti_te: bool) voi
 
 export fn MOVE(f: c.PutC, ti: *c.TermInfo, line: c_int, column: c_int) void {
     _ = c.tputs(c.tgoto(ti.T_cm, column, line), 1, f);
+}
+
+export fn graph_ok(_ti: ?*c.TermInfo) bool {
+    if (g.UseGraphicChar != c.GRAPHIC_CHAR_DEC)
+        return false;
+    const ti = _ti orelse {
+        return false;
+    };
+    return ti.T_as[0] != 0 and ti.T_ae[0] != 0 and ti.T_ac[0] != 0;
 }

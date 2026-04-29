@@ -30,12 +30,12 @@ static int graph_mode = false;
 #define G_start           \
     {                     \
         if (graph_mode)   \
-            graphstart(); \
+            sc_graphstart(); \
     }
 #define G_end           \
     {                   \
         if (graph_mode) \
-            graphend(); \
+            sc_graphend(); \
     }
 
 static int mEsc(struct CmdArgs *args);
@@ -401,13 +401,13 @@ int select_menu(Menu* menu, int mselect)
     if (menu->select >= menu->offset && menu->select < menu->offset + menu->height)
         draw_menu_item(menu, menu->select);
     menu->select = mselect;
-    standout();
+    sc_standout();
     draw_menu_item(menu, menu->select);
-    standend();
+    sc_standend();
     /*
      * move(menu->cursorY, menu->cursorX); */
     sc_move(menu->y + mselect - menu->offset, menu->x);
-    toggle_stand();
+    sc_toggle_stand();
     refresh();
 
     return (menu->select);
@@ -583,7 +583,7 @@ void new_option_menu(Menu* menu, const char** label, int* variable, const char* 
 static void
 set_menu_frame(void)
 {
-    if (graph_ok()) {
+    if (graph_ok(&terminfo)) {
         graph_mode = true;
         FRAME_WIDTH = 1;
         FRAME = graph_symbol;

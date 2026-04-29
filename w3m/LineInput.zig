@@ -440,11 +440,11 @@ fn next_dcompl(this: *@This(), _: *c.CmdArgs, next: c_int) void {
     //     }
     //     if (y) {
     //         move(y - 1, 0);
-    //         clrtoeolx();
+    //         sc_clrtoeolx();
     //     }
     //     if (comment) {
     //         move(y, 0);
-    //         clrtoeolx();
+    //         sc_clrtoeolx();
     //         bold();
     //         /* FIXME: gettextize? */
     //         addstr("----- Completion list -----");
@@ -457,7 +457,7 @@ fn next_dcompl(this: *@This(), _: *c.CmdArgs, next: c_int) void {
     //             if (n >= this.NCFileBuf)
     //                 break;
     //             move(y, j * len);
-    //             clrtoeolx();
+    //             sc_clrtoeolx();
     //             f = Strdup(d);
     //             Strcat_charp(f, this.CFileBuf[n]);
     //             addstr(conv_from_system(this.CFileBuf[n]));
@@ -468,7 +468,7 @@ fn next_dcompl(this: *@This(), _: *c.CmdArgs, next: c_int) void {
     //     }
     //     if (comment && y == (LINES - 1) - 1) {
     //         move(y, 0);
-    //         clrtoeolx();
+    //         sc_clrtoeolx();
     //         bold();
     //         if (emacs_like_lineedit)
     //             /* FIXME: gettextize? */
@@ -837,7 +837,7 @@ pub fn process(
         } else {
             c.addStr(this.strBuf.*.ptr, &this.strProp, @intCast(this.CLen), @intCast(this.offset), g.COLS - opos);
         }
-        c.clrtoeolx();
+        c.sc_clrtoeolx();
         c.sc_move((g.LINES - 1), opos + x - @as(c_int, @intCast(this.offset)));
         c.refresh();
 

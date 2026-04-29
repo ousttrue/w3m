@@ -72,3 +72,5 @@ void writestr(PutC f, const char* s);
 void terminfo_reset(PutC f, struct TermInfo* ti, bool do_not_use_ti_te);
 
 void MOVE(PutC f, struct TermInfo* ti, int line, int column);
+
+bool graph_ok(struct TermInfo* ti);

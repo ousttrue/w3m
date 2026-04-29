@@ -72,36 +72,27 @@ struct Cell {
     enum CellProperty prop;
 };
 
-void mouse_active();
-void mouse_inactive();
-void mouse_end();
-void set_int(void);
-void setupscreen(void);
+void sc_init(void);
 void sc_move(int line, int column);
-void addmch(const uint8_t* p, size_t len);
-void addch(uint8_t c);
-void wrap(void);
-void touch_line(void);
-void standout(void);
-void standend(void);
-void bold(void);
-void boldend(void);
-void underline(void);
-void underlineend(void);
-void graphstart(void);
-void graphend(void);
-int graph_ok(void);
-void setfcolor(int color);
-void setbcolor(int color);
+void sc_addmch(const uint8_t* p, size_t len);
+void sc_addch(uint8_t c);
+void sc_toggle_stand(void);
+void sc_standout(void);
+void sc_standend(void);
+void sc_bold(void);
+void sc_boldend(void);
+void sc_underline(void);
+void sc_underlineend(void);
+void sc_graphstart(void);
+void sc_graphend(void);
+void sc_setfcolor(int color);
+void sc_setbcolor(int color);
 void refresh(void);
-void clear(void);
-void clrtoeol(void);
-void clrtoeolx(void);
-void clrtobot(void);
-void clrtobotx(void);
-void no_clrtoeol(void);
+void sc_clear(void);
+void sc_clrtoeolx(void);
+void sc_clrtobotx(void);
 void sc_addstr(const char* s);
-void addnstr(const char* s, int n);
+void sc_addnstr(const char* s, int n);
 void sc_addnstr_sup(const char* s, int n);
 
 static inline void sc_mvaddnstr(int y, int x, const char* str, int n)
@@ -113,7 +104,7 @@ static inline void sc_mvaddnstr(int y, int x, const char* str, int n)
 static inline void sc_mvaddch(int y, int x, int c)
 {
     sc_move(y, x);
-    addch(c);
+    sc_addch(c);
 }
 
 static inline void sc_mvaddstr(int y, int x, const char* str)

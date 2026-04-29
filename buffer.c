@@ -324,36 +324,36 @@ listBuffer(struct Buffer* top, struct Buffer* current)
 
     sc_move(0, 0);
     if (useColor) {
-        setfcolor(basic_color);
-        setbcolor(bg_color);
+        sc_setfcolor(basic_color);
+        sc_setbcolor(bg_color);
     }
-    clrtobotx();
+    sc_clrtobotx();
     int c = 0;
     for (int i = 0; i < (LINES - 1); i++) {
         if (buf == current) {
             c = i;
-            standout();
+            sc_standout();
         }
         writeBufferName(buf, i);
         if (buf == current) {
-            standend();
-            clrtoeolx();
+            sc_standend();
+            sc_clrtoeolx();
             sc_move(i, 0);
-            toggle_stand();
+            sc_toggle_stand();
         } else
-            clrtoeolx();
+            sc_clrtoeolx();
         if (buf->nextBuffer == NULL) {
             sc_move(i + 1, 0);
-            clrtobotx();
+            sc_clrtobotx();
             break;
         }
         buf = buf->nextBuffer;
     }
-    standout();
+    sc_standout();
     /* FIXME: gettextize? */
     message("struct Buffer selection mode: SPC for select / D for delete buffer", 0,
         0);
-    standend();
+    sc_standend();
     /*
      * move((LINES-1), COLS - 1); */
     sc_move(c, 0);
@@ -420,11 +420,11 @@ selectBuffer(struct CmdArgs* args, struct Buffer* firstbuf, struct Buffer* curre
                 currentbuf = currentbuf->nextBuffer;
                 cpoint++;
                 spoint++;
-                standout();
+                sc_standout();
                 writeBufferName(currentbuf, spoint);
-                standend();
+                sc_standend();
                 sc_move(spoint, 0);
-                toggle_stand();
+                sc_toggle_stand();
             } else if (cpoint < maxbuf - 1) {
                 topbuf = currentbuf;
                 currentbuf = currentbuf->nextBuffer;
@@ -439,11 +439,11 @@ selectBuffer(struct CmdArgs* args, struct Buffer* firstbuf, struct Buffer* curre
                 writeBufferName(currentbuf, spoint);
                 currentbuf = nthBuffer(topbuf, --spoint);
                 cpoint--;
-                standout();
+                sc_standout();
                 writeBufferName(currentbuf, spoint);
-                standend();
+                sc_standend();
                 sc_move(spoint, 0);
-                toggle_stand();
+                sc_toggle_stand();
             } else if (cpoint > 0) {
                 i = cpoint - sclimit;
                 if (i < 0)

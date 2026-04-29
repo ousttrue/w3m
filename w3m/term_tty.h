@@ -16,7 +16,6 @@ void term_noecho(void);
 void term_raw(void);
 void term_cooked(void);
 void term_cbreak(void);
-void toggle_stand(void);
 void bell(void);
 
 void tty_flush(void);

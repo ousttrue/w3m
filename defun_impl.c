@@ -138,7 +138,7 @@ void ctrCsrH(struct CmdArgs* args)
 
 void rdrwSc(struct CmdArgs* args)
 {
-    clear();
+    sc_clear();
     arrangeCursor(Currentbuf);
     displayBuffer(args, B_FORCE_REDRAW);
 }
@@ -592,7 +592,7 @@ void selBuf(struct CmdArgs* args)
 void susp(struct CmdArgs* args)
 {
     sc_move((LINES - 1), 0);
-    clrtoeolx();
+    sc_clrtoeolx();
     refresh();
     tty_deinit();
     signal(SIGTSTP, SIG_DFL); /* just in case */
