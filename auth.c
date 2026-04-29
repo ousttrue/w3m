@@ -1,6 +1,7 @@
 #include "auth.h"
+#include <w3m.h>
 #include "url.h"
-#include "terms.h"
+#include "screen.h"
 #include "display.h"
 #include "global.h"
 #include "alloc.h"
@@ -49,7 +50,7 @@ FILE* openSecretFile(const char* fname)
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
         if (fmInitialized) {
             message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
-            refresh();
+            tty_write_sc();
         } else {
             fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
             fputc('\n', stderr);

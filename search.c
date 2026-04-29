@@ -1,7 +1,7 @@
 #include "search.h"
 #include "term_tty.h"
 #include "display.h"
-#include "terms.h"
+#include "screen.h"
 #include "signal_util.h"
 #include "line_input.h"
 #include "history.h"

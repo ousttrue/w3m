@@ -3,7 +3,7 @@
 #include "input_stream.h"
 #include "main.h"
 #include "display.h"
-#include "terms.h"
+#include "screen.h"
 #include "cookie.h"
 #include "etc.h"
 #include "global.h"
@@ -46,7 +46,7 @@ struct HttpResponse http_response_header(struct InputStream* stream, enum UrlSch
         res.status_code = atoi(p);
         if (fmInitialized) {
             message(gv.ptr, 0, 0);
-            refresh();
+            tty_write_sc();
         }
     }
 

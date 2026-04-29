@@ -215,7 +215,7 @@ export fn drawImage() void {
     // n_terminal_image = 0;
     //
     // touch_cursor();
-    // refresh();
+    // tty_write_sc();
 }
 
 // void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,

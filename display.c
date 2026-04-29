@@ -6,7 +6,7 @@
 #include "term_tty.h"
 #include "ctrlcode.h"
 #include "myctype.h"
-#include "terms.h"
+#include "screen.h"
 #include "indep.h"
 #include "anchor.h"
 #include "wc_util.h"
@@ -370,12 +370,12 @@ static void _displayBuffer(struct Buffer* buf, struct CmdArgs* args, enum Displa
     if (delayed_msg != NULL) {
         disp_message(args, delayed_msg, false);
         delayed_msg = NULL;
-        refresh();
+        tty_write_sc();
     }
     sc_standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     sc_standend();
-    refresh();
+    tty_write_sc();
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
     }
@@ -1063,7 +1063,7 @@ void disp_message_nsec(struct CmdArgs* args, const char* s, int redraw_current, 
             Currentbuf->cursorY + Currentbuf->rootY);
     else
         message(s, (LINES - 1), 0);
-    refresh();
+    tty_write_sc();
     int ch = getch_timeout(sec, args);
     if (!purge && ch > 0) {
         unget(ch);

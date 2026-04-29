@@ -839,7 +839,7 @@ pub fn process(
         }
         c.sc_clrtoeolx();
         c.sc_move((g.LINES - 1), opos + x - @as(c_int, @intCast(this.offset)));
-        c.refresh();
+        c.tty_write_sc();
 
         while (true) {
             // next_char:

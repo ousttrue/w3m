@@ -7,7 +7,7 @@
 #include "html_token.h"
 #include "html_feed_environ.h"
 #include "form.h"
-#include "terms.h"
+#include "screen.h"
 #include "input_stream.h"
 #include "indep.h"
 #include "alloc.h"

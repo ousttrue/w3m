@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include <w3m.h>
 #include "auth.h"
 #include "global.h"
 #include "url.h"
@@ -10,7 +11,7 @@
 #include "buffer.h"
 #include "line_input.h"
 #include "display.h"
-#include "terms.h"
+#include "screen.h"
 #include "term_tty.h"
 
 #include "wc_util.h"
@@ -531,7 +532,7 @@ void getAuthCookie(struct CmdArgs* args, struct http_auth* hauth,
          */
         if (fmInitialized) {
             message("Wrong username or password", 0, 0);
-            refresh();
+            tty_write_sc();
         } else
             fprintf(stderr, "Wrong username or password\n");
         sleep(1);

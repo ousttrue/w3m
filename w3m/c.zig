@@ -27,7 +27,7 @@ pub const c = @cImport({
     // #include "alloc.h"
     // #include "qsort_util.h"
     // #include "term_tty.h"
-    @cInclude("terms.h");
+    @cInclude("screen.h");
     // #include <stdbool.h>
     // #include <dirent.h>
     // #include <w3m.h>

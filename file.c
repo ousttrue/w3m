@@ -15,7 +15,7 @@
 #include "term_tty.h"
 #include "siteconf.h"
 #include "form.h"
-#include "terms.h"
+#include "screen.h"
 #include "html_feed_environ.h"
 #include "anchor.h"
 #include "downloadlist.h"

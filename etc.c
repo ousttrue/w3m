@@ -6,7 +6,7 @@
 #include "ctrlcode.h"
 #include "input_stream.h"
 #include "textlist.h"
-#include "terms.h"
+#include "screen.h"
 #include "indep.h"
 #include "signal_util.h"
 #include "url.h"

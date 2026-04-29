@@ -1,6 +1,6 @@
 #include "signal_util.h"
 #include "global.h"
-#include "terms.h"
+#include "screen.h"
 #include "main.h"
 #include "buffer.h"
 #include "anchor.h"

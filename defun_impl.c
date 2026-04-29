@@ -11,7 +11,7 @@
 #include "func.h"
 #include "frame.h"
 #include "menu.h"
-#include "terms.h"
+#include "screen.h"
 #include "indep.h"
 #include "alloc.h"
 #include "anchor.h"
@@ -593,7 +593,7 @@ void susp(struct CmdArgs* args)
 {
     sc_move((LINES - 1), 0);
     sc_clrtoeolx();
-    refresh();
+    tty_write_sc();
     tty_deinit();
     signal(SIGTSTP, SIG_DFL); /* just in case */
     /*
@@ -886,7 +886,7 @@ void followI(struct CmdArgs* args)
         return;
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-    refresh();
+    tty_write_sc();
     struct HttpClient http = http_get(args, a->url, baseURL(Currentbuf), NULL, NULL, 0);
     buf = load_http(args, &http);
     if (buf == NULL) {
@@ -1542,7 +1542,7 @@ void reload(struct CmdArgs* args)
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
         if (fmInitialized) {
             message("Rendering frame", 0, 0);
-            refresh();
+            tty_write_sc();
         }
         if (!(buf = renderFrame(args, fbuf, 1))) {
             displayBuffer(args, B_NORMAL);
@@ -1583,7 +1583,7 @@ void reload(struct CmdArgs* args)
     url = parsedURL2Str(&Currentbuf->currentURL);
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
-    refresh();
+    tty_write_sc();
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
@@ -1700,7 +1700,7 @@ void rFrame(struct CmdArgs* args)
     }
     if (fmInitialized) {
         message("Rendering frame", 0, 0);
-        refresh();
+        tty_write_sc();
     }
     buf = renderFrame(args, Currentbuf, 0);
     if (buf == NULL) {

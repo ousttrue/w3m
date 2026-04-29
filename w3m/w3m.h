@@ -17,6 +17,8 @@ static inline int getch(struct CmdArgs* args)
 
 void unget(int ch);
 
+void tty_write_sc(void);
+
 extern void w3mFunc(const char* cmd);
 
 extern bool w3m_args(struct CmdArgs* args, int argc, const char** argv);

@@ -1,8 +1,9 @@
 #include "line_input.h"
+#include <w3m.h>
 #include "LineInput.h"
 #include "term_tty.h"
 #include "global.h"
-#include "terms.h"
+#include "screen.h"
 #include "tab.h"
 #include "Str.h"
 #include "display.h"
@@ -23,7 +24,7 @@ const char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const 
     }
 
     sc_move((LINES - 1), 0);
-    refresh();
+    tty_write_sc();
 
     return res.str;
 }

@@ -63,7 +63,7 @@ const w3m_srcs = [_][]const u8{
     "image_cache.c",
     "symbol.c",
     "entity.c",
-    "terms.c",
+    "screen.c",
     "url.c",
     "mimehead.c",
     "regex.c",

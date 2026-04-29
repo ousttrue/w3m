@@ -8,7 +8,7 @@
 #include "display.h"
 #include "global.h"
 #include "term_tty.h"
-#include "terms.h"
+#include "screen.h"
 #include <w3m.h>
 #include "form.h"
 #include "input_stream.h"
@@ -991,7 +991,7 @@ load_doc:
             term_cbreak();
             /* FIXME: gettextize? */
             message(Sprintf("%s contacted. Waiting for reply...", current->transport.url.host)->ptr, 0, 0);
-            refresh();
+            tty_write_sc();
         }
         current->res = http_response_header(current->transport.stream, current->transport.url.scheme);
         current->transport.compression = http_response_process(&current->res, args, &current->transport.url);

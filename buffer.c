@@ -8,7 +8,7 @@
 #include "ctrlcode.h"
 #include "html.h"
 #include "frame.h"
-#include "terms.h"
+#include "screen.h"
 #include "input_stream.h"
 #include "alloc.h"
 #include "anchor.h"
@@ -357,7 +357,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     /*
      * move((LINES-1), COLS - 1); */
     sc_move(c, 0);
-    refresh();
+    tty_write_sc();
     return buf->nextBuffer;
 }
 
@@ -463,7 +463,7 @@ selectBuffer(struct CmdArgs* args, struct Buffer* firstbuf, struct Buffer* curre
          * move((LINES-1), COLS - 1);
          */
         sc_move(spoint, 0);
-        refresh();
+        tty_write_sc();
     }
 }
 
@@ -729,7 +729,7 @@ void showImageProgress(struct Buffer* buf)
             drawImage();
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-        refresh();
+        tty_write_sc();
     }
 }
 

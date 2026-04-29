@@ -4,7 +4,7 @@
 #include "term_tty.h"
 #include "siteconf.h"
 #include "form.h"
-#include "terms.h"
+#include "screen.h"
 #include "input_stream.h"
 #include "indep.h"
 #include "buffer.h"
@@ -113,7 +113,7 @@ int openSocket(const char* const hostname,
     if (fmInitialized) {
         /* FIXME: gettextize? */
         message(Sprintf("Opening socket...")->ptr, 0, 0);
-        refresh();
+        tty_write_sc();
     }
     if (SETJMP(AbortLoading) != 0) {
         if (sock >= 0)

@@ -1,6 +1,6 @@
 #include "global.h"
 #include "term_tty.h"
-#include "terms.h"
+#include "screen.h"
 #include "alloc.h"
 #include "anchor.h"
 #include "search.h"
@@ -408,7 +408,7 @@ int select_menu(Menu* menu, int mselect)
      * move(menu->cursorY, menu->cursorX); */
     sc_move(menu->y + mselect - menu->offset, menu->x);
     sc_toggle_stand();
-    refresh();
+    tty_write_sc();
 
     return (menu->select);
 }

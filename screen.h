@@ -57,6 +57,7 @@ enum CellProperty : uint16_t {
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 #define SPACE " "
 #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
+static inline enum CellProperty CHMODE(enum CellProperty c) { return ((c)&C_WHICHCHAR); }
 
 enum LineFlags : uint16_t {
     L_DIRTY = 0x01,
@@ -72,7 +73,17 @@ struct Cell {
     enum CellProperty prop;
 };
 
+struct ScreenLine {
+    struct Cell* cells;
+    enum LineFlags isdirty;
+    short eol;
+};
+
 void sc_init(void);
+int sc_curline();
+int sc_curcol();
+struct ScreenLine** sc_lines();
+
 void sc_move(int line, int column);
 void sc_addmch(const uint8_t* p, size_t len);
 void sc_addch(uint8_t c);
@@ -87,7 +98,6 @@ void sc_graphstart(void);
 void sc_graphend(void);
 void sc_setfcolor(int color);
 void sc_setbcolor(int color);
-void refresh(void);
 void sc_clear(void);
 void sc_clrtoeolx(void);
 void sc_clrtobotx(void);
@@ -112,3 +122,7 @@ static inline void sc_mvaddstr(int y, int x, const char* str)
     sc_move(y, x);
     sc_addstr(str);
 }
+
+bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, enum CellProperty pr2);
+const char* sc_color_seq(int colmode);
+const char* sc_bcolor_seq(int colmode);

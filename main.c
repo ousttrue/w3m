@@ -32,11 +32,11 @@
 #include "constants.h"
 #include "history.h"
 #include "line_input.h"
-#include "terms.h"
+#include "screen.h"
 #include "defun_impl.h"
 #include "keybind.h"
 #include "display.h"
-#include "terms.h"
+#include "screen.h"
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
@@ -44,6 +44,7 @@
 
 #include <libwc/charset.h>
 #include <libwc/ucs.h>
+#include <libwc/putc.h>
 
 #include <stdio.h>
 #include <signal.h>
@@ -72,7 +73,7 @@ void tty_deinit(void)
     if (fmInitialized) {
         sc_move((LINES - 1), 0);
         sc_clrtoeolx();
-        refresh();
+        tty_write_sc();
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
         tty_reset();
@@ -1199,7 +1200,7 @@ struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* targe
     const int* no_referer_ptr;
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
-    refresh();
+    tty_write_sc();
 
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
     base = baseURL(Currentbuf);
@@ -2003,7 +2004,7 @@ void cmd_loadURL(struct CmdArgs* args, const char* url, struct Url* current, cha
     if (handleMailto(args, url))
         return;
 
-    refresh();
+    tty_write_sc();
     struct HttpClient http = http_get(args, url, current, request, referer, 0);
     struct Buffer* buf = load_http(args, &http);
     if (buf == NULL) {
@@ -2940,4 +2941,169 @@ void set_int(void)
     /* signal(SIGSEGV, error_dump); */
 }
 
+enum MoveStatus {
+    RF_NEED_TO_MOVE = 0,
+    RF_CR_OK = 1,
+    RF_NONEED_TO_MOVE = 2,
+};
 
+static bool graph_enabled = false;
+
+static int graphchar(int ch)
+{
+    return (ch >= ' ' && ch < 128) ? terminfo.gcmap[ch - ' '] : ch;
+}
+
+void tty_write_sc(void)
+{
+    int line, col, pcol;
+    int pline = sc_curline();
+    enum MoveStatus moved = RF_NEED_TO_MOVE;
+    enum CellProperty mode = 0;
+    enum CellProperty color = COL_FTERM;
+    enum CellProperty bcolor = COL_BTERM;
+    enum LineFlags* dirty;
+
+    wc_putc_init(WcOption, InnerCharset, DisplayCharset);
+    for (line = 0; line <= (LINES - 1); line++) {
+        dirty = &sc_lines()[line]->isdirty;
+        if (*dirty & L_DIRTY) {
+            *dirty &= ~L_DIRTY;
+            struct Cell* cells = sc_lines()[line]->cells;
+            for (col = 0; col < COLS && !(cells[col].prop & S_EOL); col++) {
+                if (*dirty & L_NEED_CE && col >= sc_lines()[line]->eol) {
+                    if (sc_need_redraw(&cells[col], (CellCharBytes)SPACE, 0))
+                        break;
+                } else {
+                    if (cells[col].prop & S_DIRTY)
+                        break;
+                }
+            }
+            if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
+                pcol = sc_lines()[line]->eol;
+                if (pcol >= COLS) {
+                    *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
+                    pcol = col;
+                }
+            } else {
+                pcol = col;
+            }
+            if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
+                switch (moved) {
+                case RF_NEED_TO_MOVE:
+                    MOVE(&write1, &terminfo, line, 0);
+                    moved = RF_CR_OK;
+                    break;
+                case RF_CR_OK:
+                    write1('\n');
+                    write1('\r');
+                    break;
+                case RF_NONEED_TO_MOVE:
+                    moved = RF_CR_OK;
+                    break;
+                }
+            } else {
+                MOVE(&write1, &terminfo, line, pcol);
+                moved = RF_CR_OK;
+            }
+            if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
+                writestr(&write1, terminfo.T_ce);
+                if (col != pcol)
+                    MOVE(&write1, &terminfo, line, col);
+            }
+            pline = line;
+            pcol = col;
+            for (; col < COLS; col++) {
+                if (cells[col].prop & S_EOL)
+                    break;
+
+                /*
+                 * some terminal emulators do linefeed when a
+                 * character is put on COLS-th column. this behavior
+                 * is different from one of vt100, but such terminal
+                 * emulators are used as vt100-compatible
+                 * emulators. This behaviour causes scroll when a
+                 * character is drawn on (COLS-1,LINES-1) point.  To
+                 * avoid the scroll, I prohibit to draw character on
+                 * (COLS-1,LINES-1).
+                 */
+                if ((!(cells[col].prop & S_STANDOUT) && (mode & S_STANDOUT))
+                    || (!(cells[col].prop & S_UNDERLINE) && (mode & S_UNDERLINE))
+                    || (!(cells[col].prop & S_BOLD) && (mode & S_BOLD))
+                    || (!(cells[col].prop & S_COLORED) && (mode & S_COLORED))
+                    || (!(cells[col].prop & S_BCOLORED) && (mode & S_BCOLORED))
+                    || (!(cells[col].prop & S_GRAPHICS) && (mode & S_GRAPHICS))) {
+                    if ((mode & S_COLORED) || (mode & S_BCOLORED))
+                        writestr(&write1, terminfo.T_op);
+                    if (mode & S_GRAPHICS)
+                        writestr(&write1, terminfo.T_ae);
+                    writestr(&write1, terminfo.T_me);
+                    mode &= ~M_MEND;
+                }
+                if ((*dirty & L_NEED_CE && col >= sc_lines()[line]->eol) ? sc_need_redraw(&cells[col], (CellCharBytes)SPACE, 0)
+                                                                         : (cells[col].prop & S_DIRTY)) {
+                    if (pcol == col - 1)
+                        writestr(&write1, terminfo.T_nd);
+                    else if (pcol != col)
+                        MOVE(&write1, &terminfo, line, col);
+
+                    if ((cells[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
+                        writestr(&write1, terminfo.T_so);
+                        mode |= S_STANDOUT;
+                    }
+                    if ((cells[col].prop & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
+                        writestr(&write1, terminfo.T_us);
+                        mode |= S_UNDERLINE;
+                    }
+                    if ((cells[col].prop & S_BOLD) && !(mode & S_BOLD)) {
+                        writestr(&write1, terminfo.T_md);
+                        mode |= S_BOLD;
+                    }
+                    if ((cells[col].prop & S_COLORED) && (cells[col].prop ^ mode) & COL_FCOLOR) {
+                        color = (cells[col].prop & COL_FCOLOR);
+                        mode = ((mode & ~COL_FCOLOR) | color);
+                        writestr(&write1, sc_color_seq(color));
+                    }
+                    if ((cells[col].prop & S_BCOLORED)
+                        && (cells[col].prop ^ mode) & COL_BCOLOR) {
+                        bcolor = (cells[col].prop & COL_BCOLOR);
+                        mode = ((mode & ~COL_BCOLOR) | bcolor);
+                        writestr(&write1, sc_bcolor_seq(bcolor));
+                    }
+                    if ((cells[col].prop & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
+                        wc_putc_end(&writer);
+                        if (!graph_enabled) {
+                            graph_enabled = true;
+                            writestr(&write1, terminfo.T_eA);
+                        }
+                        writestr(&write1, terminfo.T_as);
+                        mode |= S_GRAPHICS;
+                    }
+                    if (cells[col].prop & S_GRAPHICS)
+                        write1(graphchar(cells[col].bytes[0]));
+                    else if (CHMODE(cells[col].prop) != C_WCHAR2)
+                        wc_putc(WcOption, (char*)cells[col].bytes, &writer);
+                    pcol = col + 1;
+                }
+            }
+            if (col == COLS)
+                moved = RF_NEED_TO_MOVE;
+            for (; col < COLS && !(cells[col].prop & S_EOL); col++)
+                cells[col].prop |= S_EOL;
+        }
+        *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
+        if (mode & M_MEND) {
+            if (mode & (S_COLORED | S_BCOLORED))
+                writestr(&write1, terminfo.T_op);
+            if (mode & S_GRAPHICS) {
+                writestr(&write1, terminfo.T_ae);
+                wc_putc_clear_status();
+            }
+            writestr(&write1, terminfo.T_me);
+            mode &= ~M_MEND;
+        }
+    }
+    wc_putc_end(writer);
+    MOVE(&write1, &terminfo, sc_curline(), sc_curcol());
+    tty_flush();
+}

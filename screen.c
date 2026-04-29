@@ -1,22 +1,14 @@
-#include "terms.h"
-#include "filepath.h"
+#include "screen.h"
+#include "Str.h"
 #include "global.h"
-#include "constants.h"
-#include "content_type.h"
 #include "alloc.h"
-#include "term_tty.h"
-#include "etc.h"
-#include "signal_util.h"
-#include "buffer.h"
-#include "main.h"
 #include "myctype.h"
-
 #include "wc_util.h"
-#include <libwc/putc.h>
+#include <libwc/wtf.h>
+#include <string.h>
 
 struct TermInfo terminfo;
 
-static enum CellProperty CHMODE(enum CellProperty c) { return ((c)&C_WHICHCHAR); }
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
 
 static void setCell(struct Cell* cell, CellCharBytes ch, size_t len, enum CellProperty prop)
@@ -26,8 +18,7 @@ static void setCell(struct Cell* cell, CellCharBytes ch, size_t len, enum CellPr
     cell->prop = (cell->prop & S_DIRTY) | prop;
 }
 
-static bool
-need_redraw(const struct Cell* cell, const CellCharBytes c2, enum CellProperty pr2)
+bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, enum CellProperty pr2)
 {
     if (!cell->bytes || !c2 || strcmp((const char*)cell->bytes, (const char*)c2))
         return 1;
@@ -40,18 +31,20 @@ need_redraw(const struct Cell* cell, const CellCharBytes c2, enum CellProperty p
     return 0;
 }
 
-struct ScreenLine {
-    struct Cell* cells;
-    enum LineFlags isdirty;
-    short eol;
-};
-
 static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
 static int CurLine, CurColumn;
+
+int sc_curline() { return CurLine; }
+int sc_curcol() { return CurColumn; }
+
 static struct ScreenLine *ScreenElem = NULL, **ScreenImage = NULL;
+struct ScreenLine** sc_lines()
+{
+    return ScreenImage;
+}
+
 static enum CellProperty CurrentMode = 0;
-static int graph_enabled = 0;
 
 static uint8_t*
 skip_gif_header(uint8_t* p)
@@ -66,8 +59,6 @@ skip_gif_header(uint8_t* p)
 
     return p;
 }
-
-#define graphchar(c) (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? terminfo.gcmap[(c) - ' '] : (c))
 
 void sc_init(void)
 {
@@ -174,7 +165,7 @@ void sc_addmch(const uint8_t* src, size_t len)
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
     i = CurColumn + width - 1;
-    if (i < COLS && (((line[i].prop & S_BOLD) && need_redraw(&line[i], (CellCharBytes)pc, CurrentMode)) || ((line[i].prop & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
+    if (i < COLS && (((line[i].prop & S_BOLD) && sc_need_redraw(&line[i], (CellCharBytes)pc, CurrentMode)) || ((line[i].prop & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
         sc_touch_line();
         i++;
         if (i < COLS) {
@@ -210,7 +201,7 @@ void sc_addmch(const uint8_t* src, size_t len)
         }
     }
     if (CHMODE(CurrentMode) != C_CTRL) {
-        if (need_redraw(&line[CurColumn], (CellCharBytes)pc, CurrentMode)) {
+        if (sc_need_redraw(&line[CurColumn], (CellCharBytes)pc, CurrentMode)) {
             setCell(&line[CurColumn], (CellCharBytes)pc, len, CurrentMode);
             sc_touch_line();
             touch_column(CurColumn);
@@ -234,7 +225,7 @@ void sc_addmch(const uint8_t* src, size_t len)
             line = ScreenImage[CurLine]->cells;
         }
         for (i = CurColumn; i < dest; i++) {
-            if (need_redraw(&line[i], (CellCharBytes)SPACE, CurrentMode)) {
+            if (sc_need_redraw(&line[i], (CellCharBytes)SPACE, CurrentMode)) {
                 setCell(&line[i], (CellCharBytes)SPACE, 1, CurrentMode);
                 sc_touch_line();
                 touch_column(i);
@@ -309,8 +300,7 @@ void sc_setfcolor(int color)
         CurrentMode |= (((color & 7) | 8) << 8);
 }
 
-static char*
-color_seq(int colmode)
+const char* sc_color_seq(int colmode)
 {
     static char seqbuf[32];
     sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + (highIntensityColors ? 90 : 30));
@@ -324,177 +314,15 @@ void sc_setbcolor(int color)
         CurrentMode |= (((color & 7) | 8) << 12);
 }
 
-static char*
-bcolor_seq(int colmode)
+const char* sc_bcolor_seq(int colmode)
 {
     static char seqbuf[32];
     sprintf(seqbuf, "\033[%dm", ((colmode >> 12) & 7) + 40);
     return seqbuf;
 }
 
-enum MoveStatus {
-    RF_NEED_TO_MOVE = 0,
-    RF_CR_OK = 1,
-    RF_NONEED_TO_MOVE = 2,
-};
-
-void refresh(void)
-{
-    int line, col, pcol;
-    int pline = CurLine;
-    enum MoveStatus moved = RF_NEED_TO_MOVE;
-    enum CellProperty mode = 0;
-    enum CellProperty color = COL_FTERM;
-    enum CellProperty bcolor = COL_BTERM;
-    enum LineFlags* dirty;
-
-    wc_putc_init(WcOption, InnerCharset, DisplayCharset);
-    for (line = 0; line <= (LINES - 1); line++) {
-        dirty = &ScreenImage[line]->isdirty;
-        if (*dirty & L_DIRTY) {
-            *dirty &= ~L_DIRTY;
-            struct Cell* cells = ScreenImage[line]->cells;
-            for (col = 0; col < COLS && !(cells[col].prop & S_EOL); col++) {
-                if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
-                    if (need_redraw(&cells[col], (CellCharBytes)SPACE, 0))
-                        break;
-                } else {
-                    if (cells[col].prop & S_DIRTY)
-                        break;
-                }
-            }
-            if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                pcol = ScreenImage[line]->eol;
-                if (pcol >= COLS) {
-                    *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
-                    pcol = col;
-                }
-            } else {
-                pcol = col;
-            }
-            if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
-                switch (moved) {
-                case RF_NEED_TO_MOVE:
-                    MOVE(&write1, &terminfo, line, 0);
-                    moved = RF_CR_OK;
-                    break;
-                case RF_CR_OK:
-                    write1('\n');
-                    write1('\r');
-                    break;
-                case RF_NONEED_TO_MOVE:
-                    moved = RF_CR_OK;
-                    break;
-                }
-            } else {
-                MOVE(&write1, &terminfo, line, pcol);
-                moved = RF_CR_OK;
-            }
-            if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                writestr(&write1, terminfo.T_ce);
-                if (col != pcol)
-                    MOVE(&write1, &terminfo, line, col);
-            }
-            pline = line;
-            pcol = col;
-            for (; col < COLS; col++) {
-                if (cells[col].prop & S_EOL)
-                    break;
-
-                /*
-                 * some terminal emulators do linefeed when a
-                 * character is put on COLS-th column. this behavior
-                 * is different from one of vt100, but such terminal
-                 * emulators are used as vt100-compatible
-                 * emulators. This behaviour causes scroll when a
-                 * character is drawn on (COLS-1,LINES-1) point.  To
-                 * avoid the scroll, I prohibit to draw character on
-                 * (COLS-1,LINES-1).
-                 */
-                if ((!(cells[col].prop & S_STANDOUT) && (mode & S_STANDOUT))
-                    || (!(cells[col].prop & S_UNDERLINE) && (mode & S_UNDERLINE))
-                    || (!(cells[col].prop & S_BOLD) && (mode & S_BOLD))
-                    || (!(cells[col].prop & S_COLORED) && (mode & S_COLORED))
-                    || (!(cells[col].prop & S_BCOLORED) && (mode & S_BCOLORED))
-                    || (!(cells[col].prop & S_GRAPHICS) && (mode & S_GRAPHICS))) {
-                    if ((mode & S_COLORED) || (mode & S_BCOLORED))
-                        writestr(&write1, terminfo.T_op);
-                    if (mode & S_GRAPHICS)
-                        writestr(&write1, terminfo.T_ae);
-                    writestr(&write1, terminfo.T_me);
-                    mode &= ~M_MEND;
-                }
-                if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) ? need_redraw(&cells[col], (CellCharBytes)SPACE, 0)
-                                                                          : (cells[col].prop & S_DIRTY)) {
-                    if (pcol == col - 1)
-                        writestr(&write1, terminfo.T_nd);
-                    else if (pcol != col)
-                        MOVE(&write1, &terminfo, line, col);
-
-                    if ((cells[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                        writestr(&write1, terminfo.T_so);
-                        mode |= S_STANDOUT;
-                    }
-                    if ((cells[col].prop & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                        writestr(&write1, terminfo.T_us);
-                        mode |= S_UNDERLINE;
-                    }
-                    if ((cells[col].prop & S_BOLD) && !(mode & S_BOLD)) {
-                        writestr(&write1, terminfo.T_md);
-                        mode |= S_BOLD;
-                    }
-                    if ((cells[col].prop & S_COLORED) && (cells[col].prop ^ mode) & COL_FCOLOR) {
-                        color = (cells[col].prop & COL_FCOLOR);
-                        mode = ((mode & ~COL_FCOLOR) | color);
-                        writestr(&write1, color_seq(color));
-                    }
-                    if ((cells[col].prop & S_BCOLORED)
-                        && (cells[col].prop ^ mode) & COL_BCOLOR) {
-                        bcolor = (cells[col].prop & COL_BCOLOR);
-                        mode = ((mode & ~COL_BCOLOR) | bcolor);
-                        writestr(&write1, bcolor_seq(bcolor));
-                    }
-                    if ((cells[col].prop & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-                        wc_putc_end(&writer);
-                        if (!graph_enabled) {
-                            graph_enabled = 1;
-                            writestr(&write1, terminfo.T_eA);
-                        }
-                        writestr(&write1, terminfo.T_as);
-                        mode |= S_GRAPHICS;
-                    }
-                    if (cells[col].prop & S_GRAPHICS)
-                        write1(graphchar(cells[col].bytes[0]));
-                    else if (CHMODE(cells[col].prop) != C_WCHAR2)
-                        wc_putc(WcOption, (char*)cells[col].bytes, &writer);
-                    pcol = col + 1;
-                }
-            }
-            if (col == COLS)
-                moved = RF_NEED_TO_MOVE;
-            for (; col < COLS && !(cells[col].prop & S_EOL); col++)
-                cells[col].prop |= S_EOL;
-        }
-        *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
-        if (mode & M_MEND) {
-            if (mode & (S_COLORED | S_BCOLORED))
-                writestr(&write1, terminfo.T_op);
-            if (mode & S_GRAPHICS) {
-                writestr(&write1, terminfo.T_ae);
-                wc_putc_clear_status();
-            }
-            writestr(&write1, terminfo.T_me);
-            mode &= ~M_MEND;
-        }
-    }
-    wc_putc_end(writer);
-    MOVE(&write1, &terminfo, CurLine, CurColumn);
-    tty_flush();
-}
-
 void sc_clear(void)
 {
-    writestr(&write1, terminfo.T_cl);
     sc_move(0, 0);
     for (int i = 0; i < LINES; i++) {
         ScreenImage[i]->isdirty = 0;

@@ -1,6 +1,4 @@
 #include "proxy.h"
-// #include "term_tty.h"
-// #include "terms.h"
 #include "myctype.h"
 #include "signal_util.h"
 #include "global.h"

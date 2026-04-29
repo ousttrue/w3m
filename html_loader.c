@@ -10,7 +10,7 @@
 #include "table.h"
 #include "frame.h"
 #include "signal_util.h"
-#include "terms.h"
+#include "screen.h"
 #include "symbol.h"
 #include "form.h"
 #include "alloc.h"
@@ -4317,7 +4317,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
     //         addch('|');
     //     standend();
     //     /* no_clrtoeol(); */
-    //     refresh();
+    //     tty_write_sc();
     // } else
     {
         cur_time = time(0);
@@ -4341,7 +4341,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
         message(messages->ptr, 0, 0);
-        refresh();
+        tty_write_sc();
     }
 }
 
