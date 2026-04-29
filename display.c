@@ -161,7 +161,7 @@ static void EFFECT_VISITED_END
 void fmTerm(void)
 {
     if (fmInitialized) {
-        move((LINES - 1), 0);
+        sc_move((LINES - 1), 0);
         clrtoeolx();
         refresh();
         if (activeImage)
@@ -506,60 +506,57 @@ drawAnchorCursor(struct Buffer* buf)
 static void
 redrawNLine(struct Buffer* buf, int n)
 {
-    struct Line* l;
-    int i;
-
     if (useColor) {
         EFFECT_ANCHOR_END_C;
         setbcolor(bg_color);
     }
     if (nTab > 1) {
-        TabBuffer* t;
-        int l;
-
-        move(0, 0);
+        sc_move(0, 0);
         clrtoeolx();
-        for (t = FirstTab; t; t = t->nextTab) {
-            move(t->y, t->x1);
+        for (TabBuffer* t = FirstTab; t; t = t->nextTab) {
+            sc_move(t->y, t->x1);
             if (t == CurrentTab)
                 bold();
             addch('[');
-            l = t->x2 - t->x1 - 1 - get_strwidth(WcOption, t->currentBuffer->buffername);
+            int l = t->x2 - t->x1 - 1 - get_strwidth(WcOption, t->currentBuffer->buffername);
             if (l < 0)
                 l = 0;
             if (l / 2 > 0)
-                addnstr_sup(" ", l / 2);
+                sc_addnstr_sup(" ", l / 2);
             if (t == CurrentTab)
                 EFFECT_ACTIVE_START;
             addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
             if (t == CurrentTab)
                 EFFECT_ACTIVE_END;
             if ((l + 1) / 2 > 0)
-                addnstr_sup(" ", (l + 1) / 2);
-            move(t->y, t->x2);
+                sc_addnstr_sup(" ", (l + 1) / 2);
+            sc_move(t->y, t->x2);
             addch(']');
             if (t == CurrentTab)
                 boldend();
         }
-        move(LastTab->y + 1, 0);
-        for (i = 0; i < COLS; i++)
+        sc_move(LastTab->y + 1, 0);
+        for (int i = 0; i < COLS; i++)
             addch('~');
     }
-    for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
+
+    int i = 0;
+    for (struct Line* l = buf->topLine; i < buf->LINES; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
             l = redrawLine(buf, l, i + buf->rootY);
         if (l == NULL)
             break;
     }
     if (n > 0) {
-        move(i + buf->rootY, 0);
+        sc_move(i + buf->rootY, 0);
         clrtobotx();
     }
 
     if (!(activeImage && displayImage && buf->img))
         return;
-    move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
-    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
+    sc_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
+    i = 0;
+    for (struct Line* l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
         if (i >= buf->LINES - n || i < -n)
             redrawLineImage(buf, l, i + buf->rootY);
     }
@@ -586,7 +583,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
         } else
             return NULL;
     }
-    move(i, 0);
+    sc_move(i, 0);
     if (showLineNum) {
         char tmp[16];
         if (!buf->rootX) {
@@ -606,7 +603,7 @@ redrawLine(struct Buffer* buf, struct Line* l, int i)
             sprintf(tmp, "%*s ", buf->rootX - 1, "");
         addstr(tmp);
     }
-    move(i, buf->rootX);
+    sc_move(i, buf->rootX);
     if (l->width < 0)
         l->width = COLPOS(l, l->len);
     if (l->len == 0 || l->width - 1 < column) {
@@ -847,12 +844,12 @@ redrawLineRegion(struct Buffer* buf, struct Line* l, int i, int bpos, int epos)
             do_color(pc[j]);
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
-                move(i, buf->rootX);
+                sc_move(i, buf->rootX);
                 for (rcol = column; rcol < ncol; rcol++)
                     addChar(' ', 0);
                 continue;
             }
-            move(i, rcol - column + buf->rootX);
+            sc_move(i, rcol - column + buf->rootX);
             if (p[j] == '\t') {
                 for (; rcol < ncol; rcol++)
                     addChar(' ', 0);
@@ -1071,10 +1068,10 @@ void message(const char* s, int return_x, int return_y)
 {
     if (!fmInitialized)
         return;
-    move((LINES - 1), 0);
+    sc_move((LINES - 1), 0);
     addnstr(s, COLS - 1);
     clrtoeolx();
-    move(return_y, return_x);
+    sc_move(return_y, return_x);
 }
 
 void disp_err_message(struct CmdArgs* args, const char* s, int redraw_current)

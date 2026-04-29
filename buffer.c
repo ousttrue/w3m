@@ -208,15 +208,11 @@ nthBuffer(struct Buffer* firstbuf, int n)
 static void
 writeBufferName(struct Buffer* buf, int n)
 {
-    Str msg;
-    int all;
-
-    all = buf->allLine;
+    int all = buf->allLine;
     if (all == 0 && buf->lastLine != NULL)
         all = buf->lastLine->linenumber;
-    move(n, 0);
-    /* FIXME: gettextize? */
-    msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
+    sc_move(n, 0);
+    Str msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
     if (buf->filename != NULL) {
         switch (buf->currentURL.scheme) {
         case SCM_FILE:
@@ -232,7 +228,7 @@ writeBufferName(struct Buffer* buf, int n)
             break;
         }
     }
-    addnstr_sup(msg->ptr, COLS - 1);
+    sc_addnstr_sup(msg->ptr, COLS - 1);
 }
 
 /*
@@ -324,16 +320,16 @@ void gotoRealLine(struct Buffer* buf, int n)
 static struct Buffer*
 listBuffer(struct Buffer* top, struct Buffer* current)
 {
-    int i, c = 0;
     struct Buffer* buf = top;
 
-    move(0, 0);
+    sc_move(0, 0);
     if (useColor) {
         setfcolor(basic_color);
         setbcolor(bg_color);
     }
     clrtobotx();
-    for (i = 0; i < (LINES - 1); i++) {
+    int c = 0;
+    for (int i = 0; i < (LINES - 1); i++) {
         if (buf == current) {
             c = i;
             standout();
@@ -342,12 +338,12 @@ listBuffer(struct Buffer* top, struct Buffer* current)
         if (buf == current) {
             standend();
             clrtoeolx();
-            move(i, 0);
+            sc_move(i, 0);
             toggle_stand();
         } else
             clrtoeolx();
         if (buf->nextBuffer == NULL) {
-            move(i + 1, 0);
+            sc_move(i + 1, 0);
             clrtobotx();
             break;
         }
@@ -360,7 +356,7 @@ listBuffer(struct Buffer* top, struct Buffer* current)
     standend();
     /*
      * move((LINES-1), COLS - 1); */
-    move(c, 0);
+    sc_move(c, 0);
     refresh();
     return buf->nextBuffer;
 }
@@ -427,7 +423,7 @@ selectBuffer(struct CmdArgs* args, struct Buffer* firstbuf, struct Buffer* curre
                 standout();
                 writeBufferName(currentbuf, spoint);
                 standend();
-                move(spoint, 0);
+                sc_move(spoint, 0);
                 toggle_stand();
             } else if (cpoint < maxbuf - 1) {
                 topbuf = currentbuf;
@@ -446,7 +442,7 @@ selectBuffer(struct CmdArgs* args, struct Buffer* firstbuf, struct Buffer* curre
                 standout();
                 writeBufferName(currentbuf, spoint);
                 standend();
-                move(spoint, 0);
+                sc_move(spoint, 0);
                 toggle_stand();
             } else if (cpoint > 0) {
                 i = cpoint - sclimit;
@@ -466,7 +462,7 @@ selectBuffer(struct CmdArgs* args, struct Buffer* firstbuf, struct Buffer* curre
         /*
          * move((LINES-1), COLS - 1);
          */
-        move(spoint, 0);
+        sc_move(spoint, 0);
         refresh();
     }
 }

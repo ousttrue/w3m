@@ -76,7 +76,7 @@ void reset_tty(void);
 void set_int(void);
 void setupscreen(void);
 int initscr(void);
-void move(int line, int column);
+void sc_move(int line, int column);
 void addmch(const uint8_t* p, size_t len);
 void addch(uint8_t c);
 void wrap(void);
@@ -101,6 +101,22 @@ void clrtobotx(void);
 void no_clrtoeol(void);
 void addstr(const char* s);
 void addnstr(const char* s, int n);
-void addnstr_sup(const char* s, int n);
+void sc_addnstr_sup(const char* s, int n);
 
-void touch_cursor(void);
+static inline void sc_mvaddnstr(int y, int x, const char* str, int n)
+{
+    sc_move(y, x);
+    sc_addnstr_sup(str, n);
+}
+
+static inline void sc_mvaddch(int y, int x, int c)
+{
+    sc_move(y, x);
+    addch(c);
+}
+
+static inline void sc_mvaddstr(int y, int x, const char* str)
+{
+    sc_move(y, x);
+    addstr(str);
+}

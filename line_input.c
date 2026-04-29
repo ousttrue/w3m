@@ -22,7 +22,7 @@ const char* inputLineHistSearch(struct CmdArgs* args, const char* prompt, const 
         return NULL;
     }
 
-    move((LINES - 1), 0);
+    sc_move((LINES - 1), 0);
     refresh();
 
     return res.str;

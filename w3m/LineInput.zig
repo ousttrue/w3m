@@ -830,7 +830,7 @@ pub fn process(
                 this.offset = 0;
             }
         }
-        c.move((g.LINES - 1), 0);
+        c.sc_move((g.LINES - 1), 0);
         c.addstr(prompt.ptr);
         if (this.is_passwd) {
             c.addPasswd(this.strBuf.*.ptr, &this.strProp, @intCast(this.CLen), @intCast(this.offset), g.COLS - opos);
@@ -838,7 +838,7 @@ pub fn process(
             c.addStr(this.strBuf.*.ptr, &this.strProp, @intCast(this.CLen), @intCast(this.offset), g.COLS - opos);
         }
         c.clrtoeolx();
-        c.move((g.LINES - 1), opos + x - @as(c_int, @intCast(this.offset)));
+        c.sc_move((g.LINES - 1), opos + x - @as(c_int, @intCast(this.offset)));
         c.refresh();
 
         while (true) {

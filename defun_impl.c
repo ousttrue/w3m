@@ -591,7 +591,7 @@ void selBuf(struct CmdArgs* args)
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 void susp(struct CmdArgs* args)
 {
-    move((LINES - 1), 0);
+    sc_move((LINES - 1), 0);
     clrtoeolx();
     refresh();
     fmTerm();

@@ -236,10 +236,6 @@ MenuList* w3mMenuList;
 
 static Menu* CurrentMenu = NULL;
 
-#define mvaddch(y, x, c) (move(y, x), addch(c))
-#define mvaddstr(y, x, str) (move(y, x), addstr(str))
-#define mvaddnstr(y, x, str, n) (move(y, x), addnstr_sup(str, n))
-
 void new_menu(Menu* menu, MenuItem* item)
 {
     int i, l;
@@ -337,59 +333,59 @@ void draw_menu(Menu* menu)
 
     if (menu->offset == 0) {
         G_start;
-        mvaddstr(y, x, FRAME[3]);
+        sc_mvaddstr(y, x, FRAME[3]);
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
-            mvaddstr(y, x + i, FRAME[10]);
-        mvaddstr(y, x + i, FRAME[6]);
+            sc_mvaddstr(y, x + i, FRAME[10]);
+        sc_mvaddstr(y, x + i, FRAME[6]);
         G_end;
     } else {
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        sc_mvaddstr(y, x, FRAME[5]);
         G_end;
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i++)
-            mvaddstr(y, x + i, " ");
+            sc_mvaddstr(y, x + i, " ");
         G_start;
-        mvaddstr(y, x + i, FRAME[5]);
+        sc_mvaddstr(y, x + i, FRAME[5]);
         G_end;
         i = (w / 2 - 1) / FRAME_WIDTH * FRAME_WIDTH;
-        mvaddstr(y, x + i, ":");
+        sc_mvaddstr(y, x + i, ":");
     }
 
     for (j = 0; j < menu->height; j++) {
         y++;
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        sc_mvaddstr(y, x, FRAME[5]);
         G_end;
         draw_menu_item(menu, menu->offset + j);
         G_start;
-        mvaddstr(y, x + w - FRAME_WIDTH, FRAME[5]);
+        sc_mvaddstr(y, x + w - FRAME_WIDTH, FRAME[5]);
         G_end;
     }
     y++;
     if (menu->offset + menu->height == menu->nitem) {
         G_start;
-        mvaddstr(y, x, FRAME[9]);
+        sc_mvaddstr(y, x, FRAME[9]);
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i += FRAME_WIDTH)
-            mvaddstr(y, x + i, FRAME[10]);
-        mvaddstr(y, x + i, FRAME[12]);
+            sc_mvaddstr(y, x + i, FRAME[10]);
+        sc_mvaddstr(y, x + i, FRAME[12]);
         G_end;
     } else {
         G_start;
-        mvaddstr(y, x, FRAME[5]);
+        sc_mvaddstr(y, x, FRAME[5]);
         G_end;
         for (i = FRAME_WIDTH; i < w - FRAME_WIDTH; i++)
-            mvaddstr(y, x + i, " ");
+            sc_mvaddstr(y, x + i, " ");
         G_start;
-        mvaddstr(y, x + i, FRAME[5]);
+        sc_mvaddstr(y, x + i, FRAME[5]);
         G_end;
         i = (w / 2 - 1) / FRAME_WIDTH * FRAME_WIDTH;
-        mvaddstr(y, x + i, ":");
+        sc_mvaddstr(y, x + i, ":");
     }
 }
 
 void draw_menu_item(Menu* menu, int mselect)
 {
-    mvaddnstr(menu->y + mselect - menu->offset, menu->x,
+    sc_mvaddnstr(menu->y + mselect - menu->offset, menu->x,
         menu->item[mselect].label, menu->width);
 }
 
@@ -410,7 +406,7 @@ int select_menu(Menu* menu, int mselect)
     standend();
     /*
      * move(menu->cursorY, menu->cursorX); */
-    move(menu->y + mselect - menu->offset, menu->x);
+    sc_move(menu->y + mselect - menu->offset, menu->x);
     toggle_stand();
     refresh();
 

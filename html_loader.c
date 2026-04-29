@@ -4322,7 +4322,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
     {
         cur_time = time(0);
         if (*trbyte == 0) {
-            move((LINES - 1), 0);
+            sc_move((LINES - 1), 0);
             clrtoeolx();
             start_time = cur_time;
         }
@@ -4331,7 +4331,7 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
         if (cur_time == last_time)
             return;
         last_time = cur_time;
-        move((LINES - 1), 0);
+        sc_move((LINES - 1), 0);
         fmtrbyte = convert_size(*trbyte, 1);
         duration = cur_time - start_time;
         if (duration) {
