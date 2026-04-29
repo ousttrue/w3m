@@ -1,8 +1,14 @@
 #include "http_client.h"
+#include "etc.h"
+#include "auth.h"
+#include "http_auth.h"
+#include "content_type.h"
+#include "siteconf.h"
 #include "line_input.h"
 #include "display.h"
 #include "global.h"
-#include <unistd.h>
+#include "term_tty.h"
+#include "terms.h"
 #include <w3m.h>
 #include "form.h"
 #include "input_stream.h"
@@ -12,6 +18,8 @@
 #include "indep.h"
 #include "proxy.h"
 
+#include "wc_util.h"
+
 #include <openssl/ssl.h>
 #ifndef SSLEAY_VERSION_NUMBER
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
@@ -20,6 +28,8 @@
 #include <openssl/x509v3.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
+
+#include <unistd.h>
 
 SSL_CTX* ssl_ctx = NULL;
 
@@ -886,4 +896,234 @@ void http_open(struct HttpClient* http, struct CmdArgs* args)
         current->transport = init_stream((struct Url) { 0 }, NULL);
         break;
     }
+}
+
+struct HttpClient http_get(struct CmdArgs* args, const char* path, struct Url* base_url, struct Form* post,
+    const char* referer, enum UrlOptionFlags flag)
+{
+    struct HttpClient http;
+    http_init(&http, base_url, flag);
+    struct HttpMessageSession* current = http_redirect(&http, path, post, referer);
+    struct HttpMessageSession* base = http_session_base(&http);
+
+load_doc:
+    //
+    {
+        struct Url pu = parseURL2(path, base ? &base->url : NULL);
+        const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
+        if (sc_redirect && *sc_redirect) {
+            base = current;
+            current = http_redirect(&http, sc_redirect, NULL, referer);
+            if (!current) {
+                return (struct HttpClient) { 0 };
+            }
+            // tpath = sc_redirect;
+            current->add_auth_cookie_flag = false;
+            goto load_doc;
+        }
+    }
+    // TRAP_OFF;
+    http_open(&http, args);
+    // of = NULL;
+    current->content_charset = 0;
+    if (current->transport.stream == NULL) {
+        switch (current->transport.url.scheme) {
+        case SCM_FILE: {
+            struct stat st;
+            if (stat(current->transport.url.real_file, &st) < 0)
+                return (struct HttpClient) { 0 };
+            if (S_ISDIR(st.st_mode)) {
+                if (UseExternalDirBuffer) {
+                    Str cmd = Sprintf("%s?dir=%s#current",
+                        DirBufferCommand, current->transport.url.file);
+                    return http_get(args, cmd->ptr, NULL, NULL, NO_REFERER, 0);
+                    // if (b != NULL && b != NO_BUFFER) {
+                    //     copyParsedURL(&b->currentURL, &current->transport.url);
+                    //     b->filename = b->currentURL.real_file;
+                    // }
+                    // return b;
+                } else {
+                    current->page = loadLocalDir(current->transport.url.real_file);
+                    current->t = "local:directory";
+                    current->charset = SystemCharset;
+                }
+            }
+        } break;
+        case SCM_UNKNOWN:
+            disp_err_message(args, Sprintf("Unknown URI: %s", parsedURL2Str(&current->transport.url)->ptr)->ptr, false);
+            break;
+        default:
+            break;
+        }
+        if (current->page && current->page->length > 0) {
+            return http;
+        }
+        return (struct HttpClient) { 0 };
+    }
+
+    if (current->transport_status == HTST_MISSING) {
+        // TRAP_OFF;
+        UFclose(&current->transport);
+        return (struct HttpClient) { 0 };
+    }
+
+    /* openURL() succeeded */
+    // if (SETJMP(AbortLoading) != 0) {
+    //     /* transfer interrupted */
+    //     TRAP_OFF;
+    //     if (b)
+    //         discardBuffer(b);
+    //     UFclose(f);
+    //     return NULL;
+    // }
+
+    // b = NULL;
+    if (current->transport.is_cgi) {
+        /* local CGI */
+        http.searchHeader = true;
+        http.searchHeader_through = false;
+    }
+    if (header_string)
+        header_string = NULL;
+    // TRAP_ON;
+    if (current->transport.url.scheme == SCM_HTTP || current->transport.url.scheme == SCM_HTTPS) {
+        if (fmInitialized) {
+            term_cbreak();
+            /* FIXME: gettextize? */
+            message(Sprintf("%s contacted. Waiting for reply...", current->transport.url.host)->ptr, 0, 0);
+            refresh();
+        }
+        current->res = http_response_header(current->transport.stream, current->transport.url.scheme);
+        current->transport.compression = http_response_process(&current->res, args, &current->transport.url);
+        const char* p;
+        if (((current->res.status_code >= 301 && current->res.status_code <= 303)
+                || current->res.status_code == 307)
+            && (p = http_response_get(&current->res, "Location:")) != NULL) {
+            // document moved
+            // 301: Moved Permanently
+            // 302: Found
+            // 303: See Other
+            // 307: Temporary Redirect (HTTP/1.1)
+
+            UFclose(&current->transport);
+            base = current;
+            current = http_redirect(&http, url_encode(p, NULL, 0), NULL, referer);
+            if (!current) {
+                return (struct HttpClient) { 0 };
+            }
+
+            // tpath = url_encode(p, NULL, 0);
+            // http.post = NULL;
+            // http.current = New(struct Url);
+            // copyParsedURL(http.current, &f.url);
+            current->transport_status = HTST_NORMAL;
+            goto load_doc;
+        }
+        current->t = http_response_get_content_type(&current->res, &current->content_charset);
+        if (current->t == NULL && current->transport.url.file != NULL) {
+            if (!((current->res.status_code >= 400 && current->res.status_code <= 407) || (current->res.status_code >= 500 && current->res.status_code <= 505)))
+                current->t = guessContentType(current->transport.url.file);
+        }
+        if (current->t == NULL)
+            current->t = "text/plain";
+        if (current->add_auth_cookie_flag && current->realm && current->uname && current->pwd) {
+            /* If authorization is required and passed */
+            add_auth_user_passwd(&current->transport.url, qstr_unquote(current->realm)->ptr, current->uname, current->pwd,
+                0);
+            current->add_auth_cookie_flag = 0;
+        }
+        if ((p = http_response_get(&current->res, "WWW-Authenticate:")) != NULL && current->res.status_code == 401) {
+            /* Authentication needed */
+            struct http_auth hauth;
+            if (findAuthentication(&current->res, &hauth, "WWW-Authenticate:") != NULL
+                && (current->realm = get_auth_param(hauth.param, "realm")) != NULL) {
+                current->auth_pu = &current->transport.url;
+                getAuthCookie(args, &hauth, "Authorization:", current->extra_header,
+                    current->auth_pu, &current->req, current->req.post, &current->uname, &current->pwd);
+                if (current->uname == NULL) {
+                    /* abort */
+                    // TRAP_OFF;
+                    return http;
+                }
+                UFclose(&current->transport);
+                current->add_auth_cookie_flag = 1;
+                current->transport_status = HTST_NORMAL;
+                return http;
+            }
+        }
+        if ((p = http_response_get(&current->res, "Proxy-Authenticate:")) != NULL && current->res.status_code == 407) {
+            /* Authentication needed */
+            struct http_auth hauth;
+            if (findAuthentication(&current->res, &hauth, "Proxy-Authenticate:")
+                    != NULL
+                && (current->realm = get_auth_param(hauth.param, "realm")) != NULL) {
+                current->auth_pu = schemeToProxy(current->transport.url.scheme);
+                getAuthCookie(args, &hauth, "Proxy-Authorization:",
+                    current->extra_header, current->auth_pu, &current->req, current->req.post,
+                    &current->uname, &current->pwd);
+                if (current->uname == NULL) {
+                    /* abort */
+                    // TRAP_OFF;
+                    return http;
+                }
+                UFclose(&current->transport);
+                current->add_auth_cookie_flag = 1;
+                current->transport_status = HTST_NORMAL;
+                add_auth_user_passwd(current->auth_pu, qstr_unquote(current->realm)->ptr, current->uname, current->pwd, 1);
+                goto load_doc;
+            }
+        }
+        /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
+
+        if (current->transport_status == HTST_CONNECT) {
+            // of = &f;
+            goto load_doc;
+        }
+
+        current->transport.modtime = mymktime(http_response_get(&current->res, "Last-Modified:"));
+    } else if (http.searchHeader) {
+        http.searchHeader = SearchHeader = false;
+        current->res = http_response_header(current->transport.stream, current->transport.url.scheme);
+        if (http.searchHeader_through && !current->header_source) {
+            current->header_source = http_response_save_header_source(&current->res);
+        }
+        current->transport.compression = http_response_process(&current->res, args, &current->transport.url);
+        const char* p;
+        if (current->transport.is_cgi && (p = http_response_get(&current->res, "Location:")) != NULL) {
+            /* document moved */
+            UFclose(&current->transport);
+            base = current;
+            current = http_redirect(&http, url_encode(remove_space(p), NULL, 0), NULL, referer);
+            if (!current) {
+                return (struct HttpClient) { 0 };
+            }
+
+            // tpath = url_encode(remove_space(p), NULL, 0);
+            // http.post = NULL;
+            current->add_auth_cookie_flag = 0;
+            // http.current = New(struct Url);
+            // copyParsedURL(http.current, &f->url);
+            current->transport_status = HTST_NORMAL;
+            goto load_doc;
+        }
+        current->t = http_response_get_content_type(&current->res, &current->content_charset);
+        if (current->t == NULL)
+            current->t = "text/plain";
+    } else if (DefaultType) {
+        current->t = DefaultType;
+        DefaultType = NULL;
+    } else {
+        current->t = guessContentType(current->transport.url.file);
+        if (current->t == NULL)
+            current->t = "text/plain";
+        current->real_type = current->t;
+        if (current->transport.guess_type)
+            current->t = current->transport.guess_type;
+    }
+
+    /* XXX: can we use guess_type to give the type to loadHTMLstream
+     *      to support default utf8 encoding for XHTML here? */
+    current->transport.guess_type = current->t;
+
+    return http;
 }

@@ -17,8 +17,6 @@ enum HttpReidrectionStatus {
     HTTP_REDIRECTION_LOOP_DETECTED,
 };
 
-#define FollowRedirection 10
-
 enum OpenStatus {
     HTST_UNKNOWN,
     HTST_NORMAL,
@@ -52,9 +50,18 @@ struct HttpMessageSession {
     struct Url* auth_pu; //= NULL;
 };
 
+#define FollowRedirection 10
+
 struct HttpClient {
+    /// message_sessions(message stack)
+    ///
+    /// current  [2] => Url: HttpRequest => HttpResponse (redirection)
+    /// base     [1] => Url: HttpRequest => HttpResponse (first get)
+    /// base_url [0] => Url
+    ///
     struct HttpMessageSession message_sessions[FollowRedirection];
     int session_count;
+
     enum UrlOptionFlags flag;
     bool searchHeader; //= SearchHeader;
     bool searchHeader_through; //= true;
@@ -80,3 +87,7 @@ static inline struct HttpMessageSession* http_session_base(struct HttpClient* ht
 struct HttpMessageSession* http_redirect(struct HttpClient* http, const char* target,
     struct Form* post, const char* referer);
 void http_open(struct HttpClient* http, struct CmdArgs* args);
+
+struct HttpClient http_get(struct CmdArgs* args, const char* path, struct Url* base_url, struct Form* post,
+    const char* referer,
+    enum UrlOptionFlags flag);

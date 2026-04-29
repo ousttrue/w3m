@@ -347,17 +347,19 @@ frame_download_source(struct CmdArgs* args,
     switch (url.scheme) {
     case SCM_FILE:
         b->flags = 0;
-    default:
+    default: {
         is_redisplay = true;
-        buf = loadGeneralFile(args, b->url, baseURL ? baseURL : currentURL,
+        struct HttpClient http = http_get(args, b->url, baseURL ? baseURL : currentURL,
             b->request,
             b->referer,
             flag | RG_FRAME_SRC);
+        buf = load_http(args, &http);
         /* XXX certificate? */
         if (buf && buf != NO_BUFFER)
             b->ssl_certificate = buf->ssl_certificate;
         is_redisplay = false;
         break;
+    }
     }
 
     if (buf == NULL || buf == NO_BUFFER) {
@@ -492,7 +494,7 @@ createFrameFile(struct CmdArgs* args, struct frameset* f, FILE* f1, struct Buffe
                 }
                 /* fall through */
             case F_BODY:
-                f2 = init_stream((struct Url){0}, NULL);
+                f2 = init_stream((struct Url) { 0 }, NULL);
                 if (frame.body->source) {
                     fflush(f1);
                     f2 = examineFile(frame.body->source);
@@ -872,7 +874,8 @@ renderFrame(struct CmdArgs* args, struct Buffer* Cbuf, int force_reload)
     renderFrameSet = Cbuf->frameset;
     flushFrameSet(renderFrameSet);
     DocumentCharset = InnerCharset;
-    buf = loadGeneralFile(args, tmp, NULL, NULL, NULL, flag);
+    struct HttpClient http = http_get(args, tmp, NULL, NULL, NULL, flag);
+    buf = load_http(args, &http);
     DocumentCharset = doc_charset;
     renderFrameSet = NULL;
     if (buf == NULL || buf == NO_BUFFER)
