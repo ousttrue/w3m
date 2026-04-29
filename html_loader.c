@@ -34,8 +34,6 @@
 int frame_source = 0;
 static int need_number = 0;
 
-int64_t current_content_length;
-wc_ces content_charset = 0;
 static wc_ces meta_charset = 0;
 static Str cur_title;
 static Str pre_title;
@@ -4278,49 +4276,50 @@ void showProgress(int64_t* linelen, int64_t* trbyte)
 
     if (*linelen < 1024)
         return;
-    if (current_content_length > 0) {
-        double ratio;
-        cur_time = time(0);
-        if (*trbyte == 0) {
-            move((LINES - 1), 0);
-            clrtoeolx();
-            start_time = cur_time;
-        }
-        *trbyte += *linelen;
-        *linelen = 0;
-        if (cur_time == last_time)
-            return;
-        last_time = cur_time;
-        move((LINES - 1), 0);
-        ratio = 100.0 * (*trbyte) / current_content_length;
-        fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
-        duration = cur_time - start_time;
-        if (duration) {
-            rate = *trbyte / duration;
-            fmrate = convert_size(rate, 1);
-            eta = rate ? (current_content_length - *trbyte) / rate : -1;
-            messages = Sprintf("%11s %3.0f%% "
-                               "%7s/s "
-                               "eta %02d:%02d:%02d     ",
-                fmtrbyte, ratio,
-                fmrate,
-                eta / (60 * 60), (eta / 60) % 60, eta % 60);
-        } else {
-            messages = Sprintf("%11s %3.0f%%                          ",
-                fmtrbyte, ratio);
-        }
-        addstr(messages->ptr);
-        pos = 42;
-        i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-        move((LINES - 1), pos);
-        standout();
-        addch(' ');
-        for (j = pos + 1; j <= i; j++)
-            addch('|');
-        standend();
-        /* no_clrtoeol(); */
-        refresh();
-    } else {
+    // if (current_content_length > 0) {
+    //     double ratio;
+    //     cur_time = time(0);
+    //     if (*trbyte == 0) {
+    //         move((LINES - 1), 0);
+    //         clrtoeolx();
+    //         start_time = cur_time;
+    //     }
+    //     *trbyte += *linelen;
+    //     *linelen = 0;
+    //     if (cur_time == last_time)
+    //         return;
+    //     last_time = cur_time;
+    //     move((LINES - 1), 0);
+    //     ratio = 100.0 * (*trbyte) / current_content_length;
+    //     fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
+    //     duration = cur_time - start_time;
+    //     if (duration) {
+    //         rate = *trbyte / duration;
+    //         fmrate = convert_size(rate, 1);
+    //         eta = rate ? (current_content_length - *trbyte) / rate : -1;
+    //         messages = Sprintf("%11s %3.0f%% "
+    //                            "%7s/s "
+    //                            "eta %02d:%02d:%02d     ",
+    //             fmtrbyte, ratio,
+    //             fmrate,
+    //             eta / (60 * 60), (eta / 60) % 60, eta % 60);
+    //     } else {
+    //         messages = Sprintf("%11s %3.0f%%                          ",
+    //             fmtrbyte, ratio);
+    //     }
+    //     addstr(messages->ptr);
+    //     pos = 42;
+    //     i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
+    //     move((LINES - 1), pos);
+    //     standout();
+    //     addch(' ');
+    //     for (j = pos + 1; j <= i; j++)
+    //         addch('|');
+    //     standend();
+    //     /* no_clrtoeol(); */
+    //     refresh();
+    // } else
+    {
         cur_time = time(0);
         if (*trbyte == 0) {
             move((LINES - 1), 0);
@@ -4490,9 +4489,10 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
         else if (newBuf->document_charset)
             charset = doc_charset = newBuf->document_charset;
     }
-    if (content_charset && UseContentCharset)
-        doc_charset = content_charset;
-    else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
+    // if (content_charset && UseContentCharset)
+    //     doc_charset = content_charset;
+    // else
+    if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
         doc_charset = WC_CES_UTF_8;
     meta_charset = 0;
     while (true) {
@@ -4510,10 +4510,10 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
          * continue;
          */
         if (meta_charset) { /* <META> */
-            if (content_charset == 0 && UseContentCharset) {
-                doc_charset = meta_charset;
-                charset = WC_CES_US_ASCII;
-            }
+            // if (content_charset == 0 && UseContentCharset) {
+            //     doc_charset = meta_charset;
+            //     charset = WC_CES_US_ASCII;
+            // }
             meta_charset = 0;
         }
         lineBuf2 = convertLine((const uint8_t*)lineBuf2->ptr, lineBuf2->length, HTML_MODE, &charset, doc_charset, false);

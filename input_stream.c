@@ -263,6 +263,6 @@ _end:
     TRAP_OFF;
     free(buf);
     fclose(ff);
-    current_content_length = 0;
+    // current_content_length = 0;
     return retval;
 }

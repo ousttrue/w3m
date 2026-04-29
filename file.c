@@ -130,58 +130,59 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
     const char* lock;
     const char* tmpf = NULL;
 
-    if (fmInitialized) {
-        p = searchKeyData();
-        if (p == NULL || *p == '\0') {
-            /* FIXME: gettextize? */
-            p = inputLineHist(args, "(Download)Save file to: ",
-                defstr, IN_FILENAME, HistorySave);
-            if (p == NULL || *p == '\0')
-                return false;
-            p = conv_to_system(p);
-        }
-        if (!checkOverWrite(args, p))
-            return false;
-
-        if (!checkSaveFile(ist_fd(uf.stream), p)) {
-            /* FIXME: gettextize? */
-            msg = Sprintf("Can't save. Load file and %s are identical.",
-                conv_from_system(p));
-            disp_err_message(args, msg->ptr, FALSE);
-            return false;
-        }
-        /*
-         * if (save2tmp(uf, p) < 0) {
-         * msg = Sprintf("Can't save to %s", conv_from_system(p));
-         * disp_err_message(msg->ptr, FALSE);
-         * }
-         */
-        lock = tmpfname(TMPF_DFL, ".lock");
-
-        symlink(p, lock);
-        flush_tty();
-        pid = fork();
-        if (!pid) {
-            if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
-                struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression));
-                if (uncompressed.pipe) {
-                    unlink(uncompressed.tmpf);
-                    uf.stream = ist_from_fp(uncompressed.pipe, fclose);
-                    uf.url.scheme = SCM_FILE;
-                }
-            }
-            setup_child(FALSE, 0, ist_fd(uf.stream));
-            bool success = ist_save2tmp(uf.stream, uf.url.scheme, p);
-            if (success && PreserveTimestamp && uf.modtime != -1)
-                setModtime(p, uf.modtime);
-            UFclose(&uf);
-            unlink(lock);
-            if (!success)
-                exit(1);
-            exit(0);
-        }
-        addDownloadList(pid, parsedURL2Str(&uf.url)->ptr, p, lock, current_content_length);
-    } else {
+    // if (fmInitialized) {
+    //     p = searchKeyData();
+    //     if (p == NULL || *p == '\0') {
+    //         /* FIXME: gettextize? */
+    //         p = inputLineHist(args, "(Download)Save file to: ",
+    //             defstr, IN_FILENAME, HistorySave);
+    //         if (p == NULL || *p == '\0')
+    //             return false;
+    //         p = conv_to_system(p);
+    //     }
+    //     if (!checkOverWrite(args, p))
+    //         return false;
+    //
+    //     if (!checkSaveFile(ist_fd(uf.stream), p)) {
+    //         /* FIXME: gettextize? */
+    //         msg = Sprintf("Can't save. Load file and %s are identical.",
+    //             conv_from_system(p));
+    //         disp_err_message(args, msg->ptr, FALSE);
+    //         return false;
+    //     }
+    //     /*
+    //      * if (save2tmp(uf, p) < 0) {
+    //      * msg = Sprintf("Can't save to %s", conv_from_system(p));
+    //      * disp_err_message(msg->ptr, FALSE);
+    //      * }
+    //      */
+    //     lock = tmpfname(TMPF_DFL, ".lock");
+    //
+    //     symlink(p, lock);
+    //     flush_tty();
+    //     pid = fork();
+    //     if (!pid) {
+    //         if ((uf.compression != CMP_NOCOMPRESS) && AutoUncompress) {
+    //             struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression));
+    //             if (uncompressed.pipe) {
+    //                 unlink(uncompressed.tmpf);
+    //                 uf.stream = ist_from_fp(uncompressed.pipe, fclose);
+    //                 uf.url.scheme = SCM_FILE;
+    //             }
+    //         }
+    //         setup_child(FALSE, 0, ist_fd(uf.stream));
+    //         bool success = ist_save2tmp(uf.stream, uf.url.scheme, p);
+    //         if (success && PreserveTimestamp && uf.modtime != -1)
+    //             setModtime(p, uf.modtime);
+    //         UFclose(&uf);
+    //         unlink(lock);
+    //         if (!success)
+    //             exit(1);
+    //         exit(0);
+    //     }
+    //     addDownloadList(pid, parsedURL2Str(&uf.url)->ptr, p, lock, current_content_length);
+    // } else
+    {
         q = searchKeyData();
         if (q == NULL || *q == '\0') {
             /* FIXME: gettextize? */
@@ -273,10 +274,10 @@ static struct Buffer* page_loaded(struct CmdArgs* args, struct HttpClient* http)
 
     struct Buffer* (*proc)(struct CmdArgs* args, struct URLFile*, struct Buffer*) = loadBuffer;
 
-    current_content_length = 0;
+    current->current_content_length = 0;
     const char* p;
     if (t_buf && (p = http_response_get(&t_buf->http_response, "Content-Length:")) != NULL)
-        current_content_length = strtoll(p, NULL, 10);
+        current->current_content_length = strtoll(p, NULL, 10);
 
     if (do_download) {
         /* download only */
@@ -417,7 +418,7 @@ load_doc:
     // TRAP_OFF;
     http_open(&http, args);
     // of = NULL;
-    content_charset = 0;
+    current->content_charset = 0;
     if (current->transport.stream == NULL) {
         switch (current->transport.url.scheme) {
         case SCM_FILE: {
@@ -511,7 +512,7 @@ load_doc:
             current->transport_status = HTST_NORMAL;
             goto load_doc;
         }
-        current->t = http_response_get_content_type(&current->res, &content_charset);
+        current->t = http_response_get_content_type(&current->res, &current->content_charset);
         if (current->t == NULL && current->transport.url.file != NULL) {
             if (!((current->res.status_code >= 400 && current->res.status_code <= 407) || (current->res.status_code >= 500 && current->res.status_code <= 505)))
                 current->t = guessContentType(current->transport.url.file);
@@ -598,7 +599,7 @@ load_doc:
             current->transport_status = HTST_NORMAL;
             goto load_doc;
         }
-        current->t = http_response_get_content_type(&current->res, &content_charset);
+        current->t = http_response_get_content_type(&current->res, &current->content_charset);
         if (current->t == NULL)
             current->t = "text/plain";
     } else if (DefaultType) {
@@ -775,8 +776,8 @@ loadBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* volatile new
     }
     if (newBuf->document_charset)
         charset = doc_charset = newBuf->document_charset;
-    if (content_charset && UseContentCharset)
-        doc_charset = content_charset;
+    // if (content_charset && UseContentCharset)
+    //     doc_charset = content_charset;
 
     nlines = 0;
     while (true) {
@@ -1045,12 +1046,12 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     charset = buf->document_charset;
     if (buf->document_charset != WC_CES_US_ASCII)
         doc_charset = buf->document_charset;
-    else if (UseContentCharset) {
-        content_charset = 0;
-        http_response_get_content_type(&buf->http_response, &content_charset);
-        if (content_charset)
-            doc_charset = content_charset;
-    }
+    // else if (UseContentCharset) {
+    //     content_charset = 0;
+    //     http_response_get_content_type(&buf->http_response, &content_charset);
+    //     if (content_charset)
+    //         doc_charset = content_charset;
+    // }
     WcOption.auto_detect = buf->auto_detect;
 
     // if (SETJMP(AbortLoading) != 0) {

@@ -591,6 +591,8 @@ struct HttpMessageSession* http_redirect(struct HttpClient* http, const char* ta
         .transport_status = HTST_UNKNOWN,
 
         // response
+        .current_content_length = 0,
+        .content_charset = 0,
         .res = (struct HttpResponse) { 0 },
         .t = "text/plain",
         .real_type = NULL,

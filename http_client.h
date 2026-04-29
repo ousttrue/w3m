@@ -35,6 +35,8 @@ struct HttpMessageSession {
     struct URLFile transport;
     enum OpenStatus transport_status;
     // response
+    int64_t current_content_length;
+    wc_ces content_charset;
     struct HttpResponse res;
     const char* t; // = "text/plain";
     const char* real_type; // = NULL;

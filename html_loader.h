@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include <libwc/wc_types.h>
 
-extern wc_ces content_charset;
-extern int64_t current_content_length;
 extern int frame_source;
 extern int n_textarea;
 
