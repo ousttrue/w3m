@@ -520,17 +520,21 @@ static int same_url_p(struct Url* pu1, struct Url* pu2)
         && (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
 }
 
-void http_init(struct HttpClient* http, struct Url* current, enum UrlOptionFlags flag)
+void http_init(struct HttpClient* http, struct Url* base_url, enum UrlOptionFlags flag)
 {
+    http->has_base_url = false;
     http->flag = flag;
     http->session_count = 0;
     memset(http->message_sessions, 0, sizeof(http->message_sessions));
+    http->searchHeader = SearchHeader;
+    http->searchHeader_through = true;
 
-    if (current) {
+    if (base_url) {
         http->message_sessions[0] = (struct HttpMessageSession) {
-            .url = *current,
+            .url = *base_url,
         };
         ++http->session_count;
+        http->has_base_url = true;
     }
 }
 
@@ -877,7 +881,7 @@ void http_open(struct HttpClient* http, struct CmdArgs* args)
     }
 
     default:
-        current->transport = init_stream((struct Url){0}, NULL);
+        current->transport = init_stream((struct Url) { 0 }, NULL);
         break;
     }
 }

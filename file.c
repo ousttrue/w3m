@@ -226,8 +226,18 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
 
 #define DO_EXTERNAL ((struct Buffer * (*)(struct CmdArgs * args, struct URLFile*, struct Buffer*)) doExternal)
 
-static struct Buffer* page_loaded(struct CmdArgs* args, struct HttpMessageSession* current, struct Buffer* t_buf, enum UrlOptionFlags flag)
+static struct Buffer* page_loaded(struct CmdArgs* args, struct HttpClient* http)
 {
+    struct Buffer* t_buf = newBuffer(INIT_BUFFER_WIDTH);
+    int first_session = http->has_base_url ? 1 : 0;
+    if (first_session < http->session_count - 1) {
+        t_buf->bufferprop |= BP_REDIRECTED;
+    }
+
+    struct HttpMessageSession* current = http_session_current(http);
+    t_buf->http_response = current->res;
+    t_buf->header_source = current->header_source;
+
     if (current->page) {
         if (image_source)
             return NULL;
@@ -332,11 +342,11 @@ static struct Buffer* page_loaded(struct CmdArgs* args, struct HttpMessageSessio
     copyParsedURL(&t_buf->currentURL, &current->url);
     t_buf->filename = current->url.real_file ? current->url.real_file : current->url.file ? conv_to_system(current->url.file)
                                                                                           : NULL;
-    if (flag & RG_FRAME) {
+    if (http->flag & RG_FRAME) {
         t_buf->bufferprop |= BP_FRAME;
     }
     t_buf->ssl_certificate = current->transport.ssl_certificate;
-    frame_source = flag & RG_FRAME_SRC;
+    frame_source = http->flag & RG_FRAME_SRC;
 
     struct Buffer* b;
     if (proc == DO_EXTERNAL) {
@@ -383,22 +393,15 @@ static struct Buffer* page_loaded(struct CmdArgs* args, struct HttpMessageSessio
 struct Buffer* loadGeneralFile(struct CmdArgs* args, const char* path, struct Url* base_url, struct Form* post,
     const char* referer, enum UrlOptionFlags flag)
 {
-    struct Buffer* b = NULL;
-    struct Buffer* t_buf = NULL;
-    bool searchHeader = SearchHeader;
-    bool searchHeader_through = true;
-    const char* tpath = path;
-
     struct HttpClient http;
     http_init(&http, base_url, flag);
-
     struct HttpMessageSession* current = http_redirect(&http, path, post, referer);
     struct HttpMessageSession* base = http_session_base(&http);
 
 load_doc:
     //
     {
-        struct Url pu = parseURL2(tpath, base ? &base->url : NULL);
+        struct Url pu = parseURL2(path, base ? &base->url : NULL);
         const char* sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
         if (sc_redirect && *sc_redirect) {
             base = current;
@@ -406,7 +409,7 @@ load_doc:
             if (!current) {
                 return 0;
             }
-            tpath = sc_redirect;
+            // tpath = sc_redirect;
             current->add_auth_cookie_flag = false;
             goto load_doc;
         }
@@ -425,7 +428,7 @@ load_doc:
                 if (UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         DirBufferCommand, current->transport.url.file);
-                    b = loadGeneralFile(args, cmd->ptr, NULL, NULL, NO_REFERER, 0);
+                    struct Buffer* b = loadGeneralFile(args, cmd->ptr, NULL, NULL, NO_REFERER, 0);
                     if (b != NULL && b != NO_BUFFER) {
                         copyParsedURL(&b->currentURL, &current->transport.url);
                         b->filename = b->currentURL.real_file;
@@ -445,7 +448,7 @@ load_doc:
             break;
         }
         if (current->page && current->page->length > 0) {
-            return page_loaded(args, current, t_buf, http.flag);
+            return page_loaded(args, &http);
         }
         return NULL;
     }
@@ -466,11 +469,11 @@ load_doc:
     //     return NULL;
     // }
 
-    b = NULL;
+    // b = NULL;
     if (current->transport.is_cgi) {
         /* local CGI */
-        searchHeader = true;
-        searchHeader_through = false;
+        http.searchHeader = true;
+        http.searchHeader_through = false;
     }
     if (header_string)
         header_string = NULL;
@@ -482,14 +485,12 @@ load_doc:
             message(Sprintf("%s contacted. Waiting for reply...", current->transport.url.host)->ptr, 0, 0);
             refresh();
         }
-        if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        t_buf->http_response = http_response_header(current->transport.stream, current->transport.url.scheme);
-        current->transport.compression = http_response_process(&t_buf->http_response, args, &current->transport.url);
+        current->res = http_response_header(current->transport.stream, current->transport.url.scheme);
+        current->transport.compression = http_response_process(&current->res, args, &current->transport.url);
         const char* p;
-        if (((t_buf->http_response.status_code >= 301 && t_buf->http_response.status_code <= 303)
-                || t_buf->http_response.status_code == 307)
-            && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL) {
+        if (((current->res.status_code >= 301 && current->res.status_code <= 303)
+                || current->res.status_code == 307)
+            && (p = http_response_get(&current->res, "Location:")) != NULL) {
             // document moved
             // 301: Moved Permanently
             // 302: Found
@@ -503,18 +504,16 @@ load_doc:
                 return 0;
             }
 
-            tpath = url_encode(p, NULL, 0);
+            // tpath = url_encode(p, NULL, 0);
             // http.post = NULL;
             // http.current = New(struct Url);
             // copyParsedURL(http.current, &f.url);
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            t_buf->bufferprop |= BP_REDIRECTED;
             current->transport_status = HTST_NORMAL;
             goto load_doc;
         }
-        current->t = http_response_get_content_type(&t_buf->http_response, &content_charset);
+        current->t = http_response_get_content_type(&current->res, &content_charset);
         if (current->t == NULL && current->transport.url.file != NULL) {
-            if (!((t_buf->http_response.status_code >= 400 && t_buf->http_response.status_code <= 407) || (t_buf->http_response.status_code >= 500 && t_buf->http_response.status_code <= 505)))
+            if (!((current->res.status_code >= 400 && current->res.status_code <= 407) || (current->res.status_code >= 500 && current->res.status_code <= 505)))
                 current->t = guessContentType(current->transport.url.file);
         }
         if (current->t == NULL)
@@ -525,10 +524,10 @@ load_doc:
                 0);
             current->add_auth_cookie_flag = 0;
         }
-        if ((p = http_response_get(&t_buf->http_response, "WWW-Authenticate:")) != NULL && t_buf->http_response.status_code == 401) {
+        if ((p = http_response_get(&current->res, "WWW-Authenticate:")) != NULL && current->res.status_code == 401) {
             /* Authentication needed */
             struct http_auth hauth;
-            if (findAuthentication(&t_buf->http_response, &hauth, "WWW-Authenticate:") != NULL
+            if (findAuthentication(&current->res, &hauth, "WWW-Authenticate:") != NULL
                 && (current->realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 current->auth_pu = &current->transport.url;
                 getAuthCookie(args, &hauth, "Authorization:", current->extra_header,
@@ -536,18 +535,18 @@ load_doc:
                 if (current->uname == NULL) {
                     /* abort */
                     // TRAP_OFF;
-                    return page_loaded(args, current, t_buf, http.flag);
+                    return page_loaded(args, &http);
                 }
                 UFclose(&current->transport);
                 current->add_auth_cookie_flag = 1;
                 current->transport_status = HTST_NORMAL;
-                return page_loaded(args, current, t_buf, http.flag);
+                return page_loaded(args, &http);
             }
         }
-        if ((p = http_response_get(&t_buf->http_response, "Proxy-Authenticate:")) != NULL && t_buf->http_response.status_code == 407) {
+        if ((p = http_response_get(&current->res, "Proxy-Authenticate:")) != NULL && current->res.status_code == 407) {
             /* Authentication needed */
             struct http_auth hauth;
-            if (findAuthentication(&t_buf->http_response, &hauth, "Proxy-Authenticate:")
+            if (findAuthentication(&current->res, &hauth, "Proxy-Authenticate:")
                     != NULL
                 && (current->realm = get_auth_param(hauth.param, "realm")) != NULL) {
                 current->auth_pu = schemeToProxy(current->transport.url.scheme);
@@ -557,7 +556,7 @@ load_doc:
                 if (current->uname == NULL) {
                     /* abort */
                     // TRAP_OFF;
-                    return page_loaded(args, current, t_buf, http.flag);
+                    return page_loaded(args, &http);
                 }
                 UFclose(&current->transport);
                 current->add_auth_cookie_flag = 1;
@@ -573,18 +572,16 @@ load_doc:
             goto load_doc;
         }
 
-        current->transport.modtime = mymktime(http_response_get(&t_buf->http_response, "Last-Modified:"));
-    } else if (searchHeader) {
-        searchHeader = SearchHeader = false;
-        if (t_buf == NULL)
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-        t_buf->http_response = http_response_header(current->transport.stream, current->transport.url.scheme);
-        if (searchHeader_through && !t_buf->header_source) {
-            t_buf->header_source = http_response_save_header_source(&t_buf->http_response);
+        current->transport.modtime = mymktime(http_response_get(&current->res, "Last-Modified:"));
+    } else if (http.searchHeader) {
+        http.searchHeader = SearchHeader = false;
+        current->res = http_response_header(current->transport.stream, current->transport.url.scheme);
+        if (http.searchHeader_through && !current->header_source) {
+            current->header_source = http_response_save_header_source(&current->res);
         }
-        current->transport.compression = http_response_process(&t_buf->http_response, args, &current->transport.url);
+        current->transport.compression = http_response_process(&current->res, args, &current->transport.url);
         const char* p;
-        if (current->transport.is_cgi && (p = http_response_get(&t_buf->http_response, "Location:")) != NULL) {
+        if (current->transport.is_cgi && (p = http_response_get(&current->res, "Location:")) != NULL) {
             /* document moved */
             UFclose(&current->transport);
             base = current;
@@ -593,17 +590,15 @@ load_doc:
                 return 0;
             }
 
-            tpath = url_encode(remove_space(p), NULL, 0);
+            // tpath = url_encode(remove_space(p), NULL, 0);
             // http.post = NULL;
             current->add_auth_cookie_flag = 0;
             // http.current = New(struct Url);
             // copyParsedURL(http.current, &f->url);
-            t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            t_buf->bufferprop |= BP_REDIRECTED;
             current->transport_status = HTST_NORMAL;
             goto load_doc;
         }
-        current->t = http_response_get_content_type(&t_buf->http_response, &content_charset);
+        current->t = http_response_get_content_type(&current->res, &content_charset);
         if (current->t == NULL)
             current->t = "text/plain";
     } else if (DefaultType) {
@@ -622,7 +617,7 @@ load_doc:
      *      to support default utf8 encoding for XHTML here? */
     current->transport.guess_type = current->t;
 
-    return page_loaded(args, current, t_buf, http.flag);
+    return page_loaded(args, &http);
 }
 
 extern char* NullLine;
@@ -868,7 +863,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
     newBuf->mailcap_source = tmpf;
 
     Str tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    struct URLFile f = init_stream((struct Url){0}, ist_from_buffer(tmp->ptr, tmp->length));
+    struct URLFile f = init_stream((struct Url) { 0 }, ist_from_buffer(tmp->ptr, tmp->length));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
     if (src)
@@ -969,7 +964,7 @@ loadcmdout(struct CmdArgs* args, const char* cmd,
     if (f == NULL)
         return NULL;
 
-    struct URLFile uf = init_stream((struct Url){0}, ist_from_fp(f, pclose));
+    struct URLFile uf = init_stream((struct Url) { 0 }, ist_from_fp(f, pclose));
     struct Buffer* buf = loadproc(args, &uf, defaultbuf);
     UFclose(&uf);
     return buf;
@@ -1063,7 +1058,7 @@ struct Line* getNextPage(struct Buffer* buf, int plen)
     // }
     // TRAP_ON;
 
-    uf = init_stream((struct Url){0}, NULL);
+    uf = init_stream((struct Url) { 0 }, NULL);
     for (i = 0; i < plen; i++) {
         struct str_view gv = ist_gets(buf->pagerSource, true);
         if (gv.len == 0)

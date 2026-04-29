@@ -277,13 +277,13 @@ bool matchattr(const char* p, const char* attr, int len, Str* value)
 
 const char* http_response_get(struct HttpResponse* res, const char* field)
 {
-    // if (buf == NULL || field == NULL || buf->document_header == NULL)
-    //     return NULL;
-    int len = strlen(field);
-    for (TextListItem* ti = res->headers->first; ti; ti = ti->next) {
-        if (!strncasecmp(ti->ptr, field, len)) {
-            const char* p = ti->ptr + len;
-            return remove_space(p);
+    if (res && res->headers && field) {
+        int len = strlen(field);
+        for (TextListItem* ti = res->headers->first; ti; ti = ti->next) {
+            if (!strncasecmp(ti->ptr, field, len)) {
+                const char* p = ti->ptr + len;
+                return remove_space(p);
+            }
         }
     }
     return NULL;

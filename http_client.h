@@ -40,6 +40,7 @@ struct HttpMessageSession {
     const char* real_type; // = NULL;
     Str page; // = NULL;
     wc_ces charset; // = WC_CES_US_ASCII;
+    const char* header_source;
     // auth
     struct _textlist* extra_header; // = newTextList();
     Str uname; // = NULL;
@@ -53,8 +54,11 @@ struct HttpClient {
     struct HttpMessageSession message_sessions[FollowRedirection];
     int session_count;
     enum UrlOptionFlags flag;
+    bool searchHeader; //= SearchHeader;
+    bool searchHeader_through; //= true;
+    bool has_base_url;
 };
-void http_init(struct HttpClient* http, struct Url* current, enum UrlOptionFlags flag);
+void http_init(struct HttpClient* http, struct Url* base_url, enum UrlOptionFlags flag);
 /// session_count-1
 static inline struct HttpMessageSession* http_session_current(struct HttpClient* http)
 {
