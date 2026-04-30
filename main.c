@@ -2990,7 +2990,7 @@ void tty_write_sc(void)
             if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
                 switch (moved) {
                 case RF_NEED_TO_MOVE:
-                    MOVE(&tty_write1, &terminfo, line, 0);
+                    tty_write_str(es_move(&terminfo, line, 0));
                     moved = RF_CR_OK;
                     break;
                 case RF_CR_OK:
@@ -3002,13 +3002,13 @@ void tty_write_sc(void)
                     break;
                 }
             } else {
-                MOVE(&tty_write1, &terminfo, line, pcol);
+                tty_write_str(es_move(&terminfo, line, pcol));
                 moved = RF_CR_OK;
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
                 writestr(&tty_write1, terminfo.T_ce);
                 if (col != pcol)
-                    MOVE(&tty_write1, &terminfo, line, col);
+                    tty_write_str(es_move(&terminfo, line, col));
             }
             pline = line;
             pcol = col;
@@ -3044,7 +3044,7 @@ void tty_write_sc(void)
                     if (pcol == col - 1)
                         writestr(&tty_write1, terminfo.T_nd);
                     else if (pcol != col)
-                        MOVE(&tty_write1, &terminfo, line, col);
+                        tty_write_str(es_move(&terminfo, line, col));
 
                     if ((cells[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
                         writestr(&tty_write1, terminfo.T_so);
@@ -3103,6 +3103,6 @@ void tty_write_sc(void)
         }
     }
     wc_putc_end(tty_write);
-    MOVE(&tty_write1, &terminfo, sc_curline(), sc_curcol());
+    tty_write_str(es_move(&terminfo, sc_curline(), sc_curcol()));
     tty_flush();
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <stdbool.h>
+#include <stdint.h>
 
 struct TermInfo {
     char bp[1024];
@@ -66,11 +67,7 @@ typedef int (*PutC)(int);
 
 extern int tputs(const char* str, int affcnt, int (*putc)(int));
 extern char* tgoto(const char* cm, int destcol, int destline);
-
 void writestr(PutC f, const char* s);
-
 void terminfo_reset(PutC f, struct TermInfo* ti, bool do_not_use_ti_te);
-
-void MOVE(PutC f, struct TermInfo* ti, int line, int column);
-
+const char* es_move(struct TermInfo* ti, int line, int column);
 bool graph_ok(struct TermInfo* ti);

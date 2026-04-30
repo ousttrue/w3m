@@ -322,8 +322,16 @@ export fn terminfo_reset(f: c.PutC, ti: *c.TermInfo, do_not_use_ti_te: bool) voi
     writestr(f, ti.T_se);
 }
 
-export fn MOVE(f: c.PutC, ti: *c.TermInfo, line: c_int, column: c_int) void {
-    _ = c.tputs(c.tgoto(ti.T_cm, column, line), 1, f);
+// export fn MOVE(f: c.PutC, ti: *c.TermInfo, line: c_int, column: c_int) void {
+//     _ = c.tputs(c.tgoto(ti.T_cm, column, line), 1, f);
+// }
+
+const fixed_putc = @import("fixed_putc.zig");
+
+export fn es_move(ti: *c.TermInfo, line: c_int, column: c_int) [*c]const u8 {
+    fixed_putc.init();
+    _ = c.tputs(c.tgoto(ti.T_cm, column, line), 1, &fixed_putc.putc);
+    return fixed_putc.ptr();
 }
 
 export fn graph_ok(_ti: ?*c.TermInfo) bool {
@@ -407,4 +415,3 @@ export fn getTCstr(ti: *c.TermInfo) void {
 
     setgraphchar(ti);
 }
-
