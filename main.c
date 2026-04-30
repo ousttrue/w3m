@@ -1,4 +1,5 @@
 #include "main.h"
+#include "terminfo_entry.h"
 #include "file.h"
 #include "UrlFile.h"
 #include "alloc.h"
@@ -85,14 +86,14 @@ int initscr(void)
     set_int();
     getTCstr(&terminfo);
     if (terminfo.T_ti && !Do_not_use_ti_te)
-        es_writestr(&tty_write1, terminfo.T_ti);
+        es_writestr(terminfo.T_ti);
     sc_init();
     return 0;
 }
 
 void tty_reset(void)
 {
-    terminfo_reset(&tty_write1, &terminfo, Do_not_use_ti_te);
+    terminfo_reset(&terminfo, Do_not_use_ti_te);
     tty_clear();
 }
 
@@ -2994,8 +2995,8 @@ void tty_write_sc(void)
                     moved = RF_CR_OK;
                     break;
                 case RF_CR_OK:
-                    tty_write1('\n');
-                    tty_write1('\r');
+                    tty_write_str("\n");
+                    tty_write_str("\r");
                     break;
                 case RF_NONEED_TO_MOVE:
                     moved = RF_CR_OK;
@@ -3006,7 +3007,7 @@ void tty_write_sc(void)
                 moved = RF_CR_OK;
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-                es_writestr(&tty_write1, terminfo.T_ce);
+                es_writestr(terminfo.T_ce);
                 if (col != pcol)
                     tty_write_str(es_move(&terminfo, line, col));
             }
@@ -3033,55 +3034,62 @@ void tty_write_sc(void)
                     || (!(cells[col].prop & S_BCOLORED) && (mode & S_BCOLORED))
                     || (!(cells[col].prop & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED) || (mode & S_BCOLORED))
-                        es_writestr(&tty_write1, terminfo.T_op);
+                        es_writestr(terminfo.T_op);
                     if (mode & S_GRAPHICS)
-                        es_writestr(&tty_write1, terminfo.T_ae);
-                    es_writestr(&tty_write1, terminfo.T_me);
+                        es_writestr(terminfo.T_ae);
+                    es_writestr(terminfo.T_me);
                     mode &= ~M_MEND;
                 }
                 if ((*dirty & L_NEED_CE && col >= sc_lines()[line]->eol) ? sc_need_redraw(&cells[col], (CellCharBytes)SPACE, 0)
                                                                          : (cells[col].prop & S_DIRTY)) {
                     if (pcol == col - 1)
-                        es_writestr(&tty_write1, terminfo.T_nd);
+                        es_writestr(terminfo.T_nd);
                     else if (pcol != col)
                         tty_write_str(es_move(&terminfo, line, col));
 
                     if ((cells[col].prop & S_STANDOUT) && !(mode & S_STANDOUT)) {
-                        es_writestr(&tty_write1, terminfo.T_so);
+                        es_writestr(terminfo.T_so);
                         mode |= S_STANDOUT;
                     }
                     if ((cells[col].prop & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-                        es_writestr(&tty_write1, terminfo.T_us);
+                        es_writestr(terminfo.T_us);
                         mode |= S_UNDERLINE;
                     }
                     if ((cells[col].prop & S_BOLD) && !(mode & S_BOLD)) {
-                        es_writestr(&tty_write1, terminfo.T_md);
+                        es_writestr(terminfo.T_md);
                         mode |= S_BOLD;
                     }
                     if ((cells[col].prop & S_COLORED) && (cells[col].prop ^ mode) & COL_FCOLOR) {
                         color = (cells[col].prop & COL_FCOLOR);
                         mode = ((mode & ~COL_FCOLOR) | color);
-                        es_writestr(&tty_write1, sc_color_seq(color));
+                        es_writestr(sc_color_seq(color));
                     }
                     if ((cells[col].prop & S_BCOLORED)
                         && (cells[col].prop ^ mode) & COL_BCOLOR) {
                         bcolor = (cells[col].prop & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
-                        es_writestr(&tty_write1, sc_bcolor_seq(bcolor));
+                        es_writestr(sc_bcolor_seq(bcolor));
                     }
                     if ((cells[col].prop & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-                        wc_putc_end(&tty_write);
+                        struct wc_span span = wc_putc_end();
+                        tty_write(span.ptr, span.len);
                         if (!graph_enabled) {
                             graph_enabled = true;
-                            es_writestr(&tty_write1, terminfo.T_eA);
+                            es_writestr(terminfo.T_eA);
                         }
-                        es_writestr(&tty_write1, terminfo.T_as);
+                        es_writestr(terminfo.T_as);
                         mode |= S_GRAPHICS;
                     }
-                    if (cells[col].prop & S_GRAPHICS)
-                        tty_write1(graphchar(cells[col].bytes[0]));
-                    else if (CHMODE(cells[col].prop) != C_WCHAR2)
-                        wc_putc(WcOption, (char*)cells[col].bytes, &tty_write);
+                    if (cells[col].prop & S_GRAPHICS) {
+                        char buf[2] = {
+                            graphchar(cells[col].bytes[0]),
+                            0,
+                        };
+                        es_writestr(buf);
+                    } else if (CHMODE(cells[col].prop) != C_WCHAR2) {
+                        struct wc_span span = wc_putc(WcOption, (char*)cells[col].bytes);
+                        tty_write(span.ptr, span.len);
+                    }
                     pcol = col + 1;
                 }
             }
@@ -3093,16 +3101,17 @@ void tty_write_sc(void)
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
             if (mode & (S_COLORED | S_BCOLORED))
-                es_writestr(&tty_write1, terminfo.T_op);
+                es_writestr(terminfo.T_op);
             if (mode & S_GRAPHICS) {
-                es_writestr(&tty_write1, terminfo.T_ae);
+                es_writestr(terminfo.T_ae);
                 wc_putc_clear_status();
             }
-            es_writestr(&tty_write1, terminfo.T_me);
+            es_writestr(terminfo.T_me);
             mode &= ~M_MEND;
         }
     }
-    wc_putc_end(tty_write);
+    struct wc_span span = wc_putc_end();
+    tty_write(span.ptr, span.len);
     tty_write_str(es_move(&terminfo, sc_curline(), sc_curcol()));
     tty_flush();
 }

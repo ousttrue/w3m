@@ -22,4 +22,3 @@ static inline void tty_write_str(const char* str)
 {
     tty_write((const uint8_t*)str, strlen(str));
 }
-int tty_write1(int c);

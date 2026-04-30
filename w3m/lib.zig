@@ -303,19 +303,21 @@ export fn checkOverWrite(args: ?*c.CmdArgs, path: [*c]const u8) bool {
     return true;
 }
 
-export fn terminfo_reset(f: c.PutC, ti: *c.TermInfo, do_not_use_ti_te: bool) void {
+const PutC = fn (c_int) callconv(.c) c_int;
+
+export fn terminfo_reset(ti: *c.TermInfo, do_not_use_ti_te: bool) void {
     // turn off
-    es_writestr(f, ti.T_op);
-    es_writestr(f, ti.T_me);
+    es_writestr(ti.T_op);
+    es_writestr(ti.T_me);
     if (!do_not_use_ti_te) {
         if (ti.T_te != null and ti.T_te[0] != 0) {
-            es_writestr(f, ti.T_te);
+            es_writestr(ti.T_te);
         } else {
-            es_writestr(f, ti.T_cl);
+            es_writestr(ti.T_cl);
         }
     }
     // reset terminal
-    es_writestr(f, ti.T_se);
+    es_writestr(ti.T_se);
 }
 
 // export fn MOVE(f: c.PutC, ti: *c.TermInfo, line: c_int, column: c_int) void {
@@ -324,15 +326,17 @@ export fn terminfo_reset(f: c.PutC, ti: *c.TermInfo, do_not_use_ti_te: bool) voi
 
 const fixed_putc = @import("fixed_putc.zig");
 
-extern fn tputs(str: [*c]const u8, affcnt: c_int, putc: c.PutC) c_int;
+extern fn tputs(str: [*c]const u8, affcnt: c_int, putc: *const PutC) c_int;
 extern fn tgoto(cm: [*c]const u8, destcol: c_int, destline: c_int) [*c]const u8;
 extern fn tgetent(bp: [*c]u8, name: [*c]const u8) c_int;
 // extern int tgetnum(char*);
 extern fn tgetflag(name: [*c]const u8) c_int;
 extern fn tgetstr(name: [*c]const u8, bp: [*c]u8) [*c]u8;
 
-pub export fn es_writestr(f: c.PutC, s: [*c]const u8) void {
-    _ = tputs(s, 1, f);
+pub export fn es_writestr(s: [*c]const u8) void {
+    fixed_putc.init();
+    _ = tputs(s, 1, &fixed_putc.putc);
+    tty.puts(std.mem.span(fixed_putc.ptr())) catch @panic("es_writestr");
 }
 export fn es(str: [*c]const u8) [*c]const u8 {
     fixed_putc.init();

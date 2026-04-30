@@ -15,7 +15,7 @@ void wc_putc_init(struct wc_option opts, wc_ces f_ces, wc_ces t_ces)
     putc_t_ces = t_ces;
 }
 
-void wc_putc(struct wc_option opts, char* c, WriterFunc f)
+struct wc_span wc_putc(struct wc_option opts, const char* c)
 {
     struct wc_output tmp;
     wc_uchar* p;
@@ -28,15 +28,24 @@ void wc_putc(struct wc_option opts, char* c, WriterFunc f)
     wc_output__clear(&putc_str);
     while (*p)
         (*putc_st.ces_info->push_to)(opts, &putc_str, wtf_parse(opts, &p), &putc_st);
-    f((const wc_uchar*)wc_output__ptr(putc_str), wc_output__len(putc_str));
+
+    return (struct wc_span) {
+        .ptr = wc_output__ptr(putc_str),
+        .len = wc_output__len(putc_str),
+    };
 }
 
-void wc_putc_end(WriterFunc f)
+struct wc_span wc_putc_end()
 {
     wc_output__clear(&putc_str);
     wc_push_end(&putc_str, &putc_st);
-    if (wc_output__len(putc_str))
-        f((const wc_uchar*)wc_output__ptr(putc_str), wc_output__len(putc_str));
+
+    struct wc_span span = { 0 };
+    if (wc_output__len(putc_str)) {
+        span.ptr = wc_output__ptr(putc_str);
+        span.len = wc_output__len(putc_str);
+    }
+    return span;
 }
 
 void wc_putc_clear_status(void)

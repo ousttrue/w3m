@@ -48,7 +48,7 @@ export fn tty_flush() void {
 }
 
 export fn tty_clear() void {
-    lib.es_writestr(&tty_write1, c.terminfo.T_cl);
+    lib.es_writestr(c.terminfo.T_cl);
     tty_flush();
     tty.restore();
 }
@@ -60,12 +60,6 @@ export fn tty_bell() void {
 export fn tty_write(str: [*]const u8, len: usize) void {
     puts(str[0..len]) catch {};
     tty_writer.flush() catch {};
-}
-
-export fn tty_write1(ch: c_int) c_int {
-    putc(@intCast(ch)) catch @panic("write1");
-    tty_writer.flush() catch {};
-    return 0;
 }
 
 export fn unget(ch: c_int) void {

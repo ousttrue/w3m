@@ -66,3 +66,8 @@ struct wc_output {
     wc_output_clear clear;
     wc_output_free free;
 };
+
+struct wc_span {
+    uint8_t* ptr;
+    size_t len;
+};
