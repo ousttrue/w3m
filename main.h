@@ -97,6 +97,6 @@ void pushEvent(const char* cmd, void* data);
 
 void tty_init(void);
 void tty_deinit(void);
-int initscr(void);
+void initscr(void);
 void tty_reset(void);
 void set_int(void);

@@ -35,6 +35,7 @@ pub const c = @cImport({
     @cInclude("wc_util.h");
     @cInclude("libwc/conv.h");
     @cInclude("libwc/charset.h");
+    @cInclude("libwc/putc.h");
 
     @cInclude("sys/ioctl.h");
     @cInclude("unistd.h");

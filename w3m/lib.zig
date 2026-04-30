@@ -11,6 +11,7 @@ const image = @import("image.zig");
 const history = @import("history.zig");
 const LineInput = @import("LineInput.zig");
 const Growbuf = @import("Growbuf.zig");
+const ScreenRenderer = @import("ScreenRenderer.zig");
 
 pub export fn _dummy_() void {
     // export symbols ?
@@ -343,7 +344,7 @@ export fn es(str: [*c]const u8) [*c]const u8 {
     _ = tputs(str, 1, &fixed_putc.putc);
     return fixed_putc.ptr();
 }
-export fn es_move(ti: *c.TermInfo, line: c_int, column: c_int) [*c]const u8 {
+pub export fn es_move(ti: *c.TermInfo, line: c_int, column: c_int) [*c]const u8 {
     return es(tgoto(ti.T_cm, column, line));
 }
 
@@ -422,4 +423,47 @@ export fn getTCstr(ti: *c.TermInfo) void {
     ti.T_op = tgetstr("op", &pt);
 
     setgraphchar(ti);
+}
+
+export fn tty_write_sc() void {
+    var r: ScreenRenderer = .init();
+    c.wc_putc_init(c.WcOption, c.InnerCharset, c.DisplayCharset);
+    for (0..@as(usize, @intCast((g.LINES - 1)))) |i| {
+        r.render_line(i);
+    }
+    const span = c.wc_putc_end();
+    if (span.ptr != null and span.len > 0) {
+        tty.tty_write(span.ptr, span.len);
+    }
+    const str = std.mem.span(es_move(&c.terminfo, c.sc_curline(), c.sc_curcol()));
+    tty.tty_write(str.ptr, str.len);
+    tty.tty_flush();
+}
+
+export fn set_int() void {
+    //     signal(SIGHUP, reset_exit);
+    //     signal(SIGINT, reset_exit);
+    //     signal(SIGQUIT, reset_exit);
+    //     signal(SIGTERM, reset_exit);
+    //     signal(SIGILL, error_dump);
+    //     signal(SIGIOT, error_dump);
+    //     signal(SIGFPE, error_dump);
+    // #ifdef SIGBUS
+    //     signal(SIGBUS, error_dump);
+    // #endif /* SIGBUS */
+    //     /* signal(SIGSEGV, error_dump); */
+}
+
+export fn initscr() void {
+    set_int();
+    getTCstr(&c.terminfo);
+    if (c.terminfo.T_ti != null and 0 == g.Do_not_use_ti_te) {
+        es_writestr(c.terminfo.T_ti);
+    }
+    c.sc_init();
+}
+
+export fn tty_reset() void {
+    terminfo_reset(&c.terminfo, g.Do_not_use_ti_te != 0);
+    tty.tty_clear();
 }

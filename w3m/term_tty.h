@@ -18,7 +18,3 @@ void tty_bell(void);
 void tty_flush(void);
 bool tty_pixel_per_cell(int* ppc, int* ppl);
 void tty_write(const uint8_t* str, size_t len);
-static inline void tty_write_str(const char* str)
-{
-    tty_write((const uint8_t*)str, strlen(str));
-}

@@ -43,11 +43,11 @@ pub fn puts(str: []const u8) !void {
     return try tty_writer.interface.writeAll(str);
 }
 
-export fn tty_flush() void {
+pub export fn tty_flush() void {
     tty_writer.flush() catch {};
 }
 
-export fn tty_clear() void {
+pub export fn tty_clear() void {
     lib.es_writestr(c.terminfo.T_cl);
     tty_flush();
     tty.restore();
@@ -57,7 +57,13 @@ export fn tty_bell() void {
     putc(7) catch @panic("putc");
 }
 
-export fn tty_write(str: [*]const u8, len: usize) void {
+pub export fn tty_write(_str: ?[*]const u8, len: usize) void {
+    const str = _str orelse {
+        return;
+    };
+    if (len == 0) {
+        return;
+    }
     puts(str[0..len]) catch {};
     tty_writer.flush() catch {};
 }

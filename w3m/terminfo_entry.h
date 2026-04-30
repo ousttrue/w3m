@@ -62,9 +62,5 @@ struct TermInfo {
 
     char gcmap[96];
 };
-void getTCstr(struct TermInfo* ti);
 
-void es_writestr(const char* s);
-void terminfo_reset(struct TermInfo* ti, bool do_not_use_ti_te);
-const char* es_move(struct TermInfo* ti, int line, int column);
 bool graph_ok(struct TermInfo* ti);

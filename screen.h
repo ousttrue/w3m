@@ -66,7 +66,7 @@ enum LineFlags : uint16_t {
     L_CLRTOEOL = 0x08,
 };
 
-typedef uint8_t* CellCharBytes;
+typedef const uint8_t* CellCharBytes;
 
 struct Cell {
     CellCharBytes bytes;
