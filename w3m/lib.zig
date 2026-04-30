@@ -303,23 +303,19 @@ export fn checkOverWrite(args: ?*c.CmdArgs, path: [*c]const u8) bool {
     return true;
 }
 
-export fn writestr(f: c.PutC, s: [*c]const u8) void {
-    _ = c.tputs(s, 1, f);
-}
-
 export fn terminfo_reset(f: c.PutC, ti: *c.TermInfo, do_not_use_ti_te: bool) void {
     // turn off
-    writestr(f, ti.T_op);
-    writestr(f, ti.T_me);
+    es_writestr(f, ti.T_op);
+    es_writestr(f, ti.T_me);
     if (!do_not_use_ti_te) {
         if (ti.T_te != null and ti.T_te[0] != 0) {
-            writestr(f, ti.T_te);
+            es_writestr(f, ti.T_te);
         } else {
-            writestr(f, ti.T_cl);
+            es_writestr(f, ti.T_cl);
         }
     }
     // reset terminal
-    writestr(f, ti.T_se);
+    es_writestr(f, ti.T_se);
 }
 
 // export fn MOVE(f: c.PutC, ti: *c.TermInfo, line: c_int, column: c_int) void {
@@ -328,10 +324,23 @@ export fn terminfo_reset(f: c.PutC, ti: *c.TermInfo, do_not_use_ti_te: bool) voi
 
 const fixed_putc = @import("fixed_putc.zig");
 
-export fn es_move(ti: *c.TermInfo, line: c_int, column: c_int) [*c]const u8 {
+extern fn tputs(str: [*c]const u8, affcnt: c_int, putc: c.PutC) c_int;
+extern fn tgoto(cm: [*c]const u8, destcol: c_int, destline: c_int) [*c]const u8;
+extern fn tgetent(bp: [*c]u8, name: [*c]const u8) c_int;
+// extern int tgetnum(char*);
+extern fn tgetflag(name: [*c]const u8) c_int;
+extern fn tgetstr(name: [*c]const u8, bp: [*c]u8) [*c]u8;
+
+pub export fn es_writestr(f: c.PutC, s: [*c]const u8) void {
+    _ = tputs(s, 1, f);
+}
+export fn es(str: [*c]const u8) [*c]const u8 {
     fixed_putc.init();
-    _ = c.tputs(c.tgoto(ti.T_cm, column, line), 1, &fixed_putc.putc);
+    _ = tputs(str, 1, &fixed_putc.putc);
     return fixed_putc.ptr();
+}
+export fn es_move(ti: *c.TermInfo, line: c_int, column: c_int) [*c]const u8 {
+    return es(tgoto(ti.T_cm, column, line));
 }
 
 export fn graph_ok(_ti: ?*c.TermInfo) bool {
@@ -342,11 +351,6 @@ export fn graph_ok(_ti: ?*c.TermInfo) bool {
     };
     return ti.T_as[0] != 0 and ti.T_ae[0] != 0 and ti.T_ac[0] != 0;
 }
-
-extern fn tgetent(bp: [*c]u8, name: [*c]const u8) c_int;
-// extern int tgetnum(char*);
-extern fn tgetflag(name: [*c]const u8) c_int;
-extern fn tgetstr(name: [*c]const u8, bp: [*c]u8) [*c]u8;
 
 fn setgraphchar(ti: *c.TermInfo) void {
     for (0..96) |i| {

@@ -4,6 +4,7 @@ const g = @import("global.zig");
 const runtime = @import("runtime.zig");
 const TtyLinux = @import("TtyLinux.zig");
 const Epoll = @import("Epoll.zig");
+const lib = @import("lib.zig");
 
 var tty: TtyLinux = undefined;
 var tty_writer: std.Io.File.Writer = undefined;
@@ -47,7 +48,7 @@ export fn tty_flush() void {
 }
 
 export fn tty_clear() void {
-    c.writestr(&tty_write1, c.terminfo.T_cl);
+    lib.es_writestr(&tty_write1, c.terminfo.T_cl);
     tty_flush();
     tty.restore();
 }
