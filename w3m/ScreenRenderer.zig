@@ -118,7 +118,7 @@ pub fn render_line(this: *@This(), i: usize) void {
                 if (this.mode & c.S_GRAPHICS != 0)
                     lib.es_writestr(c.terminfo.T_ae);
                 lib.es_writestr(c.terminfo.T_me);
-                this.mode &= ~c.M_MEND;
+                c.remove_mend(&this.mode);
             }
             if (if (dirty & c.L_NEED_CE != 0 and col >= line.eol)
                 c.sc_need_redraw(&cells[col], SPACE, 0)
@@ -184,7 +184,7 @@ pub fn render_line(this: *@This(), i: usize) void {
     }
     line.isdirty = dirty & ~(c.L_NEED_CE | c.L_CLRTOEOL);
 
-    if (this.mode & c.M_MEND != 0) {
+    if (c.is_mend(this.mode)) {
         if (this.mode & (c.S_COLORED | c.S_BCOLORED) != 0)
             lib.es_writestr(c.terminfo.T_op);
         if (this.mode & c.S_GRAPHICS != 0) {
@@ -192,6 +192,6 @@ pub fn render_line(this: *@This(), i: usize) void {
             c.wc_putc_clear_status();
         }
         lib.es_writestr(c.terminfo.T_me);
-        this.mode &= ~c.M_MEND;
+        c.remove_mend(&this.mode);
     }
 }

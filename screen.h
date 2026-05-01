@@ -53,10 +53,19 @@ enum CellProperty : uint16_t {
 
     S_DIRTY = 0x20,
 };
-#define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
-#define M_CEOL (~(M_SPACE | C_WHICHCHAR))
-#define SPACE " "
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
+
+// #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
+
+static inline bool is_mend(enum CellProperty prop)
+{
+    return prop & (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS) != 0;
+}
+
+static inline void remove_mend(enum CellProperty* prop)
+{
+    *prop &= ~(S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS);
+}
+
 static inline enum CellProperty CHMODE(enum CellProperty c) { return ((c)&C_WHICHCHAR); }
 
 enum LineFlags : uint16_t {

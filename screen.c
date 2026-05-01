@@ -1,7 +1,7 @@
 #include "screen.h"
+#include "constants.h"
 #include "Str.h"
 #include "global.h"
-#include "alloc.h"
 #include "myctype.h"
 #include "wc_util.h"
 #include <libwc/wtf.h>
@@ -13,7 +13,7 @@ struct TermInfo terminfo;
 
 static void setCell(struct Cell* cell, CellCharBytes ch, size_t len, enum CellProperty prop)
 {
-    cell->bytes = New_Reuse(uint8_t, cell->bytes, len + 1);
+    cell->bytes = realloc((void*)cell->bytes, len + 1);
     strncpy((char*)cell->bytes, (const char*)ch, len + 1);
     cell->prop = (cell->prop & S_DIRTY) | prop;
 }
@@ -23,7 +23,7 @@ bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, enum CellPr
     if (!cell->bytes || !c2 || strcmp((const char*)cell->bytes, (const char*)c2))
         return 1;
     if (cell->bytes[0] == ' ')
-        return (cell->prop ^ pr2) & M_SPACE & ~S_DIRTY;
+        return (cell->prop ^ pr2) & (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS) & ~S_DIRTY;
 
     if ((cell->prop ^ pr2) & ~S_DIRTY)
         return 1;
@@ -65,13 +65,13 @@ void sc_init(void)
     if (LINES + 1 > max_LINES) {
         max_LINES = LINES + 1;
         max_COLS = 0;
-        ScreenElem = New_N(struct ScreenLine, max_LINES);
-        ScreenImage = New_N(struct ScreenLine*, max_LINES);
+        ScreenElem = malloc(sizeof(struct ScreenLine) * max_LINES);
+        ScreenImage = malloc(sizeof(struct ScreenLine*) * max_LINES);
     }
     if (COLS + 1 > max_COLS) {
         max_COLS = COLS + 1;
         for (int i = 0; i < max_LINES; i++) {
-            ScreenElem[i].cells = New_N(struct Cell, max_COLS);
+            ScreenElem[i].cells = malloc(sizeof(struct Cell) * max_COLS);
             memset(ScreenElem[i].cells, 0, max_COLS * sizeof(struct Cell));
         }
     }
@@ -144,12 +144,12 @@ void sc_addmch(const uint8_t* src, size_t len)
 
     struct Cell* line = ScreenImage[CurLine]->cells;
     if (line[CurColumn].prop & S_EOL) {
-        if (src[0] == ' ' && !(CurrentMode & M_SPACE)) {
+        if (src[0] == ' ' && !(CurrentMode & (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS))) {
             CurColumn++;
             return;
         }
         for (i = CurColumn; i >= 0 && (line[i].prop & S_EOL); i--) {
-            setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & M_CEOL) | C_ASCII);
+            setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & (~((S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS) | C_WHICHCHAR))) | C_ASCII);
         }
     }
 
@@ -171,7 +171,7 @@ void sc_addmch(const uint8_t* src, size_t len)
         if (i < COLS) {
             touch_column(i);
             if (line[i].prop & S_EOL) {
-                setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & M_CEOL) | C_ASCII);
+                setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & (~((S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS) | C_WHICHCHAR))) | C_ASCII);
             } else {
                 for (i++; i < COLS && CHMODE(line[i].prop) == C_WCHAR2; i++)
                     touch_column(i);
@@ -365,7 +365,7 @@ clrtoeol_with_bcolor(void)
     cli = CurLine;
     cco = CurColumn;
     pr = CurrentMode;
-    CurrentMode = (CurrentMode & (M_CEOL | S_BCOLORED)) | C_ASCII;
+    CurrentMode = (CurrentMode & ((~((S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS) | C_WHICHCHAR)) | S_BCOLORED)) | C_ASCII;
     for (i = CurColumn; i < COLS; i++)
         sc_addch(' ');
     sc_move(cli, cco);
