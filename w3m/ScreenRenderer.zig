@@ -12,16 +12,15 @@ const MoveStatus = enum {
 
 pline: usize,
 moved: MoveStatus = .RF_NEED_TO_MOVE,
-mode: c.CellProperty,
-color: c.CellProperty,
-bcolor: c.CellProperty,
+mode: c.CellMode,
 
 pub fn init() @This() {
     return .{
         .pline = @intCast(c.sc_curline()),
-        .mode = 0,
-        .color = c.COL_FTERM,
-        .bcolor = c.COL_BTERM,
+        .mode = .{
+            .fg = c.ANSI_TERM,
+            .bg = c.ANSI_TERM,
+        },
     };
 }
 
@@ -49,12 +48,12 @@ pub fn render_line(this: *@This(), i: usize) void {
         dirty &= ~c.L_DIRTY;
         const cells = line.cells;
         var col: usize = 0;
-        while (col < g.COLS and 0 == (cells[col].prop & c.S_EOL)) : (col += 1) {
+        while (col < g.COLS and !cells[col].mode.S_EOL) : (col += 1) {
             if (dirty & c.L_NEED_CE != 0 and col >= line.eol) {
-                if (c.sc_need_redraw(&cells[col], SPACE, 0))
+                if (c.sc_need_redraw(&cells[col], SPACE, .{}))
                     break;
             } else {
-                if (cells[col].prop & c.S_DIRTY != 0)
+                if (cells[col].mode.S_DIRTY)
                     break;
             }
         }
@@ -95,7 +94,7 @@ pub fn render_line(this: *@This(), i: usize) void {
         this.pline = i;
         pcol = col;
         while (col < g.COLS) : (col += 1) {
-            if (cells[col].prop & c.S_EOL != 0)
+            if (cells[col].mode.S_EOL)
                 break;
 
             // some terminal emulators do linefeed when a
@@ -106,24 +105,24 @@ pub fn render_line(this: *@This(), i: usize) void {
             // character is drawn on (COLS-1,LINES-1) point.  To
             // avoid the scroll, I prohibit to draw character on
             // (COLS-1,LINES-1).
-            if ((0 == (cells[col].prop & c.S_STANDOUT) and (this.mode & c.S_STANDOUT) != 0) or
-                (0 == (cells[col].prop & c.S_UNDERLINE) and (this.mode & c.S_UNDERLINE) != 0) or
-                (0 == (cells[col].prop & c.S_BOLD) and (this.mode & c.S_BOLD) != 0) or
-                (0 == (cells[col].prop & c.S_COLORED) and (this.mode & c.S_COLORED) != 0) or
-                (0 == (cells[col].prop & c.S_BCOLORED) and (this.mode & c.S_BCOLORED) != 0) or
-                (0 == (cells[col].prop & c.S_GRAPHICS) and (this.mode & c.S_GRAPHICS) != 0))
+            if ((!cells[col].mode.prop.S_STANDOUT and this.mode.prop.S_STANDOUT) or
+                (!cells[col].mode.prop.S_UNDERLINE and this.mode.prop.S_UNDERLINE) or
+                (!cells[col].mode.prop.S_BOLD and this.mode.prop.S_BOLD) or
+                (cells[col].mode.fg == c.ANSI_TERM and this.mode.fg != c.ANSI_TERM) or
+                (cells[col].mode.bg == c.ANSI_TERM and this.mode.bg != c.ANSI_TERM) or
+                (!cells[col].mode.prop.S_GRAPHICS and this.mode.prop.S_GRAPHICS))
             {
-                if ((this.mode & c.S_COLORED) != 0 or (this.mode & c.S_BCOLORED) != 0)
+                if (this.mode.fg != c.ANSI_TERM or this.mode.bg != c.ANSI_TERM)
                     lib.es_writestr(c.terminfo.T_op);
-                if (this.mode & c.S_GRAPHICS != 0)
+                if (this.mode.prop.S_GRAPHICS)
                     lib.es_writestr(c.terminfo.T_ae);
                 lib.es_writestr(c.terminfo.T_me);
                 c.remove_mend(&this.mode);
             }
             if (if (dirty & c.L_NEED_CE != 0 and col >= line.eol)
-                c.sc_need_redraw(&cells[col], SPACE, 0)
+                c.sc_need_redraw(&cells[col], SPACE, .{})
             else
-                (cells[col].prop & c.S_DIRTY) != 0)
+                (cells[col].mode.S_DIRTY))
             {
                 if (col >= 1 and pcol == col - 1) {
                     lib.es_writestr(c.terminfo.T_nd);
@@ -131,29 +130,27 @@ pub fn render_line(this: *@This(), i: usize) void {
                     tty_write_str(lib.es_move(&c.terminfo, @intCast(i), @intCast(col)));
                 }
 
-                if ((cells[col].prop & c.S_STANDOUT) != 0 and 0 == (this.mode & c.S_STANDOUT)) {
+                if (cells[col].mode.prop.S_STANDOUT and !this.mode.prop.S_STANDOUT) {
                     lib.es_writestr(c.terminfo.T_so);
-                    this.mode |= c.S_STANDOUT;
+                    this.mode.prop.S_STANDOUT = true;
                 }
-                if ((cells[col].prop & c.S_UNDERLINE) != 0 and 0 == (this.mode & c.S_UNDERLINE)) {
+                if (cells[col].mode.prop.S_UNDERLINE and !this.mode.prop.S_UNDERLINE) {
                     lib.es_writestr(c.terminfo.T_us);
-                    this.mode |= c.S_UNDERLINE;
+                    this.mode.prop.S_UNDERLINE = true;
                 }
-                if ((cells[col].prop & c.S_BOLD) != 0 and 0 == (this.mode & c.S_BOLD)) {
+                if (cells[col].mode.prop.S_BOLD and !this.mode.prop.S_BOLD) {
                     lib.es_writestr(c.terminfo.T_md);
-                    this.mode |= c.S_BOLD;
+                    this.mode.prop.S_BOLD = true;
                 }
-                if ((cells[col].prop & c.S_COLORED) != 0 and (cells[col].prop ^ this.mode) & c.COL_FCOLOR != 0) {
-                    this.color = (cells[col].prop & c.COL_FCOLOR);
-                    this.mode = ((this.mode & ~c.COL_FCOLOR) | this.color);
-                    lib.es_writestr(c.sc_color_seq(this.color));
+                if (cells[col].mode.fg != c.ANSI_TERM and cells[col].mode.fg != this.mode.fg) {
+                    this.mode.fg = cells[col].mode.fg;
+                    lib.es_writestr(c.sc_color_seq(this.mode.fg));
                 }
-                if ((cells[col].prop & c.S_BCOLORED) != 0 and (cells[col].prop ^ this.mode) & c.COL_BCOLOR != 0) {
-                    this.bcolor = (cells[col].prop & c.COL_BCOLOR);
-                    this.mode = ((this.mode & ~c.COL_BCOLOR) | this.bcolor);
-                    lib.es_writestr(c.sc_bcolor_seq(this.bcolor));
+                if (cells[col].mode.bg != c.ANSI_TERM and cells[col].mode.bg != this.mode.bg) {
+                    this.mode.bg = cells[col].mode.bg;
+                    lib.es_writestr(c.sc_bcolor_seq(this.mode.bg));
                 }
-                if ((cells[col].prop & c.S_GRAPHICS) != 0 and 0 == (this.mode & c.S_GRAPHICS)) {
+                if (cells[col].mode.prop.S_GRAPHICS and !this.mode.prop.S_GRAPHICS) {
                     const span = c.wc_putc_end();
                     tty.tty_write(span.ptr, span.len);
                     if (!graph_enabled) {
@@ -161,15 +158,15 @@ pub fn render_line(this: *@This(), i: usize) void {
                         lib.es_writestr(c.terminfo.T_eA);
                     }
                     lib.es_writestr(c.terminfo.T_as);
-                    this.mode |= c.S_GRAPHICS;
+                    this.mode.prop.S_GRAPHICS = true;
                 }
-                if (cells[col].prop & c.S_GRAPHICS != 0) {
+                if (cells[col].mode.prop.S_GRAPHICS) {
                     const buf: [2]u8 = .{
                         graphchar(cells[col].bytes[0]),
                         0,
                     };
                     lib.es_writestr(&buf);
-                } else if (c.CHMODE(cells[col].prop) != c.C_WCHAR2) {
+                } else if (cells[col].mode.charmode != c.C_WCHAR2) {
                     const span = c.wc_putc(c.WcOption, cells[col].bytes);
                     tty.tty_write(span.ptr, span.len);
                 }
@@ -178,16 +175,16 @@ pub fn render_line(this: *@This(), i: usize) void {
         }
         if (col == g.COLS)
             this.moved = .RF_NEED_TO_MOVE;
-        while (col < g.COLS and 0 == (cells[col].prop & c.S_EOL)) : (col += 1) {
-            cells[col].prop |= c.S_EOL;
+        while (col < g.COLS and !cells[col].mode.S_EOL) : (col += 1) {
+            cells[col].mode.S_EOL = true;
         }
     }
     line.isdirty = dirty & ~(c.L_NEED_CE | c.L_CLRTOEOL);
 
     if (c.is_mend(this.mode)) {
-        if (this.mode & (c.S_COLORED | c.S_BCOLORED) != 0)
+        if (this.mode.fg != c.ANSI_TERM or this.mode.bg != c.ANSI_TERM)
             lib.es_writestr(c.terminfo.T_op);
-        if (this.mode & c.S_GRAPHICS != 0) {
+        if (this.mode.prop.S_GRAPHICS) {
             lib.es_writestr(c.terminfo.T_ae);
             c.wc_putc_clear_status();
         }

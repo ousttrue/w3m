@@ -3,8 +3,6 @@
 
 struct CmdArgs;
 
-#define SPACE " "
-
 enum InputLineFlags {
     IN_STRING = 0x10,
     IN_FILENAME = 0x20,

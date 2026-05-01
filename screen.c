@@ -1,34 +1,54 @@
 #include "screen.h"
-#include "constants.h"
 #include "Str.h"
 #include "global.h"
+
 #include "myctype.h"
 #include "wc_util.h"
 #include <libwc/wtf.h>
 #include <string.h>
+#include <stdlib.h>
+
+static const uint8_t* SPACE = (const uint8_t*)" ";
 
 struct TermInfo terminfo;
 
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
 
-static void setCell(struct Cell* cell, CellCharBytes ch, size_t len, enum CellProperty prop)
+static void setCell(struct Cell* cell, CellCharBytes ch, size_t len, struct CellMode mode)
 {
     cell->bytes = realloc((void*)cell->bytes, len + 1);
     strncpy((char*)cell->bytes, (const char*)ch, len + 1);
-    cell->prop = (cell->prop & S_DIRTY) | prop;
+    mode.S_DIRTY = cell->mode.S_DIRTY;
+    cell->mode = mode;
 }
 
-bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, enum CellProperty pr2)
+bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, struct CellMode pr2)
 {
     if (!cell->bytes || !c2 || strcmp((const char*)cell->bytes, (const char*)c2))
         return 1;
-    if (cell->bytes[0] == ' ')
-        return (cell->prop ^ pr2) & (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS) & ~S_DIRTY;
+    if (cell->bytes[0] == ' ') {
+        if (0 == memcmp(&cell->mode.prop, &pr2.prop, sizeof(struct CellProperty))) {
+            return true;
+        }
+        if (cell->mode.fg != pr2.fg) {
+            return true;
+        }
+        if (cell->mode.bg != pr2.bg) {
+            return true;
+        }
+        return false;
+    }
 
-    if ((cell->prop ^ pr2) & ~S_DIRTY)
-        return 1;
+    if (0 != memcmp(&cell->mode.prop, &pr2.prop, sizeof(struct CellProperty)))
+        return true;
+    if (cell->mode.fg != pr2.fg) {
+        return true;
+    }
+    if (cell->mode.bg != pr2.bg) {
+        return true;
+    }
 
-    return 0;
+    return false;
 }
 
 static int max_LINES = 0, max_COLS = 0;
@@ -44,7 +64,7 @@ struct ScreenLine** sc_lines()
     return ScreenImage;
 }
 
-static enum CellProperty CurrentMode = 0;
+static struct CellMode CurrentMode = { 0 };
 
 static uint8_t*
 skip_gif_header(uint8_t* p)
@@ -79,7 +99,7 @@ void sc_init(void)
     int i = 0;
     for (; i < LINES; i++) {
         ScreenImage[i] = &ScreenElem[i];
-        ScreenImage[i]->cells[0].prop = S_EOL;
+        ScreenImage[i]->cells[0].mode.S_EOL = true;
         ScreenImage[i]->isdirty = 0;
     }
     for (; i < max_LINES; i++) {
@@ -105,7 +125,7 @@ void sc_addch(uint8_t c)
 static void touch_column(int col)
 {
     if (col >= 0 && col < COLS)
-        ScreenImage[CurLine]->cells[col].prop |= S_DIRTY;
+        ScreenImage[CurLine]->cells[col].mode.S_DIRTY = true;
 }
 
 static void sc_touch_line(void)
@@ -113,7 +133,7 @@ static void sc_touch_line(void)
     if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
         int i;
         for (i = 0; i < COLS; i++)
-            ScreenImage[CurLine]->cells[i].prop &= ~S_DIRTY;
+            ScreenImage[CurLine]->cells[i].mode.S_DIRTY = false;
         ScreenImage[CurLine]->isdirty |= L_DIRTY;
     }
 }
@@ -143,37 +163,58 @@ void sc_addmch(const uint8_t* src, size_t len)
         return;
 
     struct Cell* line = ScreenImage[CurLine]->cells;
-    if (line[CurColumn].prop & S_EOL) {
-        if (src[0] == ' ' && !(CurrentMode & (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS))) {
-            CurColumn++;
-            return;
+    if (line[CurColumn].mode.S_EOL) {
+        if (src[0] == ' ') {
+            if (!CurrentMode.prop.S_STANDOUT
+                && !CurrentMode.prop.S_BOLD
+                && !CurrentMode.prop.S_UNDERLINE
+                && !CurrentMode.prop.S_GRAPHICS
+                && CurrentMode.fg == ANSI_TERM
+                && CurrentMode.bg == ANSI_TERM) {
+                CurColumn++;
+                return;
+            }
         }
-        for (i = CurColumn; i >= 0 && (line[i].prop & S_EOL); i--) {
-            setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & (~((S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS) | C_WHICHCHAR))) | C_ASCII);
+        for (i = CurColumn; i >= 0 && (line[i].mode.S_EOL); i--) {
+            struct CellMode mode = line[i].mode;
+            mode.prop = (struct CellProperty) { 0 };
+            mode.fg = ANSI_TERM;
+            mode.bg = ANSI_TERM;
+            mode.charmode = C_ASCII;
+            setCell(&line[i], SPACE, 1, mode);
         }
     }
 
-    if (src[0] == '\t' || src[0] == '\n' || src[0] == '\r' || src[0] == '\b')
-        SETCHMODE(CurrentMode, C_CTRL);
-    else if (len > 1)
-        SETCHMODE(CurrentMode, C_WCHAR1);
-    else if (!IS_CNTRL(src[0]))
-        SETCHMODE(CurrentMode, C_ASCII);
-    else
+    if (src[0] == '\t' || src[0] == '\n' || src[0] == '\r' || src[0] == '\b') {
+        CurrentMode.charmode = C_ASCII;
+        CurrentMode.C_CTRL = true;
+    } else if (len > 1) {
+        CurrentMode.charmode = C_WCHAR1;
+        CurrentMode.C_CTRL = false;
+    } else if (!IS_CNTRL(src[0])) {
+        CurrentMode.charmode = C_ASCII;
+        CurrentMode.C_CTRL = false;
+    } else {
         return;
+    }
 
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
     i = CurColumn + width - 1;
-    if (i < COLS && (((line[i].prop & S_BOLD) && sc_need_redraw(&line[i], (CellCharBytes)pc, CurrentMode)) || ((line[i].prop & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
+    if (i < COLS && (((line[i].mode.prop.S_BOLD) && sc_need_redraw(&line[i], (CellCharBytes)pc, CurrentMode)) || ((line[i].mode.prop.S_UNDERLINE) && !(CurrentMode.prop.S_UNDERLINE)))) {
         sc_touch_line();
         i++;
         if (i < COLS) {
             touch_column(i);
-            if (line[i].prop & S_EOL) {
-                setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & (~((S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS) | C_WHICHCHAR))) | C_ASCII);
+            if (line[i].mode.S_EOL) {
+                struct CellMode mode = line[i].mode;
+                mode.prop = (struct CellProperty) { 0 };
+                mode.fg = ANSI_TERM;
+                mode.bg = ANSI_TERM;
+                mode.charmode = C_ASCII;
+                setCell(&line[i], SPACE, 1, mode);
             } else {
-                for (i++; i < COLS && CHMODE(line[i].prop) == C_WCHAR2; i++)
+                for (i++; i < COLS && line[i].mode.charmode == C_WCHAR2; i++)
                     touch_column(i);
             }
         }
@@ -182,7 +223,9 @@ void sc_addmch(const uint8_t* src, size_t len)
     if (CurColumn + width > COLS) {
         sc_touch_line();
         for (i = CurColumn; i < COLS; i++) {
-            setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & ~C_WHICHCHAR) | C_ASCII);
+            struct CellMode mode = line[i].mode;
+            mode.charmode = C_ASCII;
+            setCell(&line[i], SPACE, 1, mode);
             touch_column(i);
         }
         sc_wrap();
@@ -190,28 +233,34 @@ void sc_addmch(const uint8_t* src, size_t len)
             return;
         line = ScreenImage[CurLine]->cells;
     }
-    if (CHMODE(line[CurColumn].prop) == C_WCHAR2) {
+    if (line[CurColumn].mode.charmode == C_WCHAR2) {
         sc_touch_line();
         for (i = CurColumn - 1; i >= 0; i--) {
-            enum CellProperty l = CHMODE(line[i].prop);
-            setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & ~C_WHICHCHAR) | C_ASCII);
+            enum CharMode l = line[i].mode.charmode;
+            struct CellMode mode = line[i].mode;
+            mode.charmode = C_ASCII;
+            setCell(&line[i], SPACE, 1, mode);
             touch_column(i);
             if (l != C_WCHAR2)
                 break;
         }
     }
-    if (CHMODE(CurrentMode) != C_CTRL) {
+    if (!CurrentMode.C_CTRL) {
         if (sc_need_redraw(&line[CurColumn], (CellCharBytes)pc, CurrentMode)) {
             setCell(&line[CurColumn], (CellCharBytes)pc, len, CurrentMode);
             sc_touch_line();
             touch_column(CurColumn);
-            SETCHMODE(CurrentMode, C_WCHAR2);
+            CurrentMode.charmode = C_WCHAR2;
             for (i = CurColumn + 1; i < CurColumn + width; i++) {
-                setCell(&line[i], (CellCharBytes)SPACE, 1, (line[CurColumn].prop & ~C_WHICHCHAR) | C_WCHAR2);
+                struct CellMode mode = line[CurColumn].mode;
+                mode.charmode = C_WCHAR2;
+                setCell(&line[i], SPACE, 1, mode);
                 touch_column(i);
             }
-            for (; i < COLS && CHMODE(line[i].prop) == C_WCHAR2; i++) {
-                setCell(&line[i], (CellCharBytes)SPACE, 1, (line[i].prop & ~C_WHICHCHAR) | C_ASCII);
+            for (; i < COLS && line[i].mode.charmode == C_WCHAR2; i++) {
+                struct CellMode mode = line[i].mode;
+                mode.charmode = C_ASCII;
+                setCell(&line[i], SPACE, 1, mode);
                 touch_column(i);
             }
         }
@@ -225,8 +274,8 @@ void sc_addmch(const uint8_t* src, size_t len)
             line = ScreenImage[CurLine]->cells;
         }
         for (i = CurColumn; i < dest; i++) {
-            if (sc_need_redraw(&line[i], (CellCharBytes)SPACE, CurrentMode)) {
-                setCell(&line[i], (CellCharBytes)SPACE, 1, CurrentMode);
+            if (sc_need_redraw(&line[i], SPACE, CurrentMode)) {
+                setCell(&line[i], SPACE, 1, CurrentMode);
                 sc_touch_line();
                 touch_column(i);
             }
@@ -238,86 +287,82 @@ void sc_addmch(const uint8_t* src, size_t len)
         CurColumn = 0;
     } else if (src[0] == '\b' && CurColumn > 0) { /* Backspace */
         CurColumn--;
-        while (CurColumn > 0 && CHMODE(line[CurColumn].prop) == C_WCHAR2)
+        while (CurColumn > 0 && line[CurColumn].mode.charmode == C_WCHAR2)
             CurColumn--;
     }
 }
 
 void sc_standout(void)
 {
-    CurrentMode |= S_STANDOUT;
+    CurrentMode.prop.S_STANDOUT = true;
 }
 
 void sc_standend(void)
 {
-    CurrentMode &= ~S_STANDOUT;
+    CurrentMode.prop.S_STANDOUT = false;
 }
 
 void sc_toggle_stand(void)
 {
     struct Cell* line = ScreenImage[CurLine]->cells;
-    line[CurColumn].prop ^= S_STANDOUT;
-    if (CHMODE(line[CurColumn].prop) != C_WCHAR2) {
-        for (int i = CurColumn + 1; CHMODE(line[i].prop) == C_WCHAR2; i++)
-            line[i].prop ^= S_STANDOUT;
+    line[CurColumn].mode.prop.S_STANDOUT = !line[CurColumn].mode.prop.S_STANDOUT;
+    if (line[CurColumn].mode.charmode != C_WCHAR2) {
+        for (int i = CurColumn + 1; line[i].mode.charmode == C_WCHAR2; i++)
+            line[i].mode.prop.S_STANDOUT = !line[i].mode.prop.S_STANDOUT;
     }
 }
 
 void sc_bold(void)
 {
-    CurrentMode |= S_BOLD;
+    CurrentMode.prop.S_BOLD = true;
 }
 
 void sc_boldend(void)
 {
-    CurrentMode &= ~S_BOLD;
+    CurrentMode.prop.S_BOLD = false;
 }
 
 void sc_underline(void)
 {
-    CurrentMode |= S_UNDERLINE;
+    CurrentMode.prop.S_UNDERLINE = true;
 }
 
 void sc_underlineend(void)
 {
-    CurrentMode &= ~S_UNDERLINE;
+    CurrentMode.prop.S_UNDERLINE = false;
 }
 
 void sc_graphstart(void)
 {
-    CurrentMode |= S_GRAPHICS;
+    CurrentMode.prop.S_GRAPHICS = true;
 }
 
 void sc_graphend(void)
 {
-    CurrentMode &= ~S_GRAPHICS;
+    CurrentMode.prop.S_GRAPHICS = false;
 }
 
-void sc_setfcolor(int color)
+void sc_setfcolor(enum AnsiColor color)
 {
-    CurrentMode &= ~COL_FCOLOR;
-    if ((color & 0xf) <= 7)
-        CurrentMode |= (((color & 7) | 8) << 8);
+    CurrentMode.fg = color;
 }
 
-const char* sc_color_seq(int colmode)
+const char* sc_color_seq(enum AnsiColor colmode)
 {
     static char seqbuf[32];
-    sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + (highIntensityColors ? 90 : 30));
+    sprintf(seqbuf, "\033[%dm", colmode + (highIntensityColors ? 90 : 30));
     return seqbuf;
 }
 
-void sc_setbcolor(int color)
+void sc_setbcolor(enum AnsiColor color)
 {
-    CurrentMode &= ~COL_BCOLOR;
-    if ((color & 0xf) <= 7)
-        CurrentMode |= (((color & 7) | 8) << 12);
+    CurrentMode.bg = color;
 }
 
-const char* sc_bcolor_seq(int colmode)
+const char* sc_bcolor_seq(enum AnsiColor colmode)
 {
     static char seqbuf[32];
-    sprintf(seqbuf, "\033[%dm", ((colmode >> 12) & 7) + 40);
+    sprintf(seqbuf, "\033[%dm", colmode + 40);
     return seqbuf;
 }
 
@@ -328,10 +373,10 @@ void sc_clear(void)
         ScreenImage[i]->isdirty = 0;
         struct Cell* p = ScreenImage[i]->cells;
         for (int j = 0; j < COLS; j++) {
-            p[j].prop = S_EOL;
+            p[j].mode.S_EOL = true;
         }
     }
-    CurrentMode = C_ASCII;
+    CurrentMode.charmode = C_ASCII;
 }
 
 /* XXX: conflicts with curses's clrtoeol(3) ? */
@@ -339,7 +384,7 @@ static void sc_clrtoeol(void)
 { /* Clear to the end of line */
     struct Cell* line = ScreenImage[CurLine]->cells;
 
-    if (line[CurColumn].prop & S_EOL)
+    if (line[CurColumn].mode.S_EOL)
         return;
 
     if (!(ScreenImage[CurLine]->isdirty & (L_NEED_CE | L_CLRTOEOL)) || ScreenImage[CurLine]->eol > CurColumn)
@@ -347,26 +392,28 @@ static void sc_clrtoeol(void)
 
     ScreenImage[CurLine]->isdirty |= L_CLRTOEOL;
     sc_touch_line();
-    for (int i = CurColumn; i < COLS && !(line[i].prop & S_EOL); i++) {
-        line[i].prop = S_EOL | S_DIRTY;
+    for (int i = CurColumn; i < COLS && !line[i].mode.S_EOL; i++) {
+        line[i].mode.S_EOL = true;
+        line[i].mode.S_DIRTY = true;
     }
 }
 
 static void
 clrtoeol_with_bcolor(void)
 {
-    int i, cli, cco;
-    enum CellProperty pr;
 
-    if (!(CurrentMode & S_BCOLORED)) {
+    if (CurrentMode.bg == ANSI_TERM) {
         sc_clrtoeol();
         return;
     }
-    cli = CurLine;
-    cco = CurColumn;
-    pr = CurrentMode;
-    CurrentMode = (CurrentMode & ((~((S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS) | C_WHICHCHAR)) | S_BCOLORED)) | C_ASCII;
-    for (i = CurColumn; i < COLS; i++)
+    int cli = CurLine;
+    int cco = CurColumn;
+    struct CellMode pr = CurrentMode;
+    CurrentMode.prop = (struct CellProperty) { 0 };
+    CurrentMode.charmode = C_ASCII;
+    CurrentMode.fg = ANSI_TERM;
+    CurrentMode.bg = ANSI_TERM;
+    for (int i = CurColumn; i < COLS; i++)
         sc_addch(' ');
     sc_move(cli, cco);
     CurrentMode = pr;

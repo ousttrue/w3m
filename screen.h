@@ -5,68 +5,61 @@
 
 extern struct TermInfo terminfo;
 
-enum CellProperty : uint16_t {
-    // struct ScreenLine properties
-    S_SCREENPROP = 0x0f,
-    S_NORMAL = 0x00,
-    S_STANDOUT = 0x01,
-    S_UNDERLINE = 0x02,
-    S_BOLD = 0x04,
-    S_EOL = 0x08,
-
-    // Sort of Character
-    C_WHICHCHAR = 0xc0,
-    C_ASCII = 0x00,
-    C_WCHAR1 = 0x40,
-    C_WCHAR2 = 0x80,
-    C_CTRL = 0xc0,
-
-    // Charactor Color
-    COL_FCOLOR = 0xf00,
-    COL_FBLACK = 0x800,
-    COL_FRED = 0x900,
-    COL_FGREEN = 0xa00,
-    COL_FYELLOW = 0xb00,
-    COL_FBLUE = 0xc00,
-    COL_FMAGENTA = 0xd00,
-    COL_FCYAN = 0xe00,
-    COL_FWHITE = 0xf00,
-    COL_FTERM = 0x000,
-
-    S_COLORED = 0xf00,
-
-    // Background Color
-    COL_BCOLOR = 0xf000,
-    COL_BBLACK = 0x8000,
-    COL_BRED = 0x9000,
-    COL_BGREEN = 0xa000,
-    COL_BYELLOW = 0xb000,
-    COL_BBLUE = 0xc000,
-    COL_BMAGENTA = 0xd000,
-    COL_BCYAN = 0xe000,
-    COL_BWHITE = 0xf000,
-    COL_BTERM = 0x0000,
-
-    S_BCOLORED = 0xf000,
-
-    S_GRAPHICS = 0x10,
-
-    S_DIRTY = 0x20,
+struct CellProperty {
+    bool S_SCREENPROP;
+    bool S_NORMAL;
+    bool S_STANDOUT;
+    bool S_UNDERLINE;
+    bool S_BOLD;
+    bool S_GRAPHICS;
 };
 
-// #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
+enum CharMode {
+    C_ASCII,
+    C_WCHAR1,
+    C_WCHAR2,
+};
 
-static inline bool is_mend(enum CellProperty prop)
+enum AnsiColor {
+    ANSI_COLOR,
+    ANSI_BLACK,
+    ANSI_RED,
+    ANSI_GREEN,
+    ANSI_YELLOW,
+    ANSI_BLUE,
+    ANSI_MAGENTA,
+    ANSI_CYAN,
+    ANSI_WHITE,
+    ANSI_TERM,
+};
+
+struct CellMode {
+    struct CellProperty prop;
+    enum CharMode charmode;
+    enum AnsiColor fg;
+    enum AnsiColor bg;
+    bool S_DIRTY;
+    bool S_EOL;
+    bool C_CTRL;
+};
+
+static inline bool is_mend(struct CellMode mode)
 {
-    return prop & (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS) != 0;
+    if (mode.prop.S_STANDOUT | mode.prop.S_UNDERLINE | mode.prop.S_BOLD | mode.prop.S_GRAPHICS) {
+        return true;
+    }
+    if (mode.fg != ANSI_TERM || mode.bg != ANSI_TERM) {
+        return true;
+    }
+    return false;
 }
 
-static inline void remove_mend(enum CellProperty* prop)
+static inline void remove_mend(struct CellMode* mode)
 {
-    *prop &= ~(S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS);
+    mode->prop = (struct CellProperty) { };
+    mode->fg = ANSI_TERM;
+    mode->bg = ANSI_TERM;
 }
-
-static inline enum CellProperty CHMODE(enum CellProperty c) { return ((c)&C_WHICHCHAR); }
 
 enum LineFlags : uint16_t {
     L_DIRTY = 0x01,
@@ -79,7 +72,7 @@ typedef const uint8_t* CellCharBytes;
 
 struct Cell {
     CellCharBytes bytes;
-    enum CellProperty prop;
+    struct CellMode mode;
 };
 
 struct ScreenLine {
@@ -105,8 +98,8 @@ void sc_underline(void);
 void sc_underlineend(void);
 void sc_graphstart(void);
 void sc_graphend(void);
-void sc_setfcolor(int color);
-void sc_setbcolor(int color);
+void sc_setfcolor(enum AnsiColor color);
+void sc_setbcolor(enum AnsiColor color);
 void sc_clear(void);
 void sc_clrtoeolx(void);
 void sc_clrtobotx(void);
@@ -132,6 +125,6 @@ static inline void sc_mvaddstr(int y, int x, const char* str)
     sc_addstr(str);
 }
 
-bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, enum CellProperty pr2);
-const char* sc_color_seq(int colmode);
-const char* sc_bcolor_seq(int colmode);
+bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, struct CellMode pr2);
+const char* sc_color_seq(enum AnsiColor colmode);
+const char* sc_bcolor_seq(enum AnsiColor colmode);
