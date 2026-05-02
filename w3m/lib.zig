@@ -429,7 +429,7 @@ export fn tty_write_sc() void {
     var r: ScreenRenderer = .init();
     c.wc_putc_init(c.WcOption, c.InnerCharset, c.DisplayCharset);
     for (0..@as(usize, @intCast((g.LINES - 1)))) |i| {
-        r.render_line(i);
+        r.render_line(i, c.sc_getline(i));
     }
     const span = c.wc_putc_end();
     if (span.ptr != null and span.len > 0) {
@@ -460,7 +460,7 @@ export fn initscr() void {
     if (c.terminfo.T_ti != null and 0 == g.Do_not_use_ti_te) {
         es_writestr(c.terminfo.T_ti);
     }
-    c.sc_init();
+    c.sc_init(.{ .x = @intCast(g.COLS), .y = @intCast(g.LINES) });
 }
 
 export fn tty_reset() void {

@@ -5,6 +5,11 @@
 
 extern struct TermInfo terminfo;
 
+struct Usize2 {
+    size_t x;
+    size_t y;
+};
+
 struct CellProperty {
     bool S_SCREENPROP;
     bool S_NORMAL;
@@ -63,7 +68,6 @@ static inline void remove_mend(struct CellMode* mode)
 
 enum LineFlags : uint16_t {
     L_DIRTY = 0x01,
-    L_UNUSED = 0x02,
     L_NEED_CE = 0x04,
     L_CLRTOEOL = 0x08,
 };
@@ -81,10 +85,10 @@ struct ScreenLine {
     short eol;
 };
 
-void sc_init(void);
+void sc_init(struct Usize2 size);
 int sc_curline();
 int sc_curcol();
-struct ScreenLine** sc_lines();
+struct ScreenLine* sc_getline(size_t i);
 
 void sc_move(int line, int column);
 void sc_addmch(const uint8_t* p, size_t len);

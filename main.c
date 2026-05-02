@@ -597,6 +597,8 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK);
 
+
+    tty_linescols();
     tty_init();
     signal(SIGWINCH, resize_hook);
     sync_with_option(args);
@@ -922,7 +924,7 @@ resize_screen(struct CmdArgs* args)
 {
     need_resize_screen = FALSE;
     tty_linescols();
-    sc_init();
+    sc_init((struct Usize2) { .y = LINES, .x = COLS });
     if (CurrentTab)
         displayBuffer(args, B_FORCE_REDRAW);
 }

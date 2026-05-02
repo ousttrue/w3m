@@ -51,17 +51,20 @@ bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, struct Cell
     return false;
 }
 
-static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
-static int CurLine, CurColumn;
+static int CurLine = 0;
+static int CurColumn = 0;
 
 int sc_curline() { return CurLine; }
 int sc_curcol() { return CurColumn; }
 
-static struct ScreenLine *ScreenElem = NULL, **ScreenImage = NULL;
-struct ScreenLine** sc_lines()
+static struct Usize2 size = { .x = 0, .y = 0 };
+static struct ScreenLine* lines = NULL;
+static struct Cell* cells = NULL;
+
+struct ScreenLine* sc_getline(size_t i)
 {
-    return ScreenImage;
+    return &lines[i];
 }
 
 static struct CellMode CurrentMode = { 0 };
@@ -80,30 +83,28 @@ skip_gif_header(uint8_t* p)
     return p;
 }
 
-void sc_init(void)
+void sc_init(struct Usize2 _size)
 {
-    if (LINES + 1 > max_LINES) {
-        max_LINES = LINES + 1;
-        max_COLS = 0;
-        ScreenElem = malloc(sizeof(struct ScreenLine) * max_LINES);
-        ScreenImage = malloc(sizeof(struct ScreenLine*) * max_LINES);
-    }
-    if (COLS + 1 > max_COLS) {
-        max_COLS = COLS + 1;
-        for (int i = 0; i < max_LINES; i++) {
-            ScreenElem[i].cells = malloc(sizeof(struct Cell) * max_COLS);
-            memset(ScreenElem[i].cells, 0, max_COLS * sizeof(struct Cell));
-        }
+    size = _size;
+    if (size.x == 0 || size.y == 0) {
+        return;
     }
 
-    int i = 0;
-    for (; i < LINES; i++) {
-        ScreenImage[i] = &ScreenElem[i];
-        ScreenImage[i]->cells[0].mode.S_EOL = true;
-        ScreenImage[i]->isdirty = 0;
-    }
-    for (; i < max_LINES; i++) {
-        ScreenElem[i].isdirty = L_UNUSED;
+    lines = malloc(sizeof(struct ScreenLine) * size.y);
+    cells = malloc(sizeof(struct Cell) * size.y * size.x);
+
+    size_t begin = 0;
+    for (size_t y = 0; y < size.y; y++, begin += size.x) {
+        lines[y] = (struct ScreenLine) {
+            .cells = cells + begin,
+        };
+        for (size_t x = 0; x < size.x; ++x) {
+            lines[y].cells[x] = (struct Cell) {
+                .mode = (struct CellMode) {
+                    .S_EOL = true,
+                },
+            };
+        }
     }
 
     sc_clear();
@@ -125,16 +126,16 @@ void sc_addch(uint8_t c)
 static void touch_column(int col)
 {
     if (col >= 0 && col < COLS)
-        ScreenImage[CurLine]->cells[col].mode.S_DIRTY = true;
+        lines[CurLine].cells[col].mode.S_DIRTY = true;
 }
 
 static void sc_touch_line(void)
 {
-    if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
+    if (!(lines[CurLine].isdirty & L_DIRTY)) {
         int i;
         for (i = 0; i < COLS; i++)
-            ScreenImage[CurLine]->cells[i].mode.S_DIRTY = false;
-        ScreenImage[CurLine]->isdirty |= L_DIRTY;
+            lines[CurLine].cells[i].mode.S_DIRTY = false;
+        lines[CurLine].isdirty |= L_DIRTY;
     }
 }
 
@@ -162,7 +163,7 @@ void sc_addmch(const uint8_t* src, size_t len)
     if (CurColumn >= COLS)
         return;
 
-    struct Cell* line = ScreenImage[CurLine]->cells;
+    struct Cell* line = lines[CurLine].cells;
     if (line[CurColumn].mode.S_EOL) {
         if (src[0] == ' ') {
             if (!CurrentMode.prop.S_STANDOUT
@@ -231,7 +232,7 @@ void sc_addmch(const uint8_t* src, size_t len)
         sc_wrap();
         if (CurColumn + width > COLS)
             return;
-        line = ScreenImage[CurLine]->cells;
+        line = lines[CurLine].cells;
     }
     if (line[CurColumn].mode.charmode == C_WCHAR2) {
         sc_touch_line();
@@ -271,7 +272,7 @@ void sc_addmch(const uint8_t* src, size_t len)
             sc_wrap();
             sc_touch_line();
             dest = tab_step;
-            line = ScreenImage[CurLine]->cells;
+            line = lines[CurLine].cells;
         }
         for (i = CurColumn; i < dest; i++) {
             if (sc_need_redraw(&line[i], SPACE, CurrentMode)) {
@@ -304,7 +305,7 @@ void sc_standend(void)
 
 void sc_toggle_stand(void)
 {
-    struct Cell* line = ScreenImage[CurLine]->cells;
+    struct Cell* line = lines[CurLine].cells;
     line[CurColumn].mode.prop.S_STANDOUT = !line[CurColumn].mode.prop.S_STANDOUT;
     if (line[CurColumn].mode.charmode != C_WCHAR2) {
         for (int i = CurColumn + 1; line[i].mode.charmode == C_WCHAR2; i++)
@@ -370,8 +371,8 @@ void sc_clear(void)
 {
     sc_move(0, 0);
     for (int i = 0; i < LINES; i++) {
-        ScreenImage[i]->isdirty = 0;
-        struct Cell* p = ScreenImage[i]->cells;
+        lines[i].isdirty = 0;
+        struct Cell* p = lines[i].cells;
         for (int j = 0; j < COLS; j++) {
             p[j].mode.S_EOL = true;
         }
@@ -382,15 +383,15 @@ void sc_clear(void)
 /* XXX: conflicts with curses's clrtoeol(3) ? */
 static void sc_clrtoeol(void)
 { /* Clear to the end of line */
-    struct Cell* line = ScreenImage[CurLine]->cells;
+    struct Cell* line = lines[CurLine].cells;
 
     if (line[CurColumn].mode.S_EOL)
         return;
 
-    if (!(ScreenImage[CurLine]->isdirty & (L_NEED_CE | L_CLRTOEOL)) || ScreenImage[CurLine]->eol > CurColumn)
-        ScreenImage[CurLine]->eol = CurColumn;
+    if (!(lines[CurLine].isdirty & (L_NEED_CE | L_CLRTOEOL)) || lines[CurLine].eol > CurColumn)
+        lines[CurLine].eol = CurColumn;
 
-    ScreenImage[CurLine]->isdirty |= L_CLRTOEOL;
+    lines[CurLine].isdirty |= L_CLRTOEOL;
     sc_touch_line();
     for (int i = CurColumn; i < COLS && !line[i].mode.S_EOL; i++) {
         line[i].mode.S_EOL = true;

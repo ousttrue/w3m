@@ -40,8 +40,7 @@ fn tty_write_str(str: [*c]const u8) void {
 
 const SPACE: [*c]const u8 = " ";
 
-pub fn render_line(this: *@This(), i: usize) void {
-    const line: *c.ScreenLine = c.sc_lines()[i];
+pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
     var dirty = line.isdirty;
 
     if (dirty & c.L_DIRTY != 0) {
