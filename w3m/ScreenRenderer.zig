@@ -3,6 +3,7 @@ const c = @import("c.zig").c;
 const g = @import("global.zig");
 const lib = @import("lib.zig");
 const tty = @import("tty.zig");
+const screen = @import("screen.zig");
 
 const MoveStatus = enum {
     RF_NEED_TO_MOVE,
@@ -49,7 +50,7 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
         var col: usize = 0;
         while (col < g.COLS and !cells[col].mode.S_EOL) : (col += 1) {
             if (dirty & c.L_NEED_CE != 0 and col >= line.eol) {
-                if (c.sc_need_redraw(&cells[col], SPACE, .{}))
+                if (screen.sc_cell_need_redraw(&cells[col], SPACE, .{}))
                     break;
             } else {
                 if (cells[col].mode.S_DIRTY)
@@ -119,7 +120,7 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
                 c.remove_mend(&this.mode);
             }
             if (if (dirty & c.L_NEED_CE != 0 and col >= line.eol)
-                c.sc_need_redraw(&cells[col], SPACE, .{})
+                screen.sc_cell_need_redraw(&cells[col], SPACE, .{})
             else
                 (cells[col].mode.S_DIRTY))
             {

@@ -875,3 +875,17 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //
 //     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
 // }
+
+// static uint8_t*
+// skip_gif_header(uint8_t* p)
+// {
+//     /* Header */
+//     p += 10;
+//
+//     if (*(p) & 0x80) {
+//         p += (3 * (2 << ((*p) & 0x7)));
+//     }
+//     p += 3;
+//
+//     return p;
+// }

@@ -73,6 +73,8 @@ struct Cell {
     CellCharBytes bytes;
     struct CellMode mode;
 };
+void sc_cell_set(struct Cell* cell, CellCharBytes ch, size_t len, struct CellMode mode);
+bool sc_cell_need_redraw(const struct Cell* cell, const CellCharBytes c2, struct CellMode pr2);
 
 struct ScreenLine {
     struct Cell* cells;
@@ -124,6 +126,5 @@ static inline void sc_mvaddstr(int y, int x, const char* str)
     sc_addstr(str);
 }
 
-bool sc_need_redraw(const struct Cell* cell, const CellCharBytes c2, struct CellMode pr2);
 const char* sc_color_seq(enum AnsiColor colmode);
 const char* sc_bcolor_seq(enum AnsiColor colmode);

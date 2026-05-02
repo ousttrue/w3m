@@ -12,6 +12,7 @@ const history = @import("history.zig");
 const LineInput = @import("LineInput.zig");
 const Growbuf = @import("Growbuf.zig");
 const ScreenRenderer = @import("ScreenRenderer.zig");
+const screen = @import("screen.zig");
 
 export var terminfo: c.TermInfo = .{};
 
@@ -23,6 +24,7 @@ pub export fn _dummy_() void {
     std.log.debug("{}", .{history});
     std.log.debug("{}", .{LineInput});
     std.log.debug("{}", .{Growbuf});
+    std.log.debug("{}", .{screen});
 }
 
 comptime {
