@@ -1,9 +1,6 @@
 #pragma once
-#include "terminfo_entry.h"
 #include <stddef.h>
 #include <stdint.h>
-
-extern struct TermInfo terminfo;
 
 struct Usize2 {
     size_t x;
@@ -11,8 +8,6 @@ struct Usize2 {
 };
 
 struct CellProperty {
-    bool S_SCREENPROP;
-    bool S_NORMAL;
     bool S_STANDOUT;
     bool S_UNDERLINE;
     bool S_BOLD;

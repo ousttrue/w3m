@@ -10,8 +10,6 @@
 
 static const uint8_t* SPACE = (const uint8_t*)" ";
 
-struct TermInfo terminfo;
-
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
 
 static void setCell(struct Cell* cell, CellCharBytes ch, size_t len, struct CellMode mode)

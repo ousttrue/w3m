@@ -1,6 +1,9 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
+#include "terminfo_entry.h"
+
+extern struct TermInfo terminfo;
 
 struct CmdArgs {
     int ch;

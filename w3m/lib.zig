@@ -13,6 +13,8 @@ const LineInput = @import("LineInput.zig");
 const Growbuf = @import("Growbuf.zig");
 const ScreenRenderer = @import("ScreenRenderer.zig");
 
+export var terminfo: c.TermInfo = .{};
+
 pub export fn _dummy_() void {
     // export symbols ?
     std.log.debug("{}", .{global});
