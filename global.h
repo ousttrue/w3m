@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+extern int CurLine;
+extern int CurColumn;
 extern bool is_running;
 extern int prec_num;
 extern int prev_key;

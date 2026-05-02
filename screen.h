@@ -42,6 +42,7 @@ struct CellMode {
     bool S_EOL;
     bool C_CTRL;
 };
+extern struct CellMode CurrentMode;
 
 static inline bool is_mend(struct CellMode mode)
 {
@@ -128,3 +129,5 @@ static inline void sc_mvaddstr(int y, int x, const char* str)
 
 const char* sc_color_seq(enum AnsiColor colmode);
 const char* sc_bcolor_seq(enum AnsiColor colmode);
+
+void sc_touch_line(void);
