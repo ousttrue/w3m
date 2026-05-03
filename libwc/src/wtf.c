@@ -189,7 +189,7 @@ wtf_width(wc_uchar *p)
     return (int)WTF_WIDTH_MAP[*p];
 }
 */
-int
+size_t
 wtf_width(struct wc_option opts, wc_uchar p)
 {
     return opts.use_wide 

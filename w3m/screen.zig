@@ -163,7 +163,7 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
 
     // Required to erase bold or underlined character for some * terminal emulators. */
     const width = c.wtf_width(c.WcOption, src[0]);
-    var i = g.CurColumn + width - 1;
+    var i = g.CurColumn + @as(c_int, @intCast(width - 1));
     if (i < sc_cols() and
         (((cur_line.cells[@intCast(i)].mode.prop.S_BOLD) and
             sc_cell_need_redraw(&cur_line.cells[@intCast(i)], src, c.CurrentMode)) or
@@ -190,7 +190,7 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
         }
     }
 
-    if (g.CurColumn + width > sc_cols()) {
+    if (@as(usize, @intCast(g.CurColumn)) + width > sc_cols()) {
         c.sc_touch_line();
         i = g.CurColumn;
         while (i < sc_cols()) : (i += 1) {
@@ -201,7 +201,7 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
             touch_column(i);
         }
         sc_wrap();
-        if (g.CurColumn + width > sc_cols())
+        if (@as(usize, @intCast(g.CurColumn)) + width > sc_cols())
             return;
         cur_line = sc_getline(@intCast(g.CurLine));
     }
@@ -228,7 +228,7 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
             touch_column(g.CurColumn);
             c.CurrentMode.charmode = c.C_WCHAR2;
             i = g.CurColumn + 1;
-            while (i < g.CurColumn + width) : (i += 1) {
+            while (i < g.CurColumn + @as(c_int, @intCast(width))) : (i += 1) {
                 var mode = cur_line.cells[@intCast(g.CurColumn)].mode;
                 mode.charmode = c.C_WCHAR2;
                 sc_cell_set(&cur_line.cells[@intCast(i)], SPACE, 1, mode);
@@ -242,7 +242,7 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
                 touch_column(i);
             }
         }
-        g.CurColumn += width;
+        g.CurColumn += @as(c_int, @intCast(width));
     } else if (src[0] == '\t') {
         var dest = (@as(usize, @intCast(g.CurColumn)) + tab_step) / tab_step * tab_step;
         if (dest >= sc_cols()) {
@@ -269,5 +269,57 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
         g.CurColumn -= 1;
         while (g.CurColumn > 0 and cur_line.cells[@intCast(g.CurColumn)].mode.charmode == c.C_WCHAR2)
             g.CurColumn -= 1;
+    }
+}
+
+export fn sc_addnstr_sup(_s: ?[*:0]const u8, n: usize) void {
+    var s = _s orelse {
+        return;
+    };
+    if (n == 0) {
+        return;
+    }
+    var i: usize = 0;
+    while (s[0] != 0) {
+        const width = c.wtf_width(c.WcOption, s[0]);
+        if (i + width > n)
+            break;
+        const len = c.wtf_len(s);
+        sc_addmch(s, len);
+        s += len;
+        i += width;
+    }
+    while (i < n) : (i += 1) {
+        c.sc_addch(' ');
+    }
+}
+
+export fn sc_addnstr(_s: ?[*:0]const u8, n: usize) void {
+    var s = _s orelse {
+        return;
+    };
+    if (n == 0) {
+        return;
+    }
+    var i: usize = 0;
+    while (s[0] != 0) {
+        const width = c.wtf_width(c.WcOption, s[0]);
+        if (i + width > n)
+            break;
+        const len = c.wtf_len(s);
+        sc_addmch(s, len);
+        s += len;
+        i += width;
+    }
+}
+
+export fn sc_addstr(_s: ?[*:0]const u8) void {
+    var s = _s orelse {
+        return;
+    };
+    while (s[0] != 0) {
+        const len = c.wtf_len(s);
+        sc_addmch(s, len);
+        s += len;
     }
 }

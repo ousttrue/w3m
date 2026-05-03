@@ -12,7 +12,7 @@
 #define WTF_TYPE_WCHAR2W (WTF_TYPE_WCHAR2 | WTF_TYPE_WIDE)
 
 void wtf_init(wc_ces ces1, wc_ces ces2);
-int wtf_width(struct wc_option opts, wc_uchar p);
+size_t wtf_width(struct wc_option opts, wc_uchar p);
 int wtf_strwidth(struct wc_option opts, const wc_uchar* p);
 size_t wtf_len1(wc_uchar* p);
 size_t wtf_len(const wc_uchar* p);

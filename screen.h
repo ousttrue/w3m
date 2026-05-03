@@ -106,8 +106,8 @@ void sc_clear(void);
 void sc_clrtoeolx(void);
 void sc_clrtobotx(void);
 void sc_addstr(const char* s);
-void sc_addnstr(const char* s, int n);
-void sc_addnstr_sup(const char* s, int n);
+void sc_addnstr(const char* s, size_t n);
+void sc_addnstr_sup(const char* s, size_t n);
 
 static inline void sc_mvaddnstr(int y, int x, const char* str, int n)
 {
