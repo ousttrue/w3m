@@ -44,24 +44,6 @@ struct CellMode {
 };
 extern struct CellMode CurrentMode;
 
-static inline bool is_mend(struct CellMode mode)
-{
-    if (mode.prop.S_STANDOUT | mode.prop.S_UNDERLINE | mode.prop.S_BOLD | mode.prop.S_GRAPHICS) {
-        return true;
-    }
-    if (mode.fg != ANSI_TERM || mode.bg != ANSI_TERM) {
-        return true;
-    }
-    return false;
-}
-
-static inline void remove_mend(struct CellMode* mode)
-{
-    mode->prop = (struct CellProperty) { };
-    mode->fg = ANSI_TERM;
-    mode->bg = ANSI_TERM;
-}
-
 struct LineFlags {
     bool L_DIRTY;
     bool L_NEED_CE;
@@ -74,8 +56,6 @@ struct Cell {
     CellCharBytes bytes;
     struct CellMode mode;
 };
-void sc_cell_set(struct Cell* cell, CellCharBytes ch, size_t len, struct CellMode mode);
-bool sc_cell_need_redraw(const struct Cell* cell, const CellCharBytes c2, struct CellMode pr2);
 
 struct ScreenLine {
     struct Cell* cells;
@@ -84,9 +64,6 @@ struct ScreenLine {
 };
 
 void sc_init(struct Usize2 size);
-int sc_curline();
-int sc_curcol();
-struct ScreenLine* sc_getline(size_t i);
 
 void sc_move(int line, int column);
 void sc_addmch(const uint8_t* p, size_t len);
@@ -126,8 +103,3 @@ static inline void sc_mvaddstr(int y, int x, const char* str)
     sc_move(y, x);
     sc_addstr(str);
 }
-
-const char* sc_color_seq(enum AnsiColor colmode);
-const char* sc_bcolor_seq(enum AnsiColor colmode);
-
-void sc_touch_line(void);

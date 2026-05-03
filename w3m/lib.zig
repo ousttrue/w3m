@@ -433,13 +433,13 @@ export fn tty_write_sc() void {
     var r: ScreenRenderer = .init();
     c.wc_putc_init(c.WcOption, c.InnerCharset, c.DisplayCharset);
     for (0..@as(usize, @intCast((g.LINES - 1)))) |i| {
-        r.render_line(i, c.sc_getline(i));
+        r.render_line(i, screen.sc_getline(i));
     }
     const span = c.wc_putc_end();
     if (span.ptr != null and span.len > 0) {
         tty.tty_write(span.ptr, span.len);
     }
-    const str = std.mem.span(es_move(&c.terminfo, c.sc_curline(), c.sc_curcol()));
+    const str = std.mem.span(es_move(&c.terminfo, screen.sc_curline(), screen.sc_curcol()));
     tty.tty_write(str.ptr, str.len);
     tty.tty_flush();
 }

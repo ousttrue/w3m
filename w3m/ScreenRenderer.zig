@@ -17,7 +17,7 @@ mode: c.CellMode,
 
 pub fn init() @This() {
     return .{
-        .pline = @intCast(c.sc_curline()),
+        .pline = @intCast(screen.sc_curline()),
         .mode = .{
             .fg = c.ANSI_TERM,
             .bg = c.ANSI_TERM,
@@ -118,7 +118,7 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
                 if (this.mode.prop.S_GRAPHICS)
                     lib.es_writestr(c.terminfo.T_ae);
                 lib.es_writestr(c.terminfo.T_me);
-                c.remove_mend(&this.mode);
+                screen.remove_mend(&this.mode);
             }
             if (if (dirty.L_NEED_CE and col >= line.eol)
                 screen.sc_cell_need_redraw(&cells[col], SPACE, .{})
@@ -145,11 +145,11 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
                 }
                 if (cells[col].mode.fg != c.ANSI_TERM and cells[col].mode.fg != this.mode.fg) {
                     this.mode.fg = cells[col].mode.fg;
-                    lib.es_writestr(c.sc_color_seq(this.mode.fg));
+                    lib.es_writestr(screen.sc_color_seq(this.mode.fg, g.highIntensityColors != 0));
                 }
                 if (cells[col].mode.bg != c.ANSI_TERM and cells[col].mode.bg != this.mode.bg) {
                     this.mode.bg = cells[col].mode.bg;
-                    lib.es_writestr(c.sc_bcolor_seq(this.mode.bg));
+                    lib.es_writestr(screen.sc_bcolor_seq(this.mode.bg));
                 }
                 if (cells[col].mode.prop.S_GRAPHICS and !this.mode.prop.S_GRAPHICS) {
                     const span = c.wc_putc_end();
@@ -184,7 +184,7 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
     dirty.L_CLRTOEOL = false;
     line.isdirty = dirty;
 
-    if (c.is_mend(this.mode)) {
+    if (screen.is_mend(this.mode)) {
         if (this.mode.fg != c.ANSI_TERM or this.mode.bg != c.ANSI_TERM)
             lib.es_writestr(c.terminfo.T_op);
         if (this.mode.prop.S_GRAPHICS) {
@@ -192,6 +192,6 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
             c.wc_putc_clear_status();
         }
         lib.es_writestr(c.terminfo.T_me);
-        c.remove_mend(&this.mode);
+        screen.remove_mend(&this.mode);
     }
 }
