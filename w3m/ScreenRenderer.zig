@@ -47,7 +47,7 @@ pub fn render_line(this: *@This(), i: usize, line: *screen.ScreenLine) void {
         var col: usize = 0;
         while (col < g.COLS and !cells[col].mode.S_EOL) : (col += 1) {
             if (dirty.L_NEED_CE and col >= line.eol) {
-                if (screen.sc_cell_need_redraw(&cells[col], SPACE, .{}))
+                if (cells[col].need_redraw(SPACE, .{}))
                     break;
             } else {
                 if (cells[col].mode.S_DIRTY)
@@ -115,10 +115,10 @@ pub fn render_line(this: *@This(), i: usize, line: *screen.ScreenLine) void {
                 if (this.mode.prop.S_GRAPHICS)
                     lib.es_writestr(c.terminfo.T_ae);
                 lib.es_writestr(c.terminfo.T_me);
-                screen.remove_mend(&this.mode);
+                this.mode.remove_mend();
             }
             if (if (dirty.L_NEED_CE and col >= line.eol)
-                screen.sc_cell_need_redraw(&cells[col], SPACE, .{})
+                cells[col].need_redraw(SPACE, .{})
             else
                 (cells[col].mode.S_DIRTY))
             {
@@ -181,7 +181,7 @@ pub fn render_line(this: *@This(), i: usize, line: *screen.ScreenLine) void {
     dirty.L_CLRTOEOL = false;
     line.isdirty = dirty;
 
-    if (screen.is_mend(this.mode)) {
+    if (this.mode.is_mend()) {
         if (this.mode.fg != c.ANSI_TERM or this.mode.bg != c.ANSI_TERM)
             lib.es_writestr(c.terminfo.T_op);
         if (this.mode.prop.S_GRAPHICS) {
@@ -189,6 +189,6 @@ pub fn render_line(this: *@This(), i: usize, line: *screen.ScreenLine) void {
             c.wc_putc_clear_status();
         }
         lib.es_writestr(c.terminfo.T_me);
-        screen.remove_mend(&this.mode);
+        this.mode.remove_mend();
     }
 }
