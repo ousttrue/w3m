@@ -60,12 +60,12 @@ struct Cell {
 struct ScreenLine {
     struct Cell* cells;
     struct LineFlags isdirty;
-    short eol;
+    size_t eol;
 };
 
 void sc_init(struct Usize2 size);
 
-void sc_move(int line, int column);
+void sc_move(size_t line, size_t column);
 void sc_addmch(const uint8_t* p, size_t len);
 void sc_addch(uint8_t c);
 void sc_toggle_stand(void);

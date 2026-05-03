@@ -348,8 +348,8 @@ export fn es(str: [*c]const u8) [*c]const u8 {
     _ = tputs(str, 1, &fixed_putc.putc);
     return fixed_putc.ptr();
 }
-pub export fn es_move(ti: *c.TermInfo, line: c_int, column: c_int) [*c]const u8 {
-    return es(tgoto(ti.T_cm, column, line));
+pub export fn es_move(ti: *c.TermInfo, line: usize, column: usize) [*c]const u8 {
+    return es(tgoto(ti.T_cm, @intCast(column), @intCast(line)));
 }
 
 export fn graph_ok(_ti: ?*c.TermInfo) bool {
