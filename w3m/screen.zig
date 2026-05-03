@@ -89,7 +89,7 @@ export fn sc_init(size: c.Usize2) void {
 export fn sc_clear() void {
     c.sc_move(0, 0);
     for (lines.items) |*line| {
-        line.isdirty = 0;
+        line.isdirty = .{};
         for (0..sc_cols()) |x| {
             line.cells[x].mode.S_EOL = true;
         }

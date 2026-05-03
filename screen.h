@@ -62,10 +62,10 @@ static inline void remove_mend(struct CellMode* mode)
     mode->bg = ANSI_TERM;
 }
 
-enum LineFlags : uint16_t {
-    L_DIRTY = 0x01,
-    L_NEED_CE = 0x04,
-    L_CLRTOEOL = 0x08,
+struct LineFlags {
+    bool L_DIRTY;
+    bool L_NEED_CE;
+    bool L_CLRTOEOL;
 };
 
 typedef const uint8_t* CellCharBytes;
@@ -79,7 +79,7 @@ bool sc_cell_need_redraw(const struct Cell* cell, const CellCharBytes c2, struct
 
 struct ScreenLine {
     struct Cell* cells;
-    enum LineFlags isdirty;
+    struct LineFlags isdirty;
     short eol;
 };
 

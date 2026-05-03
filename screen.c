@@ -30,11 +30,11 @@ void sc_addch(uint8_t c)
 
 void sc_touch_line(void)
 {
-    if (!(sc_getline(CurLine)->isdirty & L_DIRTY)) {
+    if (!sc_getline(CurLine)->isdirty.L_DIRTY) {
         int i;
         for (i = 0; i < COLS; i++)
             sc_getline(CurLine)->cells[i].mode.S_DIRTY = false;
-        sc_getline(CurLine)->isdirty |= L_DIRTY;
+        sc_getline(CurLine)->isdirty.L_DIRTY = true;
     }
 }
 
@@ -115,19 +115,19 @@ const char* sc_bcolor_seq(enum AnsiColor colmode)
 /* XXX: conflicts with curses's clrtoeol(3) ? */
 static void sc_clrtoeol(void)
 { /* Clear to the end of line */
-    struct Cell* line = sc_getline(CurLine)->cells;
+    struct ScreenLine* line = sc_getline(CurLine);
 
-    if (line[CurColumn].mode.S_EOL)
+    if (line->cells[CurColumn].mode.S_EOL)
         return;
 
-    if (!(sc_getline(CurLine)->isdirty & (L_NEED_CE | L_CLRTOEOL)) || sc_getline(CurLine)->eol > CurColumn)
-        sc_getline(CurLine)->eol = CurColumn;
+    if ((!line->isdirty.L_NEED_CE && !line->isdirty.L_CLRTOEOL) || line->eol > CurColumn)
+        line->eol = CurColumn;
 
-    sc_getline(CurLine)->isdirty |= L_CLRTOEOL;
+    line->isdirty.L_CLRTOEOL = true;
     sc_touch_line();
-    for (int i = CurColumn; i < COLS && !line[i].mode.S_EOL; i++) {
-        line[i].mode.S_EOL = true;
-        line[i].mode.S_DIRTY = true;
+    for (int i = CurColumn; i < COLS && !line->cells[i].mode.S_EOL; i++) {
+        line->cells[i].mode.S_EOL = true;
+        line->cells[i].mode.S_DIRTY = true;
     }
 }
 

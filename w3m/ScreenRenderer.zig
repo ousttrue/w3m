@@ -44,12 +44,12 @@ const SPACE: [*c]const u8 = " ";
 pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
     var dirty = line.isdirty;
 
-    if (dirty & c.L_DIRTY != 0) {
-        dirty &= ~c.L_DIRTY;
+    if (dirty.L_DIRTY) {
+        dirty.L_DIRTY = false;
         const cells = line.cells;
         var col: usize = 0;
         while (col < g.COLS and !cells[col].mode.S_EOL) : (col += 1) {
-            if (dirty & c.L_NEED_CE != 0 and col >= line.eol) {
+            if (dirty.L_NEED_CE and col >= line.eol) {
                 if (screen.sc_cell_need_redraw(&cells[col], SPACE, .{}))
                     break;
             } else {
@@ -58,10 +58,11 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
             }
         }
         var pcol: usize = undefined;
-        if (dirty & (c.L_NEED_CE | c.L_CLRTOEOL) != 0) {
+        if (dirty.L_NEED_CE or dirty.L_CLRTOEOL) {
             pcol = @intCast(line.eol);
             if (pcol >= g.COLS) {
-                dirty &= ~(c.L_NEED_CE | c.L_CLRTOEOL);
+                dirty.L_NEED_CE = false;
+                dirty.L_CLRTOEOL = false;
                 pcol = col;
             }
         } else {
@@ -85,7 +86,7 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
             tty_write_str(lib.es_move(&c.terminfo, @intCast(i), @intCast(pcol)));
             this.moved = .RF_CR_OK;
         }
-        if (dirty & (c.L_NEED_CE | c.L_CLRTOEOL) != 0) {
+        if (dirty.L_NEED_CE or dirty.L_CLRTOEOL) {
             lib.es_writestr(c.terminfo.T_ce);
             if (col != pcol) {
                 tty_write_str(lib.es_move(&c.terminfo, @intCast(i), @intCast(col)));
@@ -119,7 +120,7 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
                 lib.es_writestr(c.terminfo.T_me);
                 c.remove_mend(&this.mode);
             }
-            if (if (dirty & c.L_NEED_CE != 0 and col >= line.eol)
+            if (if (dirty.L_NEED_CE and col >= line.eol)
                 screen.sc_cell_need_redraw(&cells[col], SPACE, .{})
             else
                 (cells[col].mode.S_DIRTY))
@@ -179,7 +180,9 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
             cells[col].mode.S_EOL = true;
         }
     }
-    line.isdirty = dirty & ~(c.L_NEED_CE | c.L_CLRTOEOL);
+    dirty.L_NEED_CE = false;
+    dirty.L_CLRTOEOL = false;
+    line.isdirty = dirty;
 
     if (c.is_mend(this.mode)) {
         if (this.mode.fg != c.ANSI_TERM or this.mode.bg != c.ANSI_TERM)
