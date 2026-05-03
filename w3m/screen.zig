@@ -323,3 +323,61 @@ export fn sc_addstr(_s: ?[*:0]const u8) void {
         s += len;
     }
 }
+
+// XXX: conflicts with curses's clrtoeol(3) ?
+fn sc_clrtoeol() void { // Clear to the end of line
+    const line = sc_getline(@intCast(g.CurLine));
+
+    if (line.cells[@intCast(g.CurColumn)].mode.S_EOL)
+        return;
+
+    if ((!line.isdirty.L_NEED_CE and !line.isdirty.L_CLRTOEOL) or line.eol > g.CurColumn)
+        line.eol = @intCast(g.CurColumn);
+
+    line.isdirty.L_CLRTOEOL = true;
+    c.sc_touch_line();
+    var i = g.CurColumn;
+    while (i < sc_cols() and !line.cells[@intCast(i)].mode.S_EOL) : (i += 1) {
+        line.cells[@intCast(i)].mode.S_EOL = true;
+        line.cells[@intCast(i)].mode.S_DIRTY = true;
+    }
+}
+
+fn clrtoeol_with_bcolor() void {
+    if (c.CurrentMode.bg == c.ANSI_TERM) {
+        sc_clrtoeol();
+        return;
+    }
+    const cli = g.CurLine;
+    const cco = g.CurColumn;
+    const pr = c.CurrentMode;
+    c.CurrentMode.prop = .{};
+    c.CurrentMode.charmode = c.C_ASCII;
+    c.CurrentMode.fg = c.ANSI_TERM;
+    c.CurrentMode.bg = c.ANSI_TERM;
+    var i = g.CurColumn;
+    while (i < sc_cols()) : (i += 1)
+        c.sc_addch(' ');
+    c.sc_move(cli, cco);
+    c.CurrentMode = pr;
+}
+
+export fn sc_clrtoeolx() void {
+    clrtoeol_with_bcolor();
+}
+
+fn clrtobot_eol(clrtoeol: anytype) void {
+    const line = g.CurLine;
+    const col = g.CurColumn;
+    clrtoeol();
+    g.CurColumn = 0;
+    g.CurLine += 1;
+    while (g.CurLine < lines.items.len) : (g.CurLine += 1)
+        clrtoeol();
+    g.CurLine = line;
+    g.CurColumn = col;
+}
+
+export fn sc_clrtobotx() void {
+    clrtobot_eol(sc_clrtoeolx);
+}
