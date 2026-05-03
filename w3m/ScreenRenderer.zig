@@ -13,15 +13,12 @@ const MoveStatus = enum {
 
 pline: usize,
 moved: MoveStatus = .RF_NEED_TO_MOVE,
-mode: c.CellMode,
+mode: screen.CellMode,
 
 pub fn init() @This() {
     return .{
         .pline = @intCast(screen.sc_curline()),
-        .mode = .{
-            .fg = c.ANSI_TERM,
-            .bg = c.ANSI_TERM,
-        },
+        .mode = .{},
     };
 }
 
@@ -167,7 +164,7 @@ pub fn render_line(this: *@This(), i: usize, line: *screen.ScreenLine) void {
                         0,
                     };
                     lib.es_writestr(&buf);
-                } else if (cells[col].mode.charmode != c.C_WCHAR2) {
+                } else if (cells[col].mode.charmode != .C_WCHAR2) {
                     const span = c.wc_putc(c.WcOption, cells[col].bytes.ptr);
                     tty.tty_write(span.ptr, span.len);
                 }

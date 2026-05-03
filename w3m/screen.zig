@@ -3,14 +3,43 @@ const c = @import("c.zig").c;
 const g = @import("global.zig");
 const runtime = @import("runtime.zig");
 
+const CellProperty = std.enums.EnumFieldStruct(enum {
+    S_STANDOUT,
+    S_UNDERLINE,
+    S_BOLD,
+    S_GRAPHICS,
+}, bool, false);
+
+const CharMode = enum {
+    C_ASCII,
+    C_WCHAR1,
+    C_WCHAR2,
+};
+
+pub const CellMode = struct {
+    prop: CellProperty = .{},
+    charmode: CharMode = .C_ASCII,
+    fg: c.AnsiColor = c.ANSI_TERM,
+    bg: c.AnsiColor = c.ANSI_TERM,
+    S_DIRTY: bool = false,
+    S_EOL: bool = false,
+    C_CTRL: bool = false,
+};
+
 pub const Cell = struct {
     bytes: [:0]const u8 = &.{},
-    mode: c.CellMode = .{},
+    mode: CellMode = .{},
 };
+
+const LineFlags = std.enums.EnumFieldStruct(enum {
+    L_DIRTY,
+    L_NEED_CE,
+    L_CLRTOEOL,
+}, bool, false);
 
 pub const ScreenLine = struct {
     cells: []Cell,
-    isdirty: c.LineFlags = .{},
+    isdirty: LineFlags = .{},
     eol: usize = 0,
 };
 
@@ -19,9 +48,9 @@ const SPACE = " ";
 var tab_step: usize = 8;
 pub var CurLine: usize = 0;
 pub var CurColumn: usize = 0;
-pub var CurrentMode: c.CellMode = .{};
+pub var CurrentMode: CellMode = .{};
 
-pub fn is_mend(mode: c.CellMode) bool {
+pub fn is_mend(mode: CellMode) bool {
     if (mode.prop.S_STANDOUT | mode.prop.S_UNDERLINE | mode.prop.S_BOLD | mode.prop.S_GRAPHICS) {
         return true;
     }
@@ -31,20 +60,20 @@ pub fn is_mend(mode: c.CellMode) bool {
     return false;
 }
 
-pub fn remove_mend(mode: *c.CellMode) void {
+pub fn remove_mend(mode: *CellMode) void {
     mode.prop = .{};
     mode.fg = c.ANSI_TERM;
     mode.bg = c.ANSI_TERM;
 }
 
-pub fn sc_cell_set(cell: *Cell, str: []const u8, mode: c.CellMode) !void {
+pub fn sc_cell_set(cell: *Cell, str: []const u8, mode: CellMode) !void {
     const allocator = runtime.allocator;
     cell.bytes = try allocator.dupeZ(u8, str); //realloc((void*)cell.bytes, len + 1);
     cell.mode = mode;
     cell.mode.S_DIRTY = true;
 }
 
-pub fn sc_cell_need_redraw(cell: *Cell, c2: []const u8, pr2: c.CellMode) bool {
+pub fn sc_cell_need_redraw(cell: *Cell, c2: []const u8, pr2: CellMode) bool {
     if (cell.bytes.len == 0 or c2.len == 0 or !std.mem.eql(u8, cell.bytes, c2))
         return true;
     if (cell.*.bytes[0] == ' ') {
@@ -169,7 +198,7 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
             mode.prop = .{};
             mode.fg = c.ANSI_TERM;
             mode.bg = c.ANSI_TERM;
-            mode.charmode = c.C_ASCII;
+            mode.charmode = .C_ASCII;
             sc_cell_set(cell, SPACE, mode) catch @panic("sc_cell_set");
             if (i == 0) {
                 break;
@@ -178,13 +207,13 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
     }
 
     if (src[0] == '\t' or src[0] == '\n' or src[0] == '\r' or src[0] == 0x08) {
-        CurrentMode.charmode = c.C_ASCII;
+        CurrentMode.charmode = .C_ASCII;
         CurrentMode.C_CTRL = true;
     } else if (len > 1) {
-        CurrentMode.charmode = c.C_WCHAR1;
+        CurrentMode.charmode = .C_WCHAR1;
         CurrentMode.C_CTRL = false;
     } else if (0 == c.IS_CNTRL(src[0])) {
-        CurrentMode.charmode = c.C_ASCII;
+        CurrentMode.charmode = .C_ASCII;
         CurrentMode.C_CTRL = false;
     } else {
         return;
@@ -209,11 +238,11 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
                 mode.prop = .{};
                 mode.fg = c.ANSI_TERM;
                 mode.bg = c.ANSI_TERM;
-                mode.charmode = c.C_ASCII;
+                mode.charmode = .C_ASCII;
                 sc_cell_set(cell, SPACE, mode) catch @panic("sc_cell_set");
             } else {
                 i += 1;
-                while (i < sc_cols() and cur_line.cells[i].mode.charmode == c.C_WCHAR2) : (i += 1)
+                while (i < sc_cols() and cur_line.cells[i].mode.charmode == .C_WCHAR2) : (i += 1)
                     touch_column(i);
             }
         }
@@ -225,7 +254,7 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
         while (i < sc_cols()) : (i += 1) {
             const cell = &cur_line.cells[i];
             var mode = cell.mode;
-            mode.charmode = c.C_ASCII;
+            mode.charmode = .C_ASCII;
             sc_cell_set(cell, SPACE, mode) catch @panic("sc_cell_set");
             touch_column(i);
         }
@@ -235,17 +264,17 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
         cur_line = sc_getline(CurLine);
     }
 
-    if (cur_line.cells[CurColumn].mode.charmode == c.C_WCHAR2) {
+    if (cur_line.cells[CurColumn].mode.charmode == .C_WCHAR2) {
         sc_touch_line();
         i = CurColumn - 1;
         while (i >= 0) : (i -= 1) {
             const cell = &cur_line.cells[i];
             const l = cell.mode.charmode;
             var mode = cell.mode;
-            mode.charmode = c.C_ASCII;
+            mode.charmode = .C_ASCII;
             sc_cell_set(cell, SPACE, mode) catch @panic("sc_cell_set");
             touch_column(i);
-            if (l != c.C_WCHAR2)
+            if (l != .C_WCHAR2)
                 break;
             if (i == 0) {
                 break;
@@ -258,18 +287,18 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
             sc_cell_set(&cur_line.cells[CurColumn], src[0..len], CurrentMode) catch @panic("sc_cell_set");
             sc_touch_line();
             touch_column(CurColumn);
-            CurrentMode.charmode = c.C_WCHAR2;
+            CurrentMode.charmode = .C_WCHAR2;
             i = CurColumn + 1;
             while (i < CurColumn + width) : (i += 1) {
                 var mode = cur_line.cells[CurColumn].mode;
-                mode.charmode = c.C_WCHAR2;
+                mode.charmode = .C_WCHAR2;
                 sc_cell_set(&cur_line.cells[i], SPACE, mode) catch @panic("sc_cell_set");
                 touch_column(i);
             }
-            while (i < sc_cols() and cur_line.cells[i].mode.charmode == c.C_WCHAR2) : (i += 1) {
+            while (i < sc_cols() and cur_line.cells[i].mode.charmode == .C_WCHAR2) : (i += 1) {
                 const cell = &cur_line.cells[i];
                 var mode = cell.mode;
-                mode.charmode = c.C_ASCII;
+                mode.charmode = .C_ASCII;
                 sc_cell_set(cell, SPACE, mode) catch @panic("sc_cell_set");
                 touch_column(i);
             }
@@ -299,7 +328,7 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
         CurColumn = 0;
     } else if (src[0] == 0x08 and CurColumn > 0) { // Backspace
         CurColumn -= 1;
-        while (CurColumn > 0 and cur_line.cells[CurColumn].mode.charmode == c.C_WCHAR2)
+        while (CurColumn > 0 and cur_line.cells[CurColumn].mode.charmode == .C_WCHAR2)
             CurColumn -= 1;
     }
 }
@@ -384,7 +413,7 @@ fn clrtoeol_with_bcolor() void {
     const cco = CurColumn;
     const pr = CurrentMode;
     CurrentMode.prop = .{};
-    CurrentMode.charmode = c.C_ASCII;
+    CurrentMode.charmode = .C_ASCII;
     CurrentMode.fg = c.ANSI_TERM;
     CurrentMode.bg = c.ANSI_TERM;
     var i = CurColumn;
@@ -447,9 +476,9 @@ export fn sc_standend() void {
 export fn sc_toggle_stand() void {
     const line = sc_getline(CurLine);
     line.cells[CurColumn].mode.prop.S_STANDOUT = !line.cells[CurColumn].mode.prop.S_STANDOUT;
-    if (line.cells[CurColumn].mode.charmode != c.C_WCHAR2) {
+    if (line.cells[CurColumn].mode.charmode != .C_WCHAR2) {
         var i = CurColumn + 1;
-        while (line.cells[i].mode.charmode == c.C_WCHAR2) : (i += 1)
+        while (line.cells[i].mode.charmode == .C_WCHAR2) : (i += 1)
             line.cells[i].mode.prop.S_STANDOUT = !line.cells[i].mode.prop.S_STANDOUT;
     }
 }

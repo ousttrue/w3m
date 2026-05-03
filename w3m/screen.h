@@ -7,19 +7,6 @@ struct Usize2 {
     size_t y;
 };
 
-struct CellProperty {
-    bool S_STANDOUT;
-    bool S_UNDERLINE;
-    bool S_BOLD;
-    bool S_GRAPHICS;
-};
-
-enum CharMode {
-    C_ASCII,
-    C_WCHAR1,
-    C_WCHAR2,
-};
-
 enum AnsiColor {
     ANSI_COLOR,
     ANSI_BLACK,
@@ -32,25 +19,6 @@ enum AnsiColor {
     ANSI_WHITE,
     ANSI_TERM,
 };
-
-struct CellMode {
-    struct CellProperty prop;
-    enum CharMode charmode;
-    enum AnsiColor fg;
-    enum AnsiColor bg;
-    bool S_DIRTY;
-    bool S_EOL;
-    bool C_CTRL;
-};
-extern struct CellMode CurrentMode;
-
-struct LineFlags {
-    bool L_DIRTY;
-    bool L_NEED_CE;
-    bool L_CLRTOEOL;
-};
-
-typedef const uint8_t* CellCharBytes;
 
 void sc_init(struct Usize2 size);
 
