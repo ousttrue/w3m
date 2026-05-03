@@ -6,6 +6,8 @@ const runtime = @import("runtime.zig");
 const SPACE = " ";
 var tab_step: usize = 8;
 
+pub var CurrentMode: c.CellMode = .{};
+
 pub fn is_mend(mode: c.CellMode) bool {
     if (mode.prop.S_STANDOUT | mode.prop.S_UNDERLINE | mode.prop.S_BOLD | mode.prop.S_GRAPHICS) {
         return true;
@@ -141,12 +143,12 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
     const cur_cell = &cur_line.cells[@intCast(g.CurColumn)];
     if (cur_cell.mode.S_EOL) {
         if (src[0] == ' ') {
-            if (!c.CurrentMode.prop.S_STANDOUT and
-                !c.CurrentMode.prop.S_BOLD and
-                !c.CurrentMode.prop.S_UNDERLINE and
-                !c.CurrentMode.prop.S_GRAPHICS and
-                c.CurrentMode.fg == c.ANSI_TERM and
-                c.CurrentMode.bg == c.ANSI_TERM)
+            if (!CurrentMode.prop.S_STANDOUT and
+                !CurrentMode.prop.S_BOLD and
+                !CurrentMode.prop.S_UNDERLINE and
+                !CurrentMode.prop.S_GRAPHICS and
+                CurrentMode.fg == c.ANSI_TERM and
+                CurrentMode.bg == c.ANSI_TERM)
             {
                 g.CurColumn += 1;
                 return;
@@ -165,14 +167,14 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
     }
 
     if (src[0] == '\t' or src[0] == '\n' or src[0] == '\r' or src[0] == 0x08) {
-        c.CurrentMode.charmode = c.C_ASCII;
-        c.CurrentMode.C_CTRL = true;
+        CurrentMode.charmode = c.C_ASCII;
+        CurrentMode.C_CTRL = true;
     } else if (len > 1) {
-        c.CurrentMode.charmode = c.C_WCHAR1;
-        c.CurrentMode.C_CTRL = false;
+        CurrentMode.charmode = c.C_WCHAR1;
+        CurrentMode.C_CTRL = false;
     } else if (0 == c.IS_CNTRL(src[0])) {
-        c.CurrentMode.charmode = c.C_ASCII;
-        c.CurrentMode.C_CTRL = false;
+        CurrentMode.charmode = c.C_ASCII;
+        CurrentMode.C_CTRL = false;
     } else {
         return;
     }
@@ -182,9 +184,9 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
     var i = g.CurColumn + @as(c_int, @intCast(width - 1));
     if (i < sc_cols() and
         (((cur_line.cells[@intCast(i)].mode.prop.S_BOLD) and
-            sc_cell_need_redraw(&cur_line.cells[@intCast(i)], src, c.CurrentMode)) or
+            sc_cell_need_redraw(&cur_line.cells[@intCast(i)], src, CurrentMode)) or
             ((cur_line.cells[@intCast(i)].mode.prop.S_UNDERLINE) and
-                !(c.CurrentMode.prop.S_UNDERLINE))))
+                !(CurrentMode.prop.S_UNDERLINE))))
     {
         sc_touch_line();
         i += 1;
@@ -237,12 +239,12 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
         }
     }
 
-    if (!c.CurrentMode.C_CTRL) {
-        if (sc_cell_need_redraw(&cur_line.cells[@intCast(g.CurColumn)], src, c.CurrentMode)) {
-            sc_cell_set(&cur_line.cells[@intCast(g.CurColumn)], src, len, c.CurrentMode);
+    if (!CurrentMode.C_CTRL) {
+        if (sc_cell_need_redraw(&cur_line.cells[@intCast(g.CurColumn)], src, CurrentMode)) {
+            sc_cell_set(&cur_line.cells[@intCast(g.CurColumn)], src, len, CurrentMode);
             sc_touch_line();
             touch_column(g.CurColumn);
-            c.CurrentMode.charmode = c.C_WCHAR2;
+            CurrentMode.charmode = c.C_WCHAR2;
             i = g.CurColumn + 1;
             while (i < g.CurColumn + @as(c_int, @intCast(width))) : (i += 1) {
                 var mode = cur_line.cells[@intCast(g.CurColumn)].mode;
@@ -270,8 +272,8 @@ export fn sc_addmch(_src: ?[*]const u8, len: usize) void {
         i = g.CurColumn;
         while (i < dest) : (i += 1) {
             const cell = &cur_line.cells[@intCast(i)];
-            if (sc_cell_need_redraw(cell, SPACE, c.CurrentMode)) {
-                sc_cell_set(cell, SPACE, 1, c.CurrentMode);
+            if (sc_cell_need_redraw(cell, SPACE, CurrentMode)) {
+                sc_cell_set(cell, SPACE, 1, CurrentMode);
                 sc_touch_line();
                 touch_column(i);
             }
@@ -360,22 +362,22 @@ fn sc_clrtoeol() void { // Clear to the end of line
 }
 
 fn clrtoeol_with_bcolor() void {
-    if (c.CurrentMode.bg == c.ANSI_TERM) {
+    if (CurrentMode.bg == c.ANSI_TERM) {
         sc_clrtoeol();
         return;
     }
     const cli = g.CurLine;
     const cco = g.CurColumn;
-    const pr = c.CurrentMode;
-    c.CurrentMode.prop = .{};
-    c.CurrentMode.charmode = c.C_ASCII;
-    c.CurrentMode.fg = c.ANSI_TERM;
-    c.CurrentMode.bg = c.ANSI_TERM;
+    const pr = CurrentMode;
+    CurrentMode.prop = .{};
+    CurrentMode.charmode = c.C_ASCII;
+    CurrentMode.fg = c.ANSI_TERM;
+    CurrentMode.bg = c.ANSI_TERM;
     var i = g.CurColumn;
     while (i < sc_cols()) : (i += 1)
         c.sc_addch(' ');
     c.sc_move(cli, cco);
-    c.CurrentMode = pr;
+    CurrentMode = pr;
 }
 
 export fn sc_clrtoeolx() void {
@@ -399,7 +401,7 @@ export fn sc_clrtobotx() void {
 }
 
 export fn sc_setfcolor(color: c.AnsiColor) void {
-    c.CurrentMode.fg = color;
+    CurrentMode.fg = color;
 }
 
 var seqbuf: [32]u8 = undefined;
@@ -411,7 +413,7 @@ pub fn sc_color_seq(colmode: c.AnsiColor, highIntensityColors: bool) [*c]const u
 }
 
 export fn sc_setbcolor(color: c.AnsiColor) void {
-    c.CurrentMode.bg = color;
+    CurrentMode.bg = color;
 }
 
 pub fn sc_bcolor_seq(colmode: c.AnsiColor) [*c]const u8 {
@@ -421,11 +423,11 @@ pub fn sc_bcolor_seq(colmode: c.AnsiColor) [*c]const u8 {
 }
 
 export fn sc_standout() void {
-    c.CurrentMode.prop.S_STANDOUT = true;
+    CurrentMode.prop.S_STANDOUT = true;
 }
 
 export fn sc_standend() void {
-    c.CurrentMode.prop.S_STANDOUT = false;
+    CurrentMode.prop.S_STANDOUT = false;
 }
 
 export fn sc_toggle_stand() void {
@@ -439,27 +441,27 @@ export fn sc_toggle_stand() void {
 }
 
 export fn sc_bold() void {
-    c.CurrentMode.prop.S_BOLD = true;
+    CurrentMode.prop.S_BOLD = true;
 }
 
 export fn sc_boldend() void {
-    c.CurrentMode.prop.S_BOLD = false;
+    CurrentMode.prop.S_BOLD = false;
 }
 
 export fn sc_underline() void {
-    c.CurrentMode.prop.S_UNDERLINE = true;
+    CurrentMode.prop.S_UNDERLINE = true;
 }
 
 export fn sc_underlineend() void {
-    c.CurrentMode.prop.S_UNDERLINE = false;
+    CurrentMode.prop.S_UNDERLINE = false;
 }
 
 export fn sc_graphstart() void {
-    c.CurrentMode.prop.S_GRAPHICS = true;
+    CurrentMode.prop.S_GRAPHICS = true;
 }
 
 export fn sc_graphend() void {
-    c.CurrentMode.prop.S_GRAPHICS = false;
+    CurrentMode.prop.S_GRAPHICS = false;
 }
 
 fn sc_touch_line() void {
