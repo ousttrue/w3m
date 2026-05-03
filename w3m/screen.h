@@ -52,17 +52,6 @@ struct LineFlags {
 
 typedef const uint8_t* CellCharBytes;
 
-struct Cell {
-    CellCharBytes bytes;
-    struct CellMode mode;
-};
-
-struct ScreenLine {
-    struct Cell* cells;
-    struct LineFlags isdirty;
-    size_t eol;
-};
-
 void sc_init(struct Usize2 size);
 
 void sc_move(size_t line, size_t column);

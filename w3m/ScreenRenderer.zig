@@ -39,9 +39,9 @@ fn tty_write_str(str: [*c]const u8) void {
     tty.tty_write(s.ptr, s.len);
 }
 
-const SPACE: [*c]const u8 = " ";
+const SPACE = " ";
 
-pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
+pub fn render_line(this: *@This(), i: usize, line: *screen.ScreenLine) void {
     var dirty = line.isdirty;
 
     if (dirty.L_DIRTY) {
@@ -168,7 +168,7 @@ pub fn render_line(this: *@This(), i: usize, line: *c.ScreenLine) void {
                     };
                     lib.es_writestr(&buf);
                 } else if (cells[col].mode.charmode != c.C_WCHAR2) {
-                    const span = c.wc_putc(c.WcOption, cells[col].bytes);
+                    const span = c.wc_putc(c.WcOption, cells[col].bytes.ptr);
                     tty.tty_write(span.ptr, span.len);
                 }
                 pcol = col + 1;
