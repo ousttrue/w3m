@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 
+#define MAX_IMAGE_SIZE 2048
+
 struct CmdArgs;
 
 enum InputLineFlags {

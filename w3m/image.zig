@@ -726,3 +726,151 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //
 //     return p;
 // }
+
+fn parseImageHeader(io: std.Io, path: []const u8) !c.Usize2 {
+    const fp = std.Io.Dir.cwd().openFile(io, path, .{}) catch {
+        return error.file_not_found;
+    };
+    defer fp.close(io);
+
+    var read_buf: [8]u8 = undefined;
+    var reader = fp.reader(io, &read_buf);
+
+    const ch = reader.interface.peekByte() catch {
+        return error.file_read_error;
+    };
+
+    return switch (ch) {
+        0xff => parseJpegHeader(&reader.interface),
+        'G' => parseGifHeader(&reader.interface),
+        0x89 => parsePngHeader(&reader.interface),
+        else => error.unknown_image,
+    };
+}
+
+/// https://github.com/corkami/formats/blob/master/image/jpeg.md
+///
+/// SOI: 0xff 0xd8
+/// [marker segments]*
+fn parseJpegHeader(r: *std.Io.Reader) !c.Usize2 {
+    var SOI: [2]u8 = undefined;
+    try r.readSliceAll(&SOI);
+    if (!std.mem.eql(u8, &SOI, &[2]u8{ 0xff, 0xd8 })) {
+        return error.not_jpeg;
+    }
+
+    while (true) {
+        var marker: [2]u8 = undefined;
+        try r.readSliceAll(&marker);
+        std.debug.assert(marker[0] == 0xff);
+
+        var size: [1]u16 = undefined;
+        try r.readSliceEndian(u16, &size, .big);
+
+        switch (marker[1]) {
+            0xC0, 0xC2 => {
+                // SOF0: Baseline DCT
+                // SOF2:
+                try r.discardAll(1);
+                var height: [1]u16 = undefined;
+                try r.readSliceEndian(u16, &height, .big);
+                var width: [1]u16 = undefined;
+                try r.readSliceEndian(u16, &width, .big);
+                return .{ .x = width[0], .y = height[0] };
+            },
+            else => {
+                // skip marker segment body
+                try r.discardAll(size[0] - 2);
+            },
+        }
+    }
+
+    unreachable;
+}
+
+// https://www.tohoho-web.com/wwwgif.htm#GIFHeader
+fn parseGifHeader(r: *std.Io.Reader) !c.Usize2 {
+    var magic: [3]u8 = undefined;
+    try r.readSliceAll(&magic);
+    if (!std.mem.eql(u8, &magic, "GIF")) {
+        return error.not_gif;
+    }
+
+    var version: [3]u8 = undefined;
+    try r.readSliceAll(&version);
+    if (!std.mem.eql(u8, &version, "87a") and !std.mem.eql(u8, &version, "89a")) {
+        return error.unknown_gif_version;
+    }
+
+    var width: [1]u16 = undefined;
+    try r.readSliceEndian(u16, &width, .little);
+    var height: [1]u16 = undefined;
+    try r.readSliceEndian(u16, &height, .little);
+
+    return .{ .x = width[0], .y = height[0] };
+}
+
+fn parsePngHeader(r: *std.Io.Reader) !c.Usize2 {
+    var header: [8]u8 = undefined;
+    try r.readSliceAll(&header);
+    if (!std.mem.eql(u8, &header, "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a")) {
+        return error.not_png;
+    }
+
+    // chunk_length(4), chunk_type(4)
+    try r.discardAll(8);
+
+    var width: [1]u32 = undefined;
+    try r.readSliceEndian(u32, &width, .big);
+    var height: [1]u32 = undefined;
+    try r.readSliceEndian(u32, &height, .big);
+
+    return .{ .x = width[0], .y = height[0] };
+}
+
+export fn getImageSize(_cache: ?*c.ImageCache) bool {
+    if (0 == g.activeImage)
+        return false;
+
+    const cache = _cache orelse {
+        return false;
+    };
+
+    if (0 == (cache.loaded & c.IMG_FLAG_LOADED) or (cache.width > 0 and cache.height > 0)) {
+        return false;
+    }
+
+    const size = parseImageHeader(runtime.io, std.mem.span(cache.file)) catch {
+        return false;
+    };
+
+    var w: c_int = @intFromFloat((@as(f64, @floatFromInt(size.x)) * g.image_scale / 100.0 + 0.5));
+    if (w == 0)
+        w = 1;
+
+    var h: c_int = @intFromFloat((@as(f64, @floatFromInt(size.y)) * g.image_scale / 100.0 + 0.5));
+    if (h == 0)
+        h = 1;
+
+    if (cache.width < 0 and cache.height < 0) {
+        cache.width = if (w > c.MAX_IMAGE_SIZE) c.MAX_IMAGE_SIZE else w;
+        cache.height = if (h > c.MAX_IMAGE_SIZE) c.MAX_IMAGE_SIZE else h;
+    } else if (cache.width < 0) {
+        const tmp = @as(f64, @floatFromInt(cache.height * @divTrunc(w, h))) + 0.5;
+        cache.width = if (tmp > c.MAX_IMAGE_SIZE) c.MAX_IMAGE_SIZE else @intFromFloat(tmp);
+        cache.a_width = cache.width;
+    } else if (cache.height < 0) {
+        const tmp = @as(f64, @floatFromInt(cache.width * @divTrunc(h, w))) + 0.5;
+        cache.height = if (tmp > c.MAX_IMAGE_SIZE) c.MAX_IMAGE_SIZE else @intFromFloat(tmp);
+        cache.a_height = cache.height;
+    }
+    if (cache.width == 0)
+        cache.width = 1;
+    if (cache.height == 0)
+        cache.height = 1;
+
+    // Str tmp = Sprintf("%d;%d;%s", cache.width, cache.height, cache.url);
+    // putHash_sv(image_hash, tmp.ptr, (void*)cache);
+
+    return true;
+}

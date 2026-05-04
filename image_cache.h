@@ -1,7 +1,6 @@
 #pragma once
 #include <sys/types.h>
 
-#define MAX_IMAGE_SIZE 2048
 
 enum ImageCacheStatus {
     IMG_FLAG_UNLOADED = 0,
@@ -24,10 +23,10 @@ struct ImageCache {
     pid_t pid;
     enum ImageCacheStatus loaded;
     int index;
-    short width;
-    short height;
-    short a_width;
-    short a_height;
+    int width;
+    int height;
+    int a_width;
+    int a_height;
 };
 
 struct Image {
@@ -52,8 +51,8 @@ enum GetImageFlag {
     IMG_FLAG_AUTO = 2,
 };
 
-void loadImage(struct Buffer* buf, enum ImageLoadFlag flag);
 void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h);
+void loadImage(struct Buffer* buf, enum ImageLoadFlag flag);
 struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetImageFlag flag);
 bool getImageSize(struct ImageCache* cache);
 void getAllImage(struct Buffer* buf);
