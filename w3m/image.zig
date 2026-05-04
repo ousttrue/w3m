@@ -181,12 +181,13 @@ fn allocKittyConvertCmd(
     content_type: []const u8,
     tmpf: []const u8,
 ) ![:0]const u8 {
-    const arena: std.heap.ArenaAllocator = .init(allocator);
+    var arena: std.heap.ArenaAllocator = .init(allocator);
     defer arena.deinit();
     const arena_allocator = arena.allocator();
 
-    var cmds: std.ArrayList([]const u8) = .initBuffer(.{});
+    var cmds: std.ArrayList([]const u8) = .initBuffer(&.{});
 
+    // arg0
     const _cbuf = std.c.getenv("W3M_KITTY_TO_PNG");
     if (_cbuf) |cbuf| {
         try cmds.append(arena_allocator, std.mem.span(cbuf));
@@ -194,13 +195,18 @@ fn allocKittyConvertCmd(
         try cmds.append(arena_allocator, "convert");
     }
 
+    // arg1
     if (std.ascii.endsWithIgnoreCase(content_type, "image/gif")) {
         try cmds.append(arena_allocator, try std.fmt.allocPrint(arena_allocator, "{s}[0]", .{url}));
     } else {
-        try cmds.append(arena_allocator);
+        try cmds.append(arena_allocator, url);
     }
 
-    try cmds.appennd(arena_allocator, tmpf);
+    // arg2
+    try cmds.append(arena_allocator, tmpf);
+
+    // join
+    return try std.mem.joinZ(allocator, " ", cmds.items);
 }
 
 fn put_image_kitty(
@@ -218,20 +224,9 @@ fn put_image_kitty(
     cols: c_int,
     rows: c_int,
 ) !void {
-    _ = w;
-    _ = h;
-    _ = sx;
-    _ = sy;
-    _ = sw;
-    _ = sh;
-    _ = cols;
-    _ = rows;
-
     var url = _url;
 
     const content_type = std.mem.span(c.guessContentType(url.ptr));
-    // always convert to png for now.
-    // int t = 100;
 
     const cwd = std.Io.Dir.cwd();
     if (!std.ascii.eqlIgnoreCase(content_type, "image/png")) {
@@ -245,7 +240,8 @@ fn put_image_kitty(
 
         _ = cwd.statFile(io, tmpf, .{}) catch {
             // convert only if tmpf not exists yet
-            const cmd = try allocKittyConvertCmd(allocator);
+            const cmd = try allocKittyConvertCmd(allocator, url, content_type, tmpf);
+            defer allocator.free(cmd);
 
             tty.tty_flush();
             const status = c.system(cmd.ptr);
@@ -264,53 +260,74 @@ fn put_image_kitty(
     };
     defer fp.close(io);
 
-    screen.sc_move(y, x);
+    var read_buf: [1]u8 = undefined;
+    var r = fp.reader(io, &read_buf);
 
-    //     char* cbuf = malloc(3072); /* base64-encoded chunks of 4096 bytes */
-    //     if (!cbuf)
-    //         goto cleanup;
-    //     int i = 0;
-    //
-    //     int c;
-    //     while (i < 3072 && (c = fgetc(fp)) != EOF)
-    //         cbuf[i++] = c;
-    //
-    //     Str base64 = base64_encode(cbuf, i);
-    //     int m;
-    //     if (c == EOF)
-    //         m = 0;
-    //     else
-    //         m = 1;
-    //     Str buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
-    //                       "%s\x1b\\",
-    //         t, w, h, m, sx, sy, sw, sh, cols, rows, base64.ptr);
-    //     writestr(&tty_write1, buf.ptr);
-    //
-    //     if (m) {
-    //         i = 0;
-    //         int j = 0;
-    //         while ((c = fgetc(fp)) != EOF) {
-    //             if (j) {
-    //                 base64 = base64_encode(cbuf, i);
-    //                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64.ptr);
-    //                 writestr(&tty_write1, buf.ptr);
-    //                 i = 0;
-    //                 j = 0;
-    //             }
-    //             cbuf[i++] = c;
-    //             if (i == 3072)
-    //                 j = 1;
-    //         }
-    //
-    //         if (i) {
-    //             base64 = base64_encode(cbuf, i);
-    //             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64.ptr);
-    //             writestr(&tty_write1, buf.ptr);
-    //         }
-    //     }
-    // cleanup:
-    //     fclose(fp);
-    //     MOVE(&tty_write1, &terminfo, Currentbuf.cursorY, Currentbuf.cursorX);
+    screen.sc_move(y, x);
+    // defer screen.sc_move(c.Currentbuf.cursorY, c.Currentbuf.cursorX);
+
+    // base64-encoded chunks of 4096 bytes
+    const cbuf = allocator.alloc(u8, 3072) catch @panic("OOM");
+    defer allocator.free(cbuf);
+
+    var i: usize = 0;
+    var is_end = false;
+    while (i < 3072) : (i += 1) {
+        var buf: [1]u8 = undefined;
+        r.interface.readSliceAll(&buf) catch |e| {
+            switch (e) {
+                error.EndOfStream => {
+                    is_end = true;
+                    break;
+                },
+                error.ReadFailed => {
+                    @panic("ReadFailed");
+                },
+            }
+        };
+        cbuf[i] = buf[0];
+    }
+
+    const _base64 = c.base64_encode(cbuf.ptr, i);
+    const base64 = _base64.*.ptr[0..@intCast(_base64.*.length)];
+
+    const buf = try std.fmt.allocPrint(allocator, "\x1b_Gf={},s={},v={},a=T,m={},x={},y={},w={},h={},c={},r={};{s}\x1b\\", .{
+        100,
+        w,
+        h,
+        @as(c_int, if (is_end) 0 else 1),
+        sx,
+        sy,
+        sw,
+        sh,
+        cols,
+        rows,
+        base64,
+    });
+    tty.tty_write(buf.ptr, buf.len);
+
+    if (!is_end) {
+        //         i = 0;
+        //         int j = 0;
+        //         while ((c = fgetc(fp)) != EOF) {
+        //             if (j) {
+        //                 base64 = base64_encode(cbuf, i);
+        //                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64.ptr);
+        //                 writestr(&tty_write1, buf.ptr);
+        //                 i = 0;
+        //                 j = 0;
+        //             }
+        //             cbuf[i++] = c;
+        //             if (i == 3072)
+        //                 j = 1;
+        //         }
+        //
+        //         if (i) {
+        //             base64 = base64_encode(cbuf, i);
+        //             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64.ptr);
+        //             writestr(&tty_write1, buf.ptr);
+        //         }
+    }
 }
 
 export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c_int) void {

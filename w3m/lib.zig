@@ -46,7 +46,7 @@ extern fn checkDownloadList() bool;
 extern fn submitCurrentBuffer(args: *c.CmdArgs) bool;
 extern fn processCurrentEvent() bool;
 extern fn processCurrentBufferEvent() bool;
-extern fn processResizeAndImage(args: *c.CmdArgs) void;
+extern fn idleTask() void;
 
 export fn w3m_loop() c_int {
     input_dispatcher.init();
@@ -66,9 +66,6 @@ export fn w3m_loop() c_int {
         if (submitCurrentBuffer(&args)) {
             continue;
         }
-
-        // TODO:
-        // processResizeAndImage(&args);
 
         const may_event = tty.epoll.next(80) catch {
             // error ?
@@ -97,7 +94,12 @@ export fn w3m_loop() c_int {
                 input_dispatcher.dispatch_key(ch);
             }
         } else {
-            input_dispatcher.dispatch_timeout();
+            if (input_dispatcher.dispatch_timeout()) {
+                // do task
+            } else {
+                // idle
+                idleTask();
+            }
         }
     }
 

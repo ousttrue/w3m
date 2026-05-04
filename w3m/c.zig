@@ -11,6 +11,7 @@ pub const c = @cImport({
     @cInclude("line_input.h");
     @cInclude("content_type.h");
     @cInclude("filepath.h");
+    @cInclude("etc.h");
 
     // #include "LineInput.h"
     // #include "Str.h"

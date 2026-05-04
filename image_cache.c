@@ -346,23 +346,24 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
         }
 
         tty_flush();
-        if ((cache->pid = fork()) == 0) {
-            /*
-             * setup_child(TRUE, 0, -1);
-             */
-            setup_child(FALSE, 0, -1);
+        // if ((cache->pid = fork()) == 0) {
+        //     /*
+        //      * setup_child(TRUE, 0, -1);
+        //      */
+        //     setup_child(FALSE, 0, -1);
             image_source = cache->file;
-            http_get(0, cache->url, cache->current, NULL, NULL, 0);
+            struct HttpClient http = http_get(0, cache->url, cache->current, NULL, NULL, 0);
+            load_http(0, &http);
             /* TODO make sure removing this didn't break anything
             if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
                 unlink(cache->file);
             */
             symlink(cache->file, cache->touch);
-            exit(0);
-        } else if (cache->pid < 0) {
-            cache->pid = 0;
-            return;
-        }
+        //     exit(0);
+        // } else if (cache->pid < 0) {
+        //     cache->pid = 0;
+        //     return;
+        // }
     }
 }
 

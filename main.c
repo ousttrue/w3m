@@ -597,7 +597,6 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK);
 
-
     tty_linescols();
     tty_init();
     signal(SIGWINCH, resize_hook);
@@ -2888,21 +2887,10 @@ bool processCurrentBufferEvent(void)
     return false;
 }
 
-void processResizeAndImage(struct CmdArgs* args)
+void idleTask()
 {
-    signal(SIGWINCH, resize_hook);
-    while (true) {
-        if (need_resize_screen) {
-            resize_screen(args);
-        }
-        if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-            loadImage(Currentbuf, IMG_FLAG_NEXT);
-        }
-        int ch = getch_timeout(1, args);
-        if (ch > 0) {
-            unget(ch);
-            break;
-        }
+    if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+        loadImage(Currentbuf, IMG_FLAG_NEXT);
     }
 }
 

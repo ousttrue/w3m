@@ -92,13 +92,17 @@ pub fn dispatch_key(ch: u8) void {
     }
 }
 
-pub fn dispatch_timeout() void {
+/// return if no task(idle)
+pub fn dispatch_timeout() bool {
     // timeout
     if (tasks_current()) |task| {
         task.enqueue(0);
         if (task.state() == .DEAD) {
             tasks_pop();
         }
+        return true;
+    } else {
+        return false;
     }
 }
 

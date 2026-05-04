@@ -377,6 +377,7 @@ static void _displayBuffer(struct Buffer* buf, struct CmdArgs* args, enum Displa
     tty_write_sc();
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
+        sc_move(Currentbuf->cursorY, Currentbuf->cursorX);
     }
     if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
         chkURLBuffer(buf);
