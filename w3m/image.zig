@@ -3,6 +3,7 @@ const c = @import("c.zig").c;
 const g = @import("global.zig");
 const runtime = @import("runtime.zig");
 const tty = @import("tty.zig");
+const screen = @import("screen.zig");
 
 const TerminalImage = struct {
     cache: *c.ImageCache,
@@ -46,7 +47,7 @@ fn getCharSize() bool {
     // if (!strchr(Imgdisplay, '/'))
     //     Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
     // Strcat_m_charp(tmp, Imgdisplay, " -test 2>/dev/null", NULL);
-    // FILE* f = popen(tmp->ptr, "r");
+    // FILE* f = popen(tmp.ptr, "r");
     // if (!f)
     //     return false;
     //
@@ -93,189 +94,224 @@ export fn addImage(_cache: ?*c.ImageCache, x: c_int, y: c_int, sx: c_int, sy: c_
 }
 
 export fn drawImage() void {
-    // if (!activeImage)
-    //     return;
-    // if (!n_terminal_image)
-    //     return;
-    //
-    // for (int j = 0; j < n_terminal_image; j++) {
-    //     struct TerminalImage* i = &terminal_image[j];
-    //     if (enable_inline_image) {
-    //         /*
-    //          * So this shouldn't ever happen, but if it does then at least let's
-    //          * not have external programs fetch images from the Internet...
-    //          */
-    //         struct stat st;
-    //         if (!i->cache->touch || stat(i->cache->file, &st))
-    //             return;
-    //
-    //         const char* url = i->cache->file;
-    //
-    //         int x = i->x / pixel_per_char_i;
-    //         int y = i->y / pixel_per_line_i;
-    //
-    //         int w = i->cache->a_width > 0 ? (
-    //                                             (i->cache->width + i->x % pixel_per_char_i + pixel_per_char_i - 1) / pixel_per_char_i)
-    //                                       : 0;
-    //         int h = i->cache->a_height > 0 ? (
-    //                                              (i->cache->height + i->y % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i)
-    //                                        : 0;
-    //
-    //         int sx = i->sx / pixel_per_char_i;
-    //         int sy = i->sy / pixel_per_line_i;
-    //
-    //         int sw = (i->width + i->sx % pixel_per_char_i + pixel_per_char_i - 1) / pixel_per_char_i;
-    //         int sh = (i->height + i->sy % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i;
-    //
-    //         if (enable_inline_image == INLINE_IMG_SIXEL) {
-    //             w = i->cache->a_width > 0 ? i->width : 0;
-    //             h = i->cache->a_height > 0 ? i->height : 0;
-    //             put_image_sixel(url, x, y, w, h, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, n_terminal_image);
-    //         } else if (enable_inline_image == INLINE_IMG_OSC5379) {
-    //             put_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
-    //         } else if (enable_inline_image == INLINE_IMG_ITERM2) {
-    //             put_image_iterm2(url, x, y, sw, sh);
-    //         } else if (enable_inline_image == INLINE_IMG_KITTY) {
-    //             put_image_kitty(url, x, y, i->width, i->height, i->sx, i->sy, sw * pixel_per_char, sh * pixel_per_line_i, sw, sh);
-    //         }
-    //
-    //         continue;
-    //     }
-    // }
-    //
-    // n_terminal_image = 0;
-    //
+    if (0 == g.activeImage) {
+        return;
+    }
+
+    if (0 == g.enable_inline_image) {
+        return;
+    }
+
+    const io = runtime.io;
+
+    for (terminal_image.items) |*i| {
+        // So this shouldn't ever happen, but if it does then at least let's
+        // not have external programs fetch images from the Internet...
+        if (i.cache.touch == null) {
+            return;
+        }
+
+        const url = std.mem.span(i.cache.file);
+        _ = std.Io.Dir.cwd().statFile(io, url, .{}) catch {
+            // cache not exists
+            return;
+        };
+
+        // term position: col, line
+        const x: usize = @intCast(@divTrunc(i.x, g.pixel_per_char_i));
+        const y: usize = @intCast(@divTrunc(i.y, g.pixel_per_line_i));
+
+        //         int w = i.cache.a_width > 0 ? (
+        //                                             (i.cache.width + i.x % pixel_per_char_i + pixel_per_char_i - 1) / pixel_per_char_i)
+        //                                       : 0;
+        //         int h = i.cache.a_height > 0 ? (
+        //                                              (i.cache.height + i.y % pixel_per_line_i + pixel_per_line_i - 1) / pixel_per_line_i)
+        //                                        : 0;
+        //
+        //         int sx = i.sx / pixel_per_char_i;
+        //         int sy = i.sy / pixel_per_line_i;
+
+        const sw = @divTrunc((i.width + @mod(i.sx, g.pixel_per_char_i) + g.pixel_per_char_i - 1), g.pixel_per_char_i);
+        const sh = @divTrunc((i.height + @mod(i.sy, g.pixel_per_line_i) + g.pixel_per_line_i - 1), g.pixel_per_line_i);
+
+        switch (g.enable_inline_image) {
+            c.INLINE_IMG_SIXEL => {
+                // w = i.cache.a_width > 0 ? i.width : 0;
+                // h = i.cache.a_height > 0 ? i.height : 0;
+                // put_image_sixel(url, x, y, w, h, i.sx, i.sy, sw * pixel_per_char, sh * pixel_per_line_i, n_terminal_image);
+            },
+            c.INLINE_IMG_OSC5379 => {
+                // put_image_osc5379(url, x, y, w, h, sx, sy, sw, sh);
+            },
+            c.INLINE_IMG_ITERM2 => {
+                // put_image_iterm2(url, x, y, sw, sh);
+            },
+            c.INLINE_IMG_KITTY => {
+                put_image_kitty(
+                    runtime.allocator,
+                    runtime.io,
+                    url,
+                    x,
+                    y,
+                    i.width,
+                    i.height,
+                    i.sx,
+                    i.sy,
+                    @intFromFloat(sw * g.pixel_per_char),
+                    sh * g.pixel_per_line_i,
+                    sw,
+                    sh,
+                ) catch |e| {
+                    std.log.err("put_image_kitty => {}", .{e});
+                };
+            },
+            else => unreachable,
+        }
+    }
+
+    terminal_image.clearRetainingCapacity();
+
     // touch_cursor();
-    // tty_write_sc();
+    c.tty_write_sc();
 }
 
-// void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
-//     int sh, int cols, int rows)
-// {
-//     if (!url)
-//         return;
-//
-//     const char* type = guessContentType(url);
-//     // always convert to png for now.
-//     int t = 100;
-//
-//     // Str buf, base64;
-//     // FILE* fp;
-//     // int c, i, j, m, t;
-//
-//     if (!(type && !strcasecmp(type, "image/png"))) {
-//         char* tmpf = Sprintf("%s/%s.png", tmp_dir, fpath_basename(url))->ptr;
-//
-//         bool is_anim = type && !strcasecmp(type, "image/gif");
-//
-//         // convert only if png doesn't exist yet.
-//
-//         struct stat st;
-//         if (stat(tmpf, &st)) {
-//             if (stat(url, &st))
-//                 return;
-//
-//             tty_flush();
-//
-//             SignalFunc previntr = signal(SIGINT, SIG_IGN);
-//             SignalFunc prevquit = signal(SIGQUIT, SIG_IGN);
-//             SignalFunc prevstop = signal(SIGTSTP, SIG_IGN);
-//
-//             pid_t pid = fork();
-//             if (pid == 0) {
-//                 int i = 0;
-//
-//                 close(STDERR_FILENO); /* Don't output error message. */
-//                 ttymode_add(ISIG, 0);
-//
-//                 char* argv[4];
-//                 char* cbuf;
-//                 if ((cbuf = getenv("W3M_KITTY_TO_PNG")))
-//                     argv[i++] = cbuf;
-//                 else
-//                     argv[i++] = "convert";
-//
-//                 if (is_anim) {
-//                     Str buf = Strnew_charp(url);
-//                     Strcat_charp(buf, "[0]");
-//                     argv[i++] = buf->ptr;
-//                 } else {
-//                     argv[i++] = (char*)url;
-//                 }
-//                 argv[i++] = tmpf;
-//                 argv[i++] = NULL;
-//                 execvp(argv[0], argv);
-//                 exit(0);
-//             } else if (pid > 0) {
-//                 int i;
-//                 waitpid(pid, &i, 0);
-//                 ttymode_remove(ISIG, 0);
-//                 signal(SIGINT, previntr);
-//                 signal(SIGQUIT, prevquit);
-//                 signal(SIGTSTP, prevstop);
-//             }
-//
-//             addDeleteFile(tmpf);
-//         }
-//         url = tmpf;
-//     }
-//
-//     struct stat st;
-//     if (stat(url, &st))
-//         return;
-//
-//     FILE* fp = fopen(url, "r");
-//     if (!fp)
-//         return;
-//
-//     MOVE(&tty_write1, &terminfo, y, x);
-//
-//     char* cbuf = malloc(3072); /* base64-encoded chunks of 4096 bytes */
-//     if (!cbuf)
-//         goto cleanup;
-//     int i = 0;
-//
-//     int c;
-//     while (i < 3072 && (c = fgetc(fp)) != EOF)
-//         cbuf[i++] = c;
-//
-//     Str base64 = base64_encode(cbuf, i);
-//     int m;
-//     if (c == EOF)
-//         m = 0;
-//     else
-//         m = 1;
-//     Str buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
-//                       "%s\x1b\\",
-//         t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
-//     writestr(&tty_write1, buf->ptr);
-//
-//     if (m) {
-//         i = 0;
-//         int j = 0;
-//         while ((c = fgetc(fp)) != EOF) {
-//             if (j) {
-//                 base64 = base64_encode(cbuf, i);
-//                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
-//                 writestr(&tty_write1, buf->ptr);
-//                 i = 0;
-//                 j = 0;
-//             }
-//             cbuf[i++] = c;
-//             if (i == 3072)
-//                 j = 1;
-//         }
-//
-//         if (i) {
-//             base64 = base64_encode(cbuf, i);
-//             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
-//             writestr(&tty_write1, buf->ptr);
-//         }
-//     }
-// cleanup:
-//     fclose(fp);
-//     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
-// }
+fn allocKittyConvertCmd(
+    allocator: std.mem.Allocator,
+    url: []const u8,
+    content_type: []const u8,
+    tmpf: []const u8,
+) ![:0]const u8 {
+    const arena: std.heap.ArenaAllocator = .init(allocator);
+    defer arena.deinit();
+    const arena_allocator = arena.allocator();
+
+    var cmds: std.ArrayList([]const u8) = .initBuffer(.{});
+
+    const _cbuf = std.c.getenv("W3M_KITTY_TO_PNG");
+    if (_cbuf) |cbuf| {
+        try cmds.append(arena_allocator, std.mem.span(cbuf));
+    } else {
+        try cmds.append(arena_allocator, "convert");
+    }
+
+    if (std.ascii.endsWithIgnoreCase(content_type, "image/gif")) {
+        try cmds.append(arena_allocator, try std.fmt.allocPrint(arena_allocator, "{s}[0]", .{url}));
+    } else {
+        try cmds.append(arena_allocator);
+    }
+
+    try cmds.appennd(arena_allocator, tmpf);
+}
+
+fn put_image_kitty(
+    allocator: std.mem.Allocator,
+    io: std.Io,
+    _url: [:0]const u8,
+    x: usize,
+    y: usize,
+    w: c_int,
+    h: c_int,
+    sx: c_int,
+    sy: c_int,
+    sw: c_int,
+    sh: c_int,
+    cols: c_int,
+    rows: c_int,
+) !void {
+    _ = w;
+    _ = h;
+    _ = sx;
+    _ = sy;
+    _ = sw;
+    _ = sh;
+    _ = cols;
+    _ = rows;
+
+    var url = _url;
+
+    const content_type = std.mem.span(c.guessContentType(url.ptr));
+    // always convert to png for now.
+    // int t = 100;
+
+    const cwd = std.Io.Dir.cwd();
+    if (!std.ascii.eqlIgnoreCase(content_type, "image/png")) {
+        // not png. convert to tmpf
+        const tmpf = try std.fmt.allocPrintSentinel(
+            allocator,
+            "{s}/{s}.png",
+            .{ g.tmp_dir, c.fpath_basename(url) },
+            0,
+        );
+
+        _ = cwd.statFile(io, tmpf, .{}) catch {
+            // convert only if tmpf not exists yet
+            const cmd = try allocKittyConvertCmd(allocator);
+
+            tty.tty_flush();
+            const status = c.system(cmd.ptr);
+            if (status != 0) {
+                std.log.warn("system: {s} => {}", .{ cmd, status });
+            }
+
+            c.addDeleteFile(tmpf);
+        };
+
+        url = tmpf;
+    }
+
+    const fp = cwd.openFile(io, url, .{}) catch {
+        return;
+    };
+    defer fp.close(io);
+
+    screen.sc_move(y, x);
+
+    //     char* cbuf = malloc(3072); /* base64-encoded chunks of 4096 bytes */
+    //     if (!cbuf)
+    //         goto cleanup;
+    //     int i = 0;
+    //
+    //     int c;
+    //     while (i < 3072 && (c = fgetc(fp)) != EOF)
+    //         cbuf[i++] = c;
+    //
+    //     Str base64 = base64_encode(cbuf, i);
+    //     int m;
+    //     if (c == EOF)
+    //         m = 0;
+    //     else
+    //         m = 1;
+    //     Str buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
+    //                       "%s\x1b\\",
+    //         t, w, h, m, sx, sy, sw, sh, cols, rows, base64.ptr);
+    //     writestr(&tty_write1, buf.ptr);
+    //
+    //     if (m) {
+    //         i = 0;
+    //         int j = 0;
+    //         while ((c = fgetc(fp)) != EOF) {
+    //             if (j) {
+    //                 base64 = base64_encode(cbuf, i);
+    //                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64.ptr);
+    //                 writestr(&tty_write1, buf.ptr);
+    //                 i = 0;
+    //                 j = 0;
+    //             }
+    //             cbuf[i++] = c;
+    //             if (i == 3072)
+    //                 j = 1;
+    //         }
+    //
+    //         if (i) {
+    //             base64 = base64_encode(cbuf, i);
+    //             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64.ptr);
+    //             writestr(&tty_write1, buf.ptr);
+    //         }
+    //     }
+    // cleanup:
+    //     fclose(fp);
+    //     MOVE(&tty_write1, &terminfo, Currentbuf.cursorY, Currentbuf.cursorX);
+}
 
 export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c_int) void {
     _ = url;
@@ -309,7 +345,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
     //
     //     MOVE(y, x);
     //
-    //     writestr(buf->ptr);
+    //     writestr(buf.ptr);
     //
     //     cbuf = GC_MALLOC_ATOMIC(3072);
     //     if (!cbuf)
@@ -319,20 +355,20 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
     //         cbuf[i++] = c;
     //         if (i == 3072) {
     //             buf = base64_encode(cbuf, i);
-    //             writestr(buf->ptr);
+    //             writestr(buf.ptr);
     //             i = 0;
     //         }
     //     }
     //
     //     if (i) {
     //         buf = base64_encode(cbuf, i);
-    //         writestr(buf->ptr);
+    //         writestr(buf.ptr);
     //     }
     //
     // cleanup:
     //     fclose(fp);
     //     writestr("\a");
-    //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+    //     MOVE(Currentbuf.cursorY, Currentbuf.cursorX);
 }
 
 // export fn put_image_sixel(
@@ -384,13 +420,13 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     //         if (do_anim) {
 //     //             writestr("\x1b[?80h");
 //     //         } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
-//     //             url = str_url->ptr;
+//     //             url = str_url.ptr;
 //     //         }
 //     //         ttymode_add_local_input(ISIG, 0);
 //     //
 //     //         if ((env = getenv("W3M_IMG2SIXEL"))) {
 //     //             char* p;
-//     //             env = Strnew_charp(env)->ptr;
+//     //             env = Strnew_charp(env).ptr;
 //     //             while (n < 8 && (p = strchr(env, ' '))) {
 //     //                 *p = '\0';
 //     //                 if (*env != '\0') {
@@ -434,7 +470,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     //         }
 //     //     }
 //     //
-//     //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
+//     //     MOVE(Currentbuf.cursorY, Currentbuf.cursorX);
 // }
 //
 // void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
@@ -443,14 +479,14 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //     char* size;
 //
 //     if (w > 0 && h > 0)
-//         size = Sprintf("%dx%d", w, h)->ptr;
+//         size = Sprintf("%dx%d", w, h).ptr;
 //     else
 //         size = "";
 //
 //     MOVE(&tty_write1, &terminfo, y, x);
 //     buf = Sprintf("\x1b]5379;show_picture %s %s %dx%d+%d+%d\x07", url, size, sw, sh, sx, sy);
-//     writestr(&tty_write1, buf->ptr);
-//     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+//     writestr(&tty_write1, buf.ptr);
+//     MOVE(&tty_write1, &terminfo, Currentbuf.cursorY, Currentbuf.cursorX);
 // }
 
 // void put_image_iterm2(const char* url, int x, int y, int w, int h)
@@ -481,7 +517,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //
 //     MOVE(&tty_write1, &terminfo, y, x);
 //
-//     writestr(&tty_write1, buf->ptr);
+//     writestr(&tty_write1, buf.ptr);
 //
 //     cbuf = GC_MALLOC_ATOMIC(3072);
 //     if (!cbuf)
@@ -491,20 +527,20 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //         cbuf[i++] = c;
 //         if (i == 3072) {
 //             buf = base64_encode(cbuf, i);
-//             writestr(&tty_write1, buf->ptr);
+//             writestr(&tty_write1, buf.ptr);
 //             i = 0;
 //         }
 //     }
 //
 //     if (i) {
 //         buf = base64_encode(cbuf, i);
-//         writestr(&tty_write1, buf->ptr);
+//         writestr(&tty_write1, buf.ptr);
 //     }
 //
 // cleanup:
 //     fclose(fp);
 //     writestr(&tty_write1, "\a");
-//     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+//     MOVE(&tty_write1, &terminfo, Currentbuf.cursorY, Currentbuf.cursorX);
 // }
 
 // static void
@@ -533,7 +569,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //
 //     new_path = Strnew_charp(path);
 //     Strcat_charp(new_path, "-1");
-//     if (stat(new_path->ptr, &st) == 0) {
+//     if (stat(new_path.ptr, &st) == 0) {
 //         return new_path;
 //     }
 //
@@ -569,7 +605,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //         if (*(p++) == 0x21 && *(p++) == 0xf9 && *(p++) == 0x04) {
 //             if (body) {
 //                 /* Graphic Control Extension */
-//                 save_gif(new_path->ptr, header, header_size, body, p - 3 - body);
+//                 save_gif(new_path.ptr, header, header_size, body, p - 3 - body);
 //                 return new_path;
 //             } else {
 //                 /* skip the first frame. */
@@ -607,13 +643,13 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //         if (do_anim) {
 //             writestr(&tty_write1, "\x1b[?80h");
 //         } else if (!strstr(url, "://") && strcmp(url + strlen(url) - 4, ".gif") == 0 && (str_url = save_first_animation_frame(url))) {
-//             url = str_url->ptr;
+//             url = str_url.ptr;
 //         }
 //         ttymode_add(ISIG, 0);
 //
 //         if ((env = getenv("W3M_IMG2SIXEL"))) {
 //             char* p;
-//             env = Strnew_charp(env)->ptr;
+//             env = Strnew_charp(env).ptr;
 //             while (n < 8 && (p = strchr(env, ' '))) {
 //                 *p = '\0';
 //                 if (*env != '\0') {
@@ -657,7 +693,7 @@ export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c
 //         }
 //     }
 //
-//     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
+//     MOVE(&tty_write1, &terminfo, Currentbuf.cursorY, Currentbuf.cursorX);
 // }
 
 // static uint8_t*

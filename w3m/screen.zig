@@ -523,7 +523,7 @@ export fn sc_addch(ch: u8) void {
     sc_addmch(&buf, 1);
 }
 
-export fn sc_move(line: usize, column: usize) void {
+pub export fn sc_move(line: usize, column: usize) void {
     if (line < lines.items.len)
         CurLine = line;
     if (column < sc_cols())

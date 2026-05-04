@@ -120,11 +120,11 @@ export fn term_title(s: [*c]const u8) void {
     //     }
 }
 
-export fn ttymode_add(mode: c_int, imode: c_int) void {
+pub export fn ttymode_add(mode: c_int, imode: c_int) void {
     _ = mode;
     _ = imode;
 }
-export fn ttymode_remove(mode: c_int, imode: c_int) void {
+pub export fn ttymode_remove(mode: c_int, imode: c_int) void {
     _ = mode;
     _ = imode;
 }
