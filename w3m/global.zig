@@ -86,7 +86,6 @@ pub export var showLineNum: c_int = 0;
 pub export var show_srch_str: c_int = 1;
 const IMGDISPLAY = "w3mimgdisplay";
 pub export var Imgdisplay: [*c]const u8 = IMGDISPLAY;
-pub export var activeImage: c_int = 0;
 pub export var displayImage: c_int = 1;
 pub export var autoImage: c_int = 1;
 pub export var useExtImageViewer: c_int = 1;

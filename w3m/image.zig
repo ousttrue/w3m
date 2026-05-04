@@ -18,11 +18,7 @@ const TerminalImage = struct {
 var terminal_image: std.ArrayList(TerminalImage) = .initBuffer(&.{});
 
 export fn initImage() void {
-    if (0 == g.activeImage) {
-        if (getCharSize()) {
-            g.activeImage = 1;
-        }
-    }
+    getCharSize();
 }
 
 fn getCharSize() bool {
@@ -79,8 +75,6 @@ export fn addImage(_cache: ?*c.ImageCache, x: c_int, y: c_int, sx: c_int, sy: c_
     const cache = _cache orelse {
         return;
     };
-    if (0 == g.activeImage)
-        return;
 
     terminal_image.append(runtime.allocator, .{
         .cache = cache,
@@ -94,10 +88,6 @@ export fn addImage(_cache: ?*c.ImageCache, x: c_int, y: c_int, sx: c_int, sy: c_
 }
 
 export fn drawImage() void {
-    if (0 == g.activeImage) {
-        return;
-    }
-
     if (0 == g.enable_inline_image) {
         return;
     }
@@ -830,9 +820,6 @@ fn parsePngHeader(r: *std.Io.Reader) !c.Usize2 {
 }
 
 export fn getImageSize(_cache: ?*c.ImageCache) bool {
-    if (0 == g.activeImage)
-        return false;
-
     const cache = _cache orelse {
         return false;
     };

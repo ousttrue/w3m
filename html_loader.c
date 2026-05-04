@@ -1064,7 +1064,6 @@ Str process_img(struct HtmlTag* tag, int width)
     char *p, *q, *r, *r2 = NULL, *s, *t;
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
-    int use_image = activeImage && displayImage;
     int pre_int = FALSE, ext_pre_int = FALSE;
     Str tmp = Strnew();
 
@@ -1085,7 +1084,7 @@ Str process_img(struct HtmlTag* tag, int width)
             else
                 w = -1;
         }
-        if (use_image) {
+        if (displayImage) {
             if (w > 0) {
                 w = (int)(w * image_scale / 100 + 0.5);
                 if (w == 0)
@@ -1096,7 +1095,7 @@ Str process_img(struct HtmlTag* tag, int width)
         }
     }
     i = -1;
-    if (use_image) {
+    if (displayImage) {
         if (parsedtag_get_value(tag, ATTR_HEIGHT, &i)) {
             if (i > 0) {
                 i = (int)(i * image_scale / 100 + 0.5);
@@ -1121,7 +1120,7 @@ Str process_img(struct HtmlTag* tag, int width)
         ext_pre_int = TRUE;
 
     tmp = Strnew_size(128);
-    if (use_image) {
+    if (displayImage) {
         switch (align) {
         case ALIGN_LEFT:
             Strcat_charp(tmp, "<div_int align=left>");
@@ -1149,7 +1148,7 @@ Str process_img(struct HtmlTag* tag, int width)
                             "type=submit no_effect=true>",
                         cur_hseq++, cur_form_id));
     }
-    if (use_image) {
+    if (displayImage) {
         w0 = w;
         i0 = i;
         if (w < 0 || i < 0) {
@@ -1203,7 +1202,7 @@ Str process_img(struct HtmlTag* tag, int width)
         Strcat_charp(tmp, html_quote(t));
         Strcat_charp(tmp, "\"");
     }
-    if (use_image) {
+    if (displayImage) {
         if (w0 >= 0)
             Strcat(tmp, Sprintf(" width=%d", w0));
         if (i0 >= 0)
@@ -1268,7 +1267,7 @@ Str process_img(struct HtmlTag* tag, int width)
         q = NULL;
     if (q != NULL) {
         n = get_strwidth(WcOption, q);
-        if (use_image) {
+        if (displayImage) {
             if (n > nw) {
                 char* r;
                 for (r = q, n = 0; *r; r += get_mclen(r), n += get_mcwidth(r)) {
@@ -1338,7 +1337,7 @@ Str process_img(struct HtmlTag* tag, int width)
     Strcat_char(tmp, ']');
     n++;
 img_end:
-    if (use_image) {
+    if (displayImage) {
         for (; n < nw; n++)
             Strcat_char(tmp, ' ');
     }
@@ -1349,7 +1348,7 @@ img_end:
         Strcat_charp(tmp, "</input_alt>");
         process_n_form();
     }
-    if (use_image) {
+    if (displayImage) {
         switch (align) {
         case ALIGN_RIGHT:
         case ALIGN_CENTER:
@@ -4456,7 +4455,7 @@ void loadHTMLstream(struct URLFile* f, struct Buffer* newBuf, FILE* src, int int
     cur_iseq = 1;
     if (newBuf->image_flag)
         image_flag = newBuf->image_flag;
-    else if (activeImage && displayImage && autoImage)
+    else if (displayImage && autoImage)
         image_flag = IMG_FLAG_AUTO;
     else
         image_flag = IMG_FLAG_SKIP;

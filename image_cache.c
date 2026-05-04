@@ -35,8 +35,6 @@ static struct Buffer* image_buffer = NULL;
 
 struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetImageFlag flag)
 {
-    if (!activeImage)
-        return NULL;
     if (!image_hash)
         image_hash = newHash_sv(100);
 

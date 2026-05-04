@@ -74,8 +74,7 @@ void tty_deinit(void)
         sc_move((LINES - 1), 0);
         sc_clrtoeolx();
         tty_write_sc();
-        if (activeImage)
-            loadImage(NULL, IMG_FLAG_STOP);
+        loadImage(NULL, IMG_FLAG_STOP);
         tty_reset();
         fmInitialized = false;
     }
@@ -1121,8 +1120,7 @@ void _quitfm(struct CmdArgs* args, int confirm)
         return;
     }
 
-    if (activeImage)
-        deinitImage();
+    deinitImage();
     tty_deinit();
     save_cookies();
     if (UseHistory && SaveURLHist)
@@ -2889,7 +2887,7 @@ bool processCurrentBufferEvent(void)
 
 void idleTask()
 {
-    if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+    if (displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
         loadImage(Currentbuf, IMG_FLAG_NEXT);
     }
 }

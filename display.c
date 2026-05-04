@@ -338,7 +338,7 @@ static void _displayBuffer(struct Buffer* buf, struct CmdArgs* args, enum Displa
     }
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
         {
-            if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
+            if ((mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
                 if (draw_image_flag)
                     sc_clear();
                 clearImage();
@@ -375,7 +375,7 @@ static void _displayBuffer(struct Buffer* buf, struct CmdArgs* args, enum Displa
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     sc_standend();
     tty_write_sc();
-    if (activeImage && displayImage && buf->img && buf->image_loaded) {
+    if (displayImage && buf->img && buf->image_loaded) {
         drawImage();
         sc_move(Currentbuf->cursorY, Currentbuf->cursorX);
     }
@@ -522,7 +522,7 @@ redrawNLine(struct Buffer* buf, int n)
         sc_clrtobotx();
     }
 
-    if (!(activeImage && displayImage && buf->img))
+    if (!(displayImage && buf->img))
         return;
     sc_move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
     i = 0;

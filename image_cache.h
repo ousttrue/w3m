@@ -1,7 +1,6 @@
 #pragma once
 #include <sys/types.h>
 
-
 enum ImageCacheStatus {
     IMG_FLAG_UNLOADED = 0,
     IMG_FLAG_LOADED = 1,

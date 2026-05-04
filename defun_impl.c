@@ -1778,8 +1778,6 @@ void dispI(struct CmdArgs* args)
 {
     if (!displayImage)
         initImage();
-    if (!activeImage)
-        return;
     displayImage = TRUE;
     /*
      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
@@ -1792,8 +1790,6 @@ void dispI(struct CmdArgs* args)
 
 void stopI(struct CmdArgs* args)
 {
-    if (!activeImage)
-        return;
     /*
      * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
      * return;

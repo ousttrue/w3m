@@ -82,7 +82,6 @@ extern int retryAsHttp;
 extern int showLineNum;
 extern int show_srch_str;
 extern const char* Imgdisplay;
-extern int activeImage;
 extern int displayImage;
 extern int autoImage;
 extern int useExtImageViewer;

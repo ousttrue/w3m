@@ -338,7 +338,7 @@ struct Buffer* load_http(struct CmdArgs* args, struct HttpClient* http)
         proc = loadHTMLBuffer;
     else if (is_plain_text_type(current->t))
         proc = loadBuffer;
-    else if (activeImage && displayImage && !useExtImageViewer && !strncasecmp(current->t, "image/", 6))
+    else if (displayImage && !useExtImageViewer && !strncasecmp(current->t, "image/", 6))
         proc = loadImageBuffer;
 
     if (t_buf == NULL)
