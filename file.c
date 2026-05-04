@@ -598,7 +598,7 @@ loadImageBuffer(struct CmdArgs* args, struct URLFile* uf, struct Buffer* newBuf)
 {
     const struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
 
-    loadImage(newBuf, IMG_FLAG_STOP);
+    loadImageStop(newBuf);
     struct Image image = {
         .url = parsedURL2RefererStr(&uf->url)->ptr,
         .width = -1,

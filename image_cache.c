@@ -6,15 +6,11 @@
 #include "anchor.h"
 #include "constants.h"
 #include "alloc.h"
-#include "etc.h"
 #include "global.h"
 #include "Str.h"
-#include "indep.h"
 #include "hash.h"
 #include "textlist.h"
 #include "term_tty.h"
-
-#include <w3m.h>
 
 #include <sys/stat.h>
 #include <stdio.h>
@@ -97,10 +93,8 @@ struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetIm
     return cache;
 }
 
-void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
+static bool updateCache(struct Buffer* buf)
 {
-    /* int wait_st; */
-
     if (maxLoadImage > MAX_LOAD_IMAGE)
         maxLoadImage = MAX_LOAD_IMAGE;
     else if (maxLoadImage < 1)
@@ -144,13 +138,23 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
         image_cache[i] = NULL;
     }
 
-    if (flag == IMG_FLAG_STOP) {
-        image_list = NULL;
-        image_file = NULL;
-        n_load_image = maxLoadImage;
-        image_buffer = NULL;
-        return;
-    }
+    return draw;
+}
+
+void loadImageStop(struct Buffer* buf)
+{
+    updateCache(buf);
+
+    image_list = NULL;
+    image_file = NULL;
+    n_load_image = maxLoadImage;
+    image_buffer = NULL;
+    return;
+}
+
+void loadImageStart(struct Buffer* buf)
+{
+    bool draw = updateCache(buf);
 
     if (draw && image_buffer) {
         if (!enable_inline_image)
@@ -259,5 +263,5 @@ void deleteImage(struct Buffer* buf)
         if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
             unlink(a->image->cache->file);
     }
-    loadImage(NULL, IMG_FLAG_STOP);
+    loadImageStop(NULL);
 }

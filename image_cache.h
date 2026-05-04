@@ -8,12 +8,6 @@ enum ImageCacheStatus {
     IMG_FLAG_DONT_REMOVE = 4,
 };
 
-enum ImageLoadFlag {
-    IMG_FLAG_START = 0,
-    IMG_FLAG_STOP = 1,
-    IMG_FLAG_NEXT = 2,
-};
-
 struct ImageCache {
     const char* url;
     struct Url* current;
@@ -50,7 +44,10 @@ enum GetImageFlag {
 };
 
 void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h);
-void loadImage(struct Buffer* buf, enum ImageLoadFlag flag);
+
+void loadImageStart(struct Buffer* buf);
+void loadImageStop(struct Buffer* buf);
+
 struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetImageFlag flag);
 bool getImageSize(struct ImageCache* cache);
 void getAllImage(struct Buffer* buf);

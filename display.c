@@ -342,7 +342,7 @@ static void _displayBuffer(struct Buffer* buf, struct CmdArgs* args, enum Displa
                 if (draw_image_flag)
                     sc_clear();
                 clearImage();
-                loadImage(buf, IMG_FLAG_STOP);
+                loadImageStop(buf);
                 image_touch++;
                 draw_image_flag = false;
             }

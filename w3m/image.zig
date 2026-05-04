@@ -18,7 +18,7 @@ const TerminalImage = struct {
 var terminal_image: std.ArrayList(TerminalImage) = .initBuffer(&.{});
 
 export fn initImage() void {
-    getCharSize();
+    _ = getCharSize();
 }
 
 fn getCharSize() bool {

@@ -74,7 +74,7 @@ void tty_deinit(void)
         sc_move((LINES - 1), 0);
         sc_clrtoeolx();
         tty_write_sc();
-        loadImage(NULL, IMG_FLAG_STOP);
+        loadImageStop(NULL);
         tty_reset();
         fmInitialized = false;
     }
@@ -2888,7 +2888,7 @@ bool processCurrentBufferEvent(void)
 void idleTask()
 {
     if (displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
-        loadImage(Currentbuf, IMG_FLAG_NEXT);
+        loadImageStart(Currentbuf);
     }
 }
 
