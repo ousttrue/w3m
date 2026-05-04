@@ -118,7 +118,6 @@ pub export var pre_form_file: [*c]const u8 = PRE_FORM_FILE;
 const SITECONF_FILE = _RC_DIR ++ "/siteconf";
 pub export var siteconf_file: [*c]const u8 = SITECONF_FILE;
 pub export var do_download: c_int = 0;
-pub export var image_source: [*c]const u8 = null;
 pub export var UserAgent: [*c]const u8 = null;
 pub export var NoSendReferer: c_int = 0;
 pub export var CrossOriginReferer: c_int = 1;

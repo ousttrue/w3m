@@ -899,7 +899,7 @@ void http_open(struct HttpClient* http, struct CmdArgs* args)
 }
 
 struct HttpClient http_get(struct CmdArgs* args, const char* path, struct Url* base_url, struct Form* post,
-    const char* referer, enum UrlOptionFlags flag)
+    const char* referer, enum UrlOptionFlags flag, const char *image_source)
 {
     struct HttpClient http;
     http_init(&http, base_url, flag);
@@ -936,7 +936,7 @@ load_doc:
                 if (UseExternalDirBuffer) {
                     Str cmd = Sprintf("%s?dir=%s#current",
                         DirBufferCommand, current->transport.url.file);
-                    return http_get(args, cmd->ptr, NULL, NULL, NO_REFERER, 0);
+                    return http_get(args, cmd->ptr, NULL, NULL, NO_REFERER, 0, image_source);
                     // if (b != NULL && b != NO_BUFFER) {
                     //     copyParsedURL(&b->currentURL, &current->transport.url);
                     //     b->filename = b->currentURL.real_file;
@@ -1084,7 +1084,7 @@ load_doc:
     } else if (http.searchHeader) {
         http.searchHeader = SearchHeader = false;
         current->res = http_response_header(current->transport.stream, current->transport.url.scheme);
-        if (http.searchHeader_through && !current->header_source) {
+        if (http.searchHeader_through && !current->header_source && !image_source) {
             current->header_source = http_response_save_header_source(&current->res);
         }
         current->transport.compression = http_response_process(&current->res, args, &current->transport.url);

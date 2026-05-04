@@ -509,6 +509,7 @@ void reshapeBuffer(struct CmdArgs* args, struct Buffer* buf)
             struct URLFile h = examineFile(buf->header_source);
             if (h.stream) {
                 buf->http_response = http_response_header(h.stream, h.url.scheme);
+
                 if (!buf->header_source) {
                     buf->header_source = http_response_save_header_source(&buf->http_response);
                 }

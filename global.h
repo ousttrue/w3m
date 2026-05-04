@@ -107,7 +107,6 @@ extern const char* passwd_file;
 extern const char* pre_form_file;
 extern const char* siteconf_file;
 extern int do_download;
-extern const char* image_source;
 extern const char* UserAgent;
 extern int NoSendReferer;
 extern int CrossOriginReferer;

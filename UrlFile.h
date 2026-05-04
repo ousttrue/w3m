@@ -40,4 +40,4 @@ struct Uncompressed {
     FILE* pipe;
     const char* tmpf;
 };
-struct Uncompressed uncompressed_pipe(struct URLFile* uf, struct CompressionDecoder* d);
+struct Uncompressed uncompressed_pipe(struct URLFile* uf, struct CompressionDecoder* d, const char* tmpf);

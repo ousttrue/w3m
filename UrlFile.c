@@ -128,7 +128,7 @@ struct URLFile examineFile(const char* path)
         if (uf.compression != CMP_NOCOMPRESS) {
             struct ContentTypeWithExt ce = compression_from_path_to_content_type(path);
             uf.guess_type = ce.content_type;
-            struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression));
+            struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression), 0);
             if (uncompressed.pipe) {
                 // if (uncompressed.tmpf) {
                 //     // if (src)
@@ -159,16 +159,10 @@ static const char* auxbinFile(const char* base)
 
 #define SAVE_BUF_SIZE 1536
 
-struct Uncompressed uncompressed_pipe(struct URLFile* uf, struct CompressionDecoder* d)
+struct Uncompressed uncompressed_pipe(struct URLFile* uf, struct CompressionDecoder* d, const char* tmpf)
 {
     if (!d) {
         return (struct Uncompressed) { 0 };
-    }
-
-    const char* tmpf = NULL;
-    if (uf->url.scheme != SCM_FILE
-        && !image_source) {
-        tmpf = tmpfname(TMPF_DFL, d->ext);
     }
 
     // child1 --> stdout(f1)

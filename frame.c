@@ -352,7 +352,7 @@ frame_download_source(struct CmdArgs* args,
         struct HttpClient http = http_get(args, b->url, baseURL ? baseURL : currentURL,
             b->request,
             b->referer,
-            flag | RG_FRAME_SRC);
+            flag | RG_FRAME_SRC, 0);
         buf = load_http(args, &http);
         /* XXX certificate? */
         if (buf && buf != NO_BUFFER)
@@ -874,7 +874,7 @@ renderFrame(struct CmdArgs* args, struct Buffer* Cbuf, int force_reload)
     renderFrameSet = Cbuf->frameset;
     flushFrameSet(renderFrameSet);
     DocumentCharset = InnerCharset;
-    struct HttpClient http = http_get(args, tmp, NULL, NULL, NULL, flag);
+    struct HttpClient http = http_get(args, tmp, NULL, NULL, NULL, flag, 0);
     buf = load_http(args, &http);
     DocumentCharset = doc_charset;
     renderFrameSet = NULL;

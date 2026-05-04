@@ -1,4 +1,5 @@
 #include "image_cache.h"
+#include "input_stream.h"
 #include <w3m.h>
 #include "file.h"
 #include "buffer.h"
@@ -345,20 +346,31 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
             continue;
         }
 
-        tty_flush();
+        // tty_flush();
         // if ((cache->pid = fork()) == 0) {
         //     /*
         //      * setup_child(TRUE, 0, -1);
         //      */
         //     setup_child(FALSE, 0, -1);
-            image_source = cache->file;
-            struct HttpClient http = http_get(0, cache->url, cache->current, NULL, NULL, 0);
-            load_http(0, &http);
-            /* TODO make sure removing this didn't break anything
-            if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
-                unlink(cache->file);
-            */
-            symlink(cache->file, cache->touch);
+        struct HttpClient http = http_get(0, cache->url, cache->current, NULL, NULL, 0, cache->file);
+        struct HttpMessageSession* current = http_session_current(&http);
+        // load_http(0, &http, cache->file);
+        // if (image_source) {
+        // struct Buffer* b = NULL;
+        ist_save2tmp(current->transport.stream, current->transport.url.scheme, cache->file);
+        // b = newBuffer(INIT_BUFFER_WIDTH);
+        // b->sourcefile = image_source;
+        // b->real_type = current->t;
+        UFclose(&current->transport);
+        // TRAP_OFF;
+        //     return b;
+        // }
+
+        /* TODO make sure removing this didn't break anything
+        if (!b || !b->real_type || strncasecmp(b->real_type, "image/", 6))
+            unlink(cache->file);
+        */
+        symlink(cache->file, cache->touch);
         //     exit(0);
         // } else if (cache->pid < 0) {
         //     cache->pid = 0;

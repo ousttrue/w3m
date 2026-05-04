@@ -90,4 +90,4 @@ void http_open(struct HttpClient* http, struct CmdArgs* args);
 
 struct HttpClient http_get(struct CmdArgs* args, const char* path, struct Url* base_url, struct Form* post,
     const char* referer,
-    enum UrlOptionFlags flag);
+    enum UrlOptionFlags flag, const char *image_source);

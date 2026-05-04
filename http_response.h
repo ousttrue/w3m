@@ -19,4 +19,4 @@ enum ContentCompression http_response_process(struct HttpResponse* res, struct C
 bool matchattr(const char* p, const char* attr, int len, Str* value);
 const char* http_response_get(struct HttpResponse* res, const char* field);
 const char* http_response_get_content_type(struct HttpResponse* res, wc_ces* content_charset);
-const char* http_response_guess_save_name(struct HttpResponse *res, const char* path);
+const char* http_response_guess_save_name(struct HttpResponse* res, const char* path);

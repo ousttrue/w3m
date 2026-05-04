@@ -63,14 +63,8 @@ struct HttpResponse http_response_header(struct InputStream* stream, enum UrlSch
 
 const char* http_response_save_header_source(struct HttpResponse* res)
 {
-    FILE* thru_src = NULL;
-    const char* tmpf = NULL;
-    if (!image_source) {
-        tmpf = tmpfname(TMPF_DFL, NULL);
-        thru_src = fopen(tmpf, "w");
-        // if (thru_src)
-        //     newBuf->header_source = tmpf;
-    }
+    const char* tmpf = tmpfname(TMPF_DFL, NULL);
+    FILE* thru_src = fopen(tmpf, "w");
     for (TextListItem* ti = res->headers->first; ti; ti = ti->next) {
         Str tmp = Strnew_charp(ti->ptr);
         if (thru_src)

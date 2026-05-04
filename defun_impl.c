@@ -887,7 +887,7 @@ void followI(struct CmdArgs* args)
     /* FIXME: gettextize? */
     message(Sprintf("loading %s", a->url)->ptr, 0, 0);
     tty_write_sc();
-    struct HttpClient http = http_get(args, a->url, baseURL(Currentbuf), NULL, NULL, 0);
+    struct HttpClient http = http_get(args, a->url, baseURL(Currentbuf), NULL, NULL, 0, 0);
     buf = load_http(args, &http);
     if (buf == NULL) {
         /* FIXME: gettextize? */
@@ -1589,7 +1589,7 @@ void reload(struct CmdArgs* args)
         DocumentCharset = Currentbuf->document_charset;
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
-    struct HttpClient http = http_get(args, url->ptr, NULL, request, NO_REFERER, RG_NOCACHE);
+    struct HttpClient http = http_get(args, url->ptr, NULL, request, NO_REFERER, RG_NOCACHE, 0);
     buf = load_http(args, &http);
     DocumentCharset = old_charset;
     SearchHeader = FALSE;

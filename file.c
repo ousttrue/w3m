@@ -30,6 +30,7 @@
 // #include "signal_util.h"
 #include "html.h"
 #include "local_cgi.h"
+#include "w3m/w3m.h"
 #include "wc_util.h"
 #include <sys/stat.h>
 #include <utime.h>
@@ -207,7 +208,7 @@ static bool doFileSave(struct CmdArgs* args, struct URLFile uf, const char* defs
             return false;
         }
         if (uf.compression != CMP_NOCOMPRESS && AutoUncompress) {
-            struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression));
+            struct Uncompressed uncompressed = uncompressed_pipe(&uf, compression_from_type(uf.compression), 0);
             if (uncompressed.pipe) {
                 unlink(uncompressed.tmpf);
                 uf.stream = ist_from_fp(uncompressed.pipe, fclose);
@@ -240,8 +241,6 @@ struct Buffer* load_http(struct CmdArgs* args, struct HttpClient* http)
     t_buf->header_source = current->header_source;
 
     if (current->page) {
-        if (image_source)
-            return NULL;
         const char* tmpf = tmpfname(TMPF_SRC, ".html");
         FILE* src = fopen(tmpf, "w");
         if (src) {
@@ -296,7 +295,14 @@ struct Buffer* load_http(struct CmdArgs* args, struct HttpClient* http)
     }
 
     if ((current->transport.compression != CMP_NOCOMPRESS) && AutoUncompress) {
-        struct Uncompressed uncompressed = uncompressed_pipe(&current->transport, compression_from_type(current->transport.compression));
+        struct CompressionDecoder* d = compression_from_type(current->transport.compression);
+
+        const char* tmpf = NULL;
+        if (current->url.scheme != SCM_FILE) {
+            tmpf = tmpfname(TMPF_DFL, d->ext);
+        }
+
+        struct Uncompressed uncompressed = uncompressed_pipe(&current->transport, d, tmpf);
         if (uncompressed.pipe) {
             current->url.real_file = uncompressed.tmpf;
             current->transport.stream = ist_from_fp(uncompressed.pipe, fclose);
@@ -306,7 +312,15 @@ struct Buffer* load_http(struct CmdArgs* args, struct HttpClient* http)
         if ((is_text_type(current->t) || searchExtViewer(current->t))) {
             if (t_buf == NULL)
                 t_buf = newBuffer(INIT_BUFFER_WIDTH);
-            struct Uncompressed uncompressed = uncompressed_pipe(&current->transport, compression_from_type(current->transport.compression));
+
+            struct CompressionDecoder* d = compression_from_type(current->transport.compression);
+
+            const char* tmpf = NULL;
+            if (current->url.scheme != SCM_FILE) {
+                tmpf = tmpfname(TMPF_DFL, d->ext);
+            }
+
+            struct Uncompressed uncompressed = uncompressed_pipe(&current->transport, d, tmpf);
             if (uncompressed.pipe) {
                 t_buf->sourcefile = uncompressed.tmpf;
                 current->transport.stream = ist_from_fp(uncompressed.pipe, fclose);
@@ -318,17 +332,6 @@ struct Buffer* load_http(struct CmdArgs* args, struct HttpClient* http)
             current->t = d ? d->mime_type : NULL; // compress_application_type(f.compression);
             current->transport.compression = CMP_NOCOMPRESS;
         }
-    }
-    if (image_source) {
-        struct Buffer* b = NULL;
-        if (ist_save2tmp(current->transport.stream, current->transport.url.scheme, image_source)) {
-            b = newBuffer(INIT_BUFFER_WIDTH);
-            b->sourcefile = image_source;
-            b->real_type = current->t;
-        }
-        UFclose(&current->transport);
-        // TRAP_OFF;
-        return b;
     }
 
     if (is_html_type(current->t))
