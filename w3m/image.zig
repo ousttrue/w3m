@@ -192,7 +192,8 @@ fn allocKittyConvertCmd(
     if (_cbuf) |cbuf| {
         try cmds.append(arena_allocator, std.mem.span(cbuf));
     } else {
-        try cmds.append(arena_allocator, "convert");
+        try cmds.append(arena_allocator, "magick");
+        // try cmds.append(arena_allocator, "convert");
     }
 
     // arg1

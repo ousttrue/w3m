@@ -20,7 +20,6 @@ struct ImageCache {
     struct Url* current;
     const char* file;
     const char* touch;
-    pid_t pid;
     enum ImageCacheStatus loaded;
     int index;
     int width;

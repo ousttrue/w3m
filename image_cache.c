@@ -63,7 +63,6 @@ struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetIm
         cache->url = image->url;
         cache->current = current;
         cache->file = tmpfname(TMPF_DFL, image->ext);
-        cache->pid = 0;
         cache->index = 0;
         cache->loaded = IMG_FLAG_UNLOADED;
         if (enable_inline_image == INLINE_IMG_OSC5379) {
@@ -85,8 +84,8 @@ struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetIm
         if (cache->loaded == IMG_FLAG_UNLOADED) {
             if (!image_file)
                 image_file = newHash_sv(100);
-            if (!getHash_sv(image_file, cache->file, NULL)) {
-                putHash_sv(image_file, cache->file, (void*)cache);
+            if (!getHash_sv(image_file, (char*)cache->file, NULL)) {
+                putHash_sv(image_file, (char*)cache->file, (void*)cache);
                 if (!image_list)
                     image_list = newGeneralList();
                 pushValue(image_list, (void*)cache);
@@ -99,10 +98,6 @@ struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetIm
         getImageSize(cache);
     return cache;
 }
-
-
-
-
 
 void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
 {
@@ -127,17 +122,6 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
         struct stat st;
         if (lstat(cache->touch, &st))
             continue;
-        if (cache->pid) {
-            kill(cache->pid, SIGKILL);
-            /*
-             * #ifdef HAVE_WAITPID
-             * waitpid(cache->pid, &wait_st, 0);
-             * #else
-             * wait(&wait_st);
-             * #endif
-             */
-            cache->pid = 0;
-        }
         if (!stat(cache->file, &st)) {
             cache->loaded = IMG_FLAG_LOADED;
             if (getImageSize(cache)) {
@@ -155,17 +139,7 @@ void loadImage(struct Buffer* buf, enum ImageLoadFlag flag)
         struct ImageCache* cache = image_cache[i];
         if (!cache || !cache->touch)
             continue;
-        if (cache->pid) {
-            kill(cache->pid, SIGKILL);
-            /*
-             * #ifdef HAVE_WAITPID
-             * waitpid(cache->pid, &wait_st, 0);
-             * #else
-             * wait(&wait_st);
-             * #endif
-             */
-            cache->pid = 0;
-        }
+
         /*TODO make sure removing this didn't break anything
         unlink(cache->touch);
         */
