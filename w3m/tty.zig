@@ -128,3 +128,60 @@ export fn ttymode_remove(mode: c_int, imode: c_int) void {
     _ = mode;
     _ = imode;
 }
+
+pub export fn tty_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
+    if (getTermSize()) |ws| {
+        if (ws.ws_ypixel > 0 and ws.ws_row > 0 and ws.ws_xpixel > 0 and ws.ws_col > 0) {
+            ppc.* = ws.ws_xpixel / ws.ws_col;
+            ppl.* = ws.ws_ypixel / ws.ws_row;
+            return true;
+        }
+    } else |_| {
+        @panic("getTermSize");
+    }
+
+    // XTWINOPS
+    //
+    // fd_set rfd;
+    // struct timeval tval;
+    // char buf[100];
+    // char* p;
+    // ssize_t len;
+    // ssize_t left;
+    // int wp, hp, wc, hc;
+    // int i;
+    //
+    // fputs("\x1b[14t\x1b[18t", ttyf);
+    // tty_flush();
+    //
+    // p = buf;
+    // left = sizeof(buf) - 1;
+    // for (i = 0; i < 10; i++) {
+    //     tval.tv_usec = 200000; /* 0.2 sec * 10 */
+    //     tval.tv_sec = 0;
+    //     FD_ZERO(&rfd);
+    //     FD_SET(tty, &rfd);
+    //     if (select(tty + 1, &rfd, NULL, NULL, &tval) <= 0 || !FD_ISSET(tty, &rfd))
+    //         continue;
+    //
+    //     if ((len = read(tty, p, left)) <= 0)
+    //         continue;
+    //     p[len] = '\0';
+    //
+    //     if (sscanf(buf, "\x1b[4;%d;%dt\x1b[8;%d;%dt", &hp, &wp, &hc, &wc) == 4) {
+    //         if (wp > 0 && wc > 0 && hp > 0 && hc > 0) {
+    //             *ppc = wp / wc;
+    //             *ppl = hp / hc;
+    //             return 1;
+    //         } else {
+    //             return 0;
+    //         }
+    //     }
+    //     p += len;
+    //     left -= len;
+    // }
+
+    return false;
+}
+
+

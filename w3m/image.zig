@@ -1,7 +1,20 @@
 const std = @import("std");
 const c = @import("c.zig").c;
 const g = @import("global.zig");
+const runtime = @import("runtime.zig");
 const tty = @import("tty.zig");
+
+const TerminalImage = struct {
+    cache: *c.ImageCache,
+    x: c_int,
+    y: c_int,
+    sx: c_int,
+    sy: c_int,
+    width: c_int,
+    height: c_int,
+};
+
+var terminal_image: std.ArrayList(TerminalImage) = .initBuffer(&.{});
 
 export fn initImage() void {
     if (0 == g.activeImage) {
@@ -11,68 +24,13 @@ export fn initImage() void {
     }
 }
 
-export fn tty_pixel_per_cell(ppc: *c_int, ppl: *c_int) bool {
-    if (tty.getTermSize()) |ws| {
-        if (ws.ws_ypixel > 0 and ws.ws_row > 0 and ws.ws_xpixel > 0 and ws.ws_col > 0) {
-            ppc.* = ws.ws_xpixel / ws.ws_col;
-            ppl.* = ws.ws_ypixel / ws.ws_row;
-            return true;
-        }
-    } else |_| {
-        @panic("getTermSize");
-    }
-
-    // XTWINOPS
-    //
-    // fd_set rfd;
-    // struct timeval tval;
-    // char buf[100];
-    // char* p;
-    // ssize_t len;
-    // ssize_t left;
-    // int wp, hp, wc, hc;
-    // int i;
-    //
-    // fputs("\x1b[14t\x1b[18t", ttyf);
-    // tty_flush();
-    //
-    // p = buf;
-    // left = sizeof(buf) - 1;
-    // for (i = 0; i < 10; i++) {
-    //     tval.tv_usec = 200000; /* 0.2 sec * 10 */
-    //     tval.tv_sec = 0;
-    //     FD_ZERO(&rfd);
-    //     FD_SET(tty, &rfd);
-    //     if (select(tty + 1, &rfd, NULL, NULL, &tval) <= 0 || !FD_ISSET(tty, &rfd))
-    //         continue;
-    //
-    //     if ((len = read(tty, p, left)) <= 0)
-    //         continue;
-    //     p[len] = '\0';
-    //
-    //     if (sscanf(buf, "\x1b[4;%d;%dt\x1b[8;%d;%dt", &hp, &wp, &hc, &wc) == 4) {
-    //         if (wp > 0 && wc > 0 && hp > 0 && hc > 0) {
-    //             *ppc = wp / wc;
-    //             *ppl = hp / hc;
-    //             return 1;
-    //         } else {
-    //             return 0;
-    //         }
-    //     }
-    //     p += len;
-    //     left -= len;
-    // }
-
-    return false;
-}
-
 fn getCharSize() bool {
     c.set_environ("W3M_TTY", tty.ttyname_tty());
 
     if (g.enable_inline_image != 0) {
         var ppc: c_int = undefined;
         var ppl: c_int = undefined;
-        if (tty_pixel_per_cell(&ppc, &ppl)) {
+        if (tty.tty_pixel_per_cell(&ppc, &ppl)) {
             g.pixel_per_char_i = ppc;
             g.pixel_per_line_i = ppl;
             g.pixel_per_char = @floatFromInt(ppc);
@@ -108,57 +66,30 @@ fn getCharSize() bool {
     return false;
 }
 
-const TerminalImage = struct {
-    //     struct ImageCache* cache;
-    //     short x;
-    //     short y;
-    //     short sx;
-    //     short sy;
-    //     short width;
-    //     short height;
-};
-
-// static struct TerminalImage* terminal_image = NULL;
-var n_terminal_image: usize = 0;
-// static int max_terminal_image = 0;
-
 export fn deinitImage() void {
     clearImage();
 }
 
 export fn clearImage() void {
-    n_terminal_image = 0;
+    terminal_image.clearRetainingCapacity();
 }
 
-export fn addImage(cache: ?*c.ImageCache, x: c_int, y: c_int, sx: c_int, sy: c_int, w: c_int, h: c_int) void {
-    _ = cache;
-    _ = x;
-    _ = y;
-    _ = sx;
-    _ = sy;
-    _ = w;
-    _ = h;
+export fn addImage(_cache: ?*c.ImageCache, x: c_int, y: c_int, sx: c_int, sy: c_int, w: c_int, h: c_int) void {
+    const cache = _cache orelse {
+        return;
+    };
+    if (0 == g.activeImage)
+        return;
 
-    // if (!activeImage)
-    //     return;
-    //
-    // if (n_terminal_image >= max_terminal_image) {
-    //     max_terminal_image = max_terminal_image ? (2 * max_terminal_image) : 8;
-    //     terminal_image = New_Reuse(struct TerminalImage, terminal_image,
-    //         max_terminal_image);
-    // }
-    //
-    // struct TerminalImage* i = &terminal_image[n_terminal_image];
-    // *i = (struct TerminalImage) {
-    //     .cache = cache,
-    //     .x = x,
-    //     .y = y,
-    //     .sx = sx,
-    //     .sy = sy,
-    //     .width = w,
-    //     .height = h,
-    // };
-    // n_terminal_image++;
+    terminal_image.append(runtime.allocator, .{
+        .cache = cache,
+        .x = x,
+        .y = y,
+        .sx = sx,
+        .sy = sy,
+        .width = w,
+        .height = h,
+    }) catch @panic("OOM");
 }
 
 export fn drawImage() void {
@@ -344,153 +275,6 @@ export fn drawImage() void {
 // cleanup:
 //     fclose(fp);
 //     MOVE(&tty_write1, &terminfo, Currentbuf->cursorY, Currentbuf->cursorX);
-// }
-// export fn put_image_kitty(
-//     url: [*c]const u8,
-//     x: c_int,
-//     y: c_int,
-//     w: c_int,
-//     h: c_int,
-//     sx: c_int,
-//     sy: c_int,
-//     sw: c_int,
-//     sh: c_int,
-//     cols: c_int,
-//     rows: c_int,
-// ) void {
-//     _ = x;
-//     _ = y;
-//     _ = w;
-//     _ = h;
-//     _ = sx;
-//     _ = sy;
-//     _ = sw;
-//     _ = sh;
-//     _ = cols;
-//     _ = rows;
-//     //     Str buf, base64;
-//     //     char *cbuf, *tmpf;
-//     //     char* argv[4];
-//     //     FILE* fp;
-//     //     int c, i, j, m, t, is_anim;
-//     //     struct stat st;
-//     //     pid_t pid;
-//     //     MySignalHandler (*volatile previntr)(SIGNAL_ARG);
-//     //     MySignalHandler (*volatile prevquit)(SIGNAL_ARG);
-//     //     MySignalHandler (*volatile prevstop)(SIGNAL_ARG);
-//
-//     const content_type = std.mem.span(guessContentType(url));
-//     // const t = 100; // always convert to png for now.
-//     const path = std.mem.span(url);
-//
-//     if (!std.ascii.eqlIgnoreCase(content_type, "image/png")) {
-//         // conv to png
-//         //         tmpf = Sprintf("%s/%s.png", tmp_dir, mybasename(path))->ptr;
-//         //
-//         //         if (type && !strcasecmp(type, "image/gif")) {
-//         //             is_anim = 1;
-//         //         } else {
-//         //             is_anim = 0;
-//         //         }
-//         //
-//         //         /* convert only if png doesn't exist yet. */
-//         //
-//         //         if (stat(tmpf, &st)) {
-//         //             if (stat(path, &st))
-//         //                 return;
-//         //
-//         //             tty_flush();
-//         //
-//         //             previntr = signal(SIGINT, SIG_IGN);
-//         //             prevquit = signal(SIGQUIT, SIG_IGN);
-//         //             prevstop = signal(SIGTSTP, SIG_IGN);
-//         //
-//         //             if ((pid = fork()) == 0) {
-//         //                 i = 0;
-//         //
-//         //                 close(STDERR_FILENO); /* Don't output error message. */
-//         //                 ttymode_add_local_input(ISIG, 0);
-//         //
-//         //                 if ((cbuf = getenv("W3M_KITTY_TO_PNG")))
-//         //                     argv[i++] = cbuf;
-//         //                 else
-//         //                     argv[i++] = "convert";
-//         //
-//         //                 if (is_anim) {
-//         //                     buf = Strnew_charp(path);
-//         //                     Strcat_charp(buf, "[0]");
-//         //                     argv[i++] = buf->ptr;
-//         //                 } else {
-//         //                     argv[i++] = path;
-//         //                 }
-//         //                 argv[i++] = tmpf;
-//         //                 argv[i++] = NULL;
-//         //                 execvp(argv[0], argv);
-//         //                 exit(0);
-//         //             } else if (pid > 0) {
-//         //                 waitpid(pid, &i, 0);
-//         //                 ttymode_remove_local_input(ISIG, 0);
-//         //                 signal(SIGINT, previntr);
-//         //                 signal(SIGQUIT, prevquit);
-//         //                 signal(SIGTSTP, prevstop);
-//         //             }
-//         //
-//         //             pushText(fileToDelete, tmpf);
-//         //         }
-//         //         path = tmpf;
-//     }
-//
-//     const f = std.Io.Dir.cwd().openFile(runtime.io, path, .{}) catch {
-//         return;
-//     };
-//     defer f.close(runtime.io);
-//
-//     // MOVE(y, x);
-//
-//     //     cbuf = GC_MALLOC_ATOMIC(3072); /* base64-encoded chunks of 4096 bytes */
-//     //     if (!cbuf)
-//     //         goto cleanup;
-//     //     i = 0;
-//     //
-//     //     while (i < 3072 && (c = fgetc(fp)) != EOF)
-//     //         cbuf[i++] = c;
-//     //
-//     //     base64 = base64_encode(cbuf, i);
-//     //
-//     //     if (c == EOF)
-//     //         m = 0;
-//     //     else
-//     //         m = 1;
-//     //     buf = Sprintf("\x1b_Gf=%d,s=%d,v=%d,a=T,m=%d,x=%d,y=%d,w=%d,h=%d,c=%d,r=%d;"
-//     //                   "%s\x1b\\",
-//     //         t, w, h, m, sx, sy, sw, sh, cols, rows, base64->ptr);
-//     //     writestr(buf->ptr);
-//     //
-//     //     if (m) {
-//     //         i = 0;
-//     //         j = 0;
-//     //         while ((c = fgetc(fp)) != EOF) {
-//     //             if (j) {
-//     //                 base64 = base64_encode(cbuf, i);
-//     //                 buf = Sprintf("\x1b_Gm=1;%s\x1b\\", base64->ptr);
-//     //                 writestr(buf->ptr);
-//     //                 i = 0;
-//     //                 j = 0;
-//     //             }
-//     //             cbuf[i++] = c;
-//     //             if (i == 3072)
-//     //                 j = 1;
-//     //         }
-//     //
-//     //         if (i) {
-//     //             base64 = base64_encode(cbuf, i);
-//     //             buf = Sprintf("\x1b_Gm=0;%s\x1b\\", base64->ptr);
-//     //             writestr(buf->ptr);
-//     //         }
-//     //     }
-//     // cleanup:
-//     //     fclose(fp);
-//     //     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 // }
 
 export fn put_image_iterm2(url: [*c]const u8, x: c_int, y: c_int, w: c_int, h: c_int) void {
