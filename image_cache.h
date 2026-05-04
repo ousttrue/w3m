@@ -36,8 +36,6 @@ struct Image {
     struct ImageCache* cache;
 };
 
-struct Buffer;
-
 enum GetImageFlag {
     IMG_FLAG_SKIP = 1,
     IMG_FLAG_AUTO = 2,
@@ -45,10 +43,10 @@ enum GetImageFlag {
 
 void addImage(struct ImageCache* cache, int x, int y, int sx, int sy, int w, int h);
 
-void loadImageStart(struct Buffer* buf);
-void loadImageStop(struct Buffer* buf);
-
+void loadImageStart();
+void loadImageStop();
 struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetImageFlag flag);
 bool getImageSize(struct ImageCache* cache);
+struct Buffer;
 void getAllImage(struct Buffer* buf);
 void deleteImage(struct Buffer* buf);

@@ -27,7 +27,6 @@ static GeneralList* image_list = NULL;
 static int image_index = 0;
 static int n_load_image = 0;
 static struct ImageCache** image_cache = NULL;
-static struct Buffer* image_buffer = NULL;
 
 struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetImageFlag flag)
 {
@@ -93,7 +92,7 @@ struct ImageCache* getImage(struct Image* image, struct Url* current, enum GetIm
     return cache;
 }
 
-static bool updateCache(struct Buffer* buf)
+static bool updateCache()
 {
     if (maxLoadImage > MAX_LOAD_IMAGE)
         maxLoadImage = MAX_LOAD_IMAGE;
@@ -117,8 +116,6 @@ static bool updateCache(struct Buffer* buf)
         if (!stat(cache->file, &st)) {
             cache->loaded = IMG_FLAG_LOADED;
             if (getImageSize(cache)) {
-                if (image_buffer)
-                    image_buffer->need_reshape = true;
             }
             draw = true;
         } else
@@ -127,7 +124,7 @@ static bool updateCache(struct Buffer* buf)
         image_cache[i] = NULL;
     }
 
-    for (int i = (buf != image_buffer) ? 0 : maxLoadImage; i < n_load_image; i++) {
+    for (int i = 0; i < n_load_image; i++) {
         struct ImageCache* cache = image_cache[i];
         if (!cache || !cache->touch)
             continue;
@@ -141,28 +138,29 @@ static bool updateCache(struct Buffer* buf)
     return draw;
 }
 
-void loadImageStop(struct Buffer* buf)
+void loadImageStop()
 {
-    updateCache(buf);
+    updateCache();
 
     image_list = NULL;
     image_file = NULL;
     n_load_image = maxLoadImage;
-    image_buffer = NULL;
     return;
 }
 
-void loadImageStart(struct Buffer* buf)
+void loadImageStart()
 {
-    bool draw = updateCache(buf);
+    bool draw = updateCache();
 
-    if (draw && image_buffer) {
-        if (!enable_inline_image)
+    if (draw 
+            // && image_buffer
+            ) {
+        // if (!enable_inline_image)
             drawImage();
-        showImageProgress(image_buffer);
+        // showImageProgress(image_buffer);
     }
 
-    image_buffer = buf;
+    // image_buffer = buf;
 
     if (!image_list)
         return;
@@ -232,7 +230,7 @@ void getAllImage(struct Buffer* buf)
     struct Url* current;
     int i;
 
-    image_buffer = buf;
+    // image_buffer = buf;
     if (!buf)
         return;
     buf->image_loaded = TRUE;
@@ -263,5 +261,5 @@ void deleteImage(struct Buffer* buf)
         if (a->image && a->image->cache && a->image->cache->loaded != IMG_FLAG_UNLOADED && !(a->image->cache->loaded & IMG_FLAG_DONT_REMOVE) && a->image->cache->index < 0)
             unlink(a->image->cache->file);
     }
-    loadImageStop(NULL);
+    loadImageStop();
 }
