@@ -1,4 +1,5 @@
 #include "http_client.h"
+#include "message.h"
 #include "etc.h"
 #include "auth.h"
 #include "http_auth.h"

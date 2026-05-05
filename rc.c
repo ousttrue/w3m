@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "message.h"
 #include "file.h"
 #include "UrlFile.h"
 #include "form.h"

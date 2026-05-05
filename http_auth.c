@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "message.h"
 #include <w3m.h>
 #include "auth.h"
 #include "global.h"

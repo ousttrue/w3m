@@ -1,4 +1,5 @@
 #include "file.h"
+#include "message.h"
 #include "http_client.h"
 #include "global.h"
 #include "display.h"

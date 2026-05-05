@@ -1,4 +1,5 @@
 #include "html_loader.h"
+#include "message.h"
 #include "global.h"
 #include "quote.h"
 #include "ctrlcode.h"

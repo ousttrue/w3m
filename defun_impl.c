@@ -1,4 +1,5 @@
 #include "defun_impl.h"
+#include "message.h"
 #include "file.h"
 #include "html_loader.h"
 #include "UrlFile.h"
@@ -1231,7 +1232,9 @@ void setOpt(struct CmdArgs* args)
 /* error message list */
 void msgs(struct CmdArgs* args)
 {
-    cmd_loadBuffer(args, message_list_panel(), BP_NO_URL, LB_NOLINK);
+    Str html = message_list_panel();
+    struct Buffer* buf = loadHTMLString(html);
+    cmd_loadBuffer(args, buf, BP_NO_URL, LB_NOLINK);
 }
 
 /* page info */

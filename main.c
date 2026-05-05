@@ -1,4 +1,5 @@
 #include "main.h"
+#include "message.h"
 #include "terminfo_entry.h"
 #include "file.h"
 #include "UrlFile.h"

@@ -1,4 +1,5 @@
 #include "url.h"
+#include "message.h"
 #include "content_type.h"
 #include "alloc.h"
 #include "term_tty.h"

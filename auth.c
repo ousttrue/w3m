@@ -1,4 +1,5 @@
 #include "auth.h"
+#include "message.h"
 #include <w3m.h>
 #include "url.h"
 #include "screen.h"

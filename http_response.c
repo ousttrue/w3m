@@ -1,4 +1,5 @@
 #include "http_response.h"
+#include "message.h"
 #include "filepath.h"
 #include "input_stream.h"
 #include "main.h"

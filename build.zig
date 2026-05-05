@@ -18,6 +18,7 @@ const system_libs = [_][]const u8{
 };
 
 const w3m_srcs = [_][]const u8{
+    "message.c",
     "compression.c",
     "http_client.c",
     "http_auth.c",

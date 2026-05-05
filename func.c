@@ -1,7 +1,5 @@
-/*
- * w3m func.c
- */
 #include "global.h"
+#include "message.h"
 #include "ctrlcode.h"
 #include "indep.h"
 #include "alloc.h"

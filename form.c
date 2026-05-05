@@ -1,4 +1,5 @@
 #include "form.h"
+#include "message.h"
 #include "filepath.h"
 #include "UrlFile.h"
 #include "auth.h"

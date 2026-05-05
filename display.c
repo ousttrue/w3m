@@ -1,4 +1,5 @@
 #include "display.h"
+#include "message.h"
 #include "file.h"
 #include "content_type.h"
 #include "alloc.h"
@@ -166,7 +167,6 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
 static Linecolor color_mode = 0;
 
-static char* delayed_msg = NULL;
 
 static void drawAnchorCursor(struct Buffer* buf);
 #define redrawBuffer(buf) redrawNLine(buf, (LINES - 1))
@@ -366,11 +366,9 @@ static void _displayBuffer(struct Buffer* buf, struct CmdArgs* args, enum Displa
         /* FIXME: gettextize? */
         Strcat_charp(msg, "\tNo Line");
     }
-    if (delayed_msg != NULL) {
-        disp_message(args, delayed_msg, false);
-        delayed_msg = NULL;
-        tty_write_sc();
-    }
+
+    displayDilayedMessage(args);
+
     sc_standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     sc_standend();
@@ -998,82 +996,8 @@ void addMChar(char* p, Lineprop mode, size_t len)
         sc_addmch((const uint8_t*)p, len);
 }
 
-static GeneralList* message_list = NULL;
 
-void record_err_message(const char* s)
-{
-    if (fmInitialized) {
-        if (!message_list)
-            message_list = newGeneralList();
-        if (message_list->nitem >= LINES)
-            popValue(message_list);
-        pushValue(message_list, allocStr(s, -1));
-    }
-}
 
-/*
- * List of error messages
- */
-struct Buffer*
-message_list_panel(void)
-{
-    Str tmp = Strnew_size(LINES * COLS);
-    ListItem* p;
 
-    /* FIXME: gettextize? */
-    Strcat_charp(tmp,
-        "<html><head><title>List of error messages</title></head><body>"
-        "<h1>List of error messages</h1><table cellpadding=0>\n");
-    if (message_list)
-        for (p = message_list->last; p; p = p->prev)
-            Strcat_m_charp(tmp, "<tr><td><pre>", html_quote(p->ptr),
-                "</pre></td></tr>\n", NULL);
-    else
-        Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
-    Strcat_charp(tmp, "</table></body></html>");
-    return loadHTMLString(tmp);
-}
 
-void message(const char* s, int return_x, int return_y)
-{
-    if (!fmInitialized)
-        return;
-    sc_move((LINES - 1), 0);
-    sc_addnstr(s, COLS - 1);
-    sc_clrtoeolx();
-    sc_move(return_y, return_x);
-}
-
-void disp_err_message(struct CmdArgs* args, const char* s, int redraw_current)
-{
-    record_err_message(s);
-    disp_message(args, s, redraw_current);
-}
-
-void disp_message_nsec(struct CmdArgs* args, const char* s, int redraw_current, int sec, int purge, int mouse)
-{
-    if (QuietMessage)
-        return;
-    if (!fmInitialized) {
-        fprintf(stderr, "%s\n", conv_to_system(s));
-        return;
-    }
-    if (CurrentTab != NULL && Currentbuf != NULL)
-        message(s, Currentbuf->cursorX + Currentbuf->rootX,
-            Currentbuf->cursorY + Currentbuf->rootY);
-    else
-        message(s, (LINES - 1), 0);
-    tty_write_sc();
-    int ch = getch_timeout(sec, args);
-    if (!purge && ch > 0) {
-        unget(ch);
-    }
-    if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
-        displayBuffer(args, B_NORMAL);
-}
-
-void set_delayed_message(char* s)
-{
-    delayed_msg = allocStr(s, -1);
-}
 

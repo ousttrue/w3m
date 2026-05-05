@@ -1,4 +1,5 @@
 #include "search.h"
+#include "message.h"
 #include "term_tty.h"
 #include "display.h"
 #include "screen.h"

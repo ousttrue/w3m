@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "message.h"
 #include "file.h"
 #include "http_response.h"
 #include "content_type.h"

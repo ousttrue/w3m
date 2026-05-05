@@ -1,4 +1,5 @@
 #include "global.h"
+#include "message.h"
 #include "term_tty.h"
 #include "screen.h"
 #include "alloc.h"
@@ -27,42 +28,42 @@
 static char** FRAME;
 static int FRAME_WIDTH;
 static int graph_mode = false;
-#define G_start           \
-    {                     \
-        if (graph_mode)   \
+#define G_start              \
+    {                        \
+        if (graph_mode)      \
             sc_graphstart(); \
     }
-#define G_end           \
-    {                   \
-        if (graph_mode) \
+#define G_end              \
+    {                      \
+        if (graph_mode)    \
             sc_graphend(); \
     }
 
-static int mEsc(struct CmdArgs *args);
-static int mEscB(struct CmdArgs *args);
-static int mEscD(struct CmdArgs *args);
-static int mNull(struct CmdArgs *args);
-static int mSelect(struct CmdArgs *args);
-static int mDown(struct CmdArgs *args);
-static int mUp(struct CmdArgs *args);
-static int mLast(struct CmdArgs *args);
-static int mTop(struct CmdArgs *args);
-static int mNext(struct CmdArgs *args);
-static int mPrev(struct CmdArgs *args);
-static int mFore(struct CmdArgs *args);
-static int mBack(struct CmdArgs *args);
-static int mLineU(struct CmdArgs *args);
-static int mLineD(struct CmdArgs *args);
-static int mOk(struct CmdArgs *args);
-static int mCancel(struct CmdArgs *args);
-static int mClose(struct CmdArgs *args);
-static int mSusp(struct CmdArgs *args);
-static int mMouse(struct CmdArgs *args);
-static int mSgrMouse(struct CmdArgs *args);
-static int mSrchF(struct CmdArgs *args);
-static int mSrchB(struct CmdArgs *args);
-static int mSrchN(struct CmdArgs *args);
-static int mSrchP(struct CmdArgs *args);
+static int mEsc(struct CmdArgs* args);
+static int mEscB(struct CmdArgs* args);
+static int mEscD(struct CmdArgs* args);
+static int mNull(struct CmdArgs* args);
+static int mSelect(struct CmdArgs* args);
+static int mDown(struct CmdArgs* args);
+static int mUp(struct CmdArgs* args);
+static int mLast(struct CmdArgs* args);
+static int mTop(struct CmdArgs* args);
+static int mNext(struct CmdArgs* args);
+static int mPrev(struct CmdArgs* args);
+static int mFore(struct CmdArgs* args);
+static int mBack(struct CmdArgs* args);
+static int mLineU(struct CmdArgs* args);
+static int mLineD(struct CmdArgs* args);
+static int mOk(struct CmdArgs* args);
+static int mCancel(struct CmdArgs* args);
+static int mClose(struct CmdArgs* args);
+static int mSusp(struct CmdArgs* args);
+static int mMouse(struct CmdArgs* args);
+static int mSgrMouse(struct CmdArgs* args);
+static int mSrchF(struct CmdArgs* args);
+static int mSrchB(struct CmdArgs* args);
+static int mSrchN(struct CmdArgs* args);
+static int mSrchP(struct CmdArgs* args);
 
 // clang-format off
 static MenuFunc MenuKeymap[128] = {
@@ -182,7 +183,7 @@ Menu SelectMenu;
 static int SelectV = 0;
 static void initSelectMenu(void);
 static void smChBuf(void);
-static int smDelBuf(struct CmdArgs *args);
+static int smDelBuf(struct CmdArgs* args);
 
 /* --- SelectMenu (END) --- */
 
@@ -192,7 +193,7 @@ Menu SelTabMenu;
 static int SelTabV = 0;
 static void initSelTabMenu(void);
 static void smChTab(void);
-static int smDelTab(struct CmdArgs *args);
+static int smDelTab(struct CmdArgs* args);
 
 /* --- SelTabMenu (END) --- */
 
@@ -463,7 +464,7 @@ void down_menu(Menu* menu, int n)
     draw_menu(menu);
 }
 
-int action_menu(struct CmdArgs *args, Menu* menu)
+int action_menu(struct CmdArgs* args, Menu* menu)
 {
     int mselect;
     MenuItem item;
@@ -508,7 +509,7 @@ int action_menu(struct CmdArgs *args, Menu* menu)
     return (0);
 }
 
-void popup_menu(struct CmdArgs *args, Menu* parent, Menu* menu)
+void popup_menu(struct CmdArgs* args, Menu* parent, Menu* menu)
 {
     int active = 1;
 
@@ -596,7 +597,7 @@ set_menu_frame(void)
     }
 }
 
-struct LinkList* link_menu(struct CmdArgs *args, struct Buffer* buf)
+struct LinkList* link_menu(struct CmdArgs* args, struct Buffer* buf)
 {
     Menu menu;
     struct LinkList* l;
@@ -655,14 +656,14 @@ struct LinkList* link_menu(struct CmdArgs *args, struct Buffer* buf)
 /* --- MenuFunctions --- */
 
 static int
-mEsc(struct CmdArgs *args)
+mEsc(struct CmdArgs* args)
 {
     args->ch = getch(args);
     return (MenuEscKeymap[args->ch](args));
 }
 
 static int
-mEscB(struct CmdArgs *args)
+mEscB(struct CmdArgs* args)
 {
     args->ch = getch(args);
     if (IS_DIGIT(args->ch))
@@ -672,7 +673,7 @@ mEscB(struct CmdArgs *args)
 }
 
 static int
-mEscD(struct CmdArgs *args)
+mEscD(struct CmdArgs* args)
 {
     int d = args->ch - (int)'0';
     args->ch = getch(args);
@@ -687,13 +688,13 @@ mEscD(struct CmdArgs *args)
 }
 
 static int
-mNull(struct CmdArgs *args)
+mNull(struct CmdArgs* args)
 {
     return (MENU_NOTHING);
 }
 
 static int
-mSelect(struct CmdArgs *args)
+mSelect(struct CmdArgs* args)
 {
     if (IS_ASCII(args->ch))
         return (select_menu(CurrentMenu, CurrentMenu->keyselect[args->ch]));
@@ -702,7 +703,7 @@ mSelect(struct CmdArgs *args)
 }
 
 static int
-mDown(struct CmdArgs *args)
+mDown(struct CmdArgs* args)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -711,7 +712,7 @@ mDown(struct CmdArgs *args)
 }
 
 static int
-mUp(struct CmdArgs *args)
+mUp(struct CmdArgs* args)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
@@ -720,21 +721,21 @@ mUp(struct CmdArgs *args)
 }
 
 static int
-mLast(struct CmdArgs *args)
+mLast(struct CmdArgs* args)
 {
     goto_menu(CurrentMenu, CurrentMenu->nitem - 1, -1);
     return (MENU_NOTHING);
 }
 
 static int
-mTop(struct CmdArgs *args)
+mTop(struct CmdArgs* args)
 {
     goto_menu(CurrentMenu, 0, 1);
     return (MENU_NOTHING);
 }
 
 static int
-mNext(struct CmdArgs *args)
+mNext(struct CmdArgs* args)
 {
     int mselect = CurrentMenu->select + CurrentMenu->height;
 
@@ -746,7 +747,7 @@ mNext(struct CmdArgs *args)
 }
 
 static int
-mPrev(struct CmdArgs *args)
+mPrev(struct CmdArgs* args)
 {
     int mselect = CurrentMenu->select - CurrentMenu->height;
 
@@ -758,7 +759,7 @@ mPrev(struct CmdArgs *args)
 }
 
 static int
-mFore(struct CmdArgs *args)
+mFore(struct CmdArgs* args)
 {
     if (CurrentMenu->select >= CurrentMenu->nitem - 1)
         return (MENU_NOTHING);
@@ -768,7 +769,7 @@ mFore(struct CmdArgs *args)
 }
 
 static int
-mBack(struct CmdArgs *args)
+mBack(struct CmdArgs* args)
 {
     if (CurrentMenu->select <= 0)
         return (MENU_NOTHING);
@@ -778,7 +779,7 @@ mBack(struct CmdArgs *args)
 }
 
 static int
-mLineU(struct CmdArgs *args)
+mLineU(struct CmdArgs* args)
 {
     int mselect = CurrentMenu->select;
 
@@ -796,7 +797,7 @@ mLineU(struct CmdArgs *args)
 }
 
 static int
-mLineD(struct CmdArgs *args)
+mLineD(struct CmdArgs* args)
 {
     int mselect = CurrentMenu->select;
 
@@ -814,7 +815,7 @@ mLineD(struct CmdArgs *args)
 }
 
 static int
-mOk(struct CmdArgs *args)
+mOk(struct CmdArgs* args)
 {
     int mselect = CurrentMenu->select;
 
@@ -824,19 +825,19 @@ mOk(struct CmdArgs *args)
 }
 
 static int
-mCancel(struct CmdArgs *args)
+mCancel(struct CmdArgs* args)
 {
     return (MENU_CANCEL);
 }
 
 static int
-mClose(struct CmdArgs *args)
+mClose(struct CmdArgs* args)
 {
     return (MENU_CLOSE);
 }
 
 static int
-mSusp(struct CmdArgs *args)
+mSusp(struct CmdArgs* args)
 {
     susp(args);
     draw_all_menu(CurrentMenu);
@@ -849,22 +850,22 @@ int (*menuSearchRoutine)(Menu*, const char*, int);
 static int
 menuForwardSearch(Menu* menu, const char* str, int from)
 {
-    int i;
-    const char* p;
-    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+    const char* p = regexCompile(str, IgnoreCase);
+    if (p) {
         message(p, 0, 0);
         return -1;
     }
+
     if (from < 0)
         from = 0;
-    for (i = from; i < menu->nitem; i++)
+    for (int i = from; i < menu->nitem; i++)
         if (menu->item[i].type != MENU_NOP && regexMatch(menu->item[i].label, -1, 1) == 1)
             return i;
     return -1;
 }
 
 static int
-menu_search_forward(struct CmdArgs *args, Menu* menu, int from)
+menu_search_forward(struct CmdArgs* args, Menu* menu, int from)
 {
     const char* str = inputStrHist(args, "Forward: ", NULL, HistoryText);
     if (str != NULL && *str == '\0')
@@ -884,7 +885,7 @@ menu_search_forward(struct CmdArgs *args, Menu* menu, int from)
 }
 
 static int
-mSrchF(struct CmdArgs *args)
+mSrchF(struct CmdArgs* args)
 {
     int mselect = menu_search_forward(args, CurrentMenu, CurrentMenu->select);
     if (mselect >= 0)
@@ -910,7 +911,7 @@ menuBackwardSearch(Menu* menu, const char* str, int from)
 }
 
 static int
-menu_search_backward(struct CmdArgs *args, Menu* menu, int from)
+menu_search_backward(struct CmdArgs* args, Menu* menu, int from)
 {
     const char* str = inputStrHist(args, "Backward: ", NULL, HistoryText);
     if (str != NULL && *str == '\0')
@@ -930,7 +931,7 @@ menu_search_backward(struct CmdArgs *args, Menu* menu, int from)
 }
 
 static int
-mSrchB(struct CmdArgs *args)
+mSrchB(struct CmdArgs* args)
 {
     int mselect = menu_search_backward(args, CurrentMenu, CurrentMenu->select);
     if (mselect >= 0)
@@ -939,7 +940,7 @@ mSrchB(struct CmdArgs *args)
 }
 
 static int
-menu_search_next_previous(struct CmdArgs *args, Menu* menu, int from, int reverse)
+menu_search_next_previous(struct CmdArgs* args, Menu* menu, int from, int reverse)
 {
     int found;
     static int (*routine[2])(Menu*, const char*, int) = {
@@ -967,7 +968,7 @@ menu_search_next_previous(struct CmdArgs *args, Menu* menu, int from, int revers
 }
 
 static int
-mSrchN(struct CmdArgs *args)
+mSrchN(struct CmdArgs* args)
 {
     int mselect;
     mselect = menu_search_next_previous(args, CurrentMenu, CurrentMenu->select, 0);
@@ -977,7 +978,7 @@ mSrchN(struct CmdArgs *args)
 }
 
 static int
-mSrchP(struct CmdArgs *args)
+mSrchP(struct CmdArgs* args)
 {
     int mselect = menu_search_next_previous(args, CurrentMenu, CurrentMenu->select, 1);
     if (mselect >= 0)
@@ -986,13 +987,13 @@ mSrchP(struct CmdArgs *args)
 }
 
 static int
-mMouse(struct CmdArgs *args)
+mMouse(struct CmdArgs* args)
 {
     return (MENU_NOTHING);
 }
 
 static int
-mSgrMouse(struct CmdArgs *args)
+mSgrMouse(struct CmdArgs* args)
 {
     return (MENU_NOTHING);
 }
@@ -1001,7 +1002,7 @@ mSgrMouse(struct CmdArgs *args)
 
 /* --- MainMenu --- */
 
-void popupMenu(struct CmdArgs *args, int x, int y, Menu* menu)
+void popupMenu(struct CmdArgs* args, int x, int y, Menu* menu)
 {
     set_menu_frame();
 
@@ -1016,7 +1017,7 @@ void popupMenu(struct CmdArgs *args, int x, int y, Menu* menu)
     popup_menu(args, NULL, menu);
 }
 
-void mainMenu(struct CmdArgs *args, int x, int y)
+void mainMenu(struct CmdArgs* args, int x, int y)
 {
     popupMenu(args, x, y, &MainMenu);
 }
@@ -1109,7 +1110,7 @@ smChBuf(void)
 }
 
 static int
-smDelBuf(struct CmdArgs *args)
+smDelBuf(struct CmdArgs* args)
 {
     int i, x, y, mselect;
     struct Buffer* buf;
@@ -1243,7 +1244,7 @@ smChTab(void)
 }
 
 static int
-smDelTab(struct CmdArgs *args)
+smDelTab(struct CmdArgs* args)
 {
     int i, x, y, mselect;
     TabBuffer* tab;
@@ -1279,7 +1280,7 @@ smDelTab(struct CmdArgs *args)
 
 /* --- OptionMenu --- */
 
-void optionMenu(struct CmdArgs *args, int x, int y, const char** label, int* variable, int initial, const char* cmd)
+void optionMenu(struct CmdArgs* args, int x, int y, const char** label, int* variable, int initial, const char* cmd)
 {
     set_menu_frame();
 
@@ -1466,7 +1467,7 @@ int getMenuN(MenuList* list, const char* id)
 /* --- LinkMenu (END) --- */
 
 struct Anchor*
-accesskey_menu(struct CmdArgs *args, struct Buffer* buf)
+accesskey_menu(struct CmdArgs* args, struct Buffer* buf)
 {
     Menu menu;
     struct AnchorList* al = buf->href;
@@ -1547,7 +1548,7 @@ static char lmKeys2[] = "1234567890ABCDEFGHILMOPQRSTUVWXYZ";
 #define nlmKeys2 (sizeof(lmKeys2) - 1)
 
 static int
-lmGoto(struct CmdArgs *args)
+lmGoto(struct CmdArgs* args)
 {
     if (IS_ASCII(args->ch) && CurrentMenu->keyselect[args->ch] >= 0) {
         goto_menu(CurrentMenu, CurrentMenu->nitem - 1, -1);
@@ -1557,7 +1558,7 @@ lmGoto(struct CmdArgs *args)
 }
 
 static int
-lmSelect(struct CmdArgs *args)
+lmSelect(struct CmdArgs* args)
 {
     if (IS_ASCII(args->ch))
         return select_menu(CurrentMenu, (CurrentMenu->select / nlmKeys) * nlmKeys + CurrentMenu->keyselect[args->ch]);
@@ -1565,7 +1566,7 @@ lmSelect(struct CmdArgs *args)
         return (MENU_NOTHING);
 }
 
-struct Anchor* list_menu(struct CmdArgs *args, struct Buffer* buf)
+struct Anchor* list_menu(struct CmdArgs* args, struct Buffer* buf)
 {
     Menu menu;
     struct AnchorList* al = buf->href;
