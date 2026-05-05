@@ -484,8 +484,8 @@ main(int argc, char **argv)
 	    open_new_tab = TRUE;
 	else if (ISOPT("-R"))
 	    opt_restore = TRUE;
-	else if (ISOPT("-T"))
-	    DefaultType = default_type = NXTARG();
+	else if (CHKOPT("-T"))
+	    DefaultType = default_type = getarg(argv, &i);
 	else if (ISOPT("-V")) {
 	    fversion(stdout);
 	    exit(0);
@@ -498,7 +498,7 @@ main(int argc, char **argv)
 	else if (ISOPT("-h"))
 	    help();
 	else if (CHKOPT("-l")) {
-	    if (atoi(NXTARG()) > 0)
+	    if (atoi(getarg(argv, &i)) > 0)
 		PagerMax = atoi(argv[i]);
 	}
 	else if (ISOPT("-m"))
@@ -509,8 +509,14 @@ main(int argc, char **argv)
 		show_params(stdout);
 		exit(0);
 	    }
-	    if (!set_param_option(argv[++i])) {
-		fprintf(stderr, _("%s: bad option\n"), argv[i]);
+	    p = NXTARG();
+	    goto setopt;
+	}
+	else if (CHKOPT("-o")) {
+	    p = getarg(argv, &i);
+setopt:
+	    if (!set_param_option(p)) {
+		fprintf(stderr, _("%s: bad option\n"), p);
 		fputs(_("Use 'w3m -o' to see all options\n"), stderr);
 		exit(1);
 	    }
@@ -520,7 +526,7 @@ main(int argc, char **argv)
 	else if (ISOPT("-s"))
 	    squeezeBlankLine = TRUE;
 	else if (CHKOPT("-t")) {
-	    if (atoi(NXTARG()) > 0)
+	    if (atoi(getarg(argv, &i)) > 0)
 		Tabstop = atoi(argv[i]);
 	}
 	else if (ISOPT("-v"))
