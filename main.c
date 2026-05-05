@@ -124,6 +124,8 @@ static int prev_key = -1;
 
 static Str currentURL(void);
 static Str make_optional_header_string(char *s);
+static char *_nxtarg(char *argv);
+static char *getarg(char **argv, int *i);
 static int _strSession(char *sf);
 static int checkDownloadList(void);
 static int searchKeyNum(void);
@@ -153,6 +155,10 @@ static void wrap_GC_warn_proc(char *msg, GC_word arg);
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
+
+#define NXTARG() _nxtarg(argv[++i])
+#define ISOPT(opt) !strcmp(opt, argv[i])
+#define CHKOPT(opt) !strncmp(opt, argv[i], strlen(opt))
 
 int
 main(int argc, char **argv)
@@ -232,11 +238,9 @@ main(int argc, char **argv)
 
     /* argument search 1 */
     for (i = 1; i < argc; i++) {
-	if (!strcmp("-config", argv[i])) {
+	if (ISOPT("-config")) {
 	    argv[i] = "-dummy";
-	    if (++i >= argc)
-		usage();
-	    config_file = argv[i];
+	    config_file = NXTARG();
 	    argv[i] = "-dummy";
 	}
     }
@@ -335,20 +339,16 @@ main(int argc, char **argv)
 	 * single-letter flags that get their option-argument in the same
 	 * argument string without intervening <blank> characters.
 	 */
-	if (!strcmp("-backend", argv[i]))
+	if (ISOPT("-backend"))
 	    w3m_backend = TRUE;
-	else if (!strcmp("-backend_batch", argv[i])) {
+	else if (ISOPT("-backend_batch")) {
 	    w3m_backend = TRUE;
-	    if (++i >= argc)
-		usage();
 	    if (!backend_batch_commands)
 		backend_batch_commands = newTextList();
-	    pushText(backend_batch_commands, argv[i]);
+	    pushText(backend_batch_commands, NXTARG());
 	}
-	else if (!strcmp("-bookmark", argv[i])) {
-	    if (++i >= argc)
-		usage();
-	    BookmarkFile = argv[i];
+	else if (ISOPT("-bookmark")) {
+	    BookmarkFile = NXTARG();
 	    if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {
 		Str tmp = Strnew_charp(CurrentDir);
 		if (Strlastchar(tmp) != '/')
@@ -357,92 +357,76 @@ main(int argc, char **argv)
 		BookmarkFile = cleanupName(tmp->ptr);
 	    }
 	}
-	else if (!strcmp("-cols", argv[i])) {
-	    if (++i >= argc)
-		usage();
-	    opt_cols = atoi(argv[i]);
-	}
-	else if (!strcmp("-debug", argv[i]))
+	else if (ISOPT("-cols"))
+	    opt_cols = atoi(NXTARG());
+	else if (ISOPT("-debug"))
 	    w3m_debug = TRUE;
-	else if (!strcmp("-dump", argv[i]))
+	else if (ISOPT("-dump"))
 	    w3m_dump = DUMP_BUFFER;
-	else if (!strcmp("-dump_both", argv[i]))
+	else if (ISOPT("-dump_both"))
 	    w3m_dump = (DUMP_HEAD | DUMP_SOURCE);
-	else if (!strcmp("-dump_extra", argv[i]))
+	else if (ISOPT("-dump_extra"))
 	    w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
-	else if (!strcmp("-dump_head", argv[i]))
+	else if (ISOPT("-dump_head"))
 	    w3m_dump = DUMP_HEAD;
-	else if (!strcmp("-dump_source", argv[i]))
+	else if (ISOPT("-dump_source"))
 	    w3m_dump = DUMP_SOURCE;
-	else if (!strcmp("-graph", argv[i]))
+	else if (ISOPT("-graph"))
 	    UseGraphicChar = GRAPHIC_CHAR_DEC;
-	else if (!strcmp("-halfdump", argv[i]))
+	else if (ISOPT("-halfdump"))
 	    w3m_dump = DUMP_HALFDUMP;
-	else if (!strcmp("-halfload", argv[i])) {
+	else if (ISOPT("-halfload")) {
 	    w3m_dump = 0;
 	    w3m_halfload = TRUE;
 	    DefaultType = default_type = "text/html";
 	}
-	else if (!strcmp("-header", argv[i])) {
+	else if (ISOPT("-header")) {
 	    Str hs;
-	    if (++i >= argc)
-		usage();
-	    if ((hs = make_optional_header_string(argv[i])))
+	    if ((hs = make_optional_header_string(NXTARG())))
 		header_string = header_string ? Strcat(header_string, hs) : hs;
 	}
-	else if (!strcmp("-help", argv[i]))
+	else if (ISOPT("-help"))
 	    help();
-	else if (!strcmp("-no-graph", argv[i]))
+	else if (ISOPT("-no-graph"))
 	    UseGraphicChar = GRAPHIC_CHAR_ASCII;
-	else if (!strcmp("-no-proxy", argv[i]))
+	else if (ISOPT("-no-proxy"))
 	    use_proxy = FALSE;
-	else if (!strcmp("-num", argv[i]))
+	else if (ISOPT("-num"))
 	    showLineNum = TRUE;
-	else if (!strcmp("-post", argv[i])) {
-	    if (++i >= argc)
-		usage();
-	    post_file = argv[i];
-	}
-	else if (!strcmp("-ppc", argv[i])) {
+	else if (ISOPT("-post"))
+	    post_file = NXTARG();
+	else if (ISOPT("-ppc")) {
 	    double ppc;
-	    if (++i >= argc)
-		usage();
-	    ppc = atof(argv[i]);
+	    ppc = atof(NXTARG());
 	    if (ppc >= MINIMUM_PIXEL_PER_CHAR &&
 		ppc <= MAXIMUM_PIXEL_PER_CHAR) {
 		pixel_per_char = ppc;
 		set_pixel_per_char = TRUE;
 	    }
 	}
-	else if (!strcmp("-reqlog",argv[i]))
+	else if (ISOPT("-reqlog"))
 	    w3m_reqlog=rcFile("request.log");
-	else if (!strcmp("-session", argv[i])) {
-	    if (++i >= argc)
-		usage();
-	    session_file = argv[i];
+	else if (ISOPT("-session")) {
+	    session_file = NXTARG();
 	}
-	else if (!strcmp("-show-option", argv[i])) {
+	else if (ISOPT("-show-option")) {
 		show_params(stdout);
 		exit(0);
 	}
-	else if (!strcmp("-title", argv[i]))
-	    displayTitleTerm = getenv("TERM");
-	else if (!strncmp("-title=", argv[i], 7))
-	    displayTitleTerm = argv[i] + 7;
-	else if (!strcmp("-version", argv[i])) {
+	else if (ISOPT("-title"))
+	    displayTitleTerm = argv[i][6] == '=' ? argv[i] + 7 : getenv("TERM");
+	else if (ISOPT("-version")) {
 	    fversion(stdout);
 	    exit(0);
 	}
 
 #ifdef USE_COOKIE
-	else if (!strcmp("-no-cookie", argv[i]))
+	else if (ISOPT("-no-cookie"))
 	    use_cookie = accept_cookie = FALSE;
-	else if (!strcmp("-cookie", argv[i]))
+	else if (ISOPT("-cookie"))
 	    use_cookie = accept_cookie = TRUE;
-	else if (!strcmp("-cookie-jar", argv[i])) {
-	    if (++i >= argc)
-		usage();
-	    CookieFile = argv[i];
+	else if (ISOPT("-cookie-jar")) {
+	    CookieFile = NXTARG();
 	    if (CookieFile[0] != '~' && CookieFile[0] != '/') {
 		Str tmp = Strnew_charp(CurrentDir);
 		if (Strlastchar(tmp) != '/')
@@ -454,30 +438,28 @@ main(int argc, char **argv)
 #endif				/* USE_COOKIE */
 
 #ifdef USE_IMAGE
-	else if (!strcmp("-ppl", argv[i])) {
+	else if (ISOPT("-ppl")) {
 	    double ppc;
-	    if (++i >= argc)
-		usage();
-	    ppc = atof(argv[i]);
+	    ppc = atof(NXTARG());
 	    if (ppc >= MINIMUM_PIXEL_PER_CHAR &&
 		ppc <= MAXIMUM_PIXEL_PER_CHAR * 2) {
 		pixel_per_line = ppc;
 		set_pixel_per_line = TRUE;
 	    }
 	}
-	else if (!strcmp("-ri", argv[i]))
+	else if (ISOPT("-ri"))
 	    enable_inline_image = INLINE_IMG_OSC5379;
-	else if (!strcmp("-sixel", argv[i]))
+	else if (ISOPT("-sixel"))
 	    enable_inline_image = INLINE_IMG_SIXEL;
 #endif
 
 #ifdef USE_MOUSE
-	else if (!strcmp("-no-mouse", argv[i]))
+	else if (ISOPT("-no-mouse"))
 	    use_mouse = FALSE;
 #endif				/* USE_MOUSE */
 
 #ifdef USE_SSL
-	else if (!strcmp("-insecure", argv[i])) {
+	else if (ISOPT("-insecure")) {
 #ifdef OPENSSL_TLS_SECURITY_LEVEL
 	    set_param_option("ssl_cipher=ALL:eNULL:@SECLEVEL=0");
 #else
@@ -494,39 +476,34 @@ main(int argc, char **argv)
 #endif				/* USE_SSL */
 
 	/* Single-letter flags */
-	else if (!strcmp("-B", argv[i]))
+	else if (ISOPT("-B"))
 	    load_bookmark = TRUE;
-	else if (!strcmp("-F", argv[i]))
+	else if (ISOPT("-F"))
 	    RenderFrame = TRUE;
-	else if (!strcmp("-N", argv[i]))
+	else if (ISOPT("-N"))
 	    open_new_tab = TRUE;
-	else if (!strcmp("-R", argv[i]))
+	else if (ISOPT("-R"))
 	    opt_restore = TRUE;
-	else if (!strcmp("-T", argv[i])) {
-	    if (++i >= argc)
-		usage();
-	    DefaultType = default_type = argv[i];
-	}
-	else if (!strcmp("-V", argv[i])) {
+	else if (ISOPT("-T"))
+	    DefaultType = default_type = NXTARG();
+	else if (ISOPT("-V")) {
 	    fversion(stdout);
 	    exit(0);
 	}
-	else if (!strcmp("-W", argv[i]))
+	else if (ISOPT("-W"))
 	    WrapDefault = !WrapDefault;
-	else if (!strcmp("-X", argv[i]))
+	else if (ISOPT("-X"))
 	    Do_not_use_ti_te = TRUE;
 
-	else if (!strcmp("-h", argv[i]))
+	else if (ISOPT("-h"))
 	    help();
-	else if (!strcmp("-l", argv[i])) {
-	    if (++i >= argc)
-		usage();
-	    if (atoi(argv[i]) > 0)
+	else if (CHKOPT("-l")) {
+	    if (atoi(NXTARG()) > 0)
 		PagerMax = atoi(argv[i]);
 	}
-	else if (!strcmp("-m", argv[i]))
+	else if (ISOPT("-m"))
 	    SearchHeader = search_header = TRUE;
-	else if (!strcmp("-o", argv[i])) {
+	else if (ISOPT("-o")) {
 	    /* "?" is undocumented and only kept for backwards compatibility */
 	    if (!argv[i + 1] || !strcmp(argv[i + 1], "?")) {
 		show_params(stdout);
@@ -538,56 +515,41 @@ main(int argc, char **argv)
 		exit(1);
 	    }
 	}
-	else if (!strcmp("-r", argv[i]))
+	else if (ISOPT("-r"))
 	    ShowEffect = FALSE;
-	else if (!strcmp("-s", argv[i]))
+	else if (ISOPT("-s"))
 	    squeezeBlankLine = TRUE;
-	else if (!strcmp("-t", argv[i])) {
-	    if (++i >= argc)
-		usage();
-	    if (atoi(argv[i]) > 0)
+	else if (CHKOPT("-t")) {
+	    if (atoi(NXTARG()) > 0)
 		Tabstop = atoi(argv[i]);
 	}
-	else if (!strcmp("-v", argv[i]))
+	else if (ISOPT("-v"))
 	    visual_start = TRUE;
 
 #ifdef INET6
-	else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
+	else if (ISOPT("-4") || ISOPT("-6"))
 	    set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
 #endif
 
 #ifdef USE_COLOR
-	else if (!strcmp("-M", argv[i]))
+	else if (ISOPT("-M"))
 	    useColor = FALSE;
-	else if (!strcmp("-H", argv[i])) {
+	else if (ISOPT("-H")) {
 	    deprecated = TRUE;
 	    highIntensityColors = TRUE;
 	}
 #endif				/* USE_COLOR */
 
 #ifdef USE_M17N
-	else if (!strncmp("-I", argv[i], 2)) {
-	    if (argv[i][2] != '\0')
-		p = argv[i] + 2;
-	    else {
-		if (++i >= argc)
-		    usage();
-		p = argv[i];
-	    }
-	    DocumentCharset = wc_guess_charset_short(p, DocumentCharset);
+	else if (CHKOPT("-I")) {
+	    DocumentCharset = wc_guess_charset_short(getarg(argv, &i),
+						     DocumentCharset);
 	    WcOption.auto_detect = WC_OPT_DETECT_OFF;
 	    UseContentCharset = FALSE;
 	}
-	else if (!strncmp("-O", argv[i], 2)) {
-	    if (argv[i][2] != '\0')
-		p = argv[i] + 2;
-	    else {
-		if (++i >= argc)
-		    usage();
-		p = argv[i];
-	    }
-	    DisplayCharset = wc_guess_charset_short(p, DisplayCharset);
-	}
+	else if (CHKOPT("-O"))
+	    DisplayCharset = wc_guess_charset_short(getarg(argv, &i),
+						    DisplayCharset);
 #endif
 
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
@@ -603,6 +565,9 @@ main(int argc, char **argv)
 	    usage();
 	}
     }
+#undef ISOPT
+#undef CHKOPT
+#undef NXTARG
 
 #ifdef	__WATT32__
     if (w3m_debug)
@@ -1100,6 +1065,26 @@ main(int argc, char **argv)
 	CurrentKey = -1;
     }
 }
+
+/* Helpers for command-line argument parsing */
+/* Assert an argument is passed and exit with error if not */
+char *
+_nxtarg(char *argv)
+{
+    if (!argv)
+	usage();
+    return argv;
+}
+
+/* Get an concatenated argument or assert a seperated argument is passed */
+char *
+getarg(char **argv, int *i)
+{
+    if (argv[*i][2])
+	return &argv[*i][2];
+    return _nxtarg(argv[++(*i)]);
+}
+
 
 static void
 fversion(FILE * f)
