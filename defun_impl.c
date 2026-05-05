@@ -1232,8 +1232,8 @@ void setOpt(struct CmdArgs* args)
 /* error message list */
 void msgs(struct CmdArgs* args)
 {
-    Str html = message_list_panel();
-    struct Buffer* buf = loadHTMLString(html);
+    struct str_view html = message_list_panel();
+    struct Buffer* buf = loadHTMLString(html.ptr, html.len);
     cmd_loadBuffer(args, buf, BP_NO_URL, LB_NOLINK);
 }
 
@@ -1310,7 +1310,7 @@ void cooLst(struct CmdArgs* args)
 void ldHist(struct CmdArgs* args)
 {
     Str html = Strnew_charp(historyBuffer(HistoryURL));
-    cmd_loadBuffer(args, loadHTMLString(html), BP_NO_URL, LB_NOLINK);
+    cmd_loadBuffer(args, loadHTMLString(html->ptr, html->length), BP_NO_URL, LB_NOLINK);
 }
 
 /* download HREF link */

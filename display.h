@@ -18,6 +18,3 @@ void displayBuffer(struct CmdArgs* args, enum DisplayBufferMode mode);
 
 void addChar(char c, Lineprop mode);
 void addMChar(char* c, Lineprop mode, size_t len);
-void record_err_message(const char* s);
-struct Buffer* message_list_panel(void);
-

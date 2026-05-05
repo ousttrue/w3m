@@ -635,7 +635,7 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
                 w3m_version,
                 "<br>Written by <a href='mailto:aito@fw.ipsj.or.jp'>Akinori Ito</a>",
                 NULL);
-            newbuf = loadHTMLString(s_page);
+            newbuf = loadHTMLString(s_page->ptr, s_page->length);
             if (newbuf == NULL)
                 Strcat_charp(err_msg, "w3m: Can't load string.\n");
             else if (newbuf != NO_BUFFER)

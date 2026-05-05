@@ -830,5 +830,5 @@ link_list_panel(struct Buffer* buf)
         Strcat_charp(tmp, "</ol>\n");
     }
 
-    return loadHTMLString(tmp);
+    return loadHTMLString(tmp->ptr, tmp->length);
 }

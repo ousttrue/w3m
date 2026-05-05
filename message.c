@@ -84,21 +84,18 @@ void displayDilayedMessage(struct CmdArgs* args)
     }
 }
 
-Str message_list_panel(void)
+struct str_view message_list_panel(void)
 {
     Str tmp = Strnew_size(LINES * COLS);
-    ListItem* p;
-
-    /* FIXME: gettextize? */
     Strcat_charp(tmp,
         "<html><head><title>List of error messages</title></head><body>"
         "<h1>List of error messages</h1><table cellpadding=0>\n");
     if (message_list)
-        for (p = message_list->last; p; p = p->prev)
+        for (ListItem* p = message_list->last; p; p = p->prev)
             Strcat_m_charp(tmp, "<tr><td><pre>", html_quote(p->ptr),
                 "</pre></td></tr>\n", NULL);
     else
         Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
     Strcat_charp(tmp, "</table></body></html>");
-    return tmp;
+    return (struct str_view) { .ptr = tmp->ptr, .len = tmp->length };
 }

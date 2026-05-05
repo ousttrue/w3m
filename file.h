@@ -17,5 +17,5 @@ struct Buffer* loadcmdout(struct CmdArgs* args, const char* cmd,
     struct Buffer* (*loadproc)(struct CmdArgs* args, struct URLFile*, struct Buffer*),
     struct Buffer* defaultbuf);
 struct Buffer* loadHTMLBuffer(struct CmdArgs* args, struct URLFile* f, struct Buffer* newBuf);
-struct Buffer* loadHTMLString(Str page);
+struct Buffer* loadHTMLString(const char* html, size_t len);
 struct Buffer* load_http(struct CmdArgs* args, struct HttpClient* http);

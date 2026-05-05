@@ -223,7 +223,7 @@ struct Buffer* DownloadListBuffer(void)
         Strcat_charp(src, "\n</pre><hr>\n");
     }
     Strcat_charp(src, "</form></body></html>");
-    return loadHTMLString(src);
+    return loadHTMLString(src->ptr, src->length);
 }
 
 void download_action(struct CmdArgs *args, struct parsed_tagarg* arg)

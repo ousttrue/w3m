@@ -571,7 +571,7 @@ page_info_panel(struct Buffer* buf)
             html_quote(buf->ssl_certificate), "</pre>\n", NULL);
 end:
     Strcat_charp(tmp, "</body></html>");
-    newbuf = loadHTMLString(tmp);
+    newbuf = loadHTMLString(tmp->ptr, tmp->length);
     if (newbuf)
         newbuf->document_charset = buf->document_charset;
     return newbuf;

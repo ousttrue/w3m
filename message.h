@@ -1,4 +1,5 @@
 #pragma once
+#include "str_view.h"
 
 struct CmdArgs;
 
@@ -8,3 +9,5 @@ void disp_err_message(struct CmdArgs* args, const char* s, int redraw_current);
 void disp_message_nsec(struct CmdArgs* args, const char* s, int redraw_current, int sec, int purge, int mouse);
 void set_delayed_message(const char* s);
 void displayDilayedMessage(struct CmdArgs* args);
+void record_err_message(const char* s);
+struct str_view message_list_panel(void);

@@ -3,7 +3,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-struct str_view {
+struct mutable_str_view {
     char* ptr;
+    size_t len;
+};
+
+struct str_view {
+    const char* ptr;
     size_t len;
 };

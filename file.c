@@ -257,7 +257,7 @@ struct Buffer* load_http(struct CmdArgs* args, struct HttpClient* http)
             unlink(tmpf);
             return NO_BUFFER;
         }
-        struct Buffer* b = loadHTMLString(current->page);
+        struct Buffer* b = loadHTMLString(current->page->ptr, current->page->length);
         if (b) {
             copyParsedURL(&b->currentURL, &current->url);
             b->real_scheme = current->url.scheme;
@@ -484,14 +484,14 @@ void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
  * loadHTMLString: read string and make new buffer
  */
 struct Buffer*
-loadHTMLString(Str page)
+loadHTMLString(const char* html, size_t len)
 {
     // SignalFunc prevtrap = NULL;
-    struct Buffer* newBuf;
 
-    struct URLFile f = init_stream((struct Url) { 0 }, ist_from_buffer(page->ptr, page->length));
+    struct URLFile f = init_stream((struct Url) { 0 }, ist_from_buffer(html, len));
 
-    newBuf = newBuffer(INIT_BUFFER_WIDTH);
+    struct Buffer* newBuf = newBuffer(INIT_BUFFER_WIDTH);
+
     // if (SETJMP(AbortLoading) != 0) {
     //     TRAP_OFF;
     //     discardBuffer(newBuf);
