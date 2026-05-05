@@ -271,14 +271,14 @@ void pipeBuf(struct CmdArgs* args)
     const char* tmpf = tmpfname(TMPF_DFL, NULL);
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
-        disp_message(args, Sprintf("Can't save buffer to %s", cmd)->ptr, true);
+        disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, true);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
     struct Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
     if (buf == NULL) {
-        disp_message(args, "Execution failed", TRUE);
+        disp_message("Execution failed", TRUE);
         return;
     } else {
         buf->filename = cmd;
@@ -307,7 +307,7 @@ void pipesh(struct CmdArgs* args)
     }
     struct Buffer* buf = getpipe(cmd);
     if (buf == NULL) {
-        disp_message(args, "Execution failed", true);
+        disp_message("Execution failed", true);
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -337,8 +337,7 @@ void readsh(struct CmdArgs* args)
     signal(SIGINT, prevtrap);
     tty_raw();
     if (buf == NULL) {
-        /* FIXME: gettextize? */
-        disp_message(args, "Execution failed", true);
+        disp_message("Execution failed", true);
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -665,7 +664,7 @@ void editBf(struct CmdArgs* args)
         (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
         Currentbuf->real_scheme != SCM_FILE || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
         Currentbuf->bufferprop & BP_FRAME) { /* Frame */
-        disp_err_message(args, "Can't edit other than local file", TRUE);
+        disp_err_message("Can't edit other than local file", true);
         return;
     }
     if (Currentbuf->edit)
@@ -687,7 +686,7 @@ void editScr(struct CmdArgs* args)
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message(args, Sprintf("Can't open %s", tmpf)->ptr, TRUE);
+        disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, true);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
@@ -739,8 +738,7 @@ void nextMk(struct CmdArgs* args)
         l = l->next;
         i = 0;
     }
-    /* FIXME: gettextize? */
-    disp_message(args, "No mark exist after here", true);
+    disp_message("No mark exist after here", true);
 }
 
 /* Go to previous mark */
@@ -774,8 +772,7 @@ void prevMk(struct CmdArgs* args)
         if (l != NULL)
             i = l->len - 1;
     }
-    /* FIXME: gettextize? */
-    disp_message(args, "No mark exist before here", TRUE);
+    disp_message("No mark exist before here", true);
 }
 
 /* Mark place to which the regular expression matches */
@@ -796,7 +793,7 @@ void reMark(struct CmdArgs* args)
     }
     str = conv_search_string(str, DisplayCharset);
     if ((str = regexCompile(str, 1)) != NULL) {
-        disp_message(args, str, TRUE);
+        disp_message(str, true);
         return;
     }
     MarkString = str;
@@ -893,7 +890,7 @@ void followI(struct CmdArgs* args)
     if (buf == NULL) {
         /* FIXME: gettextize? */
         char* emsg = Sprintf("Can't load %s", a->url)->ptr;
-        disp_err_message(args, emsg, FALSE);
+        disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
         pushBuffer(args, buf);
     }
@@ -1109,8 +1106,7 @@ void backBf(struct CmdArgs* args)
             deleteTab(CurrentTab);
             displayBuffer(args, B_FORCE_REDRAW);
         } else
-            /* FIXME: gettextize? */
-            disp_message(args, "Can't go back...", TRUE);
+            disp_message("Can't go back...", true);
         return;
     }
 
@@ -1366,9 +1362,8 @@ void svBuf(struct CmdArgs* args)
         is_pipe = FALSE;
     }
     if (f == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
-        disp_err_message(args, emsg, TRUE);
+        const char* emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
+        disp_err_message(emsg, true);
         return;
     }
     saveBuffer(Currentbuf, f, TRUE);
@@ -1437,7 +1432,7 @@ void curURL(struct CmdArgs* args)
         offset = (n - 1) * (COLS - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-    disp_message_nomouse(args, &s->ptr[offset], TRUE);
+    disp_message_nomouse(&s->ptr[offset], true);
 }
 /* view HTML source */
 
@@ -1531,14 +1526,12 @@ void reload(struct CmdArgs* args)
             ldDL(args);
             return;
         }
-        /* FIXME: gettextize? */
-        disp_err_message(args, "Can't reload...", TRUE);
+        disp_err_message("Can't reload...", true);
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_FILE && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
-        /* FIXME: gettextize? */
-        disp_err_message(args, "Can't reload stdin", TRUE);
+        disp_err_message("Can't reload stdin", true);
         return;
     }
     copyBuffer(&sbuf, Currentbuf);
@@ -1601,8 +1594,7 @@ void reload(struct CmdArgs* args)
     if (multipart)
         unlink(request->body);
     if (buf == NULL) {
-        /* FIXME: gettextize? */
-        disp_err_message(args, "Can't reload...", TRUE);
+        disp_err_message("Can't reload...", true);
         return;
     } else if (buf == NO_BUFFER) {
         displayBuffer(args, B_NORMAL);
@@ -1720,14 +1712,12 @@ void rFrame(struct CmdArgs* args)
 void extbrz(struct CmdArgs* args)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL) {
-        /* FIXME: gettextize? */
-        disp_err_message(args, "Can't browse...", TRUE);
+        disp_err_message("Can't browse...", true);
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_FILE && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
-        /* FIXME: gettextize? */
-        disp_err_message(args, "Can't browse stdin", TRUE);
+        disp_err_message("Can't browse stdin", true);
         return;
     }
     invoke_browser(args, parsedURL2Str(&Currentbuf->currentURL)->ptr);
@@ -1774,7 +1764,7 @@ void curlno(struct CmdArgs* args)
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
 
-    disp_message(args, tmp->ptr, FALSE);
+    disp_message(tmp->ptr, false);
 }
 
 void dispI(struct CmdArgs* args)
@@ -1803,19 +1793,17 @@ void stopI(struct CmdArgs* args)
 
 void dispVer(struct CmdArgs* args)
 {
-    disp_message(args, Sprintf("w3m version %s", w3m_version)->ptr, TRUE);
+    disp_message(Sprintf("w3m version %s", w3m_version)->ptr, true);
 }
 
 void wrapToggle(struct CmdArgs* args)
 {
     if (WrapSearch) {
-        WrapSearch = FALSE;
-        /* FIXME: gettextize? */
-        disp_message(args, "Wrap search off", TRUE);
+        WrapSearch = false;
+        disp_message("Wrap search off", true);
     } else {
-        WrapSearch = TRUE;
-        /* FIXME: gettextize? */
-        disp_message(args, "Wrap search on", TRUE);
+        WrapSearch = true;
+        disp_message("Wrap search on", true);
     }
 }
 
@@ -1883,7 +1871,7 @@ void setAlarm(struct CmdArgs* args)
     if (cmd >= 0) {
         data = getQWord(&data);
         setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-        disp_message_nsec(args, Sprintf("%dsec %s %s", sec, cmd, data)->ptr,
+        disp_message_nsec(Sprintf("%dsec %s %s", sec, cmd, data)->ptr,
             false, 1, false, true);
     } else {
         setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, "NOTHING", NULL);
@@ -1935,7 +1923,7 @@ void reinit(struct CmdArgs* args)
         return;
     }
 
-    disp_err_message(args, Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
+    disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, false);
 }
 
 void defKey(struct CmdArgs* args)

@@ -1361,11 +1361,11 @@ void panel_set_option(struct CmdArgs* args, struct parsed_tagarg* arg)
     Str s = Strnew(), tmp;
 
     if (config_file == NULL) {
-        disp_message(args, "There's no config file... config not saved", FALSE);
+        disp_message("There's no config file... config not saved", false);
     } else {
         f = fopen(config_file, "wt");
         if (f == NULL) {
-            disp_message(args, "Can't write option!", FALSE);
+            disp_message("Can't write option!", false);
         }
     }
     while (arg) {

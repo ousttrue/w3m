@@ -277,12 +277,12 @@ Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
             /* FIXME: gettextize? */
             char* e = "This SSL session was rejected "
                       "to prevent security violation: no peer certificate";
-            disp_err_message(args, e, false);
+            disp_err_message(e, false);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            disp_err_message(args, amsg->ptr, false);
+            disp_err_message(amsg->ptr, false);
         ssl_accept_this_site(hostname);
         /* FIXME: gettextize? */
         s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -313,7 +313,7 @@ Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
             } else {
                 /* FIXME: gettextize? */
                 char* e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-                disp_err_message(args, e, false);
+                disp_err_message(e, false);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -339,13 +339,13 @@ Str ssl_get_certificate(struct CmdArgs* args, SSL* ssl, const char* hostname)
             /* FIXME: gettextize? */
             const char* e = "This SSL session was rejected "
                             "to prevent security violation";
-            disp_err_message(args, e, false);
+            disp_err_message(e, false);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        disp_err_message(args, amsg->ptr, false);
+        disp_err_message(amsg->ptr, false);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -516,8 +516,7 @@ eend:
     close(sock);
     if (handle)
         SSL_free(handle);
-    /* FIXME: gettextize? */
-    disp_err_message(args,
+    disp_err_message(
         Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
             ERR_error_string(ERR_get_error(), NULL))
             ->ptr,
@@ -900,7 +899,7 @@ void http_open(struct HttpClient* http, struct CmdArgs* args)
 }
 
 struct HttpClient http_get(struct CmdArgs* args, const char* path, struct Url* base_url, struct Form* post,
-    const char* referer, enum UrlOptionFlags flag, const char *image_source)
+    const char* referer, enum UrlOptionFlags flag, const char* image_source)
 {
     struct HttpClient http;
     http_init(&http, base_url, flag);
@@ -951,7 +950,7 @@ load_doc:
             }
         } break;
         case SCM_UNKNOWN:
-            disp_err_message(args, Sprintf("Unknown URI: %s", parsedURL2Str(&current->transport.url)->ptr)->ptr, false);
+            disp_err_message(Sprintf("Unknown URI: %s", parsedURL2Str(&current->transport.url)->ptr)->ptr, false);
             break;
         default:
             break;

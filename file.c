@@ -1037,17 +1037,15 @@ bool doFileCopy(struct CmdArgs* args, const char* tmpf, const char* defstr)
                 return false;
         }
         if (!checkCopyFile(tmpf, p)) {
-            /* FIXME: gettextize? */
             msg = Sprintf("Can't copy. %s and %s are identical.",
                 conv_from_system(tmpf), conv_from_system(p));
-            disp_err_message(args, msg->ptr, FALSE);
+            disp_err_message(msg->ptr, false);
             return false;
         }
         {
             if (!MoveFile(tmpf, p)) {
-                /* FIXME: gettextize? */
                 msg = Sprintf("Can't save to %s", conv_from_system(p));
-                disp_err_message(args, msg->ptr, FALSE);
+                disp_err_message(msg->ptr, false);
             }
             return false;
         }

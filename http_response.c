@@ -174,11 +174,10 @@ enum ContentCompression http_response_process(struct HttpResponse* res, struct C
                 int err;
                 if (show_cookie) {
                     if (flag & COO_SECURE)
-                        disp_message_nsec(args, "Received a secured cookie", FALSE, 1,
-                            TRUE, false);
+                        disp_message_nsec("Received a secured cookie", false, 1, true, false);
                     else
-                        disp_message_nsec(args, Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr,
-                            FALSE, 1, TRUE, FALSE);
+                        disp_message_nsec(Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr,
+                            false, 1, true, false);
                 }
                 err = add_cookie(pu, name, value, expires, domain, path, flag,
                     comment, version, port, commentURL);
@@ -209,11 +208,10 @@ enum ContentCompression http_response_process(struct HttpResponse* res, struct C
                             emsg = "This cookie was rejected to prevent security violation.";
                         record_err_message(emsg);
                         if (show_cookie)
-                            disp_message_nsec(args, emsg, FALSE, 1, TRUE, FALSE);
+                            disp_message_nsec(emsg, false, 1, true, false);
                     } else if (show_cookie)
-                        disp_message_nsec(args, Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)->ptr,
-                            FALSE,
-                            1, TRUE, FALSE);
+                        disp_message_nsec(Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)->ptr,
+                            false, 1, true, false);
                 }
             }
         } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && pu->scheme == SCM_LOCAL_CGI) {

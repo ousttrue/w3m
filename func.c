@@ -23,7 +23,7 @@ static char keymap_initialized = FALSE;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(struct CmdArgs *args, const char* p, int lineno, int verbose)
+void setKeymap(struct CmdArgs* args, const char* p, int lineno, int verbose)
 {
     const char** map = NULL;
     char *s, *emsg;
@@ -40,20 +40,18 @@ void setKeymap(struct CmdArgs *args, const char* p, int lineno, int verbose)
             emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
         record_err_message(emsg);
         if (verbose)
-            disp_message_nsec(args, emsg, FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(emsg, false, 1, true, false);
         return;
     }
     const char* cmd = getWord(&p);
     if (!cmd) {
         if (lineno > 0)
-            /* FIXME: gettextize? */
             emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
         else
-            /* FIXME: gettextize? */
             emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
         record_err_message(emsg);
         if (verbose)
-            disp_message_nsec(args, emsg, FALSE, 1, TRUE, FALSE);
+            disp_message_nsec(emsg, false, 1, true, false);
         return;
     }
     if (c & K_MULTI) {
@@ -115,7 +113,7 @@ void setKeymap(struct CmdArgs *args, const char* p, int lineno, int verbose)
 }
 
 static void
-interpret_keymap(struct CmdArgs *args, FILE* kf, struct stat* current, int force)
+interpret_keymap(struct CmdArgs* args, FILE* kf, struct stat* current, int force)
 {
     int fd;
     struct stat kstat;
@@ -158,14 +156,14 @@ interpret_keymap(struct CmdArgs *args, FILE* kf, struct stat* current, int force
             emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
             record_err_message(emsg);
             if (verbose)
-                disp_message_nsec(args, emsg, FALSE, 1, TRUE, FALSE);
+                disp_message_nsec(emsg, false, 1, true, false);
             continue;
         }
         setKeymap(args, p, lineno, verbose);
     }
 }
 
-void initKeymap(struct CmdArgs *args, int force)
+void initKeymap(struct CmdArgs* args, int force)
 {
     FILE* kf;
 

@@ -780,11 +780,11 @@ bool w3m_args(struct CmdArgs* args, int argc, const char** argv)
         w3m_exit(2);
     }
     if (err_msg->length)
-        disp_message_nsec(args, err_msg->ptr, false, 1, true, false);
+        disp_message_nsec(err_msg->ptr, false, 1, true, false);
 
-    SearchHeader = FALSE;
+    SearchHeader = false;
     DefaultType = NULL;
-    UseContentCharset = TRUE;
+    UseContentCharset = true;
     WcOption.auto_detect = auto_detect;
 
     Currentbuf = Firstbuf;
@@ -1003,9 +1003,8 @@ void cmd_loadfile(struct CmdArgs* args, const char* fn)
     struct HttpClient http = http_get(args, file_to_url(fn), NULL, NULL, NO_REFERER, 0, 0);
     struct Buffer* buf = load_http(args, &http);
     if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
-        disp_err_message(args, emsg, FALSE);
+        const char* emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
+        disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
         pushBuffer(args, buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
@@ -1196,7 +1195,7 @@ struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* targe
     buf = load_http(args, &http);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
-        disp_err_message(args, emsg, FALSE);
+        disp_err_message(emsg, false);
         return NULL;
     }
 
@@ -1268,19 +1267,15 @@ struct Buffer* loadLink(struct CmdArgs* args, const char* url, const char* targe
 
 void gotoLabel(struct CmdArgs* args, const char* label)
 {
-    struct Buffer* buf;
-    struct Anchor* al;
-    int i;
-
-    al = searchURLLabel(Currentbuf, label);
+    struct Anchor* al = searchURLLabel(Currentbuf, label);
     if (al == NULL) {
-        /* FIXME: gettextize? */
-        disp_message(args, Sprintf("%s is not found", label)->ptr, TRUE);
+        disp_message(Sprintf("%s is not found", label)->ptr, true);
         return;
     }
-    buf = newBuffer(Currentbuf->width);
+
+    struct Buffer* buf = newBuffer(Currentbuf->width);
     copyBuffer(buf, Currentbuf);
-    for (i = 0; i < MAX_LB; i++)
+    for (int i = 0; i < MAX_LB; i++)
         buf->linkBuffer[i] = NULL;
     buf->currentURL.label = allocStr(label, -1);
     pushUrlHist(parsedURL2Str(&buf->currentURL)->ptr);
@@ -1304,7 +1299,7 @@ int handleMailto(struct CmdArgs* args, const char* url)
         return 0;
     if (!non_null(Mailer)) {
         /* FIXME: gettextize? */
-        disp_err_message(args, "no mailer is specified", TRUE);
+        disp_err_message("no mailer is specified", true);
         return 1;
     }
 
@@ -1542,9 +1537,7 @@ void _followForm(struct CmdArgs* args, int submit)
         if (submit)
             goto do_submit;
         if (fi->readonly)
-            /* FIXME: gettextize? */
-            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
-        /* FIXME: gettextize? */
+            disp_message_nsec("Read only field!", false, 1, true, false);
         p = inputStrHist(args, "TEXT:", fi->value ? fi->value->ptr : NULL, HistoryText);
         if (p == NULL || fi->readonly)
             break;
@@ -1557,9 +1550,7 @@ void _followForm(struct CmdArgs* args, int submit)
         if (submit)
             goto do_submit;
         if (fi->readonly)
-            /* FIXME: gettextize? */
-            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
-        /* FIXME: gettextize? */
+            disp_message_nsec("Read only field!", false, 1, true, false);
         p = inputFilenameHist(args, "Filename:", fi->value ? fi->value->ptr : NULL, HistoryNone);
         if (p == NULL || fi->readonly)
             break;
@@ -1572,11 +1563,9 @@ void _followForm(struct CmdArgs* args, int submit)
         if (submit)
             goto do_submit;
         if (fi->readonly) {
-            /* FIXME: gettextize? */
-            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
             break;
         }
-        /* FIXME: gettextize? */
         p = inputLine(args, "Password:", fi->value ? fi->value->ptr : NULL,
             IN_PASSWORD);
         if (p == NULL)
@@ -1590,8 +1579,7 @@ void _followForm(struct CmdArgs* args, int submit)
         if (submit)
             goto do_submit;
         if (fi->readonly)
-            /* FIXME: gettextize? */
-            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
         input_textarea(args, fi);
         formUpdateBuffer(a, Currentbuf, fi);
         break;
@@ -1599,8 +1587,7 @@ void _followForm(struct CmdArgs* args, int submit)
         if (submit)
             goto do_submit;
         if (fi->readonly) {
-            /* FIXME: gettextize? */
-            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
             break;
         }
         formRecheckRadio(a, Currentbuf, fi);
@@ -1609,8 +1596,7 @@ void _followForm(struct CmdArgs* args, int submit)
         if (submit)
             goto do_submit;
         if (fi->readonly) {
-            /* FIXME: gettextize? */
-            disp_message_nsec(args, "Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
             break;
         }
         fi->checked = !fi->checked;
@@ -1673,7 +1659,7 @@ void _followForm(struct CmdArgs* args, int submit)
         } else if ((fi->parent->method == FORM_METHOD_INTERNAL && (!Strcmp_charp(fi->parent->action, "map") || !Strcmp_charp(fi->parent->action, "none"))) || Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
             do_internal(args, tmp2->ptr, tmp->ptr);
         } else {
-            disp_err_message(args, "Can't send form because of illegal method.", false);
+            disp_err_message("Can't send form because of illegal method.", false);
         }
         break;
     case FORM_INPUT_RESET:
@@ -1992,9 +1978,8 @@ void cmd_loadURL(struct CmdArgs* args, const char* url, struct Url* current, cha
     struct HttpClient http = http_get(args, url, current, request, referer, 0, 0);
     struct Buffer* buf = load_http(args, &http);
     if (buf == NULL) {
-        /* FIXME: gettextize? */
-        char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
-        disp_err_message(args, emsg, FALSE);
+        const char* emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
+        disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
         pushBuffer(args, buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
@@ -2067,7 +2052,7 @@ void goURL0(struct CmdArgs* args, char* prompt, int relative)
 void cmd_loadBuffer(struct CmdArgs* args, struct Buffer* buf, int prop, int linkid)
 {
     if (buf == NULL) {
-        disp_err_message(args, "Can't load string", FALSE);
+        disp_err_message("Can't load string", FALSE);
     } else if (buf != NO_BUFFER) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
@@ -2178,7 +2163,7 @@ disp:
         offset = (n - 1) * (COLS - 1);
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
-    disp_message_nomouse(args, &s->ptr[offset], TRUE);
+    disp_message_nomouse(&s->ptr[offset], true);
 }
 
 /* show current URL */
@@ -2194,7 +2179,7 @@ void _docCSet(struct CmdArgs* args, wc_ces charset)
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
     if (Currentbuf->sourcefile == NULL) {
-        disp_message(args, "Can't reload...", FALSE);
+        disp_message("Can't reload...", false);
         return;
     }
     Currentbuf->document_charset = charset;
@@ -2385,7 +2370,7 @@ void execdict(struct CmdArgs* args, const char* word)
     struct HttpClient http = http_get(args, dictcmd, NULL, NULL, NO_REFERER, 0, 0);
     buf = load_http(args, &http);
     if (buf == NULL) {
-        disp_message(args, "Execution failed", TRUE);
+        disp_message("Execution failed", true);
         return;
     } else if (buf != NO_BUFFER) {
         buf->filename = w;

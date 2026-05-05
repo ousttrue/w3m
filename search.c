@@ -230,11 +230,11 @@ disp_srchresult(struct CmdArgs* args, int result, const char* prompt, const char
     if (str == NULL)
         str = "";
     if (result & SR_NOTFOUND)
-        disp_message(args, Sprintf("Not found: %s", str)->ptr, true);
+        disp_message(Sprintf("Not found: %s", str)->ptr, true);
     else if (result & SR_WRAPPED)
-        disp_message(args, Sprintf("Search wrapped: %s", str)->ptr, true);
+        disp_message(Sprintf("Search wrapped: %s", str)->ptr, true);
     else if (show_srch_str)
-        disp_message(args, Sprintf("%s%s", prompt, str)->ptr, true);
+        disp_message(Sprintf("%s%s", prompt, str)->ptr, true);
 }
 
 void srch(struct CmdArgs* args, SrchFunc func, const char* prompt)
@@ -366,8 +366,7 @@ void srch_nxtprv(struct CmdArgs* args, int reverse)
     };
 
     if (searchRoutine == NULL) {
-        /* FIXME: gettextize? */
-        disp_message(args, "No previous regular expression", true);
+        disp_message("No previous regular expression", true);
         return;
     }
     if (reverse != 0)

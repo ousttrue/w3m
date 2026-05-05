@@ -35,7 +35,7 @@ void message(const char* s, int return_x, int return_y)
     sc_move(return_y, return_x);
 }
 
-void disp_message_nsec(struct CmdArgs* args, const char* s, int redraw_current, int sec, int purge, int mouse)
+void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, int mouse)
 {
     if (QuietMessage)
         return;
@@ -50,24 +50,24 @@ void disp_message_nsec(struct CmdArgs* args, const char* s, int redraw_current, 
     else
         message(s, (LINES - 1), 0);
 
-    tty_write_sc();
-    int ch = getch_timeout(sec, args);
-    if (!purge && ch > 0) {
-        unget(ch);
-    }
+    // tty_write_sc();
+    // int ch = getch_timeout(sec, args);
+    // if (!purge && ch > 0) {
+    //     unget(ch);
+    // }
     // if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
     //     displayBuffer(args, B_NORMAL);
 }
 
-void disp_message(struct CmdArgs* args, const char* s, int redraw_current)
+void disp_message(const char* s, int redraw_current)
 {
-    disp_message_nsec(args, s, redraw_current, 10, false, true);
+    disp_message_nsec(s, redraw_current, 10, false, true);
 }
 
-void disp_err_message(struct CmdArgs* args, const char* s, int redraw_current)
+void disp_err_message(const char* s, int redraw_current)
 {
     record_err_message(s);
-    disp_message(args, s, redraw_current);
+    disp_message(s, redraw_current);
 }
 
 void set_delayed_message(const char* s)
@@ -75,10 +75,10 @@ void set_delayed_message(const char* s)
     delayed_msg = allocStr(s, -1);
 }
 
-void displayDilayedMessage(struct CmdArgs* args)
+void displayDilayedMessage()
 {
     if (delayed_msg != NULL) {
-        disp_message(args, delayed_msg, false);
+        disp_message(delayed_msg, false);
         delayed_msg = NULL;
         tty_write_sc();
     }

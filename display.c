@@ -367,7 +367,7 @@ static void _displayBuffer(struct Buffer* buf, struct CmdArgs* args, enum Displa
         Strcat_charp(msg, "\tNo Line");
     }
 
-    displayDilayedMessage(args);
+    displayDilayedMessage();
 
     sc_standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);

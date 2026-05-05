@@ -880,7 +880,7 @@ menu_search_forward(struct CmdArgs* args, Menu* menu, int from)
         found = menuForwardSearch(menu, str, 0);
     if (found >= 0)
         return found;
-    disp_message(args, "Not found", true);
+    disp_message("Not found", true);
     return -1;
 }
 
@@ -926,7 +926,7 @@ menu_search_backward(struct CmdArgs* args, Menu* menu, int from)
         found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
         return found;
-    disp_message(args, "Not found", true);
+    disp_message("Not found", true);
     return -1;
 }
 
@@ -942,13 +942,12 @@ mSrchB(struct CmdArgs* args)
 static int
 menu_search_next_previous(struct CmdArgs* args, Menu* menu, int from, int reverse)
 {
-    int found;
     static int (*routine[2])(Menu*, const char*, int) = {
         menuForwardSearch, menuBackwardSearch
     };
 
     if (menuSearchRoutine == NULL) {
-        disp_message(args, "No previous regular expression", true);
+        disp_message("No previous regular expression", true);
         return -1;
     }
 
@@ -958,12 +957,12 @@ menu_search_next_previous(struct CmdArgs* args, Menu* menu, int from, int revers
     if (menuSearchRoutine == menuBackwardSearch)
         reverse ^= 1;
     from += reverse ? -1 : 1;
-    found = (*routine[reverse])(menu, str, from);
+    int found = (*routine[reverse])(menu, str, from);
     if (WrapSearch && found == -1)
         found = (*routine[reverse])(menu, str, reverse * menu->nitem);
     if (found >= 0)
         return found;
-    disp_message(args, "Not found", true);
+    disp_message("Not found", true);
     return -1;
 }
 

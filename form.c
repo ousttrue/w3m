@@ -541,8 +541,7 @@ static Str editor_input(struct CmdArgs* args, Str value, bool readonly)
     const char* tmpf = tmpfname(TMPF_DFL, NULL);
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
-        /* FIXME: gettextize? */
-        disp_err_message(args, "Can't open temporary file", false);
+        disp_err_message("Can't open temporary file", false);
         return value;
     }
     if (value) {
@@ -559,7 +558,7 @@ static Str editor_input(struct CmdArgs* args, Str value, bool readonly)
     f = fopen(tmpf, "r");
     if (f == NULL) {
         /* FIXME: gettextize? */
-        disp_err_message(args, "Can't open temporary file", false);
+        disp_err_message("Can't open temporary file", false);
         goto input_end;
     }
 
