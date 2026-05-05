@@ -232,20 +232,12 @@ main(int argc, char **argv)
 
     /* argument search 1 */
     for (i = 1; i < argc; i++) {
-	if (*argv[i] == '-') {
-	    if (!strcmp("-config", argv[i])) {
-		argv[i] = "-dummy";
-		if (++i >= argc)
-		    usage();
-		config_file = argv[i];
-		argv[i] = "-dummy";
-	    }
-	    else if (!strcmp("-h", argv[i]) || !strcmp("-help", argv[i]))
-		help();
-	    else if (!strcmp("-V", argv[i]) || !strcmp("-version", argv[i])) {
-		fversion(stdout);
-		exit(0);
-	    }
+	if (!strcmp("-config", argv[i])) {
+	    argv[i] = "-dummy";
+	    if (++i >= argc)
+		usage();
+	    config_file = argv[i];
+	    argv[i] = "-dummy";
 	}
     }
 
@@ -322,285 +314,294 @@ main(int argc, char **argv)
 	Mailer = p;
 
     /* argument search 2 */
-    i = 1;
-    while (i < argc) {
-	if (*argv[i] == '-') {
-	    if (!strcmp("-t", argv[i])) {
-		if (++i >= argc)
-		    usage();
-		if (atoi(argv[i]) > 0)
-		    Tabstop = atoi(argv[i]);
-	    }
-	    else if (!strcmp("-r", argv[i]))
-		ShowEffect = FALSE;
-	    else if (!strcmp("-l", argv[i])) {
-		if (++i >= argc)
-		    usage();
-		if (atoi(argv[i]) > 0)
-		    PagerMax = atoi(argv[i]);
-	    }
-#ifdef USE_M17N
-	    else if (!strncmp("-I", argv[i], 2)) {
-		if (argv[i][2] != '\0')
-		    p = argv[i] + 2;
-		else {
-		    if (++i >= argc)
-			usage();
-		    p = argv[i];
-		}
-		DocumentCharset = wc_guess_charset_short(p, DocumentCharset);
-		WcOption.auto_detect = WC_OPT_DETECT_OFF;
-		UseContentCharset = FALSE;
-	    }
-	    else if (!strncmp("-O", argv[i], 2)) {
-		if (argv[i][2] != '\0')
-		    p = argv[i] + 2;
-		else {
-		    if (++i >= argc)
-			usage();
-		    p = argv[i];
-		}
-		DisplayCharset = wc_guess_charset_short(p, DisplayCharset);
-	    }
-#endif
-	    else if (!strcmp("-graph", argv[i]))
-		UseGraphicChar = GRAPHIC_CHAR_DEC;
-	    else if (!strcmp("-no-graph", argv[i]))
-		UseGraphicChar = GRAPHIC_CHAR_ASCII;
-	    else if (!strcmp("-T", argv[i])) {
-		if (++i >= argc)
-		    usage();
-		DefaultType = default_type = argv[i];
-	    }
-	    else if (!strcmp("-m", argv[i]))
-		SearchHeader = search_header = TRUE;
-	    else if (!strcmp("-v", argv[i]))
-		visual_start = TRUE;
-	    else if (!strcmp("-N", argv[i]))
-		open_new_tab = TRUE;
-#ifdef USE_COLOR
-	    else if (!strcmp("-M", argv[i]))
-		useColor = FALSE;
-	    else if (!strcmp("-H", argv[i])) {
-		deprecated = TRUE;
-		highIntensityColors = TRUE;
-	    }
-#endif				/* USE_COLOR */
-	    else if (!strcmp("-B", argv[i]))
-		load_bookmark = TRUE;
-	    else if (!strcmp("-bookmark", argv[i])) {
-		if (++i >= argc)
-		    usage();
-		BookmarkFile = argv[i];
-		if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {
-		    Str tmp = Strnew_charp(CurrentDir);
-		    if (Strlastchar(tmp) != '/')
-			Strcat_char(tmp, '/');
-		    Strcat_charp(tmp, BookmarkFile);
-		    BookmarkFile = cleanupName(tmp->ptr);
-		}
-	    }
-	    else if (!strcmp("-R", argv[i]))
-		opt_restore = TRUE;
-	    else if (!strcmp("-session", argv[i])) {
-		if (++i >= argc)
-		    usage();
-		session_file = argv[i];
-	    }
-	    else if (!strcmp("-F", argv[i]))
-		RenderFrame = TRUE;
-	    else if (!strcmp("-W", argv[i])) {
-		if (WrapDefault)
-		    WrapDefault = FALSE;
-		else
-		    WrapDefault = TRUE;
-	    }
-	    else if (!strcmp("-dump", argv[i]))
-		w3m_dump = DUMP_BUFFER;
-	    else if (!strcmp("-dump_source", argv[i]))
-		w3m_dump = DUMP_SOURCE;
-	    else if (!strcmp("-dump_head", argv[i]))
-		w3m_dump = DUMP_HEAD;
-	    else if (!strcmp("-dump_both", argv[i]))
-		w3m_dump = (DUMP_HEAD | DUMP_SOURCE);
-	    else if (!strcmp("-dump_extra", argv[i]))
-		w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
-	    else if (!strcmp("-halfdump", argv[i]))
-		w3m_dump = DUMP_HALFDUMP;
-	    else if (!strcmp("-halfload", argv[i])) {
-		w3m_dump = 0;
-		w3m_halfload = TRUE;
-		DefaultType = default_type = "text/html";
-	    }
-	    else if (!strcmp("-backend", argv[i])) {
-		w3m_backend = TRUE;
-	    }
-	    else if (!strcmp("-backend_batch", argv[i])) {
-		w3m_backend = TRUE;
-		if (++i >= argc)
-		    usage();
-		if (!backend_batch_commands)
-		    backend_batch_commands = newTextList();
-		pushText(backend_batch_commands, argv[i]);
-	    }
-	    else if (!strcmp("-cols", argv[i])) {
-		if (++i >= argc)
-		    usage();
-		opt_cols = atoi(argv[i]);
-	    }
-	    else if (!strcmp("-ppc", argv[i])) {
-		double ppc;
-		if (++i >= argc)
-		    usage();
-		ppc = atof(argv[i]);
-		if (ppc >= MINIMUM_PIXEL_PER_CHAR &&
-		    ppc <= MAXIMUM_PIXEL_PER_CHAR) {
-		    pixel_per_char = ppc;
-		    set_pixel_per_char = TRUE;
-		}
-	    }
-#ifdef USE_IMAGE
-	    else if (!strcmp("-ppl", argv[i])) {
-		double ppc;
-		if (++i >= argc)
-		    usage();
-		ppc = atof(argv[i]);
-		if (ppc >= MINIMUM_PIXEL_PER_CHAR &&
-		    ppc <= MAXIMUM_PIXEL_PER_CHAR * 2) {
-		    pixel_per_line = ppc;
-		    set_pixel_per_line = TRUE;
-		}
-	    }
-#endif
-	    else if (!strcmp("-ri", argv[i])) {
-	        enable_inline_image = INLINE_IMG_OSC5379;
-	    }
-	    else if (!strcmp("-sixel", argv[i])) {
-		enable_inline_image = INLINE_IMG_SIXEL;
-	    }
-	    else if (!strcmp("-num", argv[i]))
-		showLineNum = TRUE;
-	    else if (!strcmp("-no-proxy", argv[i]))
-		use_proxy = FALSE;
-#ifdef INET6
-	    else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
-		set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
-#endif
-	    else if (!strcmp("-post", argv[i])) {
-		if (++i >= argc)
-		    usage();
-		post_file = argv[i];
-	    }
-	    else if (!strcmp("-header", argv[i])) {
-		Str hs;
-		if (++i >= argc)
-		    usage();
-		if ((hs = make_optional_header_string(argv[i])) != NULL) {
-		    if (header_string == NULL)
-			header_string = hs;
-		    else
-			Strcat(header_string, hs);
-		}
-		while (argv[i][0]) {
-		    argv[i][0] = '\0';
-		    argv[i]++;
-		}
-	    }
-#ifdef USE_MOUSE
-	    else if (!strcmp("-no-mouse", argv[i])) {
-		use_mouse = FALSE;
-	    }
-#endif				/* USE_MOUSE */
-#ifdef USE_COOKIE
-	    else if (!strcmp("-no-cookie", argv[i])) {
-		use_cookie = FALSE;
-		accept_cookie = FALSE;
-	    }
-	    else if (!strcmp("-cookie", argv[i])) {
-		use_cookie = TRUE;
-		accept_cookie = TRUE;
-	    }
-	    else if (!strcmp("-cookie-jar", argv[i])) {
-		if (++i >= argc)
-		    usage();
-		CookieFile = argv[i];
-		if (CookieFile[0] != '~' && CookieFile[0] != '/') {
-		    Str tmp = Strnew_charp(CurrentDir);
-		    if (Strlastchar(tmp) != '/')
-			Strcat_char(tmp, '/');
-		    Strcat_charp(tmp, CookieFile);
-		    CookieFile = cleanupName(tmp->ptr);
-		}
-	    }
-#endif				/* USE_COOKIE */
-	    else if (!strcmp("-s", argv[i]))
-		squeezeBlankLine = TRUE;
-	    else if (!strcmp("-X", argv[i]))
-		Do_not_use_ti_te = TRUE;
-	    else if (!strcmp("-title", argv[i]))
-		displayTitleTerm = getenv("TERM");
-	    else if (!strncmp("-title=", argv[i], 7))
-		displayTitleTerm = argv[i] + 7;
-#ifdef USE_SSL
-	    else if (!strcmp("-insecure", argv[i])) {
-#ifdef OPENSSL_TLS_SECURITY_LEVEL
-		set_param_option("ssl_cipher=ALL:eNULL:@SECLEVEL=0");
-#else
-		set_param_option("ssl_cipher=ALL:eNULL");
-#endif
-#ifdef SSL_CTX_set_min_proto_version
-		set_param_option("ssl_min_version=all");
-#endif
-		set_param_option("ssl_forbid_method=");
-#ifdef USE_SSL_VERIFY
-		set_param_option("ssl_verify_server=0");
-#endif
-	    }
-#endif				/* USE_SSL */
-	    else if (!strcmp("-o", argv[i]) ||
-		     !strcmp("-show-option", argv[i])) {
-		if (!strcmp("-show-option", argv[i]) || ++i >= argc ||
-		    !strcmp(argv[i], "?")) {
-		    show_params(stdout);
-		    exit(0);
-		}
-		if (!set_param_option(argv[i])) {
-		    fprintf(stderr, _("%s: bad option\n"), argv[i]);
-		    fputs(_("Use 'w3m -o' to see all options\n"), stderr);
-		    exit(1);
-		}
-	    }
-	    else if (!strcmp("-", argv[i]) || !strcmp("-dummy", argv[i])) {
-		/* do nothing */
-	    }
-	    else if (!strcmp("-debug", argv[i])) {
-		w3m_debug = TRUE;
-	    }
-	    else if (!strcmp("-reqlog",argv[i])) {
-		w3m_reqlog=rcFile("request.log");
-	    }
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-	    else if (!strcmp("-$$getimage", argv[i])) {
-		++i;
-		getimage_args = argv + i;
-		i += 4;
-		if (i > argc)
-		    usage();
-	    }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-	    else {
-		usage();
-	    }
-	}
-	else if (*argv[i] == '+') {
+    for (i = 1; i < argc; i++) {
+	if (*argv[i] == '+') {
 	    line_str = argv[i] + 1;
+	    continue;
 	}
-	else {
+
+	if (*argv[i] != '-') {
 	    if (open_new_tab && load_argc)
 		load_argv[load_argc++] = "";
 	    load_argv[load_argc++] = argv[i];
+	    continue;
 	}
-	i++;
+
+	if (!strcmp("-", argv[i]) || !strcmp("-dummy", argv[i]))
+	    continue;
+
+	/*
+	 * Check for multi-letter flags first to avoid confusion with
+	 * single-letter flags that get their option-argument in the same
+	 * argument string without intervening <blank> characters.
+	 */
+	if (!strcmp("-backend", argv[i]))
+	    w3m_backend = TRUE;
+	else if (!strcmp("-backend_batch", argv[i])) {
+	    w3m_backend = TRUE;
+	    if (++i >= argc)
+		usage();
+	    if (!backend_batch_commands)
+		backend_batch_commands = newTextList();
+	    pushText(backend_batch_commands, argv[i]);
+	}
+	else if (!strcmp("-bookmark", argv[i])) {
+	    if (++i >= argc)
+		usage();
+	    BookmarkFile = argv[i];
+	    if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {
+		Str tmp = Strnew_charp(CurrentDir);
+		if (Strlastchar(tmp) != '/')
+		    Strcat_char(tmp, '/');
+		Strcat_charp(tmp, BookmarkFile);
+		BookmarkFile = cleanupName(tmp->ptr);
+	    }
+	}
+	else if (!strcmp("-cols", argv[i])) {
+	    if (++i >= argc)
+		usage();
+	    opt_cols = atoi(argv[i]);
+	}
+	else if (!strcmp("-debug", argv[i]))
+	    w3m_debug = TRUE;
+	else if (!strcmp("-dump", argv[i]))
+	    w3m_dump = DUMP_BUFFER;
+	else if (!strcmp("-dump_both", argv[i]))
+	    w3m_dump = (DUMP_HEAD | DUMP_SOURCE);
+	else if (!strcmp("-dump_extra", argv[i]))
+	    w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
+	else if (!strcmp("-dump_head", argv[i]))
+	    w3m_dump = DUMP_HEAD;
+	else if (!strcmp("-dump_source", argv[i]))
+	    w3m_dump = DUMP_SOURCE;
+	else if (!strcmp("-graph", argv[i]))
+	    UseGraphicChar = GRAPHIC_CHAR_DEC;
+	else if (!strcmp("-halfdump", argv[i]))
+	    w3m_dump = DUMP_HALFDUMP;
+	else if (!strcmp("-halfload", argv[i])) {
+	    w3m_dump = 0;
+	    w3m_halfload = TRUE;
+	    DefaultType = default_type = "text/html";
+	}
+	else if (!strcmp("-header", argv[i])) {
+	    Str hs;
+	    if (++i >= argc)
+		usage();
+	    if ((hs = make_optional_header_string(argv[i])))
+		header_string = header_string ? Strcat(header_string, hs) : hs;
+	}
+	else if (!strcmp("-help", argv[i]))
+	    help();
+	else if (!strcmp("-no-graph", argv[i]))
+	    UseGraphicChar = GRAPHIC_CHAR_ASCII;
+	else if (!strcmp("-no-proxy", argv[i]))
+	    use_proxy = FALSE;
+	else if (!strcmp("-num", argv[i]))
+	    showLineNum = TRUE;
+	else if (!strcmp("-post", argv[i])) {
+	    if (++i >= argc)
+		usage();
+	    post_file = argv[i];
+	}
+	else if (!strcmp("-ppc", argv[i])) {
+	    double ppc;
+	    if (++i >= argc)
+		usage();
+	    ppc = atof(argv[i]);
+	    if (ppc >= MINIMUM_PIXEL_PER_CHAR &&
+		ppc <= MAXIMUM_PIXEL_PER_CHAR) {
+		pixel_per_char = ppc;
+		set_pixel_per_char = TRUE;
+	    }
+	}
+	else if (!strcmp("-reqlog",argv[i]))
+	    w3m_reqlog=rcFile("request.log");
+	else if (!strcmp("-session", argv[i])) {
+	    if (++i >= argc)
+		usage();
+	    session_file = argv[i];
+	}
+	else if (!strcmp("-show-option", argv[i])) {
+		show_params(stdout);
+		exit(0);
+	}
+	else if (!strcmp("-title", argv[i]))
+	    displayTitleTerm = getenv("TERM");
+	else if (!strncmp("-title=", argv[i], 7))
+	    displayTitleTerm = argv[i] + 7;
+	else if (!strcmp("-version", argv[i])) {
+	    fversion(stdout);
+	    exit(0);
+	}
+
+#ifdef USE_COOKIE
+	else if (!strcmp("-no-cookie", argv[i]))
+	    use_cookie = accept_cookie = FALSE;
+	else if (!strcmp("-cookie", argv[i]))
+	    use_cookie = accept_cookie = TRUE;
+	else if (!strcmp("-cookie-jar", argv[i])) {
+	    if (++i >= argc)
+		usage();
+	    CookieFile = argv[i];
+	    if (CookieFile[0] != '~' && CookieFile[0] != '/') {
+		Str tmp = Strnew_charp(CurrentDir);
+		if (Strlastchar(tmp) != '/')
+		    Strcat_char(tmp, '/');
+		Strcat_charp(tmp, CookieFile);
+		CookieFile = cleanupName(tmp->ptr);
+	    }
+	}
+#endif				/* USE_COOKIE */
+
+#ifdef USE_IMAGE
+	else if (!strcmp("-ppl", argv[i])) {
+	    double ppc;
+	    if (++i >= argc)
+		usage();
+	    ppc = atof(argv[i]);
+	    if (ppc >= MINIMUM_PIXEL_PER_CHAR &&
+		ppc <= MAXIMUM_PIXEL_PER_CHAR * 2) {
+		pixel_per_line = ppc;
+		set_pixel_per_line = TRUE;
+	    }
+	}
+	else if (!strcmp("-ri", argv[i]))
+	    enable_inline_image = INLINE_IMG_OSC5379;
+	else if (!strcmp("-sixel", argv[i]))
+	    enable_inline_image = INLINE_IMG_SIXEL;
+#endif
+
+#ifdef USE_MOUSE
+	else if (!strcmp("-no-mouse", argv[i]))
+	    use_mouse = FALSE;
+#endif				/* USE_MOUSE */
+
+#ifdef USE_SSL
+	else if (!strcmp("-insecure", argv[i])) {
+#ifdef OPENSSL_TLS_SECURITY_LEVEL
+	    set_param_option("ssl_cipher=ALL:eNULL:@SECLEVEL=0");
+#else
+	    set_param_option("ssl_cipher=ALL:eNULL");
+#endif
+#ifdef SSL_CTX_set_min_proto_version
+	    set_param_option("ssl_min_version=all");
+#endif
+	    set_param_option("ssl_forbid_method=");
+#ifdef USE_SSL_VERIFY
+	    set_param_option("ssl_verify_server=0");
+#endif
+	}
+#endif				/* USE_SSL */
+
+	/* Single-letter flags */
+	else if (!strcmp("-B", argv[i]))
+	    load_bookmark = TRUE;
+	else if (!strcmp("-F", argv[i]))
+	    RenderFrame = TRUE;
+	else if (!strcmp("-N", argv[i]))
+	    open_new_tab = TRUE;
+	else if (!strcmp("-R", argv[i]))
+	    opt_restore = TRUE;
+	else if (!strcmp("-T", argv[i])) {
+	    if (++i >= argc)
+		usage();
+	    DefaultType = default_type = argv[i];
+	}
+	else if (!strcmp("-V", argv[i])) {
+	    fversion(stdout);
+	    exit(0);
+	}
+	else if (!strcmp("-W", argv[i]))
+	    WrapDefault = !WrapDefault;
+	else if (!strcmp("-X", argv[i]))
+	    Do_not_use_ti_te = TRUE;
+
+	else if (!strcmp("-h", argv[i]))
+	    help();
+	else if (!strcmp("-l", argv[i])) {
+	    if (++i >= argc)
+		usage();
+	    if (atoi(argv[i]) > 0)
+		PagerMax = atoi(argv[i]);
+	}
+	else if (!strcmp("-m", argv[i]))
+	    SearchHeader = search_header = TRUE;
+	else if (!strcmp("-o", argv[i])) {
+	    /* "?" is undocumented and only kept for backwards compatibility */
+	    if (!argv[i + 1] || !strcmp(argv[i + 1], "?")) {
+		show_params(stdout);
+		exit(0);
+	    }
+	    if (!set_param_option(argv[++i])) {
+		fprintf(stderr, _("%s: bad option\n"), argv[i]);
+		fputs(_("Use 'w3m -o' to see all options\n"), stderr);
+		exit(1);
+	    }
+	}
+	else if (!strcmp("-r", argv[i]))
+	    ShowEffect = FALSE;
+	else if (!strcmp("-s", argv[i]))
+	    squeezeBlankLine = TRUE;
+	else if (!strcmp("-t", argv[i])) {
+	    if (++i >= argc)
+		usage();
+	    if (atoi(argv[i]) > 0)
+		Tabstop = atoi(argv[i]);
+	}
+	else if (!strcmp("-v", argv[i]))
+	    visual_start = TRUE;
+
+#ifdef INET6
+	else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
+	    set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
+#endif
+
+#ifdef USE_COLOR
+	else if (!strcmp("-M", argv[i]))
+	    useColor = FALSE;
+	else if (!strcmp("-H", argv[i])) {
+	    deprecated = TRUE;
+	    highIntensityColors = TRUE;
+	}
+#endif				/* USE_COLOR */
+
+#ifdef USE_M17N
+	else if (!strncmp("-I", argv[i], 2)) {
+	    if (argv[i][2] != '\0')
+		p = argv[i] + 2;
+	    else {
+		if (++i >= argc)
+		    usage();
+		p = argv[i];
+	    }
+	    DocumentCharset = wc_guess_charset_short(p, DocumentCharset);
+	    WcOption.auto_detect = WC_OPT_DETECT_OFF;
+	    UseContentCharset = FALSE;
+	}
+	else if (!strncmp("-O", argv[i], 2)) {
+	    if (argv[i][2] != '\0')
+		p = argv[i] + 2;
+	    else {
+		if (++i >= argc)
+		    usage();
+		p = argv[i];
+	    }
+	    DisplayCharset = wc_guess_charset_short(p, DisplayCharset);
+	}
+#endif
+
+#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
+	else if (!strcmp("-$$getimage", argv[i])) {
+	    ++i;
+	    getimage_args = argv + i;
+	    i += 4;
+	    if (i > argc)
+		usage();
+	}
+#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
+	else {
+	    usage();
+	}
     }
 
 #ifdef	__WATT32__
