@@ -760,11 +760,8 @@ setopt:
 			   W3M_VERSION,
 			   "<br>Written by <a href='mailto:aito@fw.ipsj.or.jp'>Akinori Ito</a>",
 			   NULL);
-	    newbuf = loadHTMLString(s_page);
-	    if (newbuf == NULL)
-		Strcat_charp(err_msg, "w3m: Can't load string.\n");
-	    else if (newbuf != NO_BUFFER)
-		newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+	    if (!(newbuf = loadHTMLString(s_page)))
+		Strcat_charp(err_msg, "w3m: Can't load string.\n"); /* sigint */
 	}
 	else if ((p = getenv("HTTP_HOME")) != NULL ||
 		 (p = getenv("WWW_HOME")) != NULL) {
@@ -775,13 +772,9 @@ setopt:
 		pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
 	}
 	else {
-	    if (fmInitialized)
-		fmTerm();
 	    usage();
 	}
 	if (newbuf == NULL) {
-	    if (fmInitialized)
-		fmTerm();
 	    if (err_msg->length)
 		fprintf(stderr, "%s", err_msg->ptr);
 	    w3m_exit(2);
