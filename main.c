@@ -121,7 +121,6 @@ static int display_ok = FALSE;
 static int on_target = 1;
 static int prec_num = 0;
 static int prev_key = -1;
-static int show_params_p = 0;
 
 static Str currentURL(void);
 static Str make_optional_header_string(char *s);
@@ -566,10 +565,9 @@ main(int argc, char **argv)
 		    exit(0);
 		}
 		if (!set_param_option(argv[i])) {
-		    /* option set failed */
 		    fprintf(stderr, _("%s: bad option\n"), argv[i]);
-		    show_params_p = 1;
-		    usage();
+		    fputs(_("Use 'w3m -o' to see all options\n"), stderr);
+		    exit(1);
 		}
 	    }
 	    else if (!strcmp("-", argv[i]) || !strcmp("-dummy", argv[i])) {
@@ -1246,8 +1244,6 @@ fusage(FILE * f, int err)
     PUT("-reqlog", "write request logfile");
     PUT("-help", "print this usage message");
     PUT("-version", "print w3m version");
-    if (show_params_p)
-	show_params(f);
     exit(err);
 }
 #undef PUT
