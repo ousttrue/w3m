@@ -898,7 +898,7 @@ setopt:
 #ifdef USE_COOKIE
 	save_cookies();
 #endif				/* USE_COOKIE */
-	w3m_exit(0);
+	w3m_exit(!!err_msg->length);
     }
 
     if (add_download_list) {
