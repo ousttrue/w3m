@@ -694,9 +694,6 @@ extern void dictwordat(void);
 extern char *guess_save_name(Buffer *buf, char *file);
 
 extern void wrapToggle(void);
-#ifdef USE_BUFINFO
-extern void saveBufferInfo(void);
-#endif
 
 extern Str getLinkNumberStr(int correction);
 

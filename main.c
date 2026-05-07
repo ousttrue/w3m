@@ -884,18 +884,13 @@ setopt:
 	    Currentbuf->nextBuffer = newbuf;
 	    Currentbuf = newbuf;
 	}
-	if (!w3m_dump || w3m_dump == DUMP_BUFFER) {
-	    if (Currentbuf->frameset != NULL && RenderFrame)
+	if ((!w3m_dump || w3m_dump == DUMP_BUFFER)
+	    && Currentbuf->frameset && RenderFrame)
 		rFrame();
-	}
 	if (w3m_dump)
 	    do_dump(Currentbuf);
-	else {
+	else
 	    Currentbuf = newbuf;
-#ifdef USE_BUFINFO
-	    saveBufferInfo();
-#endif
-	}
     }
     if (w3m_dump) {
 	if (err_msg->length)
@@ -1594,22 +1589,6 @@ tmpClearBuffer(Buffer *buf)
     }
 }
 
-#ifdef USE_BUFINFO
-void
-saveBufferInfo(void)
-{
-    FILE *fp;
-
-    if (w3m_dump)
-	return;
-    if ((fp = fopen(rcFile("bufinfo"), "w")) == NULL) {
-	return;
-    }
-    fprintf(fp, "%s\n", currentURL()->ptr);
-    fclose(fp);
-}
-#endif
-
 static void
 pushBuffer(Buffer *buf)
 {
@@ -1629,10 +1608,6 @@ pushBuffer(Buffer *buf)
 	buf->nextBuffer = Currentbuf;
 	Currentbuf = buf;
     }
-#ifdef USE_BUFINFO
-    saveBufferInfo();
-#endif
-
 }
 
 static void

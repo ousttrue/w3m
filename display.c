@@ -230,10 +230,6 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 static Linecolor color_mode = 0;
 #endif
 
-#ifdef USE_BUFINFO
-static Buffer *save_current_buf = NULL;
-#endif
-
 static char *delayed_msg = NULL;
 
 static void drawAnchorCursor(Buffer *buf);
@@ -510,12 +506,6 @@ displayBuffer(Buffer *buf, int mode)
 #ifdef USE_IMAGE
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
 	drawImage();
-    }
-#endif
-#ifdef USE_BUFINFO
-    if (buf != save_current_buf) {
-	saveBufferInfo();
-	save_current_buf = buf;
     }
 #endif
     if (mode == B_FORCE_REDRAW &&  (buf->check_url & CHK_URL) ) {
