@@ -68,13 +68,8 @@
 #define _(String) gettext (String)
 #define N_(String) (String)
 #else
-# undef bindtextdomain
-# define bindtextdomain(Domain, Directory)	/* empty */
-# undef textdomain
-# define textdomain(Domain)	/* empty */
 # define _(Text) Text
 # define N_(Text) Text
-# define gettext(Text) Text
 #endif
 
 #ifdef MAINPROGRAM
