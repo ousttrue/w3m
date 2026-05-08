@@ -205,7 +205,6 @@ main(int argc, char **argv)
     textdomain(PACKAGE);
 #endif
 
-    NO_proxy_domains = newTextList();
     fileToDelete = newTextList();
 
     /*

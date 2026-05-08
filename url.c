@@ -55,6 +55,8 @@ int ai_family_order_table[7][3] = {
 };
 #endif				/* INET6 */
 
+TextList *NO_proxy_domains;
+
 static JMP_BUF AbortLoading;
 
 /* XXX: note html.h SCM_ */

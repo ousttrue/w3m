@@ -4,6 +4,8 @@
 #include "Str.h"
 #include "form.h"
 
+extern TextList *NO_proxy_domains;
+
 typedef struct http_request {
     char command;
     char flag;

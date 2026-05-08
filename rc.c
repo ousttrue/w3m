@@ -10,6 +10,7 @@
 #include "parsetag.h"
 #include "regex.h"
 #include "search.h"
+#include "url.h"
 #include "version.h"
 
 #include <errno.h>
