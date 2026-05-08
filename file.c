@@ -11,6 +11,7 @@
 #include "parsetagx.h"
 #include "rc.h"
 #include "table.h"
+#include "url.h"
 
 #include <fcntl.h>
 #include <math.h>

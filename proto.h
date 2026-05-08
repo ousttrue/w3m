@@ -462,12 +462,6 @@ extern Str parsedURL2Str(const ParsedURL *pu);
 extern Str parsedURL2RefererStr(ParsedURL *pu);
 extern int getURLScheme(char **url);
 extern void init_stream(URLFile *uf, int scheme, InputStream stream);
-Str HTTPrequestMethod(HRequest *hr);
-Str HTTPrequestURI(ParsedURL *pu, HRequest *hr);
-extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
-		       URLOption *option, FormList *request,
-		       TextList *extra_header, URLFile *ouf,
-		       HRequest *hr, unsigned char *status);
 extern int mailcapMatch(struct mailcap *mcap, const char *type);
 extern struct mailcap *searchMailcap(struct mailcap *table, const char *type);
 extern void initMailcap(void);

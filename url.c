@@ -7,6 +7,7 @@
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
+#include "url.h"
 #include "version.h"
 
 #include <strings.h>
