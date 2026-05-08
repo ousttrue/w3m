@@ -737,8 +737,6 @@ typedef struct http_request {
 #define TMPF_HIST	5
 #define MAX_TMPF_TYPE	6
 
-#define set_no_proxy(domains) (NO_proxy_domains=make_domain_list(domains))
-
 /* 
  * Globals.
  */
