@@ -22,6 +22,7 @@ Makefile
 /w3mimgdisplay
 /w3mhelp-lynx_*.html
 /w3mhelp-w3m_*.html
+/pathdefs.h
 /posubst
 /po/stamp-po
 /po/POTFILES

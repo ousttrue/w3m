@@ -8,6 +8,7 @@
 #include "funcname1.h"
 #include "linein.h"
 #include "myctype.h"
+#include "pathdefs.h"
 #include "rc.h"
 #include "regex.h"
 #include "search.h"

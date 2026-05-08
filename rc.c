@@ -8,6 +8,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "parsetag.h"
+#include "pathdefs.h"
 #include "regex.h"
 #include "search.h"
 #include "url.h"

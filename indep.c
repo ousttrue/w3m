@@ -5,6 +5,7 @@
 #include "Str.h"
 #include "entity.h"
 #include "myctype.h"
+#include "pathdefs.h"
 
 #include <gc/gc.h>
 #include <stdio.h>
