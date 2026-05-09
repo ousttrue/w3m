@@ -734,25 +734,25 @@ fb_cmap_create(video_info_t *video_info,
 
 #if defined(__FreeBSD__)
     if (video_info->vi_mem_model == V_INFO_MM_PACKED) {
-	cmap->red = (u_char *) malloc(sizeof(u_char) * cmaplen);
+	cmap->red = malloc(sizeof(unsigned char) * cmaplen);
 	if (!cmap->red) {
 	    perror("red lut malloc error\n");
 	    return (video_color_palette_t *)-1;
 	}
-	cmap->green = (u_char *) malloc(sizeof(u_char) * cmaplen);
+	cmap->green = malloc(sizeof(unsigned char) * cmaplen);
 	if (!cmap->green) {
 	    perror("green lut malloc error\n");
 	    free(cmap->red);
 	    return (video_color_palette_t *)-1;
 	}
-	cmap->blue = (u_char *) malloc(sizeof(u_char) * cmaplen);
+	cmap->blue = malloc(sizeof(unsigned char) * cmaplen);
 	if (!cmap->blue) {
 	    perror("blue lut malloc error\n");
 	    free(cmap->red);
 	    free(cmap->green);
 	    return (video_color_palette_t *)-1;
 	}
-	cmap->transparent = (u_char *) malloc(sizeof(u_char) * cmaplen);
+	cmap->transparent = malloc(sizeof(unsigned char) * cmaplen);
 	if (!cmap->transparent) {
 	    perror("transparent lut malloc error\n");
 	    free(cmap->red);
@@ -771,7 +771,7 @@ fb_cmap_create(video_info_t *video_info,
 	cmap->red = (__u16 *) malloc(sizeof(__u16) * cmaplen);
 #elif defined(__FreeBSD__)
     if (video_info->vi_pixel_fsizes[0]) {
-	cmap->red = (u_char *) malloc(sizeof(u_char) * cmaplen);
+	cmap->red = malloc(sizeof(unsigned char) * cmaplen);
 #else
     if (0) {
 #endif
@@ -789,7 +789,7 @@ fb_cmap_create(video_info_t *video_info,
 	cmap->green = (__u16 *) malloc(sizeof(__u16) * cmaplen);
 #elif defined(__FreeBSD__)
     if (video_info->vi_pixel_fsizes[1]) {
-	cmap->green = (u_char *) malloc(sizeof(u_char) * cmaplen);
+	cmap->green = malloc(sizeof(unsigned char) * cmaplen);
 #else
     if (0) {
 #endif
@@ -814,7 +814,7 @@ fb_cmap_create(video_info_t *video_info,
 	cmap->blue = (__u16 *) malloc(sizeof(__u16) * cmaplen);
 #elif defined(__FreeBSD__)
     if (video_info->vi_pixel_fsizes[2]) {
-	cmap->blue = (u_char *) malloc(sizeof(u_char) * cmaplen);
+	cmap->blue = malloc(sizeof(unsigned char) * cmaplen);
 #else
     if (0) {
 #endif
@@ -846,7 +846,7 @@ fb_cmap_create(video_info_t *video_info,
 	cmap->transp = (__u16 *) malloc(sizeof(__u16) * cmaplen);
 #elif defined(__FreeBSD__)
     if (video_info->vi_pixel_fsizes[3]) {
-	cmap->transparent = (u_char *) malloc(sizeof(u_char) * cmaplen);
+	cmap->transparent = malloc(sizeof(unsigned char) * cmaplen);
 #else
     if (0) {
 #endif

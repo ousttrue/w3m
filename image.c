@@ -603,7 +603,7 @@ static int
 parseImageHeader(char *path, u_int *width, u_int *height)
 {
     FILE *fp;
-    u_char buf[8];
+    unsigned char buf[8];
 
     if (!(fp = fopen(path, "r"))) return FALSE;
 

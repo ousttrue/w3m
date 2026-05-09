@@ -350,7 +350,7 @@ render_pixbuf_to_pixmap_32(Display *display, GC gc, Pixmap pixmap, GdkPixbuf *  
     line = gdk_pixbuf_get_pixels(pixbuf);
 
     for (y = 0; y < height; y++) {
-	u_char *pixel;
+	unsigned char *pixel;
 
 	pixel = line;
 	for (x = 0; x < width; x++) {

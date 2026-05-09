@@ -578,7 +578,7 @@ put_image_kitty(char *url, int x, int y, int w, int h, int sx, int sy, int sw,
 }
 
 static void
-save_gif(const char *path, u_char *header, size_t  header_size, u_char *body, size_t body_size)
+save_gif(const char *path, unsigned char *header, size_t  header_size, unsigned char *body, size_t body_size)
 {
     int	fd;
 
@@ -590,8 +590,8 @@ save_gif(const char *path, u_char *header, size_t  header_size, u_char *body, si
     }
 }
 
-static u_char *
-skip_gif_header(u_char *p)
+static unsigned char *
+skip_gif_header(unsigned char *p)
 {
     /* Header */
     p += 10;
@@ -609,10 +609,10 @@ save_first_animation_frame(const char *path)
 {
     int	fd;
     struct stat	st;
-    u_char *header;
+    unsigned char *header;
     size_t header_size;
-    u_char *body;
-    u_char *p;
+    unsigned char *body;
+    unsigned char *p;
     ssize_t len;
     Str new_path;
 
