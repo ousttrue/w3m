@@ -8,7 +8,7 @@ LIBRARY = libwc.a
 CC=@CC@
 WARNINGS  = -Wall
 WARNINGS += -Werror=vla
-CFLAGS = $(WARNINGS) $(OPTS) -I.. -I$(top_srcdir) -I$(srcdir) @CFLAGS@ @CPPFLAGS@ @WCCFLAGS@ @DEFS@
+CFLAGS = $(WARNINGS) $(OPTS) @CFLAGS@ @CPPFLAGS@ @WCCFLAGS@ @DEFS@
 AR=ar
 RANLIB=@RANLIB@
 RM=rm

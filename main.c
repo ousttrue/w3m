@@ -71,10 +71,10 @@ static const char *MarkString = NULL;
 #endif
 
 #ifdef USE_M17N
-#include "wc.h"
-#include "wtf.h"
+#include "libwc/wc.h"
+#include "libwc/wtf.h"
 #ifdef USE_UNICODE
-#include "ucs.h"
+#include "libwc/ucs.h"
 #endif
 #endif
 #ifdef USE_MOUSE

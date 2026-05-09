@@ -7,9 +7,9 @@
 #include "regex.h"
 
 #ifdef USE_M17N
-#include "wc.h"
-#include "wc_types.h"
-#include "wtf.h"
+#include "libwc/wc.h"
+#include "libwc/wc_types.h"
+#include "libwc/wtf.h"
 #endif
 
 #include <ctype.h>

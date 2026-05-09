@@ -52,8 +52,8 @@
 #include <unistd.h>
 
 #ifdef USE_M17N
-#include "wc.h"
-#include "wtf.h"
+#include "libwc/wc.h"
+#include "libwc/wtf.h"
 #endif
 
 #ifdef ENABLE_NLS

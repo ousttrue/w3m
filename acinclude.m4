@@ -141,7 +141,7 @@ AC_SUBST(SYSTEM_CHARSET)
 AC_SUBST(DOCUMENT_CHARSET)
 AC_SUBST(POSUBST)
 AC_SUBST(POLANG)
-WCTARGET=""; WCCFLAGS=""; wcinclude=""; wclib=""
+WCTARGET=""; WCCFLAGS=""; wclib=""
 AC_MSG_CHECKING(if m17n support is enabled)
 AC_ARG_ENABLE(m17n,
  [  --disable-m17n          do not use m17n],,
@@ -150,8 +150,6 @@ AC_MSG_RESULT($enable_m17n)
 if test x"$enable_m17n" = xno; then
   w3m_lang="en"
   WCTARGET=""
-  WCCFLAGS=""
-  wcinclude=""
   wclib=""
   display_charset='WC_CES_US_ASCII'
   system_charset='WC_CES_US_ASCII'
@@ -159,8 +157,6 @@ if test x"$enable_m17n" = xno; then
 else
  AC_DEFINE(USE_M17N)
  WCTARGET="libwc/libwc.a"
- WCCFLAGS='-I$(srcdir) -I$(srcdir)/..'
- wcinclude='-I$(srcdir)/libwc'
  wclib="-L./libwc -lwc"
  AC_MSG_CHECKING(if Unicode support is enabled)
  AC_ARG_ENABLE(unicode,
@@ -250,7 +246,7 @@ W3M_LANG=$W3M_LANGDEF
 AC_DEFINE_UNQUOTED(W3M_LANG, $W3M_LANG)
 AC_DEFINE_UNQUOTED(WCTARGET, "$WCTARGET")
 AC_DEFINE_UNQUOTED(WCCFLAGS, "$WCCFLAGS")
-CFLAGS="$CFLAGS $wcinclude"
+CFLAGS="$CFLAGS"
 W3M_LIBS="$W3M_LIBS $wclib"
 AC_DEFINE_UNQUOTED(DISPLAY_CHARSET, $display_charset)
 AC_DEFINE_UNQUOTED(SYSTEM_CHARSET, $system_charset)

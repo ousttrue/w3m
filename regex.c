@@ -15,10 +15,10 @@
 #include <string.h>
 
 #ifdef USE_M17N
-#include "ccs.h"
-#include "wtf.h"
+#include "libwc/ccs.h"
+#include "libwc/wtf.h"
 #ifdef USE_UNICODE
-#include "ucs.h"
+#include "libwc/ucs.h"
 #endif
 #endif
 

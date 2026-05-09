@@ -5802,7 +5802,7 @@ printf "%s\n" "#define W3M_TARGET $W3M_TARGET" >>confdefs.h
 
 
 
-WCTARGET=""; WCCFLAGS=""; wcinclude=""; wclib=""
+WCTARGET=""; WCCFLAGS=""; wclib=""
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if m17n support is enabled" >&5
 printf %s "checking if m17n support is enabled... " >&6; }
 # Check whether --enable-m17n was given.
@@ -5818,8 +5818,6 @@ printf "%s\n" "$enable_m17n" >&6; }
 if test x"$enable_m17n" = xno; then
   w3m_lang="en"
   WCTARGET=""
-  WCCFLAGS=""
-  wcinclude=""
   wclib=""
   display_charset='WC_CES_US_ASCII'
   system_charset='WC_CES_US_ASCII'
@@ -5828,8 +5826,6 @@ else
  printf "%s\n" "#define USE_M17N 1" >>confdefs.h
 
  WCTARGET="libwc/libwc.a"
- WCCFLAGS='-I$(srcdir) -I$(srcdir)/..'
- wcinclude='-I$(srcdir)/libwc'
  wclib="-L./libwc -lwc"
  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if Unicode support is enabled" >&5
 printf %s "checking if Unicode support is enabled... " >&6; }
@@ -5950,7 +5946,7 @@ printf "%s\n" "#define WCTARGET \"$WCTARGET\"" >>confdefs.h
 
 printf "%s\n" "#define WCCFLAGS \"$WCCFLAGS\"" >>confdefs.h
 
-CFLAGS="$CFLAGS $wcinclude"
+CFLAGS="$CFLAGS"
 W3M_LIBS="$W3M_LIBS $wclib"
 printf "%s\n" "#define DISPLAY_CHARSET $display_charset" >>confdefs.h
 

@@ -29,8 +29,8 @@ exec_cmd(char *cmd)
 }
 
 #if defined(USE_M17N) && defined(USE_UNICODE)
-#include "ucs.h"
-#include "wtf.h"
+#include "libwc/ucs.h"
+#include "libwc/wtf.h"
 
 wc_uint32
 getChar(const char *p)

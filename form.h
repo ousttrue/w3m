@@ -9,7 +9,7 @@
 #include "config.h"
 
 #ifdef USE_M17N
-#include "wc_types.h"
+#include "libwc/wc_types.h"
 #endif
 
 #define FORM_UNKNOWN        -1

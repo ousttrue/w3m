@@ -8,8 +8,8 @@
 #include "fm.h"
 #ifdef USE_M17N
 #ifdef USE_UNICODE
-#include "ucs.h"
-#include "utf8.h"
+#include "libwc/ucs.h"
+#include "libwc/utf8.h"
 #endif
 #endif
 #endif				/* DUMMY */

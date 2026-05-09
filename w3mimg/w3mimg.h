@@ -2,7 +2,7 @@
 #ifndef W3MIMG_W3MIMG_H
 #define W3MIMG_W3MIMG_H
 
-#include "config.h"
+#include "../config.h"
 
 #ifdef __cplusplus
 extern "C" {
