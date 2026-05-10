@@ -34,8 +34,8 @@
 #include "matrix.h"
 
 #include "alloc.h"
-#include "config.h"
 
+#include <float.h>
 #include <math.h>
 
 /* 
@@ -45,9 +45,6 @@
 #define SWAPD(a,b) { double tmp = a; a = b; b = tmp; }
 #define SWAPI(a,b) { int tmp = a; a = b; b = tmp; }
 
-#ifdef HAVE_FLOAT_H
-#include <float.h>
-#endif				/* not HAVE_FLOAT_H */
 #if defined(DBL_MAX)
 static double Tiny = 10.0 / DBL_MAX;
 #elif defined(FLT_MAX)

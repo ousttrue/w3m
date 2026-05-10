@@ -42,6 +42,7 @@
 
 #include <gc/gc.h>
 #include <limits.h>
+#include <locale.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,17 +51,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
-
 #ifdef USE_M17N
 #include "wc.h"
 #include "wtf.h"
-#endif
-
-#if !HAVE_SETLOCALE
-#define setlocale(category, locale)	/* empty */
 #endif
 
 #ifdef ENABLE_NLS
@@ -259,7 +252,6 @@ extern int REV_LB[];
  */
 
 #ifdef __EMX__
-#define HAVE_STRCASECMP
 #define strcasecmp	stricmp
 #define strncasecmp	strnicmp
 #endif				/* __EMX__ */

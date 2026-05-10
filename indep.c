@@ -56,22 +56,6 @@ char *HTML_QUOTE_MAP[] = {
     NULL,
 };
 
-size_t
-strtoclen(const char *s)
-{
-#ifdef HAVE_STRTOLL
-    return strtoll(s, NULL, 10);
-#elif defined(HAVE_STRTOQ)
-    return strtoq(s, NULL, 10);
-#elif defined(HAVE_ATOLL)
-    return atoll(s);
-#elif defined(HAVE_ATOQ)
-    return atoq(s);
-#else
-    return atoi(s);
-#endif
-}
-
 char *
 allocStr(const char *s, int len)
 {
@@ -92,31 +76,12 @@ char *
 currentdir(void)
 {
     char *path;
-#ifdef HAVE_GETCWD
 #ifdef MAXPATHLEN
     path = NewAtom_N(char, MAXPATHLEN);
     getcwd(path, MAXPATHLEN);
 #else
     path = getcwd(NULL, 0);
 #endif
-#else				/* not HAVE_GETCWD */
-#ifdef HAVE_GETWD
-    path = NewAtom_N(char, 1024);
-    getwd(path);
-#else				/* not HAVE_GETWD */
-    FILE *f;
-    char *p;
-    path = NewAtom_N(char, 1024);
-    f = popen("pwd", "r");
-    fgets(path, 1024, f);
-    pclose(f);
-    for (p = path; *p; p++)
-	if (*p == '\n') {
-	    *p = '\0';
-	    break;
-	}
-#endif				/* not HAVE_GETWD */
-#endif				/* not HAVE_GETCWD */
     return path;
 }
 
@@ -225,50 +190,6 @@ expandPath(char *name)
   rest:
     return name;
 }
-
-#ifndef HAVE_STRCHR
-char *
-strchr(const char *s, int c)
-{
-    while (*s) {
-	if ((unsigned char)*s == c)
-	    return (char *)s;
-	s++;
-    }
-    return NULL;
-}
-#endif				/* not HAVE_STRCHR */
-
-#ifndef HAVE_STRCASECMP
-int
-strcasecmp(const char *s1, const char *s2)
-{
-    int x;
-    while (*s1) {
-	x = TOLOWER(*s1) - TOLOWER(*s2);
-	if (x != 0)
-	    return x;
-	s1++;
-	s2++;
-    }
-    return -TOLOWER(*s2);
-}
-
-int
-strncasecmp(const char *s1, const char *s2, size_t n)
-{
-    int x;
-    while (*s1 && n) {
-	x = TOLOWER(*s1) - TOLOWER(*s2);
-	if (x != 0)
-	    return x;
-	s1++;
-	s2++;
-	n--;
-    }
-    return n ? -TOLOWER(*s2) : 0;
-}
-#endif				/* not HAVE_STRCASECMP */
 
 #ifndef HAVE_STRCASESTR
 /* string search using the simplest algorithm */

@@ -693,11 +693,6 @@ extern Str getLinkNumberStr(int correction);
 
 extern void dispVer(void);
 
-#ifdef USE_INCLUDED_SRAND48
-void srand48(long);
-long lrand48(void);
-#endif
-
 extern Str base64_encode(const char *src, size_t len);
 
 extern void userMessage(void);

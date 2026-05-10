@@ -520,15 +520,7 @@ loadImage(Buffer *buf, int flag)
 	    setup_child(FALSE, 0, -1);
 	    image_source = cache->file;
 	    loadGeneralFile(cache->url, cache->current, NULL, 0, NULL);
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
 	    symlink(cache->file, cache->touch);
-#else
-	    {
-		FILE *f = fopen(cache->touch, "w");
-		if (f)
-		    fclose(f);
-	    }
-#endif
 	    exit(0);
 	}
 	else if (cache->pid < 0) {

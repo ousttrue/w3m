@@ -2121,7 +2121,7 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 
     current_content_length = 0;
     if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
-	current_content_length = strtoclen(p);
+	current_content_length = atoll(p);
 #ifdef USE_GOPHER
     if (do_download || gopher_download) {
 #else
@@ -8130,7 +8130,6 @@ doExternal(URLFile uf, const char *type, Buffer *defaultbuf)
     }
 #endif
 
-#ifdef HAVE_SETPGRP
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) &&
 	!(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
 	flush_tty();
@@ -8144,7 +8143,6 @@ doExternal(URLFile uf, const char *type, Buffer *defaultbuf)
 	return NO_BUFFER;
     }
     else
-#endif
     {
 	if (save2tmp(uf, tmpf->ptr) < 0) {
 	    return NULL;
@@ -8252,9 +8250,6 @@ _doFileCopy(char *tmpf, char *defstr, int download)
     char *p, *q = NULL;
     pid_t pid;
     char *lock;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-    FILE *f;
-#endif
     struct stat st;
     size_t size = 0;
     int is_pipe = FALSE;
@@ -8293,13 +8288,7 @@ _doFileCopy(char *tmpf, char *defstr, int download)
 	    return -1;
 	}
 	lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
 	symlink(p, lock);
-#else
-	f = fopen(lock, "w");
-	if (f)
-	    fclose(f);
-#endif
 	flush_tty();
 	pid = fork();
 	if (!pid) {
@@ -8368,9 +8357,6 @@ doFileSave(URLFile uf, const char *defstr)
     char *p, *q;
     pid_t pid;
     char *lock;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-    FILE *f;
-#endif
 
     if (param_dl_dir && *param_dl_dir) {
 	filen = Strnew_charp(expandPath(param_dl_dir));
@@ -8398,13 +8384,7 @@ doFileSave(URLFile uf, const char *defstr)
 	    return -1;
 	}
 	lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
 	symlink(p, lock);
-#else
-	f = fopen(lock, "w");
-	if (f)
-	    fclose(f);
-#endif
 	flush_tty();
 	pid = fork();
 	if (!pid) {

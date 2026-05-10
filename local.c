@@ -9,10 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-
-#ifdef HAVE_READLINK
 #include <unistd.h>
-#endif				/* HAVE_READLINK */
 
 #ifdef __EMX__
 #include <limits.h>		/* _MAX_PATH ? */
@@ -68,12 +65,8 @@ loadLocalDir(char *dname)
     char **flist;
     char *p, *qdir;
     Str fbuf = Strnew();
-#ifdef HAVE_LSTAT
     struct stat lst;
-#ifdef HAVE_READLINK
     char lbuf[1024];
-#endif				/* HAVE_READLINK */
-#endif				/* HAVE_LSTAT */
     int i, l, nrow = 0, n = 0, maxlen = 0;
     int nfile, nfile_max = 100;
     Str dirname;
@@ -125,10 +118,8 @@ loadLocalDir(char *dname)
 	if (Strlastchar(fbuf) != '/')
 	    Strcat_char(fbuf, '/');
 	Strcat_charp(fbuf, p);
-#ifdef HAVE_LSTAT
 	if (lstat(fbuf->ptr, &lst) < 0)
 	    continue;
-#endif				/* HAVE_LSTAT */
 	if (stat(fbuf->ptr, &st) < 0)
 	    continue;
 	if (multicolList) {
@@ -136,11 +127,9 @@ loadLocalDir(char *dname)
 		Strcat_charp(tmp, "<TD><NOBR>");
 	}
 	else {
-#ifdef HAVE_LSTAT
 	    if (S_ISLNK(lst.st_mode))
 		Strcat_charp(tmp, "[LINK] ");
 	    else
-#endif				/* HAVE_LSTAT */
 	    if (S_ISDIR(st.st_mode))
 		Strcat_charp(tmp, "[DIR]&nbsp; ");
 	    else
@@ -163,7 +152,6 @@ loadLocalDir(char *dname)
 	    }
 	}
 	else {
-#if defined(HAVE_LSTAT) && defined(HAVE_READLINK)
 	    if (S_ISLNK(lst.st_mode)) {
 		if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
 		    lbuf[l] = '\0';
@@ -173,7 +161,6 @@ loadLocalDir(char *dname)
 			Strcat_char(tmp, '/');
 		}
 	    }
-#endif				/* HAVE_LSTAT && HAVE_READLINK */
 	    Strcat_charp(tmp, "<br>\n");
 	}
     }
@@ -206,52 +193,8 @@ check_local_cgi(const char *file, int status)
 void
 set_environ(const char *var, const char *value)
 {
-#ifdef HAVE_SETENV
-    if (var != NULL && value != NULL)
+    if (var && value)
 	setenv(var, value, 1);
-#else				/* not HAVE_SETENV */
-    static Hash_sv *env_hash = NULL;
-    Str tmp = Strnew_m_charp(var, "=", value, NULL);
-
-    if (env_hash == NULL)
-	env_hash = newHash_sv(20);
-    putHash_sv(env_hash, var, tmp->ptr);
-#ifdef HAVE_PUTENV
-    putenv(tmp->ptr);
-#else				/* not HAVE_PUTENV */
-    extern char **environ;
-    char **ne;
-    int i, l, el;
-    char **e, **newenv;
-
-    /* I have no setenv() nor putenv() */
-    /* This part is taken from terms.c of skkfep */
-    l = strlen(var);
-    for (e = environ, i = 0; *e != NULL; e++, i++) {
-	if (strncmp(e, var, l) == 0 && (*e)[l] == '=') {
-	    el = strlen(*e) - l - 1;
-	    if (el >= strlen(value)) {
-		strcpy(*e + l + 1, value);
-		return 0;
-	    }
-	    else {
-		for (; *e != NULL; e++, i++) {
-		    *e = *(e + 1);
-		}
-		i--;
-		break;
-	    }
-	}
-    }
-    newenv = (char **)GC_malloc((i + 2) * sizeof(char *));
-    if (newenv == NULL)
-	return;
-    for (e = environ, ne = newenv; *e != NULL; *(ne++) = *(e++)) ;
-    *(ne++) = tmp->ptr;
-    *ne = NULL;
-    environ = newenv;
-#endif				/* not HAVE_PUTENV */
-#endif				/* not HAVE_SETENV */
 }
 
 static void
@@ -356,9 +299,7 @@ localcgi_post(char *uri, char *qstr, FormList *request, char *referer)
     int status;
     pid_t pid;
     const char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
-#ifdef HAVE_CHDIR
     char *cgi_dir;
-#endif
     char *cgi_basename;
 
 #ifdef __MINGW32_VERSION
@@ -376,9 +317,7 @@ localcgi_post(char *uri, char *qstr, FormList *request, char *referer)
     }
     if (qstr)
 	uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
-#ifdef HAVE_CHDIR
     cgi_dir = mydirname(file);
-#endif
     cgi_basename = mybasename(file);
     pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
     /* Don't invoke gc after here, or the program might crash in some platforms */
@@ -427,12 +366,10 @@ localcgi_post(char *uri, char *qstr, FormList *request, char *referer)
 	    return NULL;
     }
 
-#ifdef HAVE_CHDIR		/* ifndef __EMX__ ? */
     if (chdir(cgi_dir) == -1) {
         fprintf(stderr, "failed to chdir to %s: %s\n", cgi_dir, strerror(errno));
         exit(1);
     }
-#endif
     execl(file, cgi_basename, NULL);
     fprintf(stderr, "execl(\"%s\", \"%s\", NULL): %s\n",
 	    file, cgi_basename, strerror(errno));

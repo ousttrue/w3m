@@ -22,11 +22,9 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
-#ifdef HAVE_WAITPID
-#include <sys/wait.h>
-#endif
 #include <time.h>
 #if defined(__CYGWIN__) && defined(USE_BINMODE_STREAM)
 #include <io.h>
@@ -707,15 +705,7 @@ setopt:
 	if (!newbuf || !newbuf->real_type ||
 	    strncasecmp(newbuf->real_type, "image/", 6))
 	    unlink(getimage_args[2]);
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
 	symlink(getimage_args[2], getimage_args[3]);
-#else
-	{
-	    FILE *f = fopen(getimage_args[3], "w");
-	    if (f)
-		fclose(f);
-	}
-#endif
 	w3m_exit(0);
     }
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
@@ -1284,11 +1274,7 @@ sig_chld(int signo)
     int p_stat;
     pid_t pid;
 
-#ifdef HAVE_WAITPID
     while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0)
-#else	/* HAVE_WAITPID */
-    if ((pid = wait(&p_stat)) > 0)
-#endif	/* HAVE_WAITPID */
     {
 	DownloadList *d;
 

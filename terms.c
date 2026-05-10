@@ -14,13 +14,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
 
 #ifndef __MINGW32_VERSION
 #include <sys/ioctl.h>
@@ -241,16 +238,6 @@ void reset_exit(SIGNAL_ARG), reset_error_exit(SIGNAL_ARG), error_dump(SIGNAL_ARG
 #define SIGIOT SIGABRT
 #endif				/* not SIGIOT */
 
-#ifdef HAVE_TERMIO_H
-#include <termio.h>
-typedef struct termio TerminalMode;
-#define TerminalSet(fd,x)       ioctl(fd,TCSETA,x)
-#define TerminalGet(fd,x)       ioctl(fd,TCGETA,x)
-#define MODEFLAG(d)     ((d).c_lflag)
-#define IMODEFLAG(d)    ((d).c_iflag)
-#endif				/* HAVE_TERMIO_H */
-
-#ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #include <unistd.h>
 typedef struct termios TerminalMode;
@@ -258,15 +245,6 @@ typedef struct termios TerminalMode;
 #define TerminalGet(fd,x)       tcgetattr(fd,x)
 #define MODEFLAG(d)     ((d).c_lflag)
 #define IMODEFLAG(d)    ((d).c_iflag)
-#endif				/* HAVE_TERMIOS_H */
-
-#ifdef HAVE_SGTTY_H
-#include <sgtty.h>
-typedef struct sgttyb TerminalMode;
-#define TerminalSet(fd,x)       ioctl(fd,TIOCSETP,x)
-#define TerminalGet(fd,x)       ioctl(fd,TIOCGETP,x)
-#define MODEFLAG(d)     ((d).sg_flags)
-#endif				/* HAVE_SGTTY_H */
 
 #ifdef __MINGW32_VERSION
 /* dummy struct */
@@ -878,9 +856,7 @@ ttymode_set(int mode, int imode)
 
     TerminalGet(tty, &ioval);
     MODEFLAG(ioval) |= mode;
-#ifndef HAVE_SGTTY_H
     IMODEFLAG(ioval) |= imode;
-#endif				/* not HAVE_SGTTY_H */
 
     while (TerminalSet(tty, &ioval) == -1) {
 	if (errno == EINTR || errno == EAGAIN)
@@ -899,9 +875,7 @@ ttymode_reset(int mode, int imode)
 
     TerminalGet(tty, &ioval);
     MODEFLAG(ioval) &= ~mode;
-#ifndef HAVE_SGTTY_H
     IMODEFLAG(ioval) &= ~imode;
-#endif				/* not HAVE_SGTTY_H */
 
     while (TerminalSet(tty, &ioval) == -1) {
 	if (errno == EINTR || errno == EAGAIN)
@@ -912,7 +886,6 @@ ttymode_reset(int mode, int imode)
 #endif /* __MINGW32_VERSION */
 }
 
-#ifndef HAVE_SGTTY_H
 static void
 set_cc(int spec, int val)
 {
@@ -927,7 +900,6 @@ set_cc(int spec, int val)
 	reset_error_exit(SIGNAL_ARGLIST);
     }
 }
-#endif				/* not HAVE_SGTTY_H */
 
 void
 close_tty(void)
@@ -1119,7 +1091,7 @@ setlinescols(void)
 	    }
 	}
     }
-#elif defined(HAVE_TERMIOS_H) && defined(TIOCGWINSZ)
+#elif defined(TIOCGWINSZ)
     struct winsize wins;
 
     i = ioctl(tty, TIOCGWINSZ, &wins);
@@ -1127,7 +1099,7 @@ setlinescols(void)
 	LINES = wins.ws_row;
 	COLS = wins.ws_col;
     }
-#endif				/* defined(HAVE-TERMIOS_H) && defined(TIOCGWINSZ) */
+#endif				/* defined(TIOCGWINSZ) */
     if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
 	LINES = i;
     if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
@@ -2029,21 +2001,11 @@ addnstr_sup(const char *s, int n)
 
 void
 crmode(void)
-#ifndef HAVE_SGTTY_H
 {
     ttymode_reset(ICANON, IXON);
     ttymode_set(ISIG, 0);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 1);
-#else				/* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 1);
-#endif				/* not HAVE_TERMIOS_H */
 }
-#else				/* HAVE_SGTTY_H */
-{
-    ttymode_set(CBREAK, 0);
-}
-#endif				/* HAVE_SGTTY_H */
 
 void
 term_noecho(void)
@@ -2053,7 +2015,6 @@ term_noecho(void)
 
 void
 term_raw(void)
-#ifndef HAVE_SGTTY_H
 #ifdef IEXTEN
 #define TTY_MODE ISIG|ICANON|ECHO|IEXTEN
 #else				/* not IEXTEN */
@@ -2061,21 +2022,11 @@ term_raw(void)
 #endif				/* not IEXTEN */
 {
     ttymode_reset(TTY_MODE, IXON | IXOFF);
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 1);
-#else				/* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 1);
-#endif				/* not HAVE_TERMIOS_H */
 }
-#else				/* HAVE_SGTTY_H */
-{
-    ttymode_set(RAW, 0);
-}
-#endif				/* HAVE_SGTTY_H */
 
 void
 term_cooked(void)
-#ifndef HAVE_SGTTY_H
 {
 #ifdef __EMX__
     /* On XFree86/OS2, some scrambled characters
@@ -2085,17 +2036,8 @@ term_cooked(void)
 #else
     ttymode_set(TTY_MODE, 0);
 #endif
-#ifdef HAVE_TERMIOS_H
     set_cc(VMIN, 4);
-#else				/* not HAVE_TERMIOS_H */
-    set_cc(VEOF, 4);
-#endif				/* not HAVE_TERMIOS_H */
 }
-#else				/* HAVE_SGTTY_H */
-{
-    ttymode_reset(RAW, 0);
-}
-#endif				/* HAVE_SGTTY_H */
 
 void
 term_cbreak(void)

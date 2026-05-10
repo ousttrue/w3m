@@ -33,13 +33,11 @@ typedef struct direct Directory;
 #define S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
 #endif				/* not S_ISDIR */
 
-#ifdef HAVE_READLINK
 #ifndef S_IFLNK
 #define S_IFLNK 0120000
 #endif				/* not S_IFLNK */
 #ifndef S_ISLNK
 #define S_ISLNK(m)	(((m) & S_IFMT) == S_IFLNK)
 #endif				/* not S_ISLNK */
-#endif				/* not HAVE_READLINK */
 
 #endif				/* not LOCAL_H */

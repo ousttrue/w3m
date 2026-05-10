@@ -122,20 +122,8 @@ case "$host_os" in
 esac
 
 AC_HEADER_DIRENT
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADER(termios.h, [AC_DEFINE(HAVE_TERMIOS_H)],
-	 [AC_CHECK_HEADER(termio.h, [AC_DEFINE(HAVE_TERMIO_H)],
-	  [AC_CHECK_HEADER(sgtty.h, [AC_DEFINE(HAVE_SGTTY_H)])])])
-AC_CHECK_HEADER([float.h], [AC_DEFINE(HAVE_FLOAT_H)])
-AC_CHECK_HEADER([sys/select.h], [AC_DEFINE(HAVE_SYS_SELECT_H)])
-AC_CHECK_HEADER([locale.h], [AC_DEFINE(HAVE_LOCALE_H)])
-AC_CHECK_HEADER([stdint.h], [AC_DEFINE(HAVE_STDINT_H)])
-AC_CHECK_HEADER([inttypes.h], [AC_DEFINE(HAVE_INTTYPES_H)])
-
 dnl Checks for library functions.
-AC_CHECK_FUNCS(strcasecmp strcasestr strchr memcpy strerror setpgrp chdir mkdtemp faccessat getcwd getwd readlink setenv putenv strtoll stroq atoll atoq symlink readlink lstat srand48 srandom getpassphrase waitpid setlocale)
-AC_FUNC_STRFTIME
-AC_FUNC_SETPGRP
+AC_CHECK_FUNCS(strcasestr mkdtemp faccessat getpassphrase)
 AC_W3M_SIGSETJMP
 
 AC_SUBST(HELP_DIR)
