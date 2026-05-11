@@ -19,9 +19,6 @@ fixes to the last release of tats/w3m.
 Additionally there is a branch gemini which is just branch master but with a
 patch to add support for the gemini protocol and hypertext format.
 
-For historical reason most active development happens using quilt. The
-quilt patch series is regularly pushed to branch patches.
-
 Need Support?? Join: https://web.libera.chat/#w3m
 Send questions, bug reports and patches to: ~rkta/w3m@lists.sr.ht
 Follow us on Email: ~rkta/w3m-announce+subscribe@lists.sr.ht ;-)
