@@ -3203,11 +3203,11 @@ save_submit_formlist(FormItemList *src)
     FormItemList *srcitem;
     FormItemList *item;
     FormItemList *ret = NULL;
-#ifdef MENU_SELECT
+#ifdef USE_MENU
     FormSelectOptionItem *opt;
     FormSelectOptionItem *curopt;
     FormSelectOptionItem *srcopt;
-#endif				/* MENU_SELECT */
+#endif				/* USE_MENU */
 
     if (src == NULL)
 	return NULL;
@@ -3235,7 +3235,7 @@ save_submit_formlist(FormItemList *src)
 	item->rows = srcitem->rows;
 	item->maxlength = srcitem->maxlength;
 	item->readonly = srcitem->readonly;
-#ifdef MENU_SELECT
+#ifdef USE_MENU
 	opt = curopt = NULL;
 	for (srcopt = srcitem->select_option; srcopt; srcopt = srcopt->next) {
 	    if (!srcopt->checked)
@@ -3255,7 +3255,7 @@ save_submit_formlist(FormItemList *src)
 	item->select_option = opt;
 	if (srcitem->label)
 	    item->label = Strdup(srcitem->label);
-#endif				/* MENU_SELECT */
+#endif				/* USE_MENU */
 	item->parent = list;
 	item->next = NULL;
 
@@ -3508,7 +3508,7 @@ _followForm(int submit)
 	fi->checked = !fi->checked;
 	formUpdateBuffer(a, Currentbuf, fi);
 	break;
-#ifdef MENU_SELECT
+#ifdef USE_MENU
     case FORM_SELECT:
 	if (submit)
 	    goto do_submit;
@@ -3521,7 +3521,7 @@ _followForm(int submit)
 	if (fi->parent->nitems == 1)
 	    goto do_submit;
 	break;
-#endif				/* MENU_SELECT */
+#endif				/* USE_MENU */
     case FORM_INPUT_IMAGE:
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
@@ -3588,10 +3588,10 @@ _followForm(int submit)
 		f2->type != FORM_INPUT_RESET) {
 		f2->value = f2->init_value;
 		f2->checked = f2->init_checked;
-#ifdef MENU_SELECT
+#ifdef USE_MENU
 		f2->label = f2->init_label;
 		f2->selected = f2->init_selected;
-#endif				/* MENU_SELECT */
+#endif				/* USE_MENU */
 		formUpdateBuffer(a2, Currentbuf, f2);
 	    }
 	}
@@ -4562,7 +4562,7 @@ void
 follow_map(struct parsed_tagarg *arg)
 {
     char *name = tag_get_value(arg, "link");
-#if defined(MENU_MAP) || defined(USE_IMAGE)
+#if defined(USE_MENU) || defined(USE_IMAGE)
     Anchor *an;
     MapArea *a;
     int x, y;
@@ -4574,13 +4574,13 @@ follow_map(struct parsed_tagarg *arg)
     a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
 #endif
-#ifndef MENU_MAP
+#ifndef USE_MENU
 	Buffer *buf = follow_map_panel(Currentbuf, name);
 
 	if (buf != NULL)
 	    cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
 #endif
-#if defined(MENU_MAP) || defined(USE_IMAGE)
+#if defined(USE_MENU) || defined(USE_IMAGE)
 	return;
     }
     if (*(a->url) == '#') {

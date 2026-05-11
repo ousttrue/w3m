@@ -16,11 +16,6 @@
 
 #include "config.h"	/* At top for defines below */
 
-#ifdef USE_MENU
-#define MENU_SELECT	/* XXX: Why not just USE_MENU? */
-#define MENU_MAP
-#endif				/* USE_MENU */
-
 #ifndef USE_COLOR
 #undef USE_ANSI_COLOR
 #undef USE_BG_COLOR

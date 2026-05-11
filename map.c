@@ -197,7 +197,7 @@ retrieveCurrentMap(Buffer *buf)
     return NULL;
 }
 
-#if defined(USE_IMAGE) || defined(MENU_MAP)
+#if defined(USE_IMAGE) || defined(USE_MENU)
 MapArea *
 follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
 {
@@ -205,7 +205,7 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
     ListItem *al;
     int i, selected = -1;
     int initial = 0;
-#ifdef MENU_MAP
+#ifdef USE_MENU
     MapArea *a;
     char **label;
 #endif
@@ -224,7 +224,7 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
     }
 #endif
 
-#ifdef MENU_MAP
+#ifdef USE_MENU
     label = New_N(char *, ml->area->nitem + 1);
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
 	a = (MapArea *) al->ptr;
@@ -251,7 +251,7 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
 }
 #endif
 
-#ifndef MENU_MAP
+#ifndef USE_MENU
 char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
 <table>";
