@@ -1,9 +1,9 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include "fm.h"	/* At top for strcasestr() */
 #include "indep.h"
 
 #include "Str.h"
 #include "entity.h"
+#include "fm.h"
 #include "myctype.h"
 #include "pathdefs.h"
 

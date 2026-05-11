@@ -10,10 +10,6 @@
 #ifndef FM_H
 #define FM_H
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE		/* strcasestr() */
-#endif
-
 #include "config.h"	/* At top for defines below */
 
 #ifndef USE_COLOR
