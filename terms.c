@@ -5,6 +5,7 @@
  */
 #include "terms.h"
 
+#include "config.h"
 #include "fm.h"
 #include "myctype.h"
 

@@ -1,4 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "url.h"
+
 #include "Str.h"
 #include "config.h"
 #include "cookie.h"
@@ -7,7 +9,6 @@
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
-#include "url.h"
 #include "version.h"
 
 #include <strings.h>

@@ -4,6 +4,7 @@
  */
 
 #include "Str.h"
+#include "config.h"
 #include "fm.h"
 #include "myctype.h"
 

@@ -2,7 +2,11 @@
 /*
  * client-side image maps
  */
+#include "map.h"
+
+#include "config.h"
 #include "fm.h"
+#include "linein.h"
 
 #include <math.h>
 

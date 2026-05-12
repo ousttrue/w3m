@@ -3,6 +3,7 @@
 
 #include "buffer.h"
 #include "config.h"
+#include "display.h"
 #include "fm.h"
 #include "regex.h"
 

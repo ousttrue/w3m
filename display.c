@@ -2,7 +2,10 @@
 #include "display.h"
 
 #include "buffer.h"
+#include "config.h"
+#include "display.h"
 #include "fm.h"
+#include "linein.h"
 
 #include <math.h>
 #include <signal.h>

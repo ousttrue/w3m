@@ -5,6 +5,7 @@
 #include "buffer.h"
 #include "config.h"
 #include "ctrlcode.h"
+#include "display.h"
 #include "fm.h"
 #include "form.h"
 #include "indep.h"

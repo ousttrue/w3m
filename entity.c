@@ -1,4 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "config.h"
+
 #ifdef DUMMY
 #include "Str.h"
 #define NBSP " "

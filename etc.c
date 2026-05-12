@@ -1,7 +1,10 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "config.h"
+#include "display.h"
 #include "fm.h"
 #include "hash.h"
 #include "html.h"
+#include "linein.h"
 #include "myctype.h"
 
 #include <fcntl.h>

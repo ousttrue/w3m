@@ -2,6 +2,7 @@
 #ifndef IO_STREAM_H
 #define IO_STREAM_H
 
+#include "config.h"
 #include "indep.h"
 
 #include <fcntl.h>

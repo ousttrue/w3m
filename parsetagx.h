@@ -15,6 +15,19 @@ struct parsed_tag {
     char need_reconstruct;
 };
 
+/* modes for align() */
+
+#define ALIGN_CENTER 0
+#define ALIGN_LEFT   1
+#define ALIGN_RIGHT  2
+#define ALIGN_MIDDLE 4
+#define ALIGN_TOP    5
+#define ALIGN_BOTTOM 6
+
+#define VALIGN_MIDDLE 0
+#define VALIGN_TOP    1
+#define VALIGN_BOTTOM 2
+
 #define parsedtag_accepts(tag, id) ((tag)->map&&(tag)->map[id]!=MAX_TAGATTR)
 #define parsedtag_exists(tag, id)  (parsedtag_accepts(tag,id)&&((tag)->attrid[(tag)->map[id]]!=ATTR_UNKNOWN))
 #define parsedtag_delete(tag, id)  (parsedtag_accepts(tag,id)&&((tag)->attrid[(tag)->map[id]]=ATTR_UNKNOWN))

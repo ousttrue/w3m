@@ -3,6 +3,8 @@
 
 #include "Str.h"
 #include "form.h"
+#include "html.h"
+#include "textlist.h"
 
 extern TextList *NO_proxy_domains;
 

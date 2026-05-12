@@ -5,6 +5,7 @@
 #include "menu.h"
 
 #include "buffer.h"
+#include "config.h"
 #include "fm.h"
 #include "func.h"
 #include "funcname1.h"

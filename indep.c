@@ -2,6 +2,7 @@
 #include "indep.h"
 
 #include "Str.h"
+#include "config.h"
 #include "entity.h"
 #include "fm.h"
 #include "myctype.h"

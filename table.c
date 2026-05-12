@@ -5,6 +5,8 @@
 #include "table.h"
 
 #include "Str.h"
+#include "config.h"
+#include "display.h"
 #include "fm.h"
 #include "html.h"
 #include "myctype.h"

@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #define MAINPROGRAM
 #include "buffer.h"
+#include "config.h"
 #include "cookie.h"
 #include "display.h"
 #include "fm.h"

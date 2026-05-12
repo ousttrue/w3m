@@ -4,7 +4,10 @@
  */
 #include "buffer.h"
 #include "cookie.h"
+#include "config.h"
+#include "display.h"
 #include "fm.h"
+#include "linein.h"
 #include "myctype.h"
 #include "parsetag.h"
 #include "parsetagx.h"

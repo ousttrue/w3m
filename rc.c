@@ -4,6 +4,7 @@
  */
 #include "rc.h"
 
+#include "config.h"
 #include "cookie.h"
 #include "fm.h"
 #include "myctype.h"

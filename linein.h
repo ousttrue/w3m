@@ -1,6 +1,36 @@
 #ifndef W3M_LINEIN_H_
 #define W3M_LINEIN_H_
 
+/* mark URL, Message-ID */
+#define CHK_URL                1
+#define CHK_NMID       2
+
+/* Flags for calcPosition() */
+#define CP_AUTO		0
+#define CP_FORCE	1
+
+#define COLPOS(l,c)	calcPosition(l->lineBuf,l->propBuf,l->len,c,0,CP_AUTO)
+
+/* Completion status. */
+#define CPL_OK		0
+#define CPL_AMBIG	1
+#define CPL_FAIL	2
+#define CPL_MENU	3
+
+#define CPL_NEVER	0x0
+#define CPL_OFF		0x1
+#define CPL_ON		0x2
+#define CPL_ALWAYS	0x4
+#define CPL_URL		0x8
+
+/* Flags for inputLine() */
+#define IN_STRING	0x10
+#define IN_FILENAME	0x20
+#define IN_PASSWORD	0x40
+#define IN_COMMAND	0x80
+#define IN_URL		0x100
+#define IN_CHAR		0x200
+
 #include "Str.h"
 #include "fm.h"
 #include "history.h"

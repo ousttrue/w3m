@@ -5,8 +5,10 @@
 #include "alloc.h"
 #include "config.h"
 #include "ctrlcode.h"
+#include "display.h"
 #include "fm.h"
 #include "html.h"
+#include "linein.h"
 #include "terms.h"
 #include "util.h"
 

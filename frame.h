@@ -1,8 +1,10 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-/*
- * frame support
- */
+#ifndef W3M_FRAME_H_
+#define W3M_FRAME_H_
 
+#include "anchor.h"
+#include "config.h"
+#include "form.h"
 #include "html.h"
 
 struct frame_element {
@@ -24,7 +26,7 @@ struct frame_body {
     char *source;
     char *type;
     char *referer;
-    struct _anchorList *nameList;
+    AnchorList *nameList;
     FormList *request;
 #ifdef USE_SSL
     char *ssl_certificate;
@@ -58,7 +60,8 @@ struct frameset_queue {
     long top_linenumber;
     int pos;
     int currentColumn;
-    struct _anchorList *formitem;
+    AnchorList *formitem;
 };
 
 extern struct frameset *renderFrameSet;
+#endif
