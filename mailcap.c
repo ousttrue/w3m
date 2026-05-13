@@ -112,7 +112,7 @@ matchMailcapAttr(char *p, char *attr, size_t len, Str *value)
 static int
 extractMailcapEntry(char *mcap_entry, struct mailcap *mcap)
 {
-    int j, k;
+    int j, k, slash;
     char *p;
     int quoted;
     Str tmp;
@@ -121,11 +121,16 @@ extractMailcapEntry(char *mcap_entry, struct mailcap *mcap)
     p = mcap_entry;
     SKIP_BLANKS(p);
     k = -1;
+    slash = 0;
     for (j = 0; p[j] && p[j] != ';'; j++) {
 	if (!IS_SPACE(p[j]))
 	    k = j;
+	slash = slash ? slash : p[j] == '/';
     }
-    mcap->type = allocStr(p, (k >= 0) ? k + 1 : j);
+    tmp = Strnew_charp_n(p, (k >= 0) ? k + 1 : j);
+    if (!slash)
+	Strcat_charp(tmp, "/*"); /* implicit-wild */
+    mcap->type = tmp->ptr;
     if (!p[j])
 	return 0;
     p += j + 1;
