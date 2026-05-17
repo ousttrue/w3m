@@ -71,13 +71,13 @@ searchMailcap(struct mailcap *table, const char *type)
 }
 
 static int
-matchMailcapAttr(char *p, char *attr, size_t len, Str *value)
+matchMailcapAttr(char *p, char *attr, Str *value)
 {
     int quoted;
     char *q = NULL;
 
-    if (strncasecmp(p, attr, len) == 0) {
-	p += len;
+    if (strncasecmp(p, attr, strlen(attr)) == 0) {
+	p += strlen(attr);
 	SKIP_BLANKS(p);
 	if (value) {
 	    *value = Strnew();
@@ -152,23 +152,23 @@ extractMailcapEntry(char *mcap_entry, struct mailcap *mcap)
     while (*p == ';') {
 	p++;
 	SKIP_BLANKS(p);
-	if (matchMailcapAttr(p, "needsterminal", 13, NULL)) {
+	if (matchMailcapAttr(p, "needsterminal", NULL)) {
 	    mcap->flags |= MAILCAP_NEEDSTERMINAL;
 	}
-	else if (matchMailcapAttr(p, "copiousoutput", 13, NULL)) {
+	else if (matchMailcapAttr(p, "copiousoutput", NULL)) {
 	    mcap->flags |= MAILCAP_COPIOUSOUTPUT;
 	}
-	else if (matchMailcapAttr(p, "x-htmloutput", 12, NULL) ||
-		 matchMailcapAttr(p, "htmloutput", 10, NULL)) {
+	else if (matchMailcapAttr(p, "x-htmloutput", NULL) ||
+		 matchMailcapAttr(p, "htmloutput", NULL)) {
 	    mcap->flags |= MAILCAP_HTMLOUTPUT;
 	}
-	else if (matchMailcapAttr(p, "test", 4, &tmp)) {
+	else if (matchMailcapAttr(p, "test", &tmp)) {
 	    mcap->test = allocStr(tmp->ptr, tmp->length);
 	}
-	else if (matchMailcapAttr(p, "nametemplate", 12, &tmp)) {
+	else if (matchMailcapAttr(p, "nametemplate", &tmp)) {
 	    mcap->nametemplate = allocStr(tmp->ptr, tmp->length);
 	}
-	else if (matchMailcapAttr(p, "edit", 4, &tmp)) {
+	else if (matchMailcapAttr(p, "edit", &tmp)) {
 	    mcap->edit = allocStr(tmp->ptr, tmp->length);
 	}
 	quoted = 0;
