@@ -860,7 +860,7 @@ setopt:
 	    FirstTab = LastTab = CurrentTab = newTab();
 	    if (!FirstTab) {
 		fprintf(stderr, "%s\n","Can't allocated memory");
-		exit(1);
+		exit(3);
 	    }
 	    nTab = 1;
 	    Firstbuf = Currentbuf = newbuf;
@@ -1323,7 +1323,7 @@ static void *
 die_oom(size_t bytes)
 {
     fprintf(stderr, "Out of memory: %zu bytes unavailable!\n", bytes);
-    exit(1);
+    exit(3);
     /*
      * Suppress compiler warning: function might return no value
      * This code is never reached.

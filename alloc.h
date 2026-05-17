@@ -18,7 +18,7 @@ z_mult_no_oflow_(size_t n, size_t size)
 	if (size != 0 && n > SIZE_MAX / size) {
 		fprintf(stderr,
 		    "w3m: overflow in malloc, %zu*%zu\n", n, size);
-		exit(1);
+		exit(3);
 	}
 	return n * size;
 }

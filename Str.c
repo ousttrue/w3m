@@ -51,7 +51,7 @@ Strnew_size(int n)
 
     if (!(x = GC_MALLOC(sizeof(struct _Str)))
 	|| !(x->ptr = GC_MALLOC_ATOMIC(n)))
-	exit(1);
+	exit(3);
     x->area_size = n;
     x->length = 0;
     x->ptr[x->length] = '\0';
@@ -211,7 +211,7 @@ Strgrow_n(Str x, int n)
 	return x;
 
     if (!(x->ptr = GC_REALLOC(x->ptr, n)))
-	exit(1);
+	exit(3);
     x->area_size = n;
     return x;
 }
@@ -517,7 +517,7 @@ Sprintf(const char *fmt, ...)
     va_end(ap);
     if (len >= s->area_size) {
 	fprintf(stderr, "Sprintf: string too long\n");
-	exit(1);
+	exit(3);
     }
     s->length = strlen(s->ptr);
     return s;

@@ -281,7 +281,7 @@ DrawImage(char *buf, int redraw)
 	imageBuf = (W3MImage *) realloc(imageBuf, sizeof(W3MImage) * maxImage);
 	if (imageBuf == NULL) {
 	    fprintf(stderr, "Out of memory\n");
-	    exit(1);
+	    exit(3);
 	}
 	for (; i < maxImage; i++)
 	    imageBuf[i].pixmap = NULL;
