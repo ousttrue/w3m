@@ -754,8 +754,8 @@ setopt:
 	    if (!(newbuf = loadHTMLString(s_page)))
 		Strcat_charp(err_msg, "w3m: Can't load string.\n"); /* sigint */
 	}
-	else if ((p = getenv("HTTP_HOME")) != NULL ||
-		 (p = getenv("WWW_HOME")) != NULL) {
+	else if ((non_null(p = getenv("HTTP_HOME"))) ||
+		 non_null((p = getenv("WWW_HOME")))) {
 	    newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL);
 	    if (newbuf == NULL)
 		Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
@@ -4365,18 +4365,20 @@ DEFUN(goURL, GOTO, "Open specified document in a new buffer")
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 {
     char *url;
-    if ((url = getenv("HTTP_HOME")) != NULL ||
-        (url = getenv("WWW_HOME")) != NULL) {
-        ParsedURL p_url;
-        Buffer *cur_buf = Currentbuf;
-        SKIP_BLANKS(url);
-        url = url_encode(url, NULL, 0);
-        parseURL2(url, &p_url, NULL);
-        pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-        cmd_loadURL(url, NULL, NULL, NULL);
-        if (Currentbuf != cur_buf)	/* success */
-        pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
-    }
+
+    if (!(non_null(url = getenv("HTTP_HOME")))
+	&& !(non_null(url = getenv("WWW_HOME"))))
+	return;
+
+    ParsedURL p_url;
+    Buffer *cur_buf = Currentbuf;
+    SKIP_BLANKS(url);
+    url = url_encode(url, NULL, 0);
+    parseURL2(url, &p_url, NULL);
+    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    cmd_loadURL(url, NULL, NULL, NULL);
+    if (Currentbuf != cur_buf)	/* success */
+	pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
 }
 
 DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
