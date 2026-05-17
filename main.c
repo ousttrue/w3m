@@ -1215,7 +1215,7 @@ fusage(FILE * f, int err)
     PUT("-reqlog", "write request logfile");
     PUT("-help", "print this usage message");
     PUT("-version", "print w3m version");
-    exit(err);
+    w3m_exit(err);
 }
 #undef PUT
 
@@ -6085,6 +6085,8 @@ deleteFiles(void)
 void
 w3m_exit(int i)
 {
+    if (fmInitialized)
+	fmTerm();
 #ifdef USE_MIGEMO
     init_migemo();		/* close pipe to migemo */
 #endif
