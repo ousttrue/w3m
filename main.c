@@ -144,17 +144,15 @@ static void deleteFiles(void);
 static void do_dump(Buffer *);
 static void escdmap(char c);
 static void followTab(TabBuffer * tab);
-static void fusage(FILE * f, int err);
 static void fversion(FILE * f);
+static void help(void);
 static void intTrap(SIGNAL_ARG);
 static void keyPressEventProc(int c);
 static void moveTab(TabBuffer * t, TabBuffer * t2, int right);
 static void save_buffer_position(Buffer *buf);
 static void set_buffer_environ(Buffer *);
+static void usage(void);
 static void wrap_GC_warn_proc(char *msg, GC_word arg);
-
-#define help() fusage(stdout, 0)
-#define usage() fusage(stderr, 1)
 
 #define NXTARG() _nxtarg(argv[++i])
 #define ISOPT(opt) !strcmp(opt, argv[i])
@@ -1146,13 +1144,21 @@ fversion(FILE * f)
 	);
 }
 
-#define PUT(a,b) fprintf(f, "    %-16s %s\n", a, b)
 static void
-fusage(FILE * f, int err)
+usage(void)
 {
-    fversion(f);
+    fputs("usage: w3m [OPTION]... [URL | file]...\n", stderr);
+    fputs("Try 'w3m -h' for more information.\n", stderr);
+    w3m_exit(1);
+}
+
+#define PUT(a,b) printf("    %-16s %s\n", a, b)
+static void
+help(void)
+{
     /* FIXME: gettextize? */
-    fprintf(f, "usage: w3m [options] [URL or filename]\noptions:\n");
+    puts("usage: w3m [OPTION]... [URL | file]...");
+    puts("options:");
     PUT("-t tab", "set tab width");
     PUT("-r", "ignore backspace effect");
     PUT("-l line", "# of preserved line (default 10000)");
@@ -1213,9 +1219,9 @@ fusage(FILE * f, int err)
     PUT("-config file", "specify config file");
     PUT("-debug", "use debug mode (only for debugging)");
     PUT("-reqlog", "write request logfile");
-    PUT("-help", "print this usage message");
+    PUT("-help", "print this message");
     PUT("-version", "print w3m version");
-    w3m_exit(err);
+    w3m_exit(0);
 }
 #undef PUT
 

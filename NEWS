@@ -4,6 +4,7 @@ Unreleased
   - Mark image alt text by wrapping it in '[Img: ... ]' when dumping
   - Allow use of implicit-wild in mailcap files, i.e. 'image; feh %s' instead
     of 'image/*; feh %s'
+  - Be less verbose when exiting with an error
 
 * bug fixes
   - Respect W3M_DIR when initializing the w3m config
