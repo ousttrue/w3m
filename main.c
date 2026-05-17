@@ -1159,68 +1159,37 @@ help(void)
     /* FIXME: gettextize? */
     puts("usage: w3m [OPTION]... [URL | file]...");
     puts("options:");
-    PUT("-t tab", "set tab width");
-    PUT("-r", "ignore backspace effect");
-    PUT("-l line", "# of preserved line (default 10000)");
+    PUT("+<num>", "goto <num> line");
+    PUT("-B", "load bookmark");
 #ifdef USE_M17N
     PUT("-I charset", "document charset");
+#endif
+    PUT("-N", "open URL of command line on each new tab");
+#ifdef USE_M17N
     PUT("-O charset", "display/output charset");
 #endif
-    PUT("-B", "load bookmark");
-    PUT("-bookmark file", "specify bookmark file");
     PUT("-R", "restore from session file");
-    PUT("-session file", "specify session file");
     PUT("-T type", "specify content-type");
-    PUT("-m", "internet message mode");
-    PUT("-v", "visual startup mode");
-#ifdef USE_COLOR
-    PUT("-M", "monochrome display");
-    PUT("-H Deprecated!", "Do not use! Use -o high-intensity=true instead");
-#endif				/* USE_COLOR */
-    PUT("-N", "open URL of command line on each new tab");
-    PUT("-F", "automatically render frames");
+    PUT("-X", "don't use termcap init/deinit");
+    PUT("-bookmark file", "specify bookmark file");
     PUT("-cols width", "specify column width (used with -dump)");
-    PUT("-ppc count", "specify the number of pixels per character (4.0...32.0)");
-#ifdef USE_IMAGE
-    PUT("-ppl count", "specify the number of pixels per line (4.0...64.0)");
-#endif
+    PUT("-config file", "specify config file");
     PUT("-dump", "dump formatted page into stdout");
-    PUT("-dump_head", "dump response of HEAD request into stdout");
-    PUT("-dump_source", "dump page source into stdout");
     PUT("-dump_both", "dump HEAD and source into stdout");
     PUT("-dump_extra", "dump HEAD, source, and extra information into stdout");
-    PUT("-post file", "use POST method with file content");
-    PUT("-header string", "insert string as a header");
-    PUT("+<num>", "goto <num> line");
+    PUT("-dump_head", "dump response of HEAD request into stdout");
+    PUT("-dump_source", "dump page source into stdout");
     PUT("-num", "show line number");
-    PUT("-no-proxy", "don't use proxy");
-#ifdef INET6
-    PUT("-4", "IPv4 only (-o dns_order=4)");
-    PUT("-6", "IPv6 only (-o dns_order=6)");
-#endif
-#ifdef USE_SSL
-    PUT("-insecure", "use insecure SSL config options");
-#endif
-#ifdef USE_MOUSE
-    PUT("-no-mouse", "don't use mouse");
-#endif				/* USE_MOUSE */
-#ifdef USE_COOKIE
-    PUT("-cookie", "use cookie (-no-cookie: don't use cookie)");
-    PUT("-cookie-jar file", "use file instead of default cookie file");
-#endif				/* USE_COOKIE */
-    PUT("-graph", "use DEC special graphics for border of table and menu");
-    PUT("-no-graph", "use ASCII character for border of table and menu");
-    PUT("-s", "squeeze multiple blank lines");
-    PUT("-W", "toggle search wrap mode");
-    PUT("-X", "don't use termcap init/deinit");
-    PUT("-title[=TERM]", "set buffer name to terminal title string");
     PUT("-o opt=value", "assign value to config option");
-    PUT("-show-option", "print all config options");
-    PUT("-config file", "specify config file");
-    PUT("-debug", "use debug mode (only for debugging)");
-    PUT("-reqlog", "write request logfile");
+    PUT("-o", "print all config options");
+    PUT("-r", "ignore backspace effect");
+    PUT("-s", "squeeze multiple blank lines");
+    PUT("-session file", "specify session file");
+    puts("");
     PUT("-help", "print this message");
     PUT("-version", "print w3m version");
+    puts("");
+    puts("For more details see w3m(1).");
     w3m_exit(0);
 }
 #undef PUT
