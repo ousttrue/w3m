@@ -419,9 +419,13 @@ AC_ARG_WITH(termlib,
  [with_termlib="yes"])
  AC_MSG_RESULT($with_termlib)
  test x"$with_termlib" = xyes && with_termlib="terminfo mytinfo termlib termcap tinfo ncurses curses"
+ w3m_termlib=""
  for lib in $with_termlib; do
-   AC_CHECK_LIB($lib, tgetent, [W3M_LIBS="$W3M_LIBS -l$lib"; break])
+   AC_CHECK_LIB($lib, tgetent, [W3M_LIBS="$W3M_LIBS -l$lib"; w3m_termlib="$lib"; break])
  done
+ if test x"$w3m_termlib" = x; then
+   AC_MSG_ERROR([terminal library (ncurses) not found.])
+ fi
 ])
 #
 # ----------------------------------------------------------------

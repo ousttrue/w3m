@@ -10234,10 +10234,13 @@ eval ac_res=\$$as_ac_Lib
 printf "%s\n" "$ac_res" >&6; }
 if eval test \"x\$"$as_ac_Lib"\" = x"yes"
 then :
-  W3M_LIBS="$W3M_LIBS -l$lib"; break
+  W3M_LIBS="$W3M_LIBS -l$lib"; w3m_termlib="$lib"; break
 fi
 
  done
+ if test x"$w3m_termlib" = x; then
+   as_fn_error $? "terminal library (ncurses) not found." "$LINENO" 5
+ fi
 
 ac_header= ac_cache=
 for ac_item in $ac_header_c_list
