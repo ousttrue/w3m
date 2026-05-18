@@ -3,7 +3,7 @@
     .version = "0.0.1",
     .dependencies = .{
         .compile_commands = .{
-            .url = "git+https://github.com/ousttrue/zig-compile-commands.git",
+            .url = "git+https://github.com/ousttrue/zig-compile-commands.git#90866ad6c678ca4c365296439cfdd946e016fa5f",
             .hash = "zig_compile_commands-0.0.1-OZg5-W7CAAD0eS5Z8YOyhveKnNjUdQvncShnVD31bRn6",
         },
         .w3m = .{
