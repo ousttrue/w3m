@@ -225,7 +225,7 @@ use \fIfile\fR instead of the default cookie file
 .TP
 \fB\-session \fIfile\fR
 use \fIfile\fR instead of the default session file
-.SH Session management
+.SH SESSIONS
 If \fB\-R\fP is given, w3m will restore a session from a session file.
 If no session file is provided with \fB\-session\fR the default session file is used.
 The default session file will be deleted after restoring a session when exiting w3m.
@@ -234,6 +234,48 @@ If URLs or files were given as parameters they will be loaded after restoring th
 If \-N and \-R are given the old session is restored as is and any new buffer are opened in separate tabs.
 \fBNote:\fP
 Session management is still an experimental feature and might change in the future!
+.SH REGULAR EXPRESSIONS
+.PP
+The following regular expression syntax is supported:
+.TP
+\fB.\fR
+Matches any single character.
+.TP
+\fB^\fR
+Matches the beginning of a line.
+.TP
+\fB$\fR
+Matches the end of a line.
+.TP
+\fB[abc]\fR
+Matches any character in the brackets.
+.TP
+\fB[^abc]\fR
+Matches any character not in the brackets.
+.TP
+\fB(pat)\fR
+Groups a subexpression.
+.TP
+\fBpat*\fR
+Matches 0 or more occurrences of \fIpat\fR.
+.TP
+\fBpat+\fR
+Matches 1 or more occurrences of \fIpat\fR.
+.TP
+\fBpat?\fR
+Matches 0 or 1 occurrences of \fIpat\fR.
+.TP
+\fBa|b\fR
+Matches either \fIa\fR or \fIb\fR.
+.PP
+Use a backslash (\fB\e\fR) to escape special characters,
+so \fB\e$\fR matches a literal \fB$\fR.
+Escaping a normal character has no effect,
+meaning \fB\eA\fR matches \fBA\fR.
+Inside bracket expressions,
+a literal closing bracket must be escaped as \fB[\e]abc]\fR,
+but an opening bracket can be used literally without escaping,
+as in \fB[[abc]\fR.
 .SH EXAMPLES
 .SS Pager-like usage
 .TP
@@ -340,11 +382,14 @@ MIME types file
 .\" .I $~/.w3m/urimethodmap
 .\" ???
 .SH SEE ALSO
-README and example files are to be found in the doc directory of your
-\fIw3m\fP installation.
-Recent information about \fIw3m\fP may be found on the project's web pages at
+.PP
+.BR re_format(7)
+.PP
+W3m home page:
 .UR https://w3m-pager.org
 .UE
+.PP
+README and example files in the doc directory of your \fIw3m\fP installation.
 .SH ACKNOWLEDGMENTS
 \fIw3m\fP has incorporated code from several sources.
 Users have contributed patches and suggestions over time.

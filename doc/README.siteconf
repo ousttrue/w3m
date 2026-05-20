@@ -53,6 +53,8 @@ user_agent "Googlebot/2.1"
 
 ===== Regular expressions notes =====
 
+See w3m(1) for the subset of supported expressions.
+
 Following expressions are all equivalent:
 
 /http:\/\/www\.example\.com\//
@@ -68,4 +70,3 @@ http://www.example.com/Abc/
 http://www.example.com/ABC/
 
 Hostnames, however, are always converted to lowercases before compared.
-
