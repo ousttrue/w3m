@@ -585,7 +585,7 @@ readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
 #endif
     char *tmpf;
     FILE *src = NULL;
-    Lineprop *propBuffer;
+    Lineprop *propBuffer = NULL;
 
     headerlist = newBuf->document_header = newTextList();
     if (uf->scheme == SCM_HTTP
