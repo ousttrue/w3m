@@ -157,6 +157,8 @@ static void set_buffer_environ(Buffer *);
 static void usage(void);
 static void wrap_GC_warn_proc(char *msg, GC_word arg);
 
+extern void w3m_exit(int i);	/* Cannot be static as it is used in terms.c */
+
 #define NXTARG() _nxtarg(argv[++i])
 #define ISOPT(opt) !strcmp(opt, argv[i])
 #define CHKOPT(opt) !strncmp(opt, argv[i], strlen(opt))

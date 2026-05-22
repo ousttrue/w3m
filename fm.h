@@ -611,7 +611,6 @@ global int w3m_backend init(FALSE);
 global TextLineList *backend_halfdump_buf;
 global TextList *backend_batch_commands init(NULL);
 int backend(void);
-void w3m_exit(int i);
 
 #ifdef USE_ALARM
 #define AL_UNSET         0

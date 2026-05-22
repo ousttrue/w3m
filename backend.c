@@ -230,7 +230,7 @@ show(TextList *argv)
     }
 }
 
-
+extern void w3m_exit(int i);
 /* Command: quit */
 static void
 quit(TextList *argv)
