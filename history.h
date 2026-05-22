@@ -2,6 +2,7 @@
 #ifndef HISTORY_H
 #define HISTORY_H
 
+#include "buffer.h"
 #include "config.h"
 #include "hash.h"
 #include "textlist.h"
@@ -30,7 +31,14 @@ extern char *lastHist(Hist *hist);
 extern char *nextHist(Hist *hist);
 extern char *prevHist(Hist *hist);
 
+extern Hist *LoadHist;
+extern Hist *SaveHist;
+extern Hist *URLHist;
+extern Hist *ShellHist;
+extern Hist *TextHist;
+
 #ifdef USE_HISTORY
+extern Buffer *historyBuffer(Hist *hist);
 extern int loadUrlHistory(void);
 extern void saveUrlHistory(void);
 extern void ldHist(void);

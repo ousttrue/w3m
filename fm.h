@@ -23,7 +23,6 @@
 #include "form.h"
 #include "frame.h"
 #include "func.h"
-#include "history.h"
 #include "html.h"
 #include "menu.h"
 #include "parsetag.h"
@@ -462,11 +461,6 @@ global char *urimethodmap_files init(NULL);
 
 global TextList *fileToDelete;
 
-extern Hist *LoadHist;
-extern Hist *SaveHist;
-extern Hist *URLHist;
-extern Hist *ShellHist;
-extern Hist *TextHist;
 #ifdef USE_HISTORY
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);

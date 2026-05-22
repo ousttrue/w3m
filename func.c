@@ -8,6 +8,7 @@
 #include "cookie.h"	/* For funcname.c */
 #include "fm.h"
 #include "proto.h"
+#include "history.h"
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"

@@ -346,9 +346,6 @@ extern void escmap(void);
 extern void escbmap(void);
 extern void multimap(void);
 extern Str unescape_spaces(Str s);
-#ifdef USE_HISTORY
-extern Buffer *historyBuffer(Hist *hist);
-#endif				/* not USE_HISTORY */
 
 /* XXX: Should be form.h, can't be due to circular deps */
 extern struct form_list *newFormList(char *action, char *method, char *charset,
