@@ -5,6 +5,9 @@
 #include "alloc.h"
 #include "config.h"
 
+#define max(a,b)	((a) > (b) ? (a) : (b))
+#define min(a,b)	((a) > (b) ? (b) : (a))
+
 #ifndef TRUE
 #define TRUE 1
 #endif				/* TRUE */

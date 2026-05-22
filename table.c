@@ -46,16 +46,6 @@ int symbol_width0 = 0;
 #endif				/* NOWRAP */
 #define TAG_IS(s,tag,len) (strncasecmp(s,tag,len)==0&&(s[len] == '>' || IS_SPACE((int)s[len])))
 
-#ifndef max
-#define max(a,b)        ((a) > (b) ? (a) : (b))
-#endif				/* not max */
-#ifndef min
-#define min(a,b)        ((a) > (b) ? (b) : (a))
-#endif				/* not min */
-#ifndef abs
-#define abs(a)          ((a) >= 0. ? (a) : -(a))
-#endif				/* not abs */
-
 #define set_prevchar(x,y,n) Strcopy_charp_n((x),(y),(n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x)," ",1)
 

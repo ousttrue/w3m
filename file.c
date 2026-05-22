@@ -24,13 +24,6 @@
 #include <time.h>
 #include <utime.h>
 
-#ifndef max
-#define max(a,b)        ((a) > (b) ? (a) : (b))
-#endif				/* not max */
-#ifndef min
-#define min(a,b)        ((a) > (b) ? (b) : (a))
-#endif				/* not min */
-
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
 extern int fold_pre;
