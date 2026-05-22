@@ -1,8 +1,8 @@
 #ifndef W3M_SEARCH_H_
 #define W3M_SEARCH_H_
 
+#include "buffer.h"
 #include "config.h"
-#include "fm.h"
 
 /* Search Result */
 #define SR_FOUND       0x1

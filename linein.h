@@ -32,7 +32,7 @@
 #define IN_CHAR		0x200
 
 #include "Str.h"
-#include "fm.h"
+#include "buffer.h"
 #include "history.h"
 
 #include <stddef.h>

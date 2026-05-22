@@ -17,9 +17,7 @@
 #undef USE_BG_COLOR
 #endif
 
-#include "Str.h"
 #include "ctrlcode.h"
-#include "anchor.h"
 #include "buffer.h"
 #include "file.h"
 #include "form.h"
@@ -27,9 +25,6 @@
 #include "func.h"
 #include "history.h"
 #include "html.h"
-#include "image.h"
-#include "istream.h"
-#include "map.h"
 #include "menu.h"
 #include "parsetag.h"
 #include "parsetagx.h"

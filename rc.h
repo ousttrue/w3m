@@ -2,8 +2,9 @@
 #ifndef RC_H
 #define RC_H
 
+#include "buffer.h"
 #include "config.h"
-#include "fm.h"
+#include "parsetag.h"
 
 #include <stdio.h>
 

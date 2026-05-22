@@ -2,9 +2,9 @@
 #define W3M_COOKIE_H_
 
 #include "Str.h"
-#include "fm.h"
+#include "buffer.h"
 #include "html.h"
-#include "parsetagx.h"
+#include "parsetag.h"
 
 #include <time.h>
 

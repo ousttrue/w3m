@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "Str.h"
-#include "fm.h"
+#include "buffer.h"
+#include "file.h"
 #include "textlist.h"
 
 #if (defined(MESCHACH) && !defined(MATRIX))
