@@ -3,6 +3,7 @@
 
 #include "Str.h"
 #include "fm.h"
+#include "proto.h"
 #include "hash.h"
 #include "html.c"
 #include "indep.h"

@@ -2,6 +2,7 @@
 #include "config.h"
 #include "cookie.h"
 #include "fm.h"
+#include "proto.h"
 #include "terms.h"
 
 #include <gc/gc.h>

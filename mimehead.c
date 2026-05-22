@@ -6,6 +6,7 @@
 #include "Str.h"
 #include "config.h"
 #include "fm.h"
+#include "proto.h"
 #include "myctype.h"
 
 #define MIME_ENCODED_LINE_LIMIT	80

@@ -7,6 +7,7 @@
 #include "ctrlcode.h"
 #include "display.h"
 #include "fm.h"
+#include "proto.h"
 #include "form.h"
 #include "indep.h"
 #include "local.h"

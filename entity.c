@@ -8,6 +8,7 @@
 #undef USE_M17N
 #else				/* DUMMY */
 #include "fm.h"
+#include "proto.h"
 #ifdef USE_M17N
 #ifdef USE_UNICODE
 #include "libwc/ucs.h"

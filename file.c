@@ -6,6 +6,7 @@
 #include "config.h"
 #include "display.h"
 #include "fm.h"
+#include "proto.h"
 #include "funcname1.h"
 #include "html.h"
 #include "linein.h"

@@ -7,6 +7,7 @@
 #include "config.h"
 #include "display.h"
 #include "fm.h"
+#include "proto.h"
 #include "linein.h"
 #include "myctype.h"
 #include "parsetag.h"

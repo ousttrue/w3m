@@ -7,6 +7,7 @@
 #include "config.h"
 #include "cookie.h"	/* For funcname.c */
 #include "fm.h"
+#include "proto.h"
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"

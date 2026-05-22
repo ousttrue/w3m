@@ -5,6 +5,7 @@
 #include "cookie.h"
 #include "display.h"
 #include "fm.h"
+#include "proto.h"
 #include "form.h"
 #include "funcname1.h"
 #include "linein.h"

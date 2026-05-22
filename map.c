@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "fm.h"
+#include "proto.h"
 #include "linein.h"
 
 #include <math.h>

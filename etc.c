@@ -2,6 +2,7 @@
 #include "config.h"
 #include "display.h"
 #include "fm.h"
+#include "proto.h"
 #include "hash.h"
 #include "html.h"
 #include "linein.h"

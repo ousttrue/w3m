@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "fm.h"
+#include "proto.h"
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

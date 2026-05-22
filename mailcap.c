@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "fm.h"
+#include "proto.h"
 #include "myctype.h"
 
 #include <stdio.h>

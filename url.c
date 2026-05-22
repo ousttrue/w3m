@@ -5,6 +5,7 @@
 #include "config.h"
 #include "cookie.h"
 #include "fm.h"
+#include "proto.h"
 #include "html.h"
 #include "myctype.h"
 #include "rc.h"

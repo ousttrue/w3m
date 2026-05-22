@@ -5,6 +5,7 @@
 #include "config.h"
 #include "entity.h"
 #include "fm.h"
+#include "proto.h"
 #include "myctype.h"
 #include "pathdefs.h"
 

@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "config.h"
 #include "fm.h"
+#include "proto.h"
 #include "rc.h"
 
 #include <errno.h>

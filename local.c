@@ -2,6 +2,7 @@
 #include "local.h"
 
 #include "fm.h"
+#include "proto.h"
 #include "version.h"
 
 #include <errno.h>

@@ -7,6 +7,7 @@
 #include "buffer.h"
 #include "config.h"
 #include "fm.h"
+#include "proto.h"
 #include "func.h"
 #include "funcname1.h"
 #include "myctype.h"

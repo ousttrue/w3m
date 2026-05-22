@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "fm.h"
+#include "proto.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

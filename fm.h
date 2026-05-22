@@ -637,6 +637,4 @@ typedef struct _AlarmEvent {
  * Externals
  */
 
-#include "proto.h"
-
 #endif				/* not FM_H */
