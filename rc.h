@@ -38,4 +38,12 @@ char * helpFile(const char *base);
 #define query_SCONF_NO_REFERER_FROM(pu) ((const int *)querySiteconf(pu, SCONF_NO_REFERER_FROM))
 #define query_SCONF_NO_REFERER_TO(pu) ((const int *)querySiteconf(pu, SCONF_NO_REFERER_TO))
 
+extern int use_cookie;
+extern int show_cookie;
+extern int accept_cookie;
+extern int accept_bad_cookie;
+extern char *cookie_reject_domains;
+extern char *cookie_accept_domains;
+extern char *cookie_avoid_wrong_number_of_dots;
+
 #endif /* RC_H */

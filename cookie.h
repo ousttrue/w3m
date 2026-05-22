@@ -57,13 +57,6 @@ void parse_cookie(void);
 void save_cookies(void);
 void set_cookie_flag(struct parsed_tagarg *arg);
 
-global char *CookieFile init(NULL);
-global char *cookie_reject_domains init(NULL);
-global char *cookie_accept_domains init(NULL);
-global char *cookie_avoid_wrong_number_of_dots init(NULL);
-global int use_cookie init(TRUE);
-global int show_cookie init(FALSE);
-global int accept_cookie init(TRUE);
-global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
+extern char *CookieFile;
 
 #endif

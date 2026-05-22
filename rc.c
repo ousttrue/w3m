@@ -848,6 +848,15 @@ static void parse_proxy(void);
 static int str_to_color(const char *value);
 #endif	/* USE_COLOR */
 
+/* Globals */
+char *cookie_accept_domains = NULL;
+char *cookie_avoid_wrong_number_of_dots = NULL;
+char *cookie_reject_domains = NULL;
+int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
+int accept_cookie = TRUE;
+int show_cookie = FALSE;
+int use_cookie = TRUE;
+
 static int
 compare_table(struct rc_search_table *a, struct rc_search_table *b)
 {

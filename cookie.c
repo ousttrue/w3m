@@ -17,6 +17,7 @@
 #include "indep.h"
 #include "myctype.h"
 #include "parsetag.h"
+#include "rc.h"
 #include "regex.h"
 #include "textlist.h"
 
@@ -38,6 +39,8 @@
 #else
 #include <winsock.h>
 #endif				/* __MINGW32_VERSION */
+
+char *CookieFile = NULL;
 
 struct portlist {
     unsigned short port;
