@@ -1703,23 +1703,9 @@ Str
 tmpfname(int type, const char *ext)
 {
     Str tmpf;
-    char *dir;
-
-    switch(type) {
-    case TMPF_HIST:
-	dir = rc_dir;
-	break;
-    case TMPF_DFL:
-    case TMPF_COOKIE:
-    case TMPF_SRC:
-    case TMPF_FRAME:
-    case TMPF_CACHE:
-    default:
-	dir = tmp_dir;
-    }
 
     tmpf = Sprintf("%s/w3m%s%d-%d%s",
-		   dir,
+		   type == TMPF_HIST ? rc_dir : tmp_dir,
 		   tmpf_base[type],
 		   CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
     pushText(fileToDelete, tmpf->ptr);
