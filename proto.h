@@ -100,11 +100,9 @@ extern void foldPre(void);
 extern void reload(void);
 extern void reshape(void);
 extern void chkURL(void);
-extern void chkURLBuffer(Buffer *buf);
 extern void chkWORD(void);
 #ifdef USE_NNTP
 extern void chkNMID(void);
-extern void chkNMIDBuffer(Buffer *buf);
 #else
 #define chkNMID nulcmd
 #endif
@@ -161,7 +159,6 @@ extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
 extern int currentLn(Buffer *buf);
-extern void tmpClearBuffer(Buffer *buf);
 extern char *filename_extension(char *patch, int is_url);
 #ifdef USE_EXTERNAL_URI_LOADER
 extern void initURIMethods(void);

@@ -12,6 +12,10 @@
 #include "libwc/wc_types.h"
 #endif
 
+/* mark URL, Message-ID */
+#define CHK_URL		1
+#define CHK_NMID	2
+
 /* Flags for displayBuffer() */
 #define B_NORMAL	0
 #define B_FORCE_REDRAW	1
@@ -163,11 +167,14 @@ char *getCurWord(Buffer *buf, int *spos, int *epos);
 char *GetWord(Buffer *buf);
 int readBufferCache(Buffer *buf);
 int writeBufferCache(Buffer *buf);
+void chkURLBuffer(Buffer *buf);
+void chkNMIDBuffer(Buffer *buf);
 void clearBuffer(Buffer *buf);
 void copyBuffer(Buffer *a, Buffer *b);
 void discardBuffer(Buffer *buf);
 void gotoLine(Buffer *buf, int n);
 void gotoRealLine(Buffer *buf, int n);
 void reshapeBuffer(Buffer *buf);
+void tmpClearBuffer(Buffer *buf);
 
 #endif

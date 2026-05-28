@@ -1,10 +1,6 @@
 #ifndef W3M_LINEIN_H_
 #define W3M_LINEIN_H_
 
-/* mark URL, Message-ID */
-#define CHK_URL                1
-#define CHK_NMID       2
-
 /* Flags for calcPosition() */
 #define CP_AUTO		0
 #define CP_FORCE	1
