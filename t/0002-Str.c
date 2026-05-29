@@ -1,7 +1,7 @@
 #if 0
 #!/bin/sh
 test ${PWD##*/} = "t" || cd t || exit 2
-make -C .. libwc/libwc.a myctype.o >/dev/null
+OPTS= make -C .. libwc/libwc.a myctype.o >/dev/null
 cc -Werror -g -O0 ${0##*/} ../myctype.o \
 	   -I.. -I../libwc -I/usr/local/include -I/usr/pkg/include \
 	   -L.. -L../libwc -L/usr/local/lib -L/usr/pkg/lib -Wl,-R/usr/pkg/lib \
