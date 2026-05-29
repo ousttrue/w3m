@@ -9,77 +9,21 @@ triggers:
     condition: always
     to: mail@rkta.de
 environment:
-  OPTS: '-Werror -Wl,-R/usr/pkg/lib'
+  NPROC: '8'
+  OPTS: '-Wl,-R/usr/pkg/lib'
 tasks:
   - default: |
       cd w3m
-      make distclean || :
-      ./configure
-      make -j4
-      test -x w3m
-      cd t
-      sh run
+      t/build default
 
   - netbsd: |
       cd w3m
-      make distclean || :
-      ./configure \
-        --disable-messagel10n \
-        --disable-help_cgi \
-        --enable-color \
-        --enable-cookie \
-        --enable-m17n \
-        --enable-mouse \
-        --enable-unicode \
-        --with-browser= \
-        --with-termlib \
-        --with-editor=vi
-      make -j4
-      test -x w3m
-      cd t
-      sh run
+      t/build netbsd
 
   - gdk-pixbuf: |
       cd w3m
-      make distclean || :
-      ./configure \
-        --disable-messagel10n \
-        --disable-help_cgi \
-        --enable-color \
-        --enable-cookie \
-        --enable-m17n \
-        --enable-mouse \
-        --enable-unicode \
-        --with-browser= \
-        --with-termlib \
-        --with-editor=vi \
-        --with-imagelib=gdk-pixbuf
-      make -j4
-      test -x w3m
-      cd t
-      sh run
+      t/build gdk_pixbuf
 
   - disable: |
       cd w3m
-      make distclean || :
-      ./configure \
-        --disable-alarm \
-        --disable-color\
-        --disable-cookie \
-        --disable-dict \
-        --disable-external_uri_loader \
-        --disable-gopher \
-        --disable-history \
-        --disable-image \
-        --disable-ipv6 \
-        --disable-m17n \
-        --disable-menu \
-        --disable-mouse \
-        --disable-nls \
-        --disable-nntp \
-        --disable-sslverify \
-        --disable-unicode \
-        --disable-w3mmailer \
-        --without-ssl
-      make -j4
-      test -x w3m
+      t/build disable

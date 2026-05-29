@@ -18,146 +18,28 @@ triggers:
     condition: always
     to: mail@rkta.de
 environment:
-  OPTS: '-Werror'
+  NPROC: '8'
 tasks:
   - default: |
       cd w3m
-      make distclean || :
-      ./configure
-      make -j4
-      test -x w3m
-      cd t
-      sh run
+      t/build default
 
   - debian: |
       cd w3m
-      make distclean || :
-      ./configure \
-        --enable-alarm \
-        --enable-ansi_color \
-        --enable-color \
-        --enable-cookie \
-        --enable-external_uri_loader \
-        --enable-gopher \
-        --enable-image \
-        --enable-ipv6 \
-        --enable-m17n \
-        --enable-menu \
-        --enable-mouse \
-        --enable-nls \
-        --enable-nntp \
-        --enable-sslverify \
-        --enable-unicode \
-        --enable-w3mmailer \
-        --with-imagelib=imlib2 \
-        --with-migemo="cmigemo -q -d /usr/share/cmigemo/utf-8/migemo-dict" \
-        --with-ssl
-      make -j4
-      test -x w3m
-      cd t
-      sh run
+      t/build debian
 
   - gdk-pixbuf: |
       cd w3m
-      make distclean || :
-      ./configure \
-        --enable-alarm \
-        --enable-ansi_color \
-        --enable-color \
-        --enable-cookie \
-        --enable-external_uri_loader \
-        --enable-gopher \
-        --enable-image \
-        --enable-ipv6 \
-        --enable-m17n \
-        --enable-menu \
-        --enable-mouse \
-        --enable-nls \
-        --enable-nntp \
-        --enable-sslverify \
-        --enable-unicode \
-        --enable-w3mmailer \
-        --with-imagelib=gdk-pixbuf \
-        --with-migemo="cmigemo -q -d /usr/share/cmigemo/utf-8/migemo-dict" \
-        --with-ssl
-      make -j4
-      test -x w3m
-      cd t
-      sh run
+      t/build gdk_pixbuf
 
   - disable: |
       cd w3m
-      make distclean || :
-      ./configure \
-        --disable-alarm \
-        --disable-color\
-        --disable-cookie \
-        --disable-dict \
-        --disable-external_uri_loader \
-        --disable-gopher \
-        --disable-history \
-        --disable-image \
-        --disable-ipv6 \
-        --disable-m17n \
-        --disable-menu \
-        --disable-mouse \
-        --disable-nls \
-        --disable-nntp \
-        --disable-sslverify \
-        --disable-unicode \
-        --disable-w3mmailer \
-        --without-ssl
-      make -j4
-      test -x w3m
+      t/build disable
 
   - tcc: |
       cd w3m
-      make distclean || :
-      env CC=tcc ./configure \
-        --enable-alarm \
-        --enable-ansi_color \
-        --enable-bgcolor \
-        --enable-color \
-        --enable-cookie \
-        --enable-dict \
-        --enable-digest_auth \
-        --enable-external_uri_loader \
-        --enable-gopher \
-        --enable-help_cgi \
-        --enable-history \
-        --enable-image \
-        --enable-ipv6 \
-        --enable-japanese \
-        --enable-keymap=w3m \
-        --enable-m17n \
-        --enable-menu \
-        --enable-messagel10n \
-        --enable-mouse \
-        --enable-nls \
-        --enable-nntp \
-        --enable-sslverify \
-        --enable-unicode \
-        --enable-w3mmailer \
-        --enable-xface \
-        --with-browser \
-        --with-editor \
-        --with-imagelib=imlib2 \
-        --with-mailer \
-        --with-migemo="cmigemo -q -d /usr/share/cmigemo/utf-8/migemo-dict" \
-        --with-ssl \
-        --with-termlib \
-        --with-x
-      make -j4
-      test -x w3m
-      cd t
-      sh run
+      t/build tcc
 
   - lto: |
-      export OPTS='-flto -Werror'
       cd w3m
-      make distclean || :
-      ./configure
-      make -j4
-      test -x w3m
-      cd t
-      sh run
+      t/build lto
