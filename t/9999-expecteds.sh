@@ -6,6 +6,11 @@ fail=0
 w3m="../w3m -config /dev/null -o ignore_null_img_alt=false"
 w3m="$w3m -I utf-8 -O utf-8 -T text/html"
 
+# If w3m is configured with --disable-m17n it errors out when using -[IO].
+# Detect that case and exit without error.
+../w3m config /dev/null -I utf-8 -dump -v >/dev/null 2>&1
+test $? -eq 2 && exit 0
+
 test "$@" || set -- expecteds/*.html
 
 for f
