@@ -1,5 +1,9 @@
 Unreleased
 
+* deprecated
+  - OS/2, DOS and native Windows (MinGW) support
+  - backend option
+
 * new features
   - Mark image alt text by wrapping it in '[Img: ... ]' when dumping
   - Allow use of implicit-wild in mailcap files, i.e. 'image; feh %s' instead

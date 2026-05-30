@@ -208,6 +208,11 @@ main(int argc, char **argv)
     textdomain(PACKAGE);
 #endif
 
+#if (defined(__MINGW32_VERSION) || defined(__EMX__)) \
+	&& !defined(SILENCE_DEPRECATION_WARNING)
+    deprecated = 1<<2;
+#endif
+
     fileToDelete = newTextList();
 
     /*
@@ -305,8 +310,10 @@ main(int argc, char **argv)
 	 * single-letter flags that get their option-argument in the same
 	 * argument string without intervening <blank> characters.
 	 */
-	if (ISOPT("-backend"))
+	if (ISOPT("-backend")) {
+	    deprecated |= 1;
 	    w3m_backend = TRUE;
+	}
 	else if (ISOPT("-backend_batch")) {
 	    w3m_backend = TRUE;
 	    if (!backend_batch_commands)
@@ -507,7 +514,7 @@ setopt:
 	else if (ISOPT("-M"))
 	    useColor = FALSE;
 	else if (ISOPT("-H")) {
-	    deprecated = TRUE;
+	    deprecated |= 1;
 	    highIntensityColors = TRUE;
 	}
 #endif				/* USE_COLOR */
@@ -2537,10 +2544,16 @@ _quitfm(int ask)
 	saveUrlHistory();
 #endif				/* USE_HISTORY */
     if (deprecated)
-	fprintf(stderr, "%s\n%s\n%s\n",
-		"DEPRECATION WARNING",
-		"-H is deprecated and will be removed in the future.",
-		"Use -o highIntensityColors=true instead.");
+	fputs("DEPRECATION WARNING\n", stderr);
+    if (deprecated & 1) {
+	fputs("-H is deprecated and will be removed in the future.\n", stderr);
+	fputs("Use -o highIntensityColors=true instead.\n", stderr);
+	fputs("-backend is deprecated and will be removed in the future.\n", stderr);
+    }
+    if (deprecated & 2) {
+	fputs("OS2/ and MinGW support is deprecated and will be removed in the future.\n", stderr);
+	fputs("Speak up at ~rkta/w3m@lists.sr.ht\n", stderr);
+    }
     w3m_exit(0);
 
 nope:
