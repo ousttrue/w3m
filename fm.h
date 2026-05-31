@@ -566,9 +566,7 @@ global int ssl_path_modified init(FALSE);
 #ifdef USE_SSL
 #include <openssl/ssl.h>
 global char *ssl_forbid_method init("2, 3, t, 5");
-#ifdef SSL_CTX_set_min_proto_version
 global char *ssl_min_version init(NULL);
-#endif
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 #else

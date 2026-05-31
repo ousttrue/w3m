@@ -296,7 +296,6 @@ init_PRNG(void)
 }
 #endif				/* SSLEAY_VERSION_NUMBER >= 0x00905100 */
 
-#ifdef SSL_CTX_set_min_proto_version
 static int
 str_to_ssl_version(const char *name)
 {
@@ -326,7 +325,6 @@ str_to_ssl_version(const char *name)
 	return SSL3_VERSION;
     return -1;
 }
-#endif				/* SSL_CTX_set_min_proto_version */
 
 static SSL *
 openSSLHandle(int sock, char *hostname, char **p_cert)
@@ -371,7 +369,6 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
 #endif
 	if (!(ssl_ctx = SSL_CTX_new(SSLv23_client_method())))
 	    goto eend;
-#ifdef SSL_CTX_set_min_proto_version
 	if (ssl_min_version && *ssl_min_version != '\0') {
 	    int sslver;
 	    sslver = str_to_ssl_version(ssl_min_version);
@@ -381,7 +378,6 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
 		goto eend;
 	    }
 	}
-#endif
 	if (ssl_cipher && *ssl_cipher != '\0')
 	    if (!SSL_CTX_set_cipher_list(ssl_ctx, ssl_cipher)) {
 		free_ssl_ctx();

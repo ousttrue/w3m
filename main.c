@@ -438,9 +438,7 @@ main(int argc, char **argv)
 #else
 	    set_param_option("ssl_cipher=ALL:eNULL");
 #endif
-#ifdef SSL_CTX_set_min_proto_version
 	    set_param_option("ssl_min_version=all");
-#endif
 	    set_param_option("ssl_forbid_method=");
 #ifdef USE_SSL_VERIFY
 	    set_param_option("ssl_verify_server=0");
