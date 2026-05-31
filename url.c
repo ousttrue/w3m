@@ -357,10 +357,6 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
 #endif				/* defined(USE_SSL_VERIFY) */
     if (ssl_ctx == NULL) {
 	int option;
-#if OPENSSL_VERSION_NUMBER < 0x0800
-	ssl_ctx = SSL_CTX_new();
-	X509_set_default_verify_paths(ssl_ctx->cert);
-#else				/* SSLEAY_VERSION_NUMBER >= 0x0800 */
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 	SSLeay_add_ssl_algorithms();
 	SSL_load_error_strings();
@@ -451,7 +447,6 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
 		SSL_CTX_set_default_verify_paths(ssl_ctx);
 	}
 #endif				/* defined(USE_SSL_VERIFY) */
-#endif				/* SSLEAY_VERSION_NUMBER >= 0x0800 */
     }
     handle = SSL_new(ssl_ctx);
     SSL_set_fd(handle, sock);
