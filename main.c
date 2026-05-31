@@ -195,11 +195,7 @@ main(int argc, char **argv)
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
 	set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
     GC_INIT();
-#if (GC_VERSION_MAJOR>7) || ((GC_VERSION_MAJOR==7) && (GC_VERSION_MINOR>=2))
     GC_set_oom_fn(die_oom);
-#else
-    GC_oom_fn = die_oom;
-#endif
 #if defined(ENABLE_NLS) || defined(USE_M17N)
     setlocale(LC_ALL, "");
 #endif
@@ -692,12 +688,8 @@ setopt:
     mySignal(SIGPIPE, SigPipe);
 #endif
 
-#if (GC_VERSION_MAJOR>7) || ((GC_VERSION_MAJOR==7) && (GC_VERSION_MINOR>=2))
     orig_GC_warn_proc = GC_get_warn_proc();
     GC_set_warn_proc(wrap_GC_warn_proc);
-#else
-    orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
-#endif
     if (load_argc == 0) {
 	/* no URL specified */
 	if (!isatty(0)) {
