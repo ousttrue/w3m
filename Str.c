@@ -135,6 +135,7 @@ Strcopy_charp(Str x, const char *y)
 Str
 Strcopy_charp_n(Str x, const char *y, int n)
 {
+    if (!x) x = Strnew();
     if (!y)
 	return Strtruncate(x, 0);
 
@@ -153,9 +154,11 @@ Strcat_charp_n(Str x, const char *y, int n)
 {
     int newlen;
 
-    if (!y || !n || x->length == STR_LEN_MAX)
+    if (!y || !n || (x && x->length == STR_LEN_MAX))
 	return x;
 
+    if (!x)
+	x = Strnew();
     if (n < 0)
 	n = strlen(y);
     newlen = x->length + n;
@@ -192,6 +195,7 @@ Strcat_m_charp(Str x, ...)
     va_list ap;
     char *p;
 
+    if (!x) x = Strnew();
     va_start(ap, x);
     while ((p = va_arg(ap, char *)) != NULL)
 	 Strcat_charp_n(x, p, strlen(p));

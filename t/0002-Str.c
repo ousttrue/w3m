@@ -19,6 +19,9 @@ exit
 #include <stdlib.h>
 #include <string.h>
 
+static Str t;
+static char *char10 = "0123456789";
+
 #define _strlen(x) (int)strlen(x)
 
 #define ASSERT_int(x,y) \
@@ -36,9 +39,6 @@ exit
 		assert(0);\
 	}\
 }
-
-static Str t;
-static char *char10 = "0123456789";
 
 struct inout_int {
 	int in;
@@ -88,6 +88,8 @@ test_Strnew_charp()
 	char *in = "0123456789012345678901234567890123456789";
 	int len = _strlen(in);
 
+	assert(Strnew_charp(NULL));
+
 	s = Strnew_charp(in);
 
 	assert(s);
@@ -104,6 +106,8 @@ test_Strnew_m_charp()
 	char *in  = "0123456789";
 	char *exp = "01234567890123456789";
 	int len = _strlen(in);
+
+	assert(Strnew_m_charp(NULL, in, NULL));
 
 	s = Strnew_m_charp(in, in, NULL);
 
@@ -122,6 +126,8 @@ test_Strnew_charp_n()
 	char *in  = "0123456789";
 	char *exp = "01234";
 	int n = 5;
+
+	assert(Strnew_charp_n(NULL, 1));
 
 	s = Strnew_charp_n(in, n);
 
@@ -170,6 +176,8 @@ test_Strcopy()
 {
 	Str s = Strnew();
 
+	assert(Strcopy(NULL, t));
+
 	Strcopy(s, t);
 
 	assert(s);
@@ -183,6 +191,8 @@ void
 test_Strcopy_charp()
 {
 	Str s = Strnew();
+
+	assert(Strcopy_charp(NULL, ""));
 
 	Strcopy_charp(s, t->ptr);
 
@@ -200,6 +210,8 @@ test_Strcopy_charp_n()
 	char *in  = "0123456789";
 	char *exp = "01234";
 	int n = 5;
+
+	assert(Strcopy_charp_n(NULL, in, n));
 
 	s = Strnew_charp(in);
 	Strcopy_charp_n(s, in, n);
@@ -219,6 +231,8 @@ test_Strcat_charp_n()
 	char *exp = "012345678901234";
 	int n = _strlen(exp) - _strlen(in);
 
+	assert(Strcat_charp_n(NULL, in, n));
+
 	s = Strdup(t);
 	Strcat_charp_n(s, in, n);
 
@@ -232,11 +246,13 @@ test_Strcat_charp_n()
 void
 test_Strcat()
 {
-	Str s, t;
+	Str s;
 	char *in  = "0123456789";
 	char *exp = "01234567890123456789";
 
-	s = Strnew_charp(in), t = Strnew_charp(in);
+	assert(Strcat(NULL, t));
+
+	s = Strnew_charp(in);
 	Strcat(s, t);
 
 	assert(s);
@@ -252,6 +268,8 @@ test_Strcat_charp()
 	Str s;
 	char *in  = "0123456789";
 	char *exp = "01234567890123456789";
+
+	assert(Strcat_charp(NULL, in));
 
 	s = Strnew_charp(in);
 	Strcat_charp(s, in);
@@ -269,6 +287,8 @@ test_Strcat_m_charp()
 	Str s;
 	char *in  = "0123456789";
 	char *exp = "012345678901234567890123456789";
+
+	assert(Strcat_m_charp(NULL, in, NULL));
 
 	s = Strnew_charp(in);
 	Strcat_m_charp(s, in, in, NULL);
