@@ -88,7 +88,6 @@
 #undef TABLE_EXPAND
 #undef TABLE_NO_COMPACT
 #define NOWRAP
-#define MATRIX
 
 #define DEF_EDITOR "@DEF_EDITOR@"
 #define DEF_MAILER "@DEF_MAILER@

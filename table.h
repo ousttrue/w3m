@@ -4,17 +4,7 @@
 #include "file.h"
 #include "textlist.h"
 
-#if (defined(MESCHACH) && !defined(MATRIX))
-#define MATRIX
-#endif				/* (defined(MESCHACH) && !defined(MATRIX)) */
-
-#ifdef MATRIX
-#ifdef MESCHACH
-#include <matrix2.h>
-#else				/* not MESCHACH */
 #include "matrix.h"
-#endif				/* not MESCHACH */
-#endif				/* MATRIX */
 
 #define MAX_TABLE 20		/* maximum nest level of table */
 #define MAX_TABLE_N_LIMIT 2000
@@ -44,10 +34,8 @@ struct table_cell {
     short index[MAXCELL];
     short maxcell;
     short icell;
-#ifdef MATRIX
     short eindex[MAXCELL];
     short necell;
-#endif				/* MATRIX */
     short width[MAXCELL];
     short minimum_width[MAXCELL];
     short fixed_width[MAXCELL];
@@ -106,10 +94,8 @@ struct table {
     TextList *suspended_data;
     /* use for counting skipped spaces */
     struct table_linfo linfo;
-#ifdef MATRIX
     MAT *matrix;
     VEC *vector;
-#endif				/* MATRIX */
     int sloppy_width;
 };
 
