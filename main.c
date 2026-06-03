@@ -480,7 +480,7 @@ setopt:
 	    if (!set_param_option(p)) {
 		fprintf(stderr, _("%s: bad option\n"), p);
 		fputs(_("Use 'w3m -o' to see all options\n"), stderr);
-		exit(1);
+		exit(2);
 	    }
 	}
 	else if (ISOPT("-r"))
@@ -729,7 +729,7 @@ setopt:
 	    usage();
 	}
 	if (!newbuf)
-	    w3m_exit(2);
+	    w3m_exit(1);
 	i = -1;
     }
     else {
@@ -875,13 +875,11 @@ setopt:
 	    if (fmInitialized)
 		inputChar(_("Hit any key to quit w3m:"));
 	}
-	if (newbuf == NO_BUFFER) {
+	if (newbuf == NO_BUFFER)
 #ifdef USE_COOKIE
 	    save_cookies();
 #endif				/* USE_COOKIE */
-	    w3m_exit(!!err_msg);
-	}
-	w3m_exit(2);
+	w3m_exit(!!err_msg);
     }
     if (err_msg)
 	disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
@@ -1151,7 +1149,7 @@ usage(void)
 {
     fputs("usage: w3m [OPTION]... [URL | file]...\n", stderr);
     fputs("Try 'w3m -h' for more information.\n", stderr);
-    w3m_exit(1);
+    w3m_exit(2);
 }
 
 #define PUT(a,b) printf("    %-16s %s\n", a, b)
