@@ -29,9 +29,6 @@
 #endif				/* __EMX__ */
 
 #ifdef USE_SSL
-#ifndef SSLEAY_VERSION_NUMBER
-#include <openssl/crypto.h>		/* SSLEAY_VERSION_NUMBER may be here */
-#endif
 #include <openssl/err.h>
 #endif
 
@@ -266,7 +263,6 @@ free_ssl_ctx(void)
     ssl_accept_this_site(NULL);
 }
 
-#if SSLEAY_VERSION_NUMBER >= 0x00905100
 #include <openssl/rand.h>
 static void
 init_PRNG(void)
@@ -294,7 +290,6 @@ init_PRNG(void)
     if (file)
 	RAND_write_file(file);
 }
-#endif				/* SSLEAY_VERSION_NUMBER >= 0x00905100 */
 
 static int
 str_to_ssl_version(const char *name)
@@ -450,12 +445,10 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
     }
     handle = SSL_new(ssl_ctx);
     SSL_set_fd(handle, sock);
-#if SSLEAY_VERSION_NUMBER >= 0x00905100
     init_PRNG();
-#endif				/* SSLEAY_VERSION_NUMBER >= 0x00905100 */
-#if (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT)
+#if !defined(OPENSSL_NO_TLSEXT)
     SSL_set_tlsext_host_name(handle,hostname);
-#endif				/* (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT) */
+#endif				/* !defined(OPENSSL_NO_TLSEXT) */
     if (SSL_connect(handle) > 0) {
 	Str serv_cert = ssl_get_certificate(handle, hostname);
 	if (serv_cert) {
