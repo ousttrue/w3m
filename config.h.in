@@ -79,7 +79,6 @@
 #undef USE_XFACE
 #undef USE_DICT
 #undef USE_HISTORY
-#define ID_EXT
 #undef CLEAR_BUF
 #undef INET6
 #undef HAVE_SOCKLEN_T

@@ -89,16 +89,12 @@ struct table {
     int real_width;
 #endif				/* TABLE_EXPAND */
     Str caption;
-#ifdef ID_EXT
     Str id;
-#endif
     GeneralList ***tabdata;
     table_attr **tabattr;
     table_attr trattr;
-#ifdef ID_EXT
     Str **tabidvalue;
     Str *tridvalue;
-#endif
     short tabwidth[MAXCOL];
     short minimum_width[MAXCOL];
     short fixed_width[MAXCOL];

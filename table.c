@@ -282,19 +282,15 @@ newTable(void)
     t->tabdata = New_N(GeneralList **, MAXROW);
     t->tabattr = New_N(table_attr *, MAXROW);
     t->tabheight = NewAtom_N(int, MAXROW);
-#ifdef ID_EXT
     t->tabidvalue = New_N(Str *, MAXROW);
     t->tridvalue = New_N(Str, MAXROW);
-#endif				/* ID_EXT */
 
     for (i = 0; i < MAXROW; i++) {
 	t->tabdata[i] = NULL;
 	t->tabattr[i] = 0;
 	t->tabheight[i] = 0;
-#ifdef ID_EXT
 	t->tabidvalue[i] = NULL;
 	t->tridvalue[i] = NULL;
-#endif				/* ID_EXT */
     }
     for (j = 0; j < MAXCOL; j++) {
 	t->tabwidth[j] = 0;
@@ -316,9 +312,7 @@ newTable(void)
 
     t->caption = Strnew();
     t->suspended_data = NULL;
-#ifdef ID_EXT
     t->id = NULL;
-#endif
     return t;
 }
 
@@ -329,10 +323,8 @@ check_row(struct table *t, int row)
     GeneralList ***tabdata;
     table_attr **tabattr;
     int *tabheight;
-#ifdef ID_EXT
     Str **tabidvalue;
     Str *tridvalue;
-#endif				/* ID_EXT */
 
     if (row < 0 || row >= MAXROW_LIMIT)
 	return;
@@ -343,50 +335,38 @@ check_row(struct table *t, int row)
 	tabdata = New_N(GeneralList **, r);
 	tabattr = New_N(table_attr *, r);
 	tabheight = NewAtom_N(int, r);
-#ifdef ID_EXT
 	tabidvalue = New_N(Str *, r);
 	tridvalue = New_N(Str, r);
-#endif				/* ID_EXT */
 	for (i = 0; i < t->max_rowsize; i++) {
 	    tabdata[i] = t->tabdata[i];
 	    tabattr[i] = t->tabattr[i];
 	    tabheight[i] = t->tabheight[i];
-#ifdef ID_EXT
 	    tabidvalue[i] = t->tabidvalue[i];
 	    tridvalue[i] = t->tridvalue[i];
-#endif				/* ID_EXT */
 	}
 	for (; i < r; i++) {
 	    tabdata[i] = NULL;
 	    tabattr[i] = NULL;
 	    tabheight[i] = 0;
-#ifdef ID_EXT
 	    tabidvalue[i] = NULL;
 	    tridvalue[i] = NULL;
-#endif				/* ID_EXT */
 	}
 	t->tabdata = tabdata;
 	t->tabattr = tabattr;
 	t->tabheight = tabheight;
-#ifdef ID_EXT
 	t->tabidvalue = tabidvalue;
 	t->tridvalue = tridvalue;
-#endif				/* ID_EXT */
 	t->max_rowsize = r;
     }
 
     if (t->tabdata[row] == NULL) {
 	t->tabdata[row] = New_N(GeneralList *, MAXCOL);
 	t->tabattr[row] = NewAtom_N(table_attr, MAXCOL);
-#ifdef ID_EXT
 	t->tabidvalue[row] = New_N(Str, MAXCOL);
-#endif				/* ID_EXT */
 	for (i = 0; i < MAXCOL; i++) {
 	    t->tabdata[row][i] = NULL;
 	    t->tabattr[row][i] = 0;
-#ifdef ID_EXT
 	    t->tabidvalue[row][i] = NULL;
-#endif				/* ID_EXT */
 	}
     }
 }
@@ -1744,9 +1724,7 @@ renderTable(struct table *t, int max_width, struct html_feed_environ *h_env)
     int width;
     int rulewidth;
     Str vrulea = NULL, vruleb = NULL, vrulec = NULL;
-#ifdef ID_EXT
     Str idtag;
-#endif				/* ID_EXT */
 
     t->total_height = 0;
     if (t->maxcol < 0) {
@@ -1899,12 +1877,10 @@ renderTable(struct table *t, int max_width, struct html_feed_environ *h_env)
     make_caption(t, h_env);
 
     HTMLlineproc1("<pre for_table>", h_env);
-#ifdef ID_EXT
     if (t->id != NULL) {
 	idtag = Sprintf("<_id id=\"%s\">", html_quote((t->id)->ptr));
 	HTMLlineproc1(idtag->ptr, h_env);
     }
-#endif				/* ID_EXT */
     switch (t->border_mode) {
     case BORDER_THIN:
     case BORDER_THICK:
@@ -1943,22 +1919,18 @@ renderTable(struct table *t, int max_width, struct html_feed_environ *h_env)
 	    if (t->border_mode == BORDER_THIN
 		|| t->border_mode == BORDER_THICK)
 		Strcat(renderbuf, vrulea);
-#ifdef ID_EXT
 	    if (t->tridvalue[r] != NULL && h == 0) {
 		idtag = Sprintf("<_id id=\"%s\">",
 				html_quote((t->tridvalue[r])->ptr));
 		Strcat(renderbuf, idtag);
 	    }
-#endif				/* ID_EXT */
 	    for (i = 0; i <= t->maxcol; i++) {
 		check_row(t, r);
-#ifdef ID_EXT
 		if (t->tabidvalue[r][i] != NULL && h == 0) {
 		    idtag = Sprintf("<_id id=\"%s\">",
 				    html_quote((t->tabidvalue[r][i])->ptr));
 		    Strcat(renderbuf, idtag);
 		}
-#endif				/* ID_EXT */
 		if (!(t->tabattr[r][i] & HTT_X)) {
 		    w = t->tabwidth[i];
 		    for (j = i + 1;
@@ -2472,9 +2444,7 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 	       int width, struct parsed_tag *tag)
 {
     int cmd;
-#ifdef ID_EXT
     char *p;
-#endif
     struct table_cell *cell = &tbl->cell;
     int colspan, rowspan;
     int col, prev_col;
@@ -2604,12 +2574,10 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 		break;
 	    }
 	}
-#ifdef ID_EXT
 	if (parsedtag_get_value(tag, ATTR_ID, &p)) {
 	    check_row(tbl, tbl->row);
 	    tbl->tridvalue[tbl->row] = Strnew_charp(p);
 	}
-#endif				/* ID_EXT */
 	tbl->trattr = align | valign;
 	break;
     case HTML_TH:
@@ -2717,10 +2685,8 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 	    v = RELATIVE_WIDTH(v);
 #endif				/* not TABLE_EXPAND */
 	}
-#ifdef ID_EXT
 	if (parsedtag_get_value(tag, ATTR_ID, &p))
 	    tbl->tabidvalue[tbl->row][tbl->col] = Strnew_charp(p);
-#endif				/* ID_EXT */
 #ifdef NOWRAP
 	if (v != 0) {
 	    /* NOWRAP and WIDTH= conflicts each other */
