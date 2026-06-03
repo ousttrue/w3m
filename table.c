@@ -42,9 +42,7 @@ int symbol_width0 = 0;
 #define HTT_MIDDLE 0x200
 #define HTT_BOTTOM 0x400
 #define HTT_VTRSET 0x800
-#ifdef NOWRAP
 #define HTT_NOWRAP  4
-#endif				/* NOWRAP */
 #define TAG_IS(s,tag,len) (strncasecmp(s,tag,len)==0&&(s[len] == '>' || IS_SPACE((int)s[len])))
 
 #define set_prevchar(x,y,n) Strcopy_charp_n((x),(y),(n))
@@ -1950,10 +1948,8 @@ setwidth(struct table *t, struct table_mode *mode)
     int width = setwidth0(t);
     if (width < 0)
 	return;
-#ifdef NOWRAP
     if (t->tabattr[t->row][t->col] & HTT_NOWRAP)
 	check_minimum0(t, width);
-#endif				/* NOWRAP */
     if (mode->pre_mode & (TBLM_NOBR | TBLM_PRE | TBLM_PRE_INT) &&
 	mode->nobr_offset >= 0)
 	check_minimum0(t, width - mode->nobr_offset);
@@ -2466,10 +2462,8 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 		break;
 	    }
 	}
-#ifdef NOWRAP
 	if (parsedtag_exists(tag, ATTR_NOWRAP))
 	    tbl->tabattr[tbl->row][tbl->col] |= HTT_NOWRAP;
-#endif				/* NOWRAP */
 	v = 0;
 	if (parsedtag_get_value(tag, ATTR_WIDTH, &v)) {
 #ifdef TABLE_EXPAND
@@ -2485,12 +2479,10 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 	}
 	if (parsedtag_get_value(tag, ATTR_ID, &p))
 	    tbl->tabidvalue[tbl->row][tbl->col] = Strnew_charp(p);
-#ifdef NOWRAP
 	if (v != 0) {
 	    /* NOWRAP and WIDTH= conflicts each other */
 	    tbl->tabattr[tbl->row][tbl->col] &= ~HTT_NOWRAP;
 	}
-#endif				/* NOWRAP */
 	tbl->tabattr[tbl->row][tbl->col] &= ~(HTT_ALIGN | HTT_VALIGN);
 	tbl->tabattr[tbl->row][tbl->col] |= (align | valign);
 	if (colspan > 1) {

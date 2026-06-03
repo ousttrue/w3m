@@ -87,7 +87,6 @@
 #undef USE_RAW_SCROLL
 #undef TABLE_EXPAND
 #undef TABLE_NO_COMPACT
-#define NOWRAP
 
 #define DEF_EDITOR "@DEF_EDITOR@"
 #define DEF_MAILER "@DEF_MAILER@
