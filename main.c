@@ -111,6 +111,7 @@ int fold_pre;
 
 static Event *CurrentEvent = NULL;
 static Event *LastEvent = NULL;
+static Str err_msg;
 static GC_warn_proc orig_GC_warn_proc = NULL;
 static char *session_bak;
 static char *session_file;
@@ -176,7 +177,6 @@ main(int argc, char **argv)
     char search_header = FALSE;
     char *default_type = NULL;
     char *post_file = NULL;
-    Str err_msg;
     int opt_restore = FALSE;
 #ifdef USE_M17N
     char *Locale = NULL;
@@ -689,7 +689,6 @@ setopt:
 #else
     orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
 #endif
-    err_msg = Strnew();
     if (load_argc == 0) {
 	/* no URL specified */
 	if (!isatty(0)) {
@@ -700,7 +699,7 @@ setopt:
 	else if (load_bookmark) {
 	    newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL);
 	    if (newbuf == NULL)
-		Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
+		err_msg = Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
 	}
 	else if (visual_start) {
 	    /* FIXME: gettextize? */
@@ -715,24 +714,22 @@ setopt:
 			   "<br>Written by <a href='mailto:aito@fw.ipsj.or.jp'>Akinori Ito</a>",
 			   NULL);
 	    if (!(newbuf = loadHTMLString(s_page)))
-		Strcat_charp(err_msg, "w3m: Can't load string.\n"); /* sigint */
+		err_msg = Strcat_charp(err_msg,
+				       "w3m: Can't load string.\n"); /* sigint */
 	}
 	else if ((non_null(p = getenv("HTTP_HOME"))) ||
 		 non_null((p = getenv("WWW_HOME")))) {
 	    newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL);
 	    if (newbuf == NULL)
-		Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
+		err_msg = Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
 	    else if (newbuf != NO_BUFFER)
 		pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
 	}
 	else {
 	    usage();
 	}
-	if (newbuf == NULL) {
-	    if (err_msg->length)
-		fprintf(stderr, "%s", err_msg->ptr);
+	if (!newbuf)
 	    w3m_exit(2);
-	}
 	i = -1;
     }
     else {
@@ -772,8 +769,9 @@ setopt:
 		    else
 			fp = fopen(post_file, "r");
 		    if (fp == NULL) {
-			Strcat(err_msg,
-			       Sprintf(_("w3m: Can't open %s.\n"), post_file));
+			err_msg = Strcat(err_msg,
+					 Sprintf(_("w3m: Can't open %s.\n"),
+						 post_file));
 			continue;
 		    }
 		    body = Strfgetall(fp);
@@ -796,8 +794,9 @@ setopt:
 		    retry = 1;
 		    goto retry_as_local_file;
 		}
-		Strcat(err_msg,
-		       Sprintf(_("w3m: Can't load %s.\n"), load_argv[i]));
+		err_msg = Strcat(err_msg,
+				 Sprintf(_("w3m: Can't load %s.\n"),
+					 load_argv[i]));
 		continue;
 	    }
 	    else if (newbuf == NO_BUFFER)
@@ -847,12 +846,10 @@ setopt:
 	    Currentbuf = newbuf;
     }
     if (w3m_dump) {
-	if (err_msg->length)
-	    fprintf(stderr, "%s", err_msg->ptr);
 #ifdef USE_COOKIE
 	save_cookies();
 #endif				/* USE_COOKIE */
-	w3m_exit(!!err_msg->length);
+	w3m_exit(!!err_msg);
     }
 
     if (add_download_list) {
@@ -878,20 +875,15 @@ setopt:
 	    if (fmInitialized)
 		inputChar(_("Hit any key to quit w3m:"));
 	}
-	if (fmInitialized)
-	    fmTerm();
-	if (err_msg->length)
-	    fprintf(stderr, "%s", err_msg->ptr);
 	if (newbuf == NO_BUFFER) {
 #ifdef USE_COOKIE
 	    save_cookies();
 #endif				/* USE_COOKIE */
-	    if (!err_msg->length)
-		w3m_exit(0);
+	    w3m_exit(!!err_msg);
 	}
 	w3m_exit(2);
     }
-    if (err_msg->length)
+    if (err_msg)
 	disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
 
     SearchHeader = FALSE;
@@ -6092,10 +6084,14 @@ w3m_exit(int i)
 #ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
 	if (rmdir(mkd_tmp_dir) != 0) {
-	    fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
-	    exit(1);
+	    err_msg = Strcat(err_msg,
+			     Sprintf("Can't remove temporary directory (%s)!\n",
+				     mkd_tmp_dir));
+	    i = i ? i : 1;
 	}
 #endif
+    if (err_msg)
+	fprintf(stderr, "%s", err_msg->ptr);
     exit(i);
 }
 
