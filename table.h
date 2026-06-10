@@ -1,4 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#ifndef TABLE_H
+#define TABLE_H
 #include "Str.h"
 #include "buffer.h"
 #include "file.h"
@@ -132,8 +134,4 @@ void end_table(struct table *tbl);
 void initRenderTable(void);
 void pushTable(struct table *, struct table *);
 void renderTable(struct table *t, int max_width, struct html_feed_environ *h_env);
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
+#endif
