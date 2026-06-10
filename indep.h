@@ -23,10 +23,12 @@ struct growbuf {
     void (*free_proc) (void *);
 };
 
-#define RAW_MODE	0
-#define PAGER_MODE	1
-#define HTML_MODE	2
-#define HEADER_MODE	3
+enum {
+    RAW_MODE,
+    PAGER_MODE,
+    HTML_MODE,
+    HEADER_MODE,
+};
 
 extern unsigned char QUOTE_MAP[];
 extern char *HTML_QUOTE_MAP[];

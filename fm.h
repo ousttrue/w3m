@@ -434,16 +434,20 @@ global const char *DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
 global const char *DictPrompt init("(dictionary)!");
 #endif				/* USE_DICT */
 global int ignore_null_img_alt init(TRUE);
-#define DISPLAY_INS_DEL_SIMPLE	0
-#define DISPLAY_INS_DEL_NORMAL	1
-#define DISPLAY_INS_DEL_FONTIFY	2
+enum {
+    DISPLAY_INS_DEL_SIMPLE,
+    DISPLAY_INS_DEL_NORMAL,
+    DISPLAY_INS_DEL_FONTIFY,
+};
 global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
 global int FoldTextarea init(FALSE);
 global int FoldPre init(FALSE);
 global int FoldLine init(FALSE);
-#define DEFAULT_URL_EMPTY	0
-#define DEFAULT_URL_CURRENT	1
-#define DEFAULT_URL_LINK	2
+enum {
+    DEFAULT_URL_EMPTY,
+    DEFAULT_URL_CURRENT,
+    DEFAULT_URL_LINK,
+};
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
 
@@ -611,10 +615,12 @@ global TextList *backend_batch_commands init(NULL);
 int backend(void);
 
 #ifdef USE_ALARM
-#define AL_UNSET         0
-#define AL_EXPLICIT      1
-#define AL_IMPLICIT      2
-#define AL_IMPLICIT_ONCE 3
+enum {
+    AL_UNSET,
+    AL_EXPLICIT,
+    AL_IMPLICIT,
+    AL_IMPLICIT_ONCE,
+};
 
 typedef struct _AlarmEvent {
     int sec;
