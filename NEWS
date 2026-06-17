@@ -3,6 +3,8 @@ Unreleased
 * deprecated
   - OS/2, DOS and native Windows (MinGW) support
   - backend option
+  - Some configure switches: --disable-alarm, --disable-m17n,
+    --disable-menu, --disable-w3mmailer
 
 * new features
   - Mark image alt text by wrapping it in '[Img: ... ]' when dumping
