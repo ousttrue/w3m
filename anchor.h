@@ -1,5 +1,5 @@
-#ifndef W3M_ANCHOR_H_
-#define W3M_ANCHOR_H_
+#ifndef W3M_ANCHOR_H
+#define W3M_ANCHOR_H
 
 #include "config.h"
 #include "image.h"
@@ -40,4 +40,5 @@ typedef struct {
     int markmax;
     int prevhseq;
 } HmarkerList;
+
 #endif

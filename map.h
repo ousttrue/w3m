@@ -1,5 +1,5 @@
-#ifndef W3M_MAP_H_
-#define W3M_MAP_H_
+#ifndef W3M_MAP_H
+#define W3M_MAP_H
 
 #include "Str.h"
 #include "config.h"
@@ -24,4 +24,5 @@ typedef struct _MapList {
     GeneralList *area;
     struct _MapList *next;
 } MapList;
+
 #endif

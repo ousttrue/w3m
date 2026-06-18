@@ -3,8 +3,8 @@
  * w3m local.h
  */
 
-#ifndef LOCAL_H
-#define LOCAL_H
+#ifndef W3M_LOCAL_H
+#define W3M_LOCAL_H
 
 #include <sys/stat.h>
 
@@ -40,4 +40,4 @@ typedef struct direct Directory;
 #define S_ISLNK(m)	(((m) & S_IFMT) == S_IFLNK)
 #endif				/* not S_ISLNK */
 
-#endif				/* not LOCAL_H */
+#endif

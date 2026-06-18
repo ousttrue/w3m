@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef IO_STREAM_H
-#define IO_STREAM_H
+#ifndef W3M_ISTREAM_H
+#define W3M_ISTREAM_H
 
 #include "config.h"
 #include "indep.h"
@@ -140,4 +140,5 @@ extern Str ssl_get_certificate(SSL * ssl, char *hostname);
 #else
 #define openIS(path) newInputStream(open((path),O_RDONLY))
 #endif				/* USE_BINMODE_STREAM */
+
 #endif

@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef INDEP_H
-#define INDEP_H
+#ifndef W3M_INDEP_H
+#define W3M_INDEP_H
+
 #include "Str.h"
 #include "alloc.h"
 #include "config.h"
@@ -92,4 +93,4 @@ extern const char *w3m_help_dir(void);
 #define NewWithoutGC_N(type,n)	((type*)xmalloc((n)*sizeof(type)))
 #define NewWithoutGC_Reuse(type,ptr,n)	((type*)xrealloc(ptr,(n)*sizeof(type)))
 
-#endif				/* INDEP_H */
+#endif

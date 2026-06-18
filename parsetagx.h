@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef PARSETAGX_H
-#define PARSETAGX_H
+#ifndef W3M_PARSETAGX_H
+#define W3M_PARSETAGX_H
 
 #include "Str.h"
 #include "html.h"
@@ -38,4 +38,5 @@ extern struct parsed_tag *parse_tag(char **s, int internal);
 extern int parsedtag_get_value(struct parsed_tag *tag, int id, void *value);
 extern int parsedtag_set_value(struct parsed_tag *tag, int id, char *value);
 extern Str parsedtag2str(struct parsed_tag *tag);
+
 #endif

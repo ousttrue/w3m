@@ -1,5 +1,5 @@
-#ifndef W3M_FILE_H_
-#define W3M_FILE_H_
+#ifndef W3M_FILE_H
+#define W3M_FILE_H
 
 #include "Str.h"
 #include "anchor.h"
@@ -157,4 +157,5 @@ struct html_feed_environ {
     char *title;
     int blank_lines;
 };
+
 #endif

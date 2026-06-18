@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef W3M_FRAME_H_
-#define W3M_FRAME_H_
+#ifndef W3M_FRAME_H
+#define W3M_FRAME_H
 
 #include "anchor.h"
 #include "config.h"
@@ -64,4 +64,5 @@ struct frameset_queue {
 };
 
 extern struct frameset *renderFrameSet;
+
 #endif

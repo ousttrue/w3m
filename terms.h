@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef TERMS_H
-#define TERMS_H
+#ifndef W3M_TERMS_H
+#define W3M_TERMS_H
 
 #include "config.h"
 
@@ -48,4 +48,4 @@ char getch(void);
 void reset_tty(void);
 void setupscreen(void);
 
-#endif				/* not TERMS_H */
+#endif

@@ -1,5 +1,5 @@
-#ifndef W3M_IMAGE_H_
-#define W3M_IMAGE_H_
+#ifndef W3M_IMAGE_H
+#define W3M_IMAGE_H
 
 #include "config.h"
 #include "html.h"
@@ -54,4 +54,5 @@ typedef struct {
     ImageCache *cache;
 } Image;
 #endif
+
 #endif

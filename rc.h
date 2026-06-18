@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef RC_H
-#define RC_H
+#ifndef W3M_RC_H
+#define W3M_RC_H
 
 #include "buffer.h"
 #include "config.h"
@@ -47,4 +47,4 @@ extern char *cookie_reject_domains;
 extern char *cookie_accept_domains;
 extern char *cookie_avoid_wrong_number_of_dots;
 
-#endif /* RC_H */
+#endif

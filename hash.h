@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef HASH_H
-#define HASH_H
+#ifndef W3M_HASH_H
+#define W3M_HASH_H
 
 /* hash table */
 
@@ -141,4 +141,5 @@ getHash_##sym(Hash_##sym *t, keytype key, type failval)\
     return failval;\
   return hi->value;\
 }
-#endif				/* not HASH_H */
+
+#endif

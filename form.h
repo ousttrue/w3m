@@ -2,8 +2,8 @@
 /*
  * HTML forms
  */
-#ifndef FORM_H
-#define FORM_H
+#ifndef W3M_FORM_H
+#define W3M_FORM_H
 
 #include "Str.h"
 #include "config.h"
@@ -101,4 +101,4 @@ typedef struct form_item_list {
     struct form_item_list *next;
 } FormItemList;
 
-#endif				/* not FORM_H */
+#endif

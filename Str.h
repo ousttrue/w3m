@@ -13,8 +13,9 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
-#ifndef GC_STR_H
-#define GC_STR_H
+#ifndef W3M_STR_H
+#define W3M_STR_H
+
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -79,4 +80,5 @@ Str Strgrow(Str s);
 #define Strlastchar(s)               ((s)->length>0?(s)->ptr[(s)->length-1]:'\0')
 #define Strshrinkfirst(s,n)          Strdelete((s),0,(n))
 #define Strfputs(s,f)                fwrite((s)->ptr,1,(s)->length,(f))
-#endif				/* not GC_STR_H */
+
+#endif

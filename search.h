@@ -1,5 +1,5 @@
-#ifndef W3M_SEARCH_H_
-#define W3M_SEARCH_H_
+#ifndef W3M_SEARCH_H
+#define W3M_SEARCH_H
 
 #include "buffer.h"
 #include "config.h"

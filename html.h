@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef _HTML_H
-#define _HTML_H
+#ifndef W3M_HTML_H
+#define W3M_HTML_H
+
 #include "config.h"
 
 #include <time.h>
@@ -422,4 +423,4 @@ struct environment {
 #define SCM_HTTPS       14
 #endif				/* USE_SSL */
 
-#endif				/* _HTML_H */
+#endif

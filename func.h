@@ -3,8 +3,8 @@
  * w3m func.h
  */
 
-#ifndef FUNC_H
-#define FUNC_H
+#ifndef W3M_FUNC_H
+#define W3M_FUNC_H
 
 #define KEY_HASH_SIZE 127
 
@@ -21,4 +21,4 @@ typedef struct _FuncList {
 
 extern FuncList w3mFuncList[]; /* Generated in funcname.c */
 
-#endif				/* not FUNC_H */
+#endif

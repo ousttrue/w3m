@@ -6,6 +6,7 @@
  */
 #ifndef W3_ALLOC_H
 #define W3_ALLOC_H
+
 #include <gc/gc.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -38,4 +39,4 @@ z_mult_no_oflow_(size_t n, size_t size)
 #define New_Reuse(type, ptr, n) \
 	(GC_REALLOC((ptr), z_mult_no_oflow_((n), sizeof(type))))
 
-#endif /* W3_ALLOC_H */
+#endif

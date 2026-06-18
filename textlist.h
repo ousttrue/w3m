@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef TEXTLIST_H
-#define TEXTLIST_H
+#ifndef W3M_TEXTLIST_H
+#define W3M_TEXTLIST_H
+
 #include "Str.h"
 
 #include <limits.h>
@@ -77,4 +78,4 @@ extern void appendTextLine(TextLineList *tl, Str line, int pos);
 #define rpopTextLine(tl) ((TextLine *)rpopValue((GeneralList *)(tl)))
 #define appendTextLineList(tl, tl2) ((TextLineList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
 
-#endif				/* not TEXTLIST_H */
+#endif

@@ -1,5 +1,5 @@
-#ifndef W3M_URL_H__
-#define W3M_URL_H__
+#ifndef W3M_URL_H
+#define W3M_URL_H
 
 #include "Str.h"
 #include "form.h"

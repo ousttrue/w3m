@@ -1,5 +1,5 @@
-#ifndef W3M_COOKIE_H_
-#define W3M_COOKIE_H_
+#ifndef W3M_COOKIE_H
+#define W3M_COOKIE_H
 
 #include "Str.h"
 #include "buffer.h"

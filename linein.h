@@ -1,5 +1,5 @@
-#ifndef W3M_LINEIN_H_
-#define W3M_LINEIN_H_
+#ifndef W3M_LINEIN_H
+#define W3M_LINEIN_H
 
 /* Flags for calcPosition() */
 #define CP_AUTO		0

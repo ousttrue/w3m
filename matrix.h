@@ -7,8 +7,8 @@
  * You can use,copy,modify and distribute this program without any permission.
  */
 
-#ifndef MATRIX_H_
-#define MATRIX_H_
+#ifndef W3M_MATRIX_H
+#define W3M_MATRIX_H
 #include "alloc.h"
 
 #include <string.h>
@@ -67,4 +67,4 @@ extern int Usolve(Matrix, Vector, Vector, double);
 extern Matrix new_matrix(int);
 extern Vector new_vector(int);
 
-#endif				/* _MATRIX_H */
+#endif

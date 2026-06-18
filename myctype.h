@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef _MYCTYPE_H
-#define _MYCTYPE_H
+#ifndef W3M_MYCTYPE_H
+#define W3M_MYCTYPE_H
 
 #define MYCTYPE_CNTRL 1
 #define MYCTYPE_SPACE 2

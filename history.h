@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef HISTORY_H
-#define HISTORY_H
+#ifndef W3M_HISTORY_H
+#define W3M_HISTORY_H
 
 #include "buffer.h"
 #include "config.h"
@@ -48,4 +48,4 @@ extern void svHist(void);
 #define svHist nulcmd
 #endif				/* not USE_HISTORY */
 
-#endif				/* HISTORY_H */
+#endif

@@ -3,8 +3,8 @@
  * w3m menu.h
  */
 
-#ifndef MENU_H
-#define MENU_H
+#ifndef W3M_MENU_H
+#define W3M_MENU_H
 
 #define MENU_END    0
 #define MENU_NOP    1
@@ -51,4 +51,4 @@ typedef struct _MenuList {
     MenuItem *item;
 } MenuList;
 
-#endif				/* not MENU_H */
+#endif

@@ -1,4 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#ifndef W3M_REGEX_H
+#define W3M_REGEX_H
+
 #define REGEX_MAX	64
 #define STORAGE_MAX	256
 
@@ -47,3 +50,5 @@ const char *regexCompile(const char *ex, int igncase);
 int regexMatch(const char *str, int len, int firstp);
 
 void matchedPosition(const char **first, const char **last);
+
+#endif

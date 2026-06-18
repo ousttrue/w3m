@@ -1,5 +1,5 @@
-#ifndef BUFFER_H_
-#define BUFFER_H_
+#ifndef W3M_BUFFER_H
+#define W3M_BUFFER_H
 
 #include "anchor.h"
 #include "config.h"
