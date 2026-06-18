@@ -330,7 +330,6 @@ extern int gethtmlcmd(const char *s);
 extern Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor);
 extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
 			int mode);
-extern char *lastFileName(const char *path);
 extern char *mybasename(const char *s);
 extern char *mydirname(const char *s);
 extern int next_status(char c, int *status);

@@ -622,33 +622,12 @@ columnLen(Line *line, int column)
 }
 
 char *
-lastFileName(const char *path)
+mybasename(const char *path)
 {
-    const char *p, *q;
+    const char *p;
 
-    p = q = path;
-    while (*p != '\0') {
-	if (*p == '/')
-	    q = p + 1;
-	p++;
-    }
-
-    return allocStr(q, -1);
-}
-
-char *
-mybasename(const char *s)
-{
-    const char *p = s;
-    while (*p)
-	p++;
-    while (s <= p && *p != '/')
-	p--;
-    if (*p == '/')
-	p++;
-    else
-	p = s;
-    return allocStr(p, -1);
+    p = strrchr(path, '/');
+    return allocStr(p ? p + 1 : path, -1);
 }
 
 char *

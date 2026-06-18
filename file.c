@@ -231,7 +231,7 @@ loadSomething(URLFile *f,
     if (buf->buffername == NULL || buf->buffername[0] == '\0') {
 	buf->buffername = checkHeader(buf, "Subject:");
 	if (buf->buffername == NULL && buf->filename != NULL)
-	    buf->buffername = conv_from_system(lastFileName(buf->filename));
+	    buf->buffername = conv_from_system(mybasename(buf->filename));
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
 	buf->currentURL.scheme = f->scheme;
@@ -8178,7 +8178,7 @@ doExternal(URLFile uf, const char *type, Buffer *defaultbuf)
     if (buf && buf != NO_BUFFER) {
 	if ((buf->buffername == NULL || buf->buffername[0] == '\0') &&
 	    buf->filename)
-	    buf->buffername = conv_from_system(lastFileName(buf->filename));
+	    buf->buffername = conv_from_system(mybasename(buf->filename));
 	buf->edit = mcap->edit;
 	buf->mailcap = mcap;
     }
