@@ -1061,7 +1061,8 @@ next_token(Str arg)
 	return NULL;
     p = arg->ptr;
     q = p;
-    SKIP_NON_BLANKS(q);
+    while(*p && !IS_SPACE(*p))
+	p++;
     if (*q != '\0') {
 	*q++ = '\0';
 	SKIP_BLANKS(q);

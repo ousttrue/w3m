@@ -5,16 +5,15 @@
 #include "Str.h"
 #include "alloc.h"
 #include "config.h"
+#include "myctype.h"
 
 #define max(a,b)	((a) > (b) ? (a) : (b))
 #define min(a,b)	((a) > (b) ? (b) : (a))
 
-#ifndef TRUE
-#define TRUE 1
-#endif				/* TRUE */
-#ifndef FALSE
 #define FALSE 0
-#endif				/* FALSE */
+#define TRUE  1
+
+#define SKIP_BLANKS(p) do{while(*(p)&&IS_SPACE(*(p)))(p)++;}while(0)
 
 struct growbuf {
     char *ptr;
@@ -92,5 +91,8 @@ extern const char *w3m_help_dir(void);
 #define NewWithoutGC(type)	((type*)xmalloc(sizeof(type)))
 #define NewWithoutGC_N(type,n)	((type*)xmalloc((n)*sizeof(type)))
 #define NewWithoutGC_Reuse(type,ptr,n)	((type*)xrealloc(ptr,(n)*sizeof(type)))
+
+extern char *CurrentDir;
+extern int CurrentPid;
 
 #endif

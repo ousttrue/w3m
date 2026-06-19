@@ -73,17 +73,6 @@
 #define MINIMUM_PIXEL_PER_CHAR  4.0
 #define MAXIMUM_PIXEL_PER_CHAR  32.0
 
-#ifdef FALSE
-#undef FALSE
-#endif
-
-#ifdef TRUE
-#undef TRUE
-#endif
-
-#define FALSE 0
-#define TRUE   1
-
 #define SHELLBUFFERNAME	"*Shellout*"
 #define PIPEBUFFERNAME	"*stream*"
 #define CPIPEBUFFERNAME	"*stream(closed)*"
@@ -113,8 +102,6 @@ extern int REV_LB[];
 #endif				/* __EMX__ */
 
 
-#define SKIP_BLANKS(p) do{while(*(p)&&IS_SPACE(*(p)))(p)++;}while(0)
-#define SKIP_NON_BLANKS(p) do{while(*(p)&&!IS_SPACE(*(p)))(p)++;}while(0)
 #define IS_ENDL(c) ((c)=='\0'||(c)=='\r'||(c)=='\n')
 #define IS_ENDT(c) (IS_ENDL(c)||(c)==';')
 
@@ -224,8 +211,6 @@ global char *personal_document_root init(NULL);
 global char *cgi_bin init(NULL);
 global char *index_file init(NULL);
 
-global char *CurrentDir;
-global int CurrentPid;
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */

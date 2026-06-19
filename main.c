@@ -107,6 +107,8 @@ DownloadList *LastDL = NULL;
 
 int CurrentKey;
 char *CurrentCmdData;
+char *CurrentDir;
+int CurrentPid;
 
 #ifdef USE_MOUSE
 MouseAction mouse_action;
