@@ -16,6 +16,7 @@ Unreleased
   - Automagically add +N for vi-like editors and others that support the syntax
     to jump to the current line when editing to a buffer (if the 'editor'
     option does not already contain a '%d').
+  - Support URLs with tabs in HREF
 
 * bug fixes
   - Respect W3M_DIR when initializing the w3m config

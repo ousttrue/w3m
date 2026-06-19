@@ -238,7 +238,7 @@ parse_tag(char **s, int internal)
            char *x;
            value = Strnew();
            for (x = value_tmp->ptr; *x; x++) {
-             if (*x != '\n')
+             if (*x != '\n' && *x != '\t')
                Strcat_char(value, *x);
            }
          }
