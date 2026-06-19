@@ -59,8 +59,6 @@
  */
 #define PAGER_MAX_LINE	10000	/* Maximum line kept as pager */
 
-#define DEFAULT_COLS 80
-
 #ifdef USE_IMAGE
 #define MAX_IMAGE 1000
 #define MAX_IMAGE_SIZE 2048
@@ -146,12 +144,6 @@ extern int REV_LB[];
  * Globals.
  */
 
-#if defined(__CYGWIN__)
-extern int LASTLINE;
-#else				/* not defined(__CYGWIN__) */
-#define LASTLINE (LINES-1)
-#endif				/* not defined(__CYGWIN__) */
-
 global int Tabstop init(8);
 global int IndentIncr init(4);
 global int MaxCols init(0);
@@ -172,21 +164,6 @@ global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
 global char* HostName init(NULL);
 
-global char fmInitialized init(FALSE);
-global char QuietMessage init(FALSE);
-global char TrapSignal init(TRUE);
-#define TRAP_ON if (TrapSignal) { \
-    prevtrap = mySignal(SIGINT, KeyAbort); \
-    if (fmInitialized) \
-	term_cbreak(); \
-}
-#define TRAP_OFF if (TrapSignal) { \
-    if (fmInitialized) \
-	term_raw(); \
-    if (prevtrap) \
-	mySignal(SIGINT, prevtrap); \
-}
-
 #ifdef INET6
 #define DNS_ORDER_UNSPEC     0
 #define DNS_ORDER_INET_INET6 1
@@ -199,7 +176,6 @@ extern int ai_family_order_table[7][3];	/* XXX */
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
-global int Do_not_use_ti_te init(FALSE);
 #ifdef USE_NNTP
 global char *NNTP_server init(NULL);
 global char *NNTP_mode init(NULL);
@@ -234,22 +210,6 @@ global Str header_string init(NULL);
 global int override_content_type init(FALSE);
 global int override_user_agent init(FALSE);
 
-#ifdef USE_COLOR
-global int useColor init(TRUE);
-global int highIntensityColors init(FALSE);
-global int basic_color init(8);	/* don't change */
-global int anchor_color init(4);	/* blue  */
-global int image_color init(2);	/* green */
-global int form_color init(1);	/* red   */
-#ifdef USE_BG_COLOR
-global int bg_color init(8);	/* don't change */
-global int mark_color init(6);	/* cyan */
-#endif				/* USE_BG_COLOR */
-global int useActiveColor init(FALSE);
-global int active_color init(6);	/* cyan */
-global int useVisitedColor init(FALSE);
-global int visited_color init(5);	/* magenta  */
-#endif				/* USE_COLOR */
 global int confirm_on_quit init(TRUE);
 global int exit_on_last init(FALSE);
 #ifdef USE_MARK
@@ -261,7 +221,6 @@ global int space_autocomplete init(FALSE);
 global int vi_prec_num init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
-global char *displayTitleTerm init(NULL);
 global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
 global int zeroBasedLinkNo init(FALSE);

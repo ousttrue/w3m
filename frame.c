@@ -2,12 +2,14 @@
 #include "buffer.h"
 #include "charset.h"
 #include "config.h"
+#include "display.h"
 #include "etc.h"
 #include "fm.h"
 #include "frame.h"
 #include "proto.h"
 #include "parsetagx.h"
 #include "symbol.h"
+#include "terms.h"
 
 #include <strings.h>
 

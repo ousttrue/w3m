@@ -4,10 +4,25 @@
 
 #include "config.h"
 
+#define DEFAULT_COLS 80
 extern int LINES, COLS;
 #if defined(__CYGWIN__)
 extern int LASTLINE;
+#else
+#define LASTLINE (LINES-1)
 #endif
+
+#define TRAP_ON if (TrapSignal) { \
+    prevtrap = mySignal(SIGINT, KeyAbort); \
+    if (fmInitialized) \
+	term_cbreak(); \
+}
+#define TRAP_OFF if (TrapSignal) { \
+    if (fmInitialized) \
+	term_raw(); \
+    if (prevtrap) \
+	mySignal(SIGINT, prevtrap); \
+}
 
 void clear(void);
 void flush_tty(void);
@@ -48,4 +63,6 @@ char getch(void);
 void reset_tty(void);
 void setupscreen(void);
 
+extern char *displayTitleTerm;
+extern int Do_not_use_ti_te;
 #endif

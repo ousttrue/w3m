@@ -9,12 +9,34 @@
 #include "proto.h"
 #include "linein.h"
 #include "mouse.h"
+#include "rc.h"
 #include "symbol.h"
 #include "tab.h"
 #include "terms.h"
 
 #include <math.h>
 #include <signal.h>
+
+char fmInitialized = FALSE;
+char QuietMessage = FALSE;
+char TrapSignal = TRUE;
+
+#ifdef USE_COLOR
+int useColor = TRUE;
+int highIntensityColors = FALSE;
+int basic_color = 8;	/* don't change */
+int anchor_color = 4;	/* blue  */
+int image_color = 2;	/* green */
+int form_color = 1;	/* red   */
+#ifdef USE_BG_COLOR
+int bg_color = 8;	/* don't change */
+int mark_color = 6;	/* cyan */
+#endif				/* USE_BG_COLOR */
+int useActiveColor = FALSE;
+int active_color = 6;	/* cyan */
+int useVisitedColor = FALSE;
+int visited_color = 5;	/* magenta  */
+#endif				/* USE_COLOR */
 
 static void calcTabPos(void);
 

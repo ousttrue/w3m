@@ -5,12 +5,14 @@
 #include "charset.h"
 #include "config.h"
 #include "cookie.h"
+#include "display.h"
 #include "fm.h"
 #include "proto.h"
 #include "html.h"
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
+#include "terms.h"
 #include "version.h"
 
 #include <strings.h>

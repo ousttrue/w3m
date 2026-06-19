@@ -5,17 +5,20 @@
  */
 #include "terms.h"
 
+#include "buffer.h"
 #include "charset.h"
 #include "config.h"
+#include "display.h"
 #include "etc.h"
 #include "fm.h"
 #include "proto.h"
 #include "myctype.h"
+#include "rc.h"
+#include "signal.h"
 #include "tab.h"
 
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
@@ -57,6 +60,9 @@ static int tty;
 static int set_tty(void);
 static void set_int(void);
 static void getTCstr(void);
+
+char *displayTitleTerm = NULL;
+int Do_not_use_ti_te = FALSE;
 
 #ifdef __EMX__
 #define INCL_DOSNLS

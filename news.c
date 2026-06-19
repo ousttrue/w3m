@@ -2,17 +2,22 @@
 #include "buffer.h"
 #include "charset.h"
 #include "config.h"
+#include "display.h"
+#include "etc.h"
 #include "fm.h"
 #include "proto.h"
 #include "myctype.h"
 #include "terms.h"
 #include "symbol.h"
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifdef USE_NNTP
+
 
 #define NEWS_ENDLINE(p) \
     ((*(p) == '.' && ((p)[1] == '\n' || (p)[1] == '\r' || (p)[1] == '\0')) || \
