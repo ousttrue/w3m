@@ -159,7 +159,6 @@ global char PreserveTimestamp init(TRUE);
 global char ArgvIsURL init(TRUE);
 global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
-global char* HostName init(NULL);
 
 #ifdef INET6
 #define DNS_ORDER_UNSPEC     0
@@ -168,10 +167,7 @@ global char* HostName init(NULL);
 #define DNS_ORDER_INET_ONLY  4
 #define DNS_ORDER_INET6_ONLY 6
 global int DNS_order init(DNS_ORDER_UNSPEC);
-extern int ai_family_order_table[7][3];	/* XXX */
 #endif				/* INET6 */
-global char NoCache init(FALSE);
-global char use_proxy init(TRUE);
 #ifdef USE_NNTP
 global char *NNTP_server init(NULL);
 global char *NNTP_mode init(NULL);
@@ -189,12 +185,7 @@ global char *MyProgramName init("w3m");
 global int open_tab_blank init(FALSE);
 global int open_tab_dl_list init(FALSE);
 global int close_tab_back init(FALSE);
-global char *w3m_reqlog;
 extern int enable_inline_image;
-
-global Str header_string init(NULL);
-global int override_content_type init(FALSE);
-global int override_user_agent init(FALSE);
 
 global int confirm_on_quit init(TRUE);
 global int exit_on_last init(FALSE);
@@ -341,27 +332,6 @@ global int view_unseenobject init(FALSE);
 #else
 global int view_unseenobject init(TRUE);
 #endif
-
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-global int ssl_verify_server init(TRUE);
-global char *ssl_cert_file init(NULL);
-global char *ssl_key_file init(NULL);
-global char *ssl_ca_path init(NULL);
-global char *ssl_ca_file init(DEF_CAFILE);
-global int ssl_ca_default init(TRUE);
-global int ssl_path_modified init(FALSE);
-#endif				/* defined(USE_SSL) &&
-				 * defined(USE_SSL_VERIFY) */
-#ifdef USE_SSL
-#include <openssl/ssl.h>
-global char *ssl_forbid_method init("2, 3, t, 5");
-global char *ssl_min_version init(NULL);
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
-#else
-global char *ssl_cipher init(NULL);
-#endif
-#endif				/* USE_SSL */
 
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);

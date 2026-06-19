@@ -651,6 +651,19 @@ struct param_ptr params6[] = {
 };
 
 #ifdef USE_SSL
+char *ssl_forbid_method = "2, 3, t, 5";
+char *ssl_min_version = NULL;
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
+char *ssl_cipher = "DEFAULT:!LOW:!RC4:!EXP";
+#else
+char *ssl_cipher = NULL;
+#endif
+int ssl_verify_server = TRUE;
+char *ssl_cert_file = NULL;
+char *ssl_key_file = NULL;
+char *ssl_ca_path = NULL;
+char *ssl_ca_file = DEF_CAFILE;
+int ssl_ca_default = TRUE;
 struct param_ptr params7[] = {
     {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
      CMT_SSL_FORBID_METHOD, NULL},

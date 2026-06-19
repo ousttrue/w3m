@@ -35,6 +35,13 @@ URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
 		TextList *extra_header, URLFile *ouf,
 		HRequest *hr, unsigned char *status);
 
+extern Str header_string;
+extern int override_content_type;
+extern int override_user_agent;
+extern char* HostName;
+extern char *w3m_reqlog;
+
+extern char use_proxy;
 extern char *HTTP_proxy;
 extern ParsedURL HTTP_proxy_parsed;
 #ifdef USE_SSL
@@ -50,4 +57,25 @@ extern ParsedURL GOPHER_proxy_parsed;
 extern char *NO_proxy;
 extern TextList *NO_proxy_domains;
 extern int NOproxy_netaddr;
+extern char NoCache;
+
+#ifdef INET6
+extern int ai_family_order_table[7][3];	/* XXX */
+#endif
+
+#if defined(USE_SSL)
+#include <openssl/ssl.h>
+extern char *ssl_forbid_method;
+extern char *ssl_min_version;
+extern char *ssl_cipher;
+#if defined(USE_SSL_VERIFY)
+extern int ssl_verify_server;
+extern char *ssl_cert_file;
+extern char *ssl_key_file;
+extern char *ssl_ca_path;
+extern char *ssl_ca_file;
+extern int ssl_ca_default;
+extern int ssl_path_modified;
+#endif
+#endif
 #endif

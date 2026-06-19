@@ -21,6 +21,7 @@
 #include "rc.h"
 #include "regex.h"
 #include "textlist.h"
+#include "url.h"
 
 #include <errno.h>
 #include <fcntl.h>

@@ -5,6 +5,7 @@
 #include "terms.h"
 #include "fm.h"
 #include "proto.h"
+#include "url.h"
 
 #include <signal.h>
 

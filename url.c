@@ -56,7 +56,13 @@ int ai_family_order_table[7][3] = {
     {PF_INET6, PF_UNSPEC, PF_UNSPEC},   /* 6:inet6 */
 };
 #endif				/* INET6 */
+Str header_string = NULL;
+int override_content_type = FALSE;
+int override_user_agent = FALSE;
+char* HostName = NULL;
+char *w3m_reqlog;
 
+char use_proxy = TRUE;
 char *HTTP_proxy = NULL;
 ParsedURL HTTP_proxy_parsed;
 #ifdef USE_SSL
@@ -72,6 +78,11 @@ ParsedURL GOPHER_proxy_parsed;
 char *NO_proxy = NULL;
 TextList *NO_proxy_domains;
 int NOproxy_netaddr = TRUE;
+char NoCache = FALSE;
+
+#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
+int ssl_path_modified = FALSE;
+#endif
 
 static JMP_BUF AbortLoading;
 
