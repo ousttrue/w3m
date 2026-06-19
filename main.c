@@ -54,11 +54,9 @@ static void sig_chld(int signo);
 static void SigPipe(SIGNAL_ARG);
 #endif
 
-#ifdef SIGWINCH
 static int need_resize_screen = FALSE;
 static void resize_hook(SIGNAL_ARG);
 static void resize_screen(void);
-#endif
 
 #ifdef USE_ALARM
 static AlarmEvent DefaultAlarm = {
@@ -588,12 +586,7 @@ setopt:
 #endif
     if (!w3m_dump && !w3m_backend) {
 	fmInit();
-#ifdef SIGWINCH
 	mySignal(SIGWINCH, resize_hook);
-#else				/* not SIGWINCH */
-	setlinescols();
-	setupscreen();
-#endif				/* not SIGWINCH */
     }
 #ifdef USE_IMAGE
     else if (w3m_halfdump && displayImage)
@@ -919,32 +912,24 @@ retry_as_local_file:
 	    alarm(CurrentAlarm->sec);
 	}
 #endif
-#ifdef SIGWINCH
 	mySignal(SIGWINCH, resize_hook);
-#endif
 #ifdef USE_IMAGE
 	if (activeImage && displayImage && Currentbuf->img &&
 	    !Currentbuf->image_loaded) {
 	    do {
-#ifdef SIGWINCH
 		if (need_resize_screen)
 		    resize_screen();
-#endif
 		loadImage(Currentbuf, IMG_FLAG_NEXT);
 	    } while (sleep_till_anykey(1, 0) <= 0);
 	}
-#ifdef SIGWINCH
 	else
 #endif
-#endif
-#ifdef SIGWINCH
 	{
 	    do {
 		if (need_resize_screen)
 		    resize_screen();
 	    } while (sleep_till_anykey(1, 0) <= 0);
 	}
-#endif
 	c = getch();
 #ifdef USE_ALARM
 	if (CurrentAlarm->sec > 0) {
@@ -1593,7 +1578,6 @@ intTrap(SIGNAL_ARG)
     LONGJMP(IntReturn, 0);
 }
 
-#ifdef SIGWINCH
 static void
 resize_hook(SIGNAL_ARG)
 {
@@ -1610,7 +1594,6 @@ resize_screen(void)
     if (CurrentTab)
 	displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-#endif				/* SIGWINCH */
 
 #ifdef SIGPIPE
 static void
