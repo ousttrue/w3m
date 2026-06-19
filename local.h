@@ -7,14 +7,7 @@
 #define W3M_LOCAL_H
 
 #include <sys/stat.h>
-
-#ifdef HAVE_DIRENT_H
 #include <dirent.h>
-typedef struct dirent Directory;
-#else				/* not HAVE_DIRENT_H */
-#include <sys/dir.h>
-typedef struct direct Directory;
-#endif				/* not HAVE_DIRENT_H */
 
 #ifndef S_IFMT
 #define S_IFMT  0170000

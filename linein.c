@@ -10,7 +10,6 @@
 #include "proto.h"
 #include "form.h"
 #include "indep.h"
-#include "local.h"
 #include "search.h"
 #include "terms.h"
 
@@ -996,7 +995,7 @@ doComplete(Str ifn, int *status, int next)
     int fl, i;
     char *fn, *p;
     DIR *d;
-    Directory *dir;
+    struct dirent *dir;
     struct stat st;
 
     if (!cm_next) {

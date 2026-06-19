@@ -61,7 +61,7 @@ loadLocalDir(char *dname)
 {
     Str tmp;
     DIR *d;
-    Directory *dir;
+    struct dirent *dir;
     struct stat st;
     char **flist;
     char *p, *qdir;

@@ -121,7 +121,6 @@ case "$host_os" in
     ;;
 esac
 
-AC_HEADER_DIRENT
 dnl Checks for library functions.
 AC_CHECK_FUNCS(strcasestr)
 AC_W3M_SIGSETJMP
