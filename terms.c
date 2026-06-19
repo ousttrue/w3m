@@ -6,6 +6,7 @@
 #include "terms.h"
 
 #include "config.h"
+#include "etc.h"
 #include "fm.h"
 #include "proto.h"
 #include "myctype.h"

@@ -67,7 +67,6 @@
 /* 
  * Constants.
  */
-#define LINELEN	256		/* Initial line length */
 #define PAGER_MAX_LINE	10000	/* Maximum line kept as pager */
 
 #define DEFAULT_COLS 80
@@ -190,14 +189,6 @@ typedef struct _DownloadList {
 #define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
 #define NO_BUFFER ((Buffer*)1)
-
-#define TMPF_DFL	0
-#define TMPF_SRC	1
-#define TMPF_FRAME	2
-#define TMPF_CACHE	3
-#define TMPF_COOKIE	4
-#define TMPF_HIST	5
-#define MAX_TMPF_TYPE	6
 
 /* 
  * Globals.
@@ -462,7 +453,6 @@ global char *mimetypes_files init(NULL);
 global char *urimethodmap_files init(NULL);
 #endif
 
-global TextList *fileToDelete;
 
 #ifdef USE_HISTORY
 global int UseHistory init(TRUE);

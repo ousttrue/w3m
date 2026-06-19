@@ -2,6 +2,7 @@
 #include "image.h"
 
 #include "config.h"
+#include "etc.h"
 #include "history.h"
 #include "fm.h"
 #include "proto.h"

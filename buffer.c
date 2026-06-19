@@ -6,6 +6,7 @@
 #include "config.h"
 #include "ctrlcode.h"
 #include "display.h"
+#include "etc.h"
 #include "fm.h"
 #include "proto.h"
 #include "html.h"

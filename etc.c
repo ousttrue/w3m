@@ -1,4 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "etc.h"
+
 #include "config.h"
 #include "display.h"
 #include "fm.h"
@@ -37,6 +39,7 @@ struct auth_pass {
 struct auth_pass *passwords = NULL;
 
 extern Hash_si tagtable;
+TextList *fileToDelete;
 
 int
 columnSkip(Buffer *buf, int offset)
