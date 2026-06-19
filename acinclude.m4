@@ -391,23 +391,6 @@ AC_DEFUN([AC_W3M_W3MMAILER],
  AC_MSG_RESULT($enable_w3mmailer)])
 #
 # ----------------------------------------------------------------
-# AC_W3M_EXTLIBS(libs)
-# ----------------------------------------------------------------
-AC_DEFUN([AC_W3M_EXTLIBS],
-[lib=$1
- AC_MSG_CHECKING(for -l$lib)
- extlib="not found"
- for dir in /lib /usr/lib /usr/local/lib /usr/ucblib /usr/ccslib /usr/ccs/lib /lib64 /usr/lib64
- do
-   if test -f $dir/lib$lib.a -o -f $dir/lib$lib.so ; then 
-    LIBS="$LIBS -l$lib"
-    extlib="found at $dir"
-    break
-   fi
- done
- AC_MSG_RESULT($extlib)])
-#
-# ----------------------------------------------------------------
 # AC_W3M_TERMLIB
 # ----------------------------------------------------------------
 AC_DEFUN([AC_W3M_TERMLIB],

@@ -25,6 +25,7 @@ Unreleased
   - Treat empty {HTTP,WWW}_HOME variables as unset
   - Fix key mappings ending with a hyphen
   - Fix executable check in check_local_cgi
+  - Fix configure uses wrong libs when cross-compiling
 
 w3m 0.5.6 - 2026-01-23
 

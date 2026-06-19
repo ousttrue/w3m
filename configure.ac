@@ -16,6 +16,7 @@ W3M_LANG=${LC_ALL:-$LANG}
 dnl AM_INIT_AUTOMAKE(w3m, 0.4)
 AC_CONFIG_HEADERS([config.h])
 dnl Checks for programs.
+PKG_PROG_PKG_CONFIG
 AC_PROG_CXX
 AC_PROG_AWK
 AC_PROG_CC
@@ -82,10 +83,15 @@ AC_W3M_MAILER
 AC_W3M_EXT_BROWSER
 
 dnl Checks for ext libs
-for lib in bsd BSD 44bsd socket nsl dld dl
-do
- AC_W3M_EXTLIBS($lib)
-done
+PKG_CHECK_MODULES([LIBBSD], [libbsd], [
+    CFLAGS="$CFLAGS $LIBBSD_CFLAGS"
+    LIBS="$LIBS $LIBBSD_LIBS"
+], [
+    AC_SEARCH_LIBS([setproctitle], [bsd BSD 44bsd])
+])
+AC_SEARCH_LIBS([socket], [socket])
+AC_SEARCH_LIBS([gethostbyname], [nsl])
+AC_SEARCH_LIBS([dlopen], [dl dld])
 
 AC_W3M_IPv6
 AC_W3M_SSL_DIGEST_AUTH
