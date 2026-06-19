@@ -482,7 +482,7 @@ main(int argc, char **argv)
 	else if (ISOPT("-W"))
 	    WrapDefault = !WrapDefault;
 	else if (ISOPT("-X"))
-	    Do_not_use_ti_te = TRUE;
+	    use_ti_te = FALSE;
 
 	else if (ISOPT("-h"))
 	    help();

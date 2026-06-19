@@ -64,5 +64,5 @@ void reset_tty(void);
 void setupscreen(void);
 
 extern char *displayTitleTerm;
-extern int Do_not_use_ti_te;
+extern int use_ti_te;
 #endif

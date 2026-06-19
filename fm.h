@@ -172,7 +172,6 @@ extern int ai_family_order_table[7][3];	/* XXX */
 #endif				/* INET6 */
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
-#define Do_not_use_proxy (!use_proxy)
 #ifdef USE_NNTP
 global char *NNTP_server init(NULL);
 global char *NNTP_mode init(NULL);

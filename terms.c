@@ -62,7 +62,7 @@ static void set_int(void);
 static void getTCstr(void);
 
 char *displayTitleTerm = NULL;
-int Do_not_use_ti_te = FALSE;
+int use_ti_te = TRUE;
 
 #ifdef __EMX__
 #define INCL_DOSNLS
@@ -930,7 +930,7 @@ reset_tty(void)
 {
     writestr(T_op);		/* turn off */
     writestr(T_me);
-    if (!Do_not_use_ti_te) {
+    if (use_ti_te) {
 	if (T_te && *T_te)
 	    writestr(T_te);
 	else
@@ -1174,7 +1174,7 @@ initscr(void)
 	return -1;
     set_int();
     getTCstr();
-    if (T_ti && !Do_not_use_ti_te)
+    if (T_ti && use_ti_te)
 	writestr(T_ti);
     setupscreen();
     return 0;

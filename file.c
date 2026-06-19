@@ -1843,7 +1843,7 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 	     (pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) ||
 #endif				/* USE_GOPHER */
 	     (pu.scheme == SCM_FTP && non_null(FTP_proxy))
-	 ) && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
+	 ) && use_proxy && needs_proxy(pu.host))) {
 
 	if (fmInitialized) {
 	    term_cbreak();

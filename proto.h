@@ -430,7 +430,7 @@ extern Str unquote_mailcap(char *qstr, const char *type, char *name, char *attr,
 			   int *mc_stat);
 extern char *guessContentType(const char *filename);
 extern TextList *make_domain_list(char *domain_list);
-extern int check_no_proxy(char *domain);
+extern int needs_proxy(char *domain);
 extern InputStream openFTPStream(ParsedURL *pu, URLFile *uf);
 #ifdef USE_M17N
 extern Str loadFTPDir(ParsedURL *pu, wc_ces * charset);

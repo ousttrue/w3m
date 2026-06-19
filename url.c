@@ -1758,8 +1758,8 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 	if (pu->file == NULL)
 	    pu->file = allocStr("/", -1);
 	if (non_null(FTP_proxy) &&
-	    !Do_not_use_proxy &&
-	    pu->host != NULL && !check_no_proxy(pu->host)) {
+	    use_proxy &&
+	    pu->host != NULL && needs_proxy(pu->host)) {
 	    hr->flag |= HR_FLAG_PROXY;
 	    sock = openSocket(FTP_proxy_parsed.host,
 			      schemeNumToName(FTP_proxy_parsed.scheme),
@@ -1791,8 +1791,8 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 #ifdef USE_SSL
 		(pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) :
 #endif				/* USE_SSL */
-		non_null(HTTP_proxy)) && !Do_not_use_proxy &&
-	    pu->host != NULL && !check_no_proxy(pu->host)) {
+		non_null(HTTP_proxy)) && use_proxy &&
+	    pu->host != NULL && needs_proxy(pu->host)) {
 	    hr->flag |= HR_FLAG_PROXY;
 #ifdef USE_SSL
 	    if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
@@ -1948,8 +1948,8 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 	  pu->file = tmp->ptr;
 	}
 	if (non_null(GOPHER_proxy) &&
-	    !Do_not_use_proxy &&
-	    pu->host != NULL && !check_no_proxy(pu->host)) {
+	    use_proxy &&
+	    pu->host != NULL && needs_proxy(pu->host)) {
 	    hr->flag |= HR_FLAG_PROXY;
 	    sock = openSocket(GOPHER_proxy_parsed.host,
 			      schemeNumToName(GOPHER_proxy_parsed.scheme),
@@ -2144,7 +2144,7 @@ domain_match(char *pat, char *domain)
 }
 
 int
-check_no_proxy(char *domain)
+needs_proxy(char *domain)
 {
     TextListItem *tl;
     volatile int ret = 0;
