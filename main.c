@@ -691,17 +691,21 @@ setopt:
 
     orig_GC_warn_proc = GC_get_warn_proc();
     GC_set_warn_proc(wrap_GC_warn_proc);
+
+    if (load_bookmark) {
+	if(!(newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL))) {
+	    err_msg = Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
+	    w3m_exit(1);
+	}
+	proc_buf(newbuf, search_header, open_new_tab);
+    }
+
     if (load_argc == 0) {
 	/* no URL specified */
 	if (!isatty(0)) {
 	    redin = newFileStream(fdopen(dup(0), "rb"), pclose);
 	    newbuf = openGeneralPagerBuffer(redin);
 	    dup2(1, 0);
-	}
-	else if (load_bookmark) {
-	    newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL);
-	    if (newbuf == NULL)
-		err_msg = Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
 	}
 	else if (visual_start) {
 	    /* FIXME: gettextize? */
