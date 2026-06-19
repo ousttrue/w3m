@@ -435,19 +435,6 @@ global int use_lessopen init(FALSE);
 
 global char *keymap_file init(KEYMAP_FILE);
 
-#ifdef USE_M17N
-#define get_mctype(c) ((Lineprop)wtf_type((const wc_uchar *)(c)) << 8)
-#define get_mclen(c) wtf_len1((const wc_uchar *)(c))
-#define get_mcwidth(c) wtf_width((const wc_uchar *)(c))
-#define get_strwidth(c) wtf_strwidth((const wc_uchar *)(c))
-#define get_Str_strwidth(c) wtf_strwidth((wc_uchar *)((c)->ptr))
-#else
-#define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
-#define get_mclen(c) 1
-#define get_mcwidth(c) 1
-#define get_strwidth(c) strlen(c)
-#define get_Str_strwidth(c) ((c)->length)
-#endif
 
 global int FollowRedirection init(10);
 
