@@ -213,14 +213,6 @@ global char TrapSignal init(TRUE);
 	mySignal(SIGINT, prevtrap); \
 }
 
-extern unsigned char GlobalKeymap[];
-extern unsigned char EscKeymap[];
-extern unsigned char EscBKeymap[];
-extern unsigned char EscDKeymap[];
-#ifdef __EMX__
-extern unsigned char PcKeymap[];
-#endif
-
 #ifdef INET6
 #define DNS_ORDER_UNSPEC     0
 #define DNS_ORDER_INET_INET6 1
@@ -255,9 +247,6 @@ global int open_tab_dl_list init(FALSE);
 global int close_tab_back init(FALSE);
 global DownloadList *FirstDL init(NULL);
 global DownloadList *LastDL init(NULL);
-global int CurrentKey;
-global char *CurrentKeyData;
-global char *CurrentCmdData;
 global char *w3m_reqlog;
 extern int enable_inline_image;
 

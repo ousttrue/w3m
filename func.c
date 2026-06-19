@@ -10,6 +10,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "history.h"
+#include "keybind.h"
 #include "menu.h"
 #include "myctype.h"
 #include "rc.h"

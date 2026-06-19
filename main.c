@@ -14,6 +14,7 @@
 #include "form.h"
 #include "funcname1.h"
 #include "linein.h"
+#include "keybind.h"
 #include "menu.h"
 #include "myctype.h"
 #include "pathdefs.h"
@@ -97,6 +98,9 @@ typedef struct _Event {
 #define GC_WARN_KEEP_MAX (20)
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
+
+int CurrentKey;
+char *CurrentCmdData;
 
 int nTab;
 int TabCols = 10;

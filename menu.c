@@ -10,6 +10,7 @@
 #include "funcname1.h"
 #include "myctype.h"
 #include "linein.h"
+#include "keybind.h"
 #include "rc.h"
 #include "regex.h"
 #include "search.h"
