@@ -8,6 +8,7 @@
 #include "cookie.h"
 #include "fm.h"
 #include "proto.h"
+#include "menu.h"
 #include "myctype.h"
 #include "parsetag.h"
 #include "pathdefs.h"

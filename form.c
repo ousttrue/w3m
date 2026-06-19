@@ -9,6 +9,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "linein.h"
+#include "menu.h"
 #include "myctype.h"
 #include "parsetag.h"
 #include "parsetagx.h"

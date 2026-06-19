@@ -24,7 +24,6 @@
 #include "frame.h"
 #include "func.h"
 #include "html.h"
-#include "menu.h"
 #include "parsetag.h"
 #include "parsetagx.h"
 #include "terms.h"
