@@ -16,6 +16,7 @@
 #include "funcname1.h"
 #include "linein.h"
 #include "keybind.h"
+#include "mouse.h"
 #include "menu.h"
 #include "myctype.h"
 #include "pathdefs.h"
@@ -106,6 +107,10 @@ DownloadList *LastDL = NULL;
 
 int CurrentKey;
 char *CurrentCmdData;
+
+#ifdef USE_MOUSE
+MouseAction mouse_action;
+#endif
 
 int nTab;
 int TabCols = 10;

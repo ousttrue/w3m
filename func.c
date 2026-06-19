@@ -11,6 +11,7 @@
 #include "proto.h"
 #include "history.h"
 #include "keybind.h"
+#include "mouse.h"
 #include "menu.h"
 #include "myctype.h"
 #include "rc.h"
