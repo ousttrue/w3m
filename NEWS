@@ -22,6 +22,7 @@ Unreleased
   - Ignore https requirements for secure cookies when connecting to localhost
   - Exit with error when dumping a document failed
   - Treat empty {HTTP,WWW}_HOME variables as unset
+  - Fix key mappings ending with a hyphen
   - Fix executable check in check_local_cgi
 
 w3m 0.5.6 - 2026-01-23

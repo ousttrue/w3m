@@ -362,7 +362,7 @@ getKey(const char *s)
     c = getKey2(&s);
     if (c < 0)
 	return -1;
-    if (*s == ' ' || *s == '-')
+    if ((*s == ' ' || *s == '-') && s[1])
 	s++;
     if (*s) {
 	c2 = getKey2(&s);
