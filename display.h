@@ -3,26 +3,6 @@
 #define W3M_DISPLAY_H
 
 #include "config.h"
-/*
- * Line Property
- */
-
-#define P_CHARTYPE	0x3f00
-#ifdef USE_M17N
-#define PC_ASCII	(WTF_TYPE_ASCII << 8)
-#define PC_CTRL		(WTF_TYPE_CTRL << 8)
-#define PC_WCHAR1	(WTF_TYPE_WCHAR1 << 8)
-#define PC_WCHAR2	(WTF_TYPE_WCHAR2 << 8)
-#define PC_KANJI	(WTF_TYPE_WIDE << 8)
-#define PC_KANJI1	(PC_WCHAR1 | PC_KANJI)
-#define PC_KANJI2	(PC_WCHAR2 | PC_KANJI)
-#define PC_UNKNOWN	(WTF_TYPE_UNKNOWN << 8)
-#define PC_UNDEF	(WTF_TYPE_UNDEF << 8)
-#else
-#define PC_ASCII	0x0000
-#define PC_CTRL		0x0100
-#endif
-#define PC_SYMBOL       0x8000
 
 /* Effect ( standout/underline ) */
 #define P_EFFECT	0x40ff
