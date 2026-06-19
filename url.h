@@ -6,7 +6,7 @@
 #include "html.h"
 #include "textlist.h"
 
-extern TextList *NO_proxy_domains;
+#define NO_REFERER ((char*)-1)
 
 typedef struct http_request {
     char command;
@@ -35,4 +35,19 @@ URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
 		TextList *extra_header, URLFile *ouf,
 		HRequest *hr, unsigned char *status);
 
+extern char *HTTP_proxy;
+extern ParsedURL HTTP_proxy_parsed;
+#ifdef USE_SSL
+extern char *HTTPS_proxy;
+extern ParsedURL HTTPS_proxy_parsed;
+#endif				/* USE_SSL */
+extern char *FTP_proxy;
+extern ParsedURL FTP_proxy_parsed;
+#ifdef USE_GOPHER
+extern char *GOPHER_proxy;
+extern ParsedURL GOPHER_proxy_parsed;
+#endif				/* USE_GOPHER */
+extern char *NO_proxy;
+extern TextList *NO_proxy_domains;
+extern int NOproxy_netaddr;
 #endif

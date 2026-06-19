@@ -8,6 +8,7 @@
 #include "linein.h"
 #include "myctype.h"
 #include "regex.h"
+#include "url.h"
 
 #include <strings.h>
 

@@ -21,6 +21,7 @@
 #include "terms.h"
 #include "tab.h"
 #include "util.h"
+#include "url.h"
 #include "version.h"
 
 #include <errno.h>

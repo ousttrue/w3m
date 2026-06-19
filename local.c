@@ -4,6 +4,7 @@
 #include "etc.h"
 #include "fm.h"
 #include "proto.h"
+#include "url.h"
 #include "version.h"
 
 #include <errno.h>

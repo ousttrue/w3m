@@ -54,7 +54,21 @@ int ai_family_order_table[7][3] = {
 };
 #endif				/* INET6 */
 
+char *HTTP_proxy = NULL;
+ParsedURL HTTP_proxy_parsed;
+#ifdef USE_SSL
+char *HTTPS_proxy = NULL;
+ParsedURL HTTPS_proxy_parsed;
+#endif				/* USE_SSL */
+char *FTP_proxy = NULL;
+ParsedURL FTP_proxy_parsed;
+#ifdef USE_GOPHER
+char *GOPHER_proxy = NULL;
+ParsedURL GOPHER_proxy_parsed;
+#endif				/* USE_GOPHER */
+char *NO_proxy = NULL;
 TextList *NO_proxy_domains;
+int NOproxy_netaddr = TRUE;
 
 static JMP_BUF AbortLoading;
 
