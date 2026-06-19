@@ -517,9 +517,7 @@ global char *rc_dir init(NULL);
 global char *tmp_dir;
 global char *param_tmp_dir init(NULL);
 global char *param_dl_dir init(NULL);
-#ifdef HAVE_MKDTEMP
 global char *mkd_tmp_dir init(NULL);
-#endif
 global char *config_file init(NULL);
 
 #ifdef USE_MOUSE

@@ -1471,7 +1471,6 @@ err:
 	((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') &&
 	((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
 	tmp_dir = "/tmp";
-#ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir) {	/* init_tmp is called when the user changes options */
 	tmp_dir = mkd_tmp_dir;
 	return;
@@ -1481,7 +1480,6 @@ err:
 	mkd_tmp_dir = tmp_dir;
     else
 	tmp_dir = rc_dir;
-#endif
 }
 
 

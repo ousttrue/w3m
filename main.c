@@ -6032,7 +6032,6 @@ w3m_exit(int i)
 #ifdef __MINGW32_VERSION
     WSACleanup();
 #endif
-#ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
 	if (rmdir(mkd_tmp_dir) != 0) {
 	    err_msg = Strcat(err_msg,
@@ -6040,7 +6039,6 @@ w3m_exit(int i)
 				     mkd_tmp_dir));
 	    i = i ? i : 1;
 	}
-#endif
     if (err_msg)
 	fprintf(stderr, "%s", err_msg->ptr);
     exit(i);
