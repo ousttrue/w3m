@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
 
+#include "backend.h"
 #include "buffer.h"
 #include "cookie.h"
 #include "config.h"

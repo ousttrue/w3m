@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #define MAINPROGRAM
+#include "backend.h"
 #include "buffer.h"
 #include "config.h"
 #include "cookie.h"

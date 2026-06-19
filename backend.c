@@ -1,15 +1,21 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "backend.h"
+
 #include "config.h"
 #include "cookie.h"
 #include "fm.h"
 #include "proto.h"
 #include "terms.h"
+#include "url.h"
 
 #include <gc/gc.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 
+int w3m_backend = FALSE;
+TextLineList *backend_halfdump_buf;
+TextList *backend_batch_commands = NULL;
 
 /* Prototype declaration of internal functions */
 #ifdef HAVE_READLINE
