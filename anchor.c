@@ -7,6 +7,7 @@
 #include "proto.h"
 #include "linein.h"
 #include "myctype.h"
+#include "rc.h"
 #include "regex.h"
 #include "terms.h"
 #include "url.h"

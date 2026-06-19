@@ -7,6 +7,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "myctype.h"
+#include "rc.h"
 #include "terms.h"
 #include "symbol.h"
 

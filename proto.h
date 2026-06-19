@@ -2,6 +2,8 @@
 #ifndef W3M_PROTO_H
 #define W3M_PROTO_H
 
+#include "fm.h"
+
 #include "ctrlcode.h"
 #include "buffer.h"
 #include "file.h"

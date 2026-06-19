@@ -13,6 +13,7 @@
 #include "proto.h"
 #include "html.h"
 #include "linein.h"
+#include "rc.h"
 #include "terms.h"
 #include "util.h"
 

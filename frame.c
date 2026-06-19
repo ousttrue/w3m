@@ -8,6 +8,7 @@
 #include "frame.h"
 #include "proto.h"
 #include "parsetagx.h"
+#include "rc.h"
 #include "symbol.h"
 #include "terms.h"
 

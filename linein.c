@@ -11,6 +11,7 @@
 #include "proto.h"
 #include "form.h"
 #include "indep.h"
+#include "rc.h"
 #include "search.h"
 #include "tab.h"
 #include "terms.h"

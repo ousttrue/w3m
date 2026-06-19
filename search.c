@@ -7,6 +7,7 @@
 #include "display.h"
 #include "fm.h"
 #include "proto.h"
+#include "rc.h"
 #include "regex.h"
 #include "tab.h"
 

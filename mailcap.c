@@ -3,6 +3,7 @@
 #include "proto.h"
 #include "history.h"
 #include "myctype.h"
+#include "rc.h"
 
 #include <stdio.h>
 #include <strings.h>

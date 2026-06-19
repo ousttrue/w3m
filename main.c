@@ -128,7 +128,6 @@ Hist *TextHist;
 Hist *URLHist;
 extern int opt_cols;
 int (*searchRoutine) (Buffer *, const char *);
-int enable_inline_image;
 int fold_pre;
 
 static Event *CurrentEvent = NULL;

@@ -11,6 +11,7 @@
 #include "proto.h"
 #include "menu.h"
 #include "linein.h"
+#include "rc.h"
 
 #include <math.h>
 

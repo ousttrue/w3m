@@ -8,7 +8,7 @@
 #undef USE_M17N
 #else				/* DUMMY */
 #include "charset.h"
-#include "fm.h"
+#include "rc.h"
 #include "proto.h"
 #ifdef USE_M17N
 #ifdef USE_UNICODE

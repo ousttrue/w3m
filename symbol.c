@@ -8,6 +8,7 @@
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
+#include "rc.h"
 #ifdef USE_M17N
 #include "Symbols/eucjp.sym"
 #include "Symbols/euckr.sym"

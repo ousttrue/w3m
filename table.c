@@ -13,6 +13,7 @@
 #include "html.h"
 #include "myctype.h"
 #include "parsetagx.h"
+#include "rc.h"
 #include "symbol.h"
 #include "terms.h"
 

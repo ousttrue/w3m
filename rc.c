@@ -8,6 +8,7 @@
 #include "config.h"
 #include "cookie.h"
 #include "display.h"
+#include "etc.h"
 #include "fm.h"
 #include "proto.h"
 #include "menu.h"
@@ -24,6 +25,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 struct param_ptr {
     char *name;
@@ -46,6 +49,22 @@ struct rc_search_table {
 
 static struct rc_search_table *RC_search_table;
 static int RC_table_size;
+
+int pixel_per_char_i = DEFAULT_PIXEL_PER_CHAR;
+int set_pixel_per_char = FALSE;
+#ifdef USE_IMAGE
+int pixel_per_line_i = DEFAULT_PIXEL_PER_LINE;
+int set_pixel_per_line = FALSE;
+#endif
+
+char *rc_dir = NULL;
+char *tmp_dir;
+char *mkd_tmp_dir = NULL;
+char *config_file = NULL;
+
+int squeezeBlankLine = FALSE;
+char *BookmarkFile = NULL;
+int ShowEffect = TRUE;
 
 #define P_INT      0
 #define P_SHORT    1
@@ -339,17 +358,6 @@ static struct sel_c wheelmode[] = {
 };
 #endif				/* MOUSE */
 
-#ifdef INET6
-static struct sel_c dnsorders[] = {
-    {N_S(DNS_ORDER_UNSPEC), N_("unspecified")},
-    {N_S(DNS_ORDER_INET_INET6), N_("inet inet6")},
-    {N_S(DNS_ORDER_INET6_INET), N_("inet6 inet")},
-    {N_S(DNS_ORDER_INET_ONLY), N_("inet only")},
-    {N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only")},
-    {0, NULL, NULL}
-};
-#endif				/* INET6 */
-
 #ifdef USE_COOKIE
 static struct sel_c badcookiestr[] = {
     {N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard")},
@@ -366,6 +374,17 @@ static struct sel_c mailtooptionsstr[] = {
     {N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL")},
     {0, NULL, NULL}
 };
+
+#ifdef INET6
+static struct sel_c dnsorders[] = {
+    {N_S(DNS_ORDER_UNSPEC), N_("unspecified")},
+    {N_S(DNS_ORDER_INET_INET6), N_("inet inet6")},
+    {N_S(DNS_ORDER_INET6_INET), N_("inet6 inet")},
+    {N_S(DNS_ORDER_INET_ONLY), N_("inet only")},
+    {N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only")},
+    {0, NULL, NULL}
+};
+#endif				/* INET6 */
 
 #ifdef USE_M17N
 static wc_ces_list *display_charset_str = NULL;
@@ -396,6 +415,199 @@ static struct sel_c inlineimgstr[] = {
     {0, NULL, NULL}
 };
 #endif				/* USE_IMAGE */
+
+#define PAGER_MAX_LINE	10000	/* Maximum line kept as pager */
+
+/* Globals */
+char *AcceptEncoding = NULL;
+char *AcceptLang = NULL;
+char *AcceptMedia = NULL;
+char *ExtBrowser = DEF_EXT_BROWSER;
+char *ExtBrowser2 = NULL;
+char *ExtBrowser3 = NULL;
+char *ExtBrowser4 = NULL;
+char *ExtBrowser5 = NULL;
+char *ExtBrowser6 = NULL;
+char *ExtBrowser7 = NULL;
+char *ExtBrowser8 = NULL;
+char *ExtBrowser9 = NULL;
+char *UserAgent = NULL;
+char *cgi_bin = NULL;
+char *cookie_accept_domains = NULL;
+char *cookie_avoid_wrong_number_of_dots = NULL;
+char *cookie_reject_domains = NULL;
+char *document_root = NULL;
+char *ftppasswd = NULL;
+char *index_file = NULL;
+char *keymap_file = KEYMAP_FILE;
+char *mailcap_files = NULL;
+char *mimetypes_files = NULL;
+char *param_dl_dir = NULL;
+char *param_tmp_dir = NULL;
+char *passwd_file = NULL;
+char *personal_document_root = NULL;
+char *pre_form_file = NULL;
+char *siteconf_file = NULL;
+char ArgvIsURL = TRUE;
+char AutoUncompress = FALSE;
+char DecodeCTE = FALSE;
+char DisableCenter = FALSE;
+char DisplayBorders = FALSE;
+char LocalhostOnly = FALSE;
+char MetaRefresh = FALSE;
+char PreserveTimestamp = TRUE;
+char RenderFrame = FALSE;
+char TargetSelf = FALSE;
+char UseAltEntity = FALSE;
+char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
+const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
+const char *Editor = DEF_EDITOR;
+double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
+int BackgroundExtViewer = TRUE;
+int CrossOriginReferer = TRUE;
+int DecodeURL = FALSE;
+int DefaultURLString = DEFAULT_URL_CURRENT;
+int FoldLine = FALSE;
+int FoldPre = FALSE;
+int FoldTextarea = FALSE;
+int FollowRedirection = 10;
+int IgnoreCase = TRUE;
+int IndentIncr = 4;
+int MailtoOptions = MAILTO_OPTIONS_IGNORE;
+int MarkAllPages = FALSE;
+int MaxCols = 0;
+int MessageDelay = 2;
+int NoSendReferer = FALSE;
+int PagerMax = PAGER_MAX_LINE;
+int SmartCase = FALSE;
+int Tabstop = 8;
+int UseExternalDirBuffer = TRUE;
+int WrapDefault = FALSE;
+int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
+int accept_cookie = TRUE;
+int clear_buffer = TRUE;
+int close_tab_back = FALSE;
+int confirm_on_quit = TRUE;
+int disable_secret_security_check = FALSE;
+int displayColumnNumber = FALSE;
+int displayInsDel = DISPLAY_INS_DEL_NORMAL;
+int displayLineInfo = FALSE;
+int displayLink = FALSE;
+int displayLinkNumber = FALSE;
+int emacs_like_lineedit = FALSE;
+int enable_inline_image;
+int exit_on_last = FALSE;
+int ftppass_hostnamegen = TRUE;
+int ignore_null_img_alt = TRUE;
+int label_topline = FALSE;
+int multicolList = FALSE;
+int nextpage_topline = FALSE;
+int open_tab_blank = FALSE;
+int open_tab_dl_list = FALSE;
+int pseudoInlines = TRUE;
+int retryAsHttp = TRUE;
+int rl_paste = FALSE;
+int showLineNum = FALSE;
+int show_cookie = FALSE;
+int show_srch_str = TRUE;
+int space_autocomplete = FALSE;
+int use_cookie = TRUE;
+int use_lessopen = FALSE;
+int vi_prec_num = FALSE;
+int zeroBasedLinkNo = FALSE;
+
+#ifdef INET6
+int DNS_order = DNS_ORDER_UNSPEC;
+#endif
+
+#ifdef USE_DICT
+int UseDictCommand = TRUE;
+const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
+const char *DictPrompt = "(dictionary)!";
+#endif				/* USE_DICT */
+
+#ifdef USE_EXTERNAL_URI_LOADER
+char *urimethodmap_files = NULL;
+#endif
+
+#ifdef USE_HISTORY
+int UseHistory = TRUE;
+int URLHistSize = 100;
+int SaveURLHist = TRUE;
+#endif
+
+#ifdef USE_IMAGE
+double pixel_per_line = DEFAULT_PIXEL_PER_LINE;
+int displayImage = TRUE;
+int view_unseenobject = FALSE;
+int autoImage = TRUE;
+int maxLoadImage = 4;
+int useExtImageViewer = TRUE;
+double image_scale = 100;
+char *Imgdisplay = IMGDISPLAY;
+int image_map_list = TRUE;
+#else
+int view_unseenobject = TRUE;
+int displayImage = FALSE;	/* XXX: emacs-w3m use display_image=off */
+#endif
+
+#ifdef USE_MARK
+int use_mark = FALSE;
+#endif
+
+#ifdef USE_MIGEMO
+int use_migemo = FALSE;
+char *migemo_command = DEF_MIGEMO_COMMAND;
+#endif
+
+#ifdef USE_MOUSE
+int use_mouse = TRUE;
+int reverse_mouse = FALSE;
+int relative_wheel_scroll = FALSE;
+int relative_wheel_scroll_ratio = 30;
+int fixed_wheel_scroll_count = 5;
+#endif
+
+#ifdef USE_NNTP
+char *NNTP_server = NULL;
+char *NNTP_mode = NULL;
+int MaxNewsMessage = 50;
+#endif
+
+#ifdef USE_M17N
+const wc_ces InnerCharset = WC_CES_WTF;
+wc_ces DisplayCharset = DISPLAY_CHARSET;
+wc_ces DocumentCharset = DOCUMENT_CHARSET;
+wc_ces SystemCharset = SYSTEM_CHARSET;
+wc_ces BookmarkCharset = SYSTEM_CHARSET;
+char ExtHalfdump = FALSE;
+char FollowLocale = TRUE;
+char UseContentCharset = TRUE;
+char SearchConv = TRUE;
+char SimplePreserveSpace = FALSE;
+#endif
+
+#ifdef USE_SSL
+char *ssl_forbid_method = "2, 3, t, 5";
+char *ssl_min_version = NULL;
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
+char *ssl_cipher = "DEFAULT:!LOW:!RC4:!EXP";
+#else
+char *ssl_cipher = NULL;
+#endif
+int ssl_verify_server = TRUE;
+char *ssl_cert_file = NULL;
+char *ssl_key_file = NULL;
+char *ssl_ca_path = NULL;
+char *ssl_ca_file = DEF_CAFILE;
+int ssl_ca_default = TRUE;
+#endif
+
+#ifdef USE_W3MMAILER
+char *Mailer = NULL;
+#else
+char *Mailer = DEF_MAILER;
+#endif
 
 struct param_ptr params1[] = {
     {"tabstop", P_NZINT, PI_TEXT, (void *)&Tabstop, CMT_TABSTOP, NULL},
@@ -598,7 +810,6 @@ struct param_ptr params4[] = {
     {"noproxy_netaddr", P_INT, PI_ONOFF, (void *)&NOproxy_netaddr,
      CMT_NOPROXY_NETADDR, NULL},
     {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE, NULL},
-
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
@@ -651,19 +862,6 @@ struct param_ptr params6[] = {
 };
 
 #ifdef USE_SSL
-char *ssl_forbid_method = "2, 3, t, 5";
-char *ssl_min_version = NULL;
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-char *ssl_cipher = "DEFAULT:!LOW:!RC4:!EXP";
-#else
-char *ssl_cipher = NULL;
-#endif
-int ssl_verify_server = TRUE;
-char *ssl_cert_file = NULL;
-char *ssl_key_file = NULL;
-char *ssl_ca_path = NULL;
-char *ssl_ca_file = DEF_CAFILE;
-int ssl_ca_default = TRUE;
 struct param_ptr params7[] = {
     {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
      CMT_SSL_FORBID_METHOD, NULL},
@@ -708,6 +906,7 @@ struct param_ptr params8[] = {
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 #endif
+
 
 struct param_ptr params9[] = {
     {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file, CMT_PASSWDFILE,
@@ -760,16 +959,6 @@ struct param_ptr params9[] = {
 };
 
 #ifdef USE_M17N
-const wc_ces InnerCharset = WC_CES_WTF;
-wc_ces DisplayCharset = DISPLAY_CHARSET;
-wc_ces DocumentCharset = DOCUMENT_CHARSET;
-wc_ces SystemCharset = SYSTEM_CHARSET;
-wc_ces BookmarkCharset = SYSTEM_CHARSET;
-char ExtHalfdump = FALSE;
-char FollowLocale = TRUE;
-char UseContentCharset = TRUE;
-char SearchConv = TRUE;
-char SimplePreserveSpace = FALSE;
 struct param_ptr params10[] = {
     {"display_charset", P_CODE, PI_CODE, (void *)&DisplayCharset,
      CMT_DISPLAY_CHARSET, (void *)&display_charset_str},
@@ -872,15 +1061,6 @@ static void parse_proxy(void);
 #ifdef USE_COLOR
 static int str_to_color(const char *value);
 #endif	/* USE_COLOR */
-
-/* Globals */
-char *cookie_accept_domains = NULL;
-char *cookie_avoid_wrong_number_of_dots = NULL;
-char *cookie_reject_domains = NULL;
-int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
-int accept_cookie = TRUE;
-int show_cookie = FALSE;
-int use_cookie = TRUE;
 
 static int
 compare_table(struct rc_search_table *a, struct rc_search_table *b)
