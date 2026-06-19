@@ -7,6 +7,7 @@
 #include "cookie.h"
 #include "config.h"
 #include "display.h"
+#include "download.h"
 #include "etc.h"
 #include "frame.h"
 #include "fm.h"

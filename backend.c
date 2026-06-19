@@ -4,6 +4,7 @@
 #include "charset.h"
 #include "config.h"
 #include "cookie.h"
+#include "download.h"
 #include "fm.h"
 #include "proto.h"
 #include "terms.h"

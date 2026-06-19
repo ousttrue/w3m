@@ -6,6 +6,7 @@
 #include "config.h"
 #include "cookie.h"
 #include "display.h"
+#include "download.h"
 #include "etc.h"
 #include "fm.h"
 #include "func.h"
@@ -98,6 +99,10 @@ typedef struct _Event {
 #define GC_WARN_KEEP_MAX (20)
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
+
+int do_download = FALSE;
+DownloadList *FirstDL = NULL;
+DownloadList *LastDL = NULL;
 
 int CurrentKey;
 char *CurrentCmdData;

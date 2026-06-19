@@ -292,10 +292,6 @@ extern char confirm_multi(const char *prompt);
 extern int matchattr(const char *p, const char *attr, int len, Str *value);
 extern void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(Buffer *buf, const char *field);
-extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-			    size_t size);
-extern void stopDownload(void);
-extern void download_action(struct parsed_tagarg *arg);
 extern void displayBuffer(Buffer *buf, int mode);
 extern void addChar(char c, Lineprop mode);
 #ifdef USE_M17N

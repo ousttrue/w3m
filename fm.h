@@ -131,19 +131,6 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef struct _DownloadList {
-    pid_t pid;
-    char *url;
-    char *save;
-    char *lock;
-    size_t size;
-    time_t time;
-    int running;
-    int err;
-    struct _DownloadList *next;
-    struct _DownloadList *prev;
-} DownloadList;
-#define DOWNLOAD_LIST_TITLE "Download List Panel"
 
 #define COPY_BUFROOT(dstbuf, srcbuf) {\
  (dstbuf)->rootX = (srcbuf)->rootX; \
@@ -245,8 +232,6 @@ global char *MyProgramName init("w3m");
 global int open_tab_blank init(FALSE);
 global int open_tab_dl_list init(FALSE);
 global int close_tab_back init(FALSE);
-global DownloadList *FirstDL init(NULL);
-global DownloadList *LastDL init(NULL);
 global char *w3m_reqlog;
 extern int enable_inline_image;
 
@@ -341,7 +326,6 @@ global char *pre_form_file init(NULL);
 global char *siteconf_file init(NULL);
 global char *ftppasswd init(NULL);
 global int ftppass_hostnamegen init(TRUE);
-global int do_download init(FALSE);
 #ifdef USE_IMAGE
 global char *image_source init(NULL);
 #endif
