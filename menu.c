@@ -1,7 +1,4 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-/* 
- * w3m menu.c
- */
 #include "menu.h"
 
 #include "buffer.h"
@@ -15,6 +12,7 @@
 #include "rc.h"
 #include "regex.h"
 #include "search.h"
+#include "tab.h"
 
 #include <stdio.h>
 

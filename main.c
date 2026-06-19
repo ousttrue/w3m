@@ -17,6 +17,7 @@
 #include "regex.h"
 #include "search.h"
 #include "terms.h"
+#include "tab.h"
 #include "util.h"
 #include "version.h"
 
@@ -98,6 +99,12 @@ typedef struct _Event {
 #define GC_WARN_KEEP_MAX (20)
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
+
+int nTab;
+int TabCols = 10;
+TabBuffer *CurrentTab;
+TabBuffer *FirstTab;
+TabBuffer *LastTab;
 
 Hist *DictHist;
 Hist *LoadHist;
@@ -861,6 +868,7 @@ retry_as_local_file:
     if (line_str) {
 	_goLine(line_str);
     }
+    /* main loop */
     for (;;) {
 	if (add_download_list) {
 	    add_download_list = FALSE;

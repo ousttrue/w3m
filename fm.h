@@ -17,15 +17,9 @@
 #undef USE_BG_COLOR
 #endif
 
-#include "ctrlcode.h"
-#include "buffer.h"
-#include "file.h"
-#include "form.h"
 #include "frame.h"
 #include "func.h"
 #include "html.h"
-#include "parsetag.h"
-#include "parsetagx.h"
 #include "terms.h"
 #include "textlist.h"
 
@@ -142,16 +136,6 @@ extern int REV_LB[];
  */
 
 #define NO_REFERER ((char*)-1)
-
-typedef struct _TabBuffer {
-    struct _TabBuffer *nextTab;
-    struct _TabBuffer *prevTab;
-    Buffer *currentBuffer;
-    Buffer *firstBuffer;
-    short x1;
-    short x2;
-    short y;
-} TabBuffer;
 
 typedef struct _DownloadList {
     pid_t pid;
@@ -290,17 +274,9 @@ global int CurrentPid;
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-global TabBuffer *CurrentTab;
-global TabBuffer *FirstTab;
-global TabBuffer *LastTab;
 global int open_tab_blank init(FALSE);
 global int open_tab_dl_list init(FALSE);
 global int close_tab_back init(FALSE);
-global int nTab;
-global int TabCols init(10);
-#define NO_TABBUFFER ((TabBuffer *)1)
-#define Currentbuf (CurrentTab->currentBuffer)
-#define Firstbuf (CurrentTab->firstBuffer)
 global DownloadList *FirstDL init(NULL);
 global DownloadList *LastDL init(NULL);
 global int CurrentKey;

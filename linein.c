@@ -11,6 +11,7 @@
 #include "form.h"
 #include "indep.h"
 #include "search.h"
+#include "tab.h"
 #include "terms.h"
 
 #ifdef USE_M17N

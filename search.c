@@ -7,6 +7,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "regex.h"
+#include "tab.h"
 
 #ifdef USE_M17N
 #include "libwc/wc.h"

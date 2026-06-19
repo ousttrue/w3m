@@ -10,6 +10,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "myctype.h"
+#include "tab.h"
 
 #include <errno.h>
 #include <fcntl.h>
