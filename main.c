@@ -153,6 +153,7 @@ static void init_from_env(void);
 static void intTrap(SIGNAL_ARG);
 static void keyPressEventProc(int c);
 static void moveTab(TabBuffer * t, TabBuffer * t2, int right);
+static void proc_buf(Buffer *newbuf, char search_header, int open_new_tab);
 static void save_buffer_position(Buffer *buf);
 static void set_buffer_environ(Buffer *);
 static void usage(void);
@@ -731,120 +732,84 @@ setopt:
 	}
 	if (!newbuf)
 	    w3m_exit(1);
-	i = -1;
-    }
-    else {
-	i = 0;
+	proc_buf(newbuf, search_header, open_new_tab);
     }
 
-    open_new_tab = FALSE;
-    for (; i < load_argc; i++) {
-	if (i >= 0) {
-	    SearchHeader = search_header;
-	    DefaultType = default_type;
-	    char *url;
-	    int retry = 0;
+    for (i = 0; i < load_argc; i++) {
+	SearchHeader = search_header;
+	DefaultType = default_type;
+	char *url;
+	int retry = 0;
 
-	    if (!*load_argv[i]) {
-		open_new_tab = TRUE;
-		continue;
-	    }
+	if (!*load_argv[i]) {
+	    open_new_tab = TRUE;
+	    continue;
+	}
 
-	    url = load_argv[i];
-	    if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
-	  retry_as_local_file:
-		url = file_to_url(load_argv[i]);
-	    else
-		url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
-	    if (w3m_dump == DUMP_HEAD) {
-		request = New(FormList);
-		request->method = FORM_METHOD_HEAD;
-		newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+	url = load_argv[i];
+	if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
+retry_as_local_file:
+	    url = file_to_url(load_argv[i]);
+	else
+	    url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
+	if (w3m_dump == DUMP_HEAD) {
+	    request = New(FormList);
+	    request->method = FORM_METHOD_HEAD;
+	    newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+	}
+	else {
+	    if (post_file && i == 0) {
+		FILE *fp;
+		Str body;
+		if (!strcmp(post_file, "-"))
+		    fp = stdin;
+		else
+		    fp = fopen(post_file, "r");
+		if (fp == NULL) {
+		    err_msg = Strcat(err_msg,
+				     Sprintf(_("w3m: Can't open %s.\n"),
+					     post_file));
+		    continue;
+		}
+		body = Strfgetall(fp);
+		if (fp != stdin)
+		    fclose(fp);
+		request =
+		    newFormList(NULL, "post", NULL, NULL, NULL, NULL,
+				NULL);
+		request->body = body->ptr;
+		request->boundary = NULL;
+		request->length = body->length;
 	    }
 	    else {
-		if (post_file && i == 0) {
-		    FILE *fp;
-		    Str body;
-		    if (!strcmp(post_file, "-"))
-			fp = stdin;
-		    else
-			fp = fopen(post_file, "r");
-		    if (fp == NULL) {
-			err_msg = Strcat(err_msg,
-					 Sprintf(_("w3m: Can't open %s.\n"),
-						 post_file));
-			continue;
-		    }
-		    body = Strfgetall(fp);
-		    if (fp != stdin)
-			fclose(fp);
-		    request =
-			newFormList(NULL, "post", NULL, NULL, NULL, NULL,
-				    NULL);
-		    request->body = body->ptr;
-		    request->boundary = NULL;
-		    request->length = body->length;
-		}
-		else {
-		    request = NULL;
-		}
-		newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+		request = NULL;
 	    }
-	    if (newbuf == NULL) {
-		if (ArgvIsURL && !retry) {
-		    retry = 1;
-		    goto retry_as_local_file;
-		}
-		err_msg = Strcat(err_msg,
-				 Sprintf(_("w3m: Can't load %s.\n"),
-					 load_argv[i]));
-		continue;
+	    newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+	}
+	if (newbuf == NULL) {
+	    if (ArgvIsURL && !retry) {
+		retry = 1;
+		goto retry_as_local_file;
 	    }
-	    else if (newbuf == NO_BUFFER)
-		continue;
-	    switch (newbuf->real_scheme) {
-	    case SCM_MAILTO:
-		break;
-	    case SCM_LOCAL:
-	    case SCM_LOCAL_CGI:
-		unshiftHist(LoadHist, url);
-	    default:
-		pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
-		break;
-	    }
+	    err_msg = Strcat(err_msg,
+			     Sprintf(_("w3m: Can't load %s.\n"),
+				     load_argv[i]));
+	    continue;
 	}
 	else if (newbuf == NO_BUFFER)
 	    continue;
-	if (newbuf->pagerSource ||
-	    (newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
-	     newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
-	    newbuf->search_header = search_header;
-	if (CurrentTab == NULL) {
-	    FirstTab = LastTab = CurrentTab = newTab();
-	    if (!FirstTab) {
-		fprintf(stderr, "%s\n","Can't allocated memory");
-		exit(3);
-	    }
-	    nTab = 1;
-	    Firstbuf = Currentbuf = newbuf;
+	switch (newbuf->real_scheme) {
+	case SCM_MAILTO:
+	    break;
+	case SCM_LOCAL:
+	case SCM_LOCAL_CGI:
+	    unshiftHist(LoadHist, url);
+	default:
+	    pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+	    break;
 	}
-	else if (open_new_tab) {
-	    _newT();
-	    Currentbuf->nextBuffer = newbuf;
-	    delBuffer(Currentbuf);
-	    open_new_tab = FALSE;
-	}
-	else {
-	    Currentbuf->nextBuffer = newbuf;
-	    Currentbuf = newbuf;
-	}
-	if ((!w3m_dump || w3m_dump == DUMP_BUFFER)
-	    && Currentbuf->frameset && RenderFrame)
-		rFrame();
-	if (w3m_dump)
-	    do_dump(Currentbuf);
-	else
-	    Currentbuf = newbuf;
+	proc_buf(newbuf, search_header, open_new_tab);
+	open_new_tab = FALSE;
     }
     if (w3m_dump) {
 #ifdef USE_COOKIE
@@ -1068,6 +1033,43 @@ init_from_env(void)
 	Editor = p;
     if (!non_null(Mailer) && (p = getenv("MAILER")) != NULL)
 	Mailer = p;
+}
+
+void
+proc_buf(Buffer *newbuf, char search_header, int open_new_tab)
+{
+    if (newbuf == NO_BUFFER)
+	return;
+
+    if (newbuf->pagerSource ||
+	(newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
+	 newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
+	newbuf->search_header = search_header;
+    if (!CurrentTab) {
+	FirstTab = LastTab = CurrentTab = newTab();
+	if (!FirstTab) {
+	    fprintf(stderr, "%s\n","Can't allocated memory");
+	    exit(3);
+	}
+	nTab = 1;
+	Firstbuf = Currentbuf = newbuf;
+    }
+    else if (open_new_tab) {
+	_newT();
+	Currentbuf->nextBuffer = newbuf;
+	delBuffer(Currentbuf);
+    }
+    else {
+	Currentbuf->nextBuffer = newbuf;
+	Currentbuf = newbuf;
+    }
+    if ((!w3m_dump || w3m_dump == DUMP_BUFFER)
+	&& Currentbuf->frameset && RenderFrame)
+	rFrame();
+    if (w3m_dump)
+	do_dump(Currentbuf);
+    else
+	Currentbuf = newbuf;
 }
 
 static void
