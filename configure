@@ -10661,12 +10661,6 @@ then :
   printf "%s\n" "#define HAVE_MKDTEMP 1" >>confdefs.h
 
 fi
-ac_fn_c_check_func "$LINENO" "faccessat" "ac_cv_func_faccessat"
-if test "x$ac_cv_func_faccessat" = xyes
-then :
-  printf "%s\n" "#define HAVE_FACCESSAT 1" >>confdefs.h
-
-fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for sigsetjmp" >&5
 printf %s "checking for sigsetjmp... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext

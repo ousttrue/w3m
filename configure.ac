@@ -123,7 +123,7 @@ esac
 
 AC_HEADER_DIRENT
 dnl Checks for library functions.
-AC_CHECK_FUNCS(strcasestr mkdtemp faccessat)
+AC_CHECK_FUNCS(strcasestr mkdtemp)
 AC_W3M_SIGSETJMP
 
 AC_SUBST(HELP_DIR)
