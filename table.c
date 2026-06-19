@@ -5,6 +5,7 @@
 #include "table.h"
 
 #include "Str.h"
+#include "charset.h"
 #include "config.h"
 #include "display.h"
 #include "fm.h"

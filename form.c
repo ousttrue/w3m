@@ -3,8 +3,9 @@
  * HTML forms
  */
 #include "buffer.h"
-#include "cookie.h"
+#include "charset.h"
 #include "config.h"
+#include "cookie.h"
 #include "display.h"
 #include "etc.h"
 #include "fm.h"

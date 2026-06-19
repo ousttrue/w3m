@@ -4,6 +4,7 @@
  */
 #include "func.h"
 
+#include "charset.h"
 #include "config.h"
 #include "cookie.h"	/* For funcname.c */
 #include "fm.h"

@@ -2,15 +2,11 @@
 #define W3M_BUFFER_H
 
 #include "anchor.h"
+#include "charset.h"
 #include "config.h"
 #include "form.h"
 #include "map.h"
 #include "istream.h"
-
-#ifdef USE_M17N
-#include "libwc/wc.h"
-#include "libwc/wc_types.h"
-#endif
 
 /* mark URL, Message-ID */
 #define CHK_URL		1

@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "local.h"
 
+#include "charset.h"
 #include "etc.h"
 #include "fm.h"
 #include "proto.h"

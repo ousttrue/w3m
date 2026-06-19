@@ -2,18 +2,13 @@
 #include "search.h"
 
 #include "buffer.h"
+#include "charset.h"
 #include "config.h"
 #include "display.h"
 #include "fm.h"
 #include "proto.h"
 #include "regex.h"
 #include "tab.h"
-
-#ifdef USE_M17N
-#include "libwc/wc.h"
-#include "libwc/wc_types.h"
-#include "libwc/wtf.h"
-#endif
 
 #include <ctype.h>
 #include <errno.h>

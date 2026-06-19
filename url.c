@@ -2,6 +2,7 @@
 #include "url.h"
 
 #include "Str.h"
+#include "charset.h"
 #include "config.h"
 #include "cookie.h"
 #include "fm.h"

@@ -3,6 +3,7 @@
 
 #include "Str.h"
 #include "alloc.h"
+#include "charset.h"
 #include "config.h"
 #include "ctrlcode.h"
 #include "display.h"
@@ -14,11 +15,6 @@
 #include "linein.h"
 #include "terms.h"
 #include "util.h"
-
-#ifdef USE_M17N
-#include "libwc/wc.h"
-#include "libwc/wc_types.h"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>

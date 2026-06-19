@@ -5,6 +5,7 @@
  */
 #include "terms.h"
 
+#include "charset.h"
 #include "config.h"
 #include "etc.h"
 #include "fm.h"

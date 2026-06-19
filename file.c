@@ -3,6 +3,7 @@
 
 #include "backend.h"
 #include "buffer.h"
+#include "charset.h"
 #include "cookie.h"
 #include "config.h"
 #include "display.h"

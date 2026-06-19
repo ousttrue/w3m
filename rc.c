@@ -4,6 +4,7 @@
  */
 #include "rc.h"
 
+#include "charset.h"
 #include "config.h"
 #include "cookie.h"
 #include "fm.h"
@@ -744,6 +745,16 @@ struct param_ptr params9[] = {
 };
 
 #ifdef USE_M17N
+const wc_ces InnerCharset = WC_CES_WTF;
+wc_ces DisplayCharset = DISPLAY_CHARSET;
+wc_ces DocumentCharset = DOCUMENT_CHARSET;
+wc_ces SystemCharset = SYSTEM_CHARSET;
+wc_ces BookmarkCharset = SYSTEM_CHARSET;
+char ExtHalfdump = FALSE;
+char FollowLocale = TRUE;
+char UseContentCharset = TRUE;
+char SearchConv = TRUE;
+char SimplePreserveSpace = FALSE;
 struct param_ptr params10[] = {
     {"display_charset", P_CODE, PI_CODE, (void *)&DisplayCharset,
      CMT_DISPLAY_CHARSET, (void *)&display_charset_str},

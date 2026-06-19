@@ -2,6 +2,7 @@
 #include "display.h"
 
 #include "buffer.h"
+#include "charset.h"
 #include "config.h"
 #include "display.h"
 #include "fm.h"

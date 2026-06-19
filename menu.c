@@ -2,6 +2,7 @@
 #include "menu.h"
 
 #include "buffer.h"
+#include "charset.h"
 #include "config.h"
 #include "fm.h"
 #include "proto.h"

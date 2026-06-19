@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "backend.h"
 #include "buffer.h"
+#include "charset.h"
 #include "config.h"
 #include "cookie.h"
 #include "display.h"
@@ -77,13 +78,6 @@ static void SigAlarm(SIGNAL_ARG);
 static const char *MarkString = NULL;
 #endif
 
-#ifdef USE_M17N
-#include "libwc/wc.h"
-#include "libwc/wtf.h"
-#ifdef USE_UNICODE
-#include "libwc/ucs.h"
-#endif
-#endif
 #ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>
