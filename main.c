@@ -8,6 +8,7 @@
 #include "etc.h"
 #include "fm.h"
 #include "proto.h"
+#include "frame.h"
 #include "form.h"
 #include "funcname1.h"
 #include "linein.h"

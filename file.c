@@ -7,6 +7,7 @@
 #include "config.h"
 #include "display.h"
 #include "etc.h"
+#include "frame.h"
 #include "fm.h"
 #include "proto.h"
 #include "funcname1.h"

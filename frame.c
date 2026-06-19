@@ -3,6 +3,7 @@
 #include "config.h"
 #include "etc.h"
 #include "fm.h"
+#include "frame.h"
 #include "proto.h"
 #include "parsetagx.h"
 

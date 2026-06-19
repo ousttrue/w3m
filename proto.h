@@ -383,21 +383,6 @@ extern Anchor *retrieveCurrentMap(Buffer *buf);
 extern MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 			   char *coords);
 extern Buffer *page_info_panel(Buffer *buf);
-extern struct frame_body *newFrame(struct parsed_tag *tag, Buffer *buf);
-extern struct frameset *newFrameSet(struct parsed_tag *tag);
-extern void addFrameSetElement(struct frameset *f,
-			       union frameset_element element);
-extern void deleteFrame(struct frame_body *b);
-extern void deleteFrameSet(struct frameset *f);
-extern void deleteFrameSetElement(union frameset_element e);
-extern struct frameset *copyFrameSet(struct frameset *of);
-extern void pushFrameTree(struct frameset_queue **fqpp, struct frameset *fs,
-			  Buffer *buf);
-extern struct frameset *popFrameTree(struct frameset_queue **fqpp);
-extern void resetFrameElement(union frameset_element *f_element, Buffer *buf,
-			      char *referer, FormList *request);
-extern Buffer *renderFrame(Buffer *Cbuf, int force_reload);
-extern union frameset_element *search_frame(struct frameset *fset, char *name);
 extern pid_t open_pipe_rw(FILE ** fr, FILE ** fw);
 extern int initscr(void);
 extern void move(int line, int column);

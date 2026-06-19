@@ -17,11 +17,10 @@
 #undef USE_BG_COLOR
 #endif
 
-#include "frame.h"
 #include "func.h"
 #include "html.h"
 #include "terms.h"
-#include "textlist.h"
+#include "Str.h"
 
 #include <gc/gc.h>
 #include <limits.h>

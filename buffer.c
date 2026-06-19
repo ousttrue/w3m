@@ -8,6 +8,7 @@
 #include "display.h"
 #include "etc.h"
 #include "fm.h"
+#include "frame.h"
 #include "proto.h"
 #include "html.h"
 #include "linein.h"
