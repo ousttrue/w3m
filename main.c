@@ -3524,10 +3524,22 @@ _followForm(int submit)
 	}
 
 	if (fi->parent->method == FORM_METHOD_GET) {
-	    if ((p = strchr(tmp2->ptr, '?')) != NULL)
+	    Str fragment = NULL;
+
+	    if ((p = strchr(tmp2->ptr, '#'))) {
+		fragment = Strnew_charp(p);
 		Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-	    Strcat_charp(tmp2, "?");
+	    }
+
+	    if ((p = strchr(tmp2->ptr, '?')))
+		Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+
+	    Strcat_char(tmp2, '?');
 	    Strcat(tmp2, tmp);
+
+	    if (fragment)
+		Strcat(tmp2, fragment);
+
 	    loadLink(tmp2->ptr, a->target, NULL, NULL);
 	}
 	else if (fi->parent->method == FORM_METHOD_POST) {
