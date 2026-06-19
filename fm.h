@@ -17,9 +17,6 @@
 #undef USE_BG_COLOR
 #endif
 
-#include "func.h"
-#include "html.h"
-#include "terms.h"
 #include "Str.h"
 
 #include <gc/gc.h>

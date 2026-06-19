@@ -13,6 +13,7 @@
 #include "regex.h"
 #include "search.h"
 #include "tab.h"
+#include "terms.h"
 
 #include <stdio.h>
 

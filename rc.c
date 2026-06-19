@@ -14,6 +14,7 @@
 #include "pathdefs.h"
 #include "regex.h"
 #include "search.h"
+#include "terms.h"
 #include "url.h"
 #include "version.h"
 

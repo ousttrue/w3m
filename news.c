@@ -4,6 +4,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "myctype.h"
+#include "terms.h"
 
 #include <stdio.h>
 #include <stdlib.h>

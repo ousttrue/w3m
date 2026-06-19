@@ -8,6 +8,7 @@
 #include "proto.h"
 #include "linein.h"
 #include "tab.h"
+#include "terms.h"
 
 #include <math.h>
 #include <signal.h>

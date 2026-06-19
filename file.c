@@ -9,6 +9,7 @@
 #include "etc.h"
 #include "frame.h"
 #include "fm.h"
+#include "func.h"
 #include "proto.h"
 #include "funcname1.h"
 #include "html.h"
@@ -19,6 +20,7 @@
 #include "rc.h"
 #include "tab.h"
 #include "table.h"
+#include "terms.h"
 #include "url.h"
 
 #include <fcntl.h>

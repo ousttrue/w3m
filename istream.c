@@ -2,6 +2,7 @@
 #include "istream.h"
 
 #include "config.h"
+#include "terms.h"
 #include "fm.h"
 #include "proto.h"
 

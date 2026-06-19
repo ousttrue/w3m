@@ -6,6 +6,7 @@
 #include "history.h"
 #include "fm.h"
 #include "proto.h"
+#include "terms.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -5,6 +5,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "url.h"
+#include "terms.h"
 #include "version.h"
 
 #include <errno.h>
