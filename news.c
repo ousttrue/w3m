@@ -6,6 +6,7 @@
 #include "proto.h"
 #include "myctype.h"
 #include "terms.h"
+#include "symbol.h"
 
 #include <stdio.h>
 #include <stdlib.h>

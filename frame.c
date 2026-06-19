@@ -7,6 +7,7 @@
 #include "frame.h"
 #include "proto.h"
 #include "parsetagx.h"
+#include "symbol.h"
 
 #include <strings.h>
 

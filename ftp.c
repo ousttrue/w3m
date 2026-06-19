@@ -7,6 +7,7 @@
 #include "html.h"
 #include "linein.h"
 #include "myctype.h"
+#include "symbol.h"
 
 #include <stdio.h>
 #include <time.h>

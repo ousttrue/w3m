@@ -18,6 +18,7 @@
 #include "parsetagx.h"
 #include "rc.h"
 #include "regex.h"
+#include "symbol.h"
 #include "util.h"
 
 #ifdef USE_MENU

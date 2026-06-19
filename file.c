@@ -20,6 +20,7 @@
 #include "myctype.h"
 #include "parsetagx.h"
 #include "rc.h"
+#include "symbol.h"
 #include "tab.h"
 #include "table.h"
 #include "terms.h"

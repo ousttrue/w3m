@@ -15,6 +15,7 @@
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
+#include "symbol.h"
 
 #include <stdio.h>
 

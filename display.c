@@ -8,6 +8,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "linein.h"
+#include "symbol.h"
 #include "tab.h"
 #include "terms.h"
 

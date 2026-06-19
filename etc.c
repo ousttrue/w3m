@@ -10,6 +10,7 @@
 #include "html.h"
 #include "linein.h"
 #include "myctype.h"
+#include "symbol.h"
 #include "terms.h"
 
 #include <fcntl.h>

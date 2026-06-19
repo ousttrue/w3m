@@ -14,6 +14,7 @@
 #include "rc.h"
 #include "regex.h"
 #include "search.h"
+#include "symbol.h"
 #include "tab.h"
 #include "terms.h"
 

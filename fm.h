@@ -393,13 +393,6 @@ global char UseAltEntity init(FALSE);
 global char UseGraphicChar init(GRAPHIC_CHAR_CHARSET);
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
-extern char *graph_symbol[];
-extern char *graph2_symbol[];
-extern int symbol_width;
-extern int symbol_width0;
-#define N_GRAPH_SYMBOL 32
-#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
-#define SYMBOL_BASE 0x20
 global char *rc_dir init(NULL);
 global char *tmp_dir;
 global char *param_tmp_dir init(NULL);

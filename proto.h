@@ -189,20 +189,6 @@ extern void examineFile(char *path, URLFile *uf);
 extern char *acceptableEncoding(void);
 extern int dir_exist(const char *path);
 extern int is_html_type(const char *type);
-#ifdef USE_M17N
-extern char **get_symbol(wc_ces charset, int *width);
-extern char **set_symbol(int width);
-extern Str convertLine(URLFile *uf, Str line, int mode, wc_ces * charset,
-		       wc_ces doc_charset);
-#else
-extern char **get_symbol(void);
-extern Str convertLine0(URLFile *uf, Str line, int mode);
-#define convertLine(uf,line,mode,charset,dcharset) convertLine0(uf,line,mode)
-#endif
-extern void push_symbol(Str str, char symbol, int width, int n);
-#ifdef USE_UNICODE
-extern void update_utf8_symbol(void);
-#endif
 extern Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer,
 			       int flag, FormList *request);
 extern int is_boundary(const unsigned char *, const unsigned char *);
