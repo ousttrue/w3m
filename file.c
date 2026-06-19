@@ -1610,7 +1610,7 @@ getAuthCookie(struct http_auth *hauth, char *auth_header,
 	    fflush(stdout);
 	    *uname = Strfgets(stdin);
 	    Strchop(*uname);
-#ifdef HAVE_GETPASSPHRASE
+#if defined(__sun)
 	    *pwd = Strnew_charp((char *)
 				getpassphrase(proxy ? "Proxy Password: " :
 					      "Password: "));

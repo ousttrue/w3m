@@ -10667,13 +10667,6 @@ then :
   printf "%s\n" "#define HAVE_FACCESSAT 1" >>confdefs.h
 
 fi
-ac_fn_c_check_func "$LINENO" "getpassphrase" "ac_cv_func_getpassphrase"
-if test "x$ac_cv_func_getpassphrase" = xyes
-then :
-  printf "%s\n" "#define HAVE_GETPASSPHRASE 1" >>confdefs.h
-
-fi
-
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for sigsetjmp" >&5
 printf %s "checking for sigsetjmp... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
