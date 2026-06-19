@@ -1406,35 +1406,41 @@ open_pipe_rw(FILE ** fr, FILE ** fw)
 	    close(fdw[1]);
 	    dup2(fdw[0], 0);
 	}
+	return pid;
     }
-    else {
-	if (fr) {
-	    close(fdr[1]);
-	    if (*fr == stdin)
-		dup2(fdr[0], 0);
-	    else
-		*fr = fdopen(fdr[0], "r");
+
+    /* parent */
+    if (fr) {
+	close(fdr[1]);
+	if (*fr == stdin) {
+	    dup2(fdr[0], 0);
+	    close(fdr[0]);
+	} else {
+	    *fr = fdopen(fdr[0], "r");
 	}
-	if (fw) {
-	    close(fdw[0]);
-	    if (*fw == stdout)
-		dup2(fdw[1], 1);
-	    else
-		*fw = fdopen(fdw[1], "w");
+    }
+    if (fw) {
+	close(fdw[0]);
+	if (*fw == stdout) {
+	    dup2(fdw[1], 1);
+	    close(fdw[1]);
+	} else {
+	    *fw = fdopen(fdw[1], "w");
 	}
     }
     return pid;
-  err2:
+
+err2:
     if (fw) {
 	close(fdw[0]);
 	close(fdw[1]);
     }
-  err1:
+err1:
     if (fr) {
 	close(fdr[0]);
 	close(fdr[1]);
     }
-  err0:
+err0:
     return (pid_t) - 1;
 }
 #endif /* __MINGW32_VERSION */
