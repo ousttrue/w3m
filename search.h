@@ -10,6 +10,7 @@
 #define SR_WRAPPED     0x4
 
 extern const char *SearchString;
+extern int WrapSearch;
 
 int backwardSearch(Buffer *buf, const char *str);
 int forwardSearch(Buffer *buf, const char *str);
@@ -23,6 +24,7 @@ const char *conv_search_string(const char *str, wc_ces f_ces);
 
 #ifdef USE_MIGEMO
 void init_migemo(void);
+extern int migemo_active;
 #endif
 
 #endif

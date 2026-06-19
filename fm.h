@@ -282,7 +282,6 @@ global char *AcceptMedia init(NULL);
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
 global int SmartCase init(FALSE);
-global int WrapSearch init(FALSE);
 global int squeezeBlankLine init(FALSE);
 global char *BookmarkFile init(NULL);
 global int UseExternalDirBuffer init(TRUE);
@@ -312,7 +311,6 @@ global int MarkAllPages init(FALSE);
 
 #ifdef USE_MIGEMO
 global int use_migemo init(FALSE);
-global int migemo_active init(0);
 global char *migemo_command init(DEF_MIGEMO_COMMAND);
 #endif				/* USE_MIGEMO */
 

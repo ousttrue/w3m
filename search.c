@@ -14,6 +14,7 @@
 #include <errno.h>
 
 const char *SearchString;
+int WrapSearch = FALSE;
 
 static void
 set_mark(Line *l, int pos, int epos)
@@ -27,6 +28,7 @@ set_mark(Line *l, int pos, int epos)
 static FILE *migemor = NULL, *migemow = NULL;
 static int migemo_running;
 static int migemo_pid = 0;
+int migemo_active = FALSE;
 
 void
 init_migemo(void)
