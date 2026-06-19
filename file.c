@@ -36,6 +36,14 @@
 
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
+int w3m_debug;
+int w3m_dump = 0;
+int w3m_halfload = FALSE;
+
+char SearchHeader = FALSE;
+char *DefaultType = NULL;
+char PermitSaveToPipe = FALSE;
+
 extern int fold_pre;
 static int frame_source = 0;
 static int need_number = 0;

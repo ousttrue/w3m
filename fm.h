@@ -151,11 +151,8 @@ global int ShowEffect init(TRUE);
 global int PagerMax init(PAGER_MAX_LINE);
 global int MessageDelay init(2);
 
-global char SearchHeader init(FALSE);
-global char *DefaultType init(NULL);
 global char RenderFrame init(FALSE);
 global char TargetSelf init(FALSE);
-global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);
 global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
@@ -196,16 +193,6 @@ global int close_tab_back init(FALSE);
 global char *w3m_reqlog;
 extern int enable_inline_image;
 
-#define DUMP_BUFFER   0x01
-#define DUMP_HEAD     0x02
-#define DUMP_SOURCE   0x04
-#define DUMP_EXTRA    0x08
-#define DUMP_HALFDUMP 0x10
-#define DUMP_FRAME    0x20
-global int w3m_debug;
-global int w3m_dump init(0);
-#define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
-global int w3m_halfload init(FALSE);
 global Str header_string init(NULL);
 global int override_content_type init(FALSE);
 global int override_user_agent init(FALSE);
