@@ -62,7 +62,12 @@ Str Stralign_left(Str, int);
 Str Stralign_right(Str, int);
 Str Stralign_center(Str, int);
 
-Str Sprintf(const char *fmt, ...);
+#ifdef GNUC
+#define FORMAT_PRINTF(fmt, arg) attribute((format(printf, fmt, arg)))
+#else
+#define FORMAT_PRINTF(fmt, arg)
+#endif
+Str Sprintf(const char *fmt, ...) FORMAT_PRINTF(1, 2);
 
 Str Strfgets(FILE *);
 Str Strfgetall(FILE *);

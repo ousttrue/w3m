@@ -351,7 +351,7 @@ localcgi_post(char *uri, char *qstr, FormList *request, char *referer)
 	set_environ("REQUEST_METHOD", "POST");
 	if (qstr)
 	    set_environ("QUERY_STRING", qstr);
-	set_environ("CONTENT_LENGTH", Sprintf("%d", request->length)->ptr);
+	set_environ("CONTENT_LENGTH", Sprintf("%lu", request->length)->ptr);
 	if (request->enctype == FORM_ENCTYPE_MULTIPART) {
 	    set_environ("CONTENT_TYPE",
 			Sprintf("multipart/form-data; boundary=%s",

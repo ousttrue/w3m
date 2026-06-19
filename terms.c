@@ -474,12 +474,12 @@ put_image_iterm2(char *url, int x, int y, int w, int h)
     buf = Sprintf("\x1b]1337;"
       "File="
       "name=%s;"
-      "size=%d;"
+      "size=%ld;"
       "width=%d;"
       "height=%d;"
       "preserveAspectRatio=0;"
       "inline=1"
-      ":", url, (int)st.st_size, w, h);
+      ":", url, st.st_size, w, h);
 
     MOVE(y,x);
 
