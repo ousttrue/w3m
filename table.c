@@ -2061,7 +2061,7 @@ skip_space(struct table *t, char *line, struct table_linfo *linfo,
 
     while (*line) {
 	char *save = line, *c = line;
-	int ec, len, wlen, plen;
+	int len, wlen, plen;
 	ctype = get_mctype(line);
 	len = get_mcwidth(line);
 	wlen = plen = get_mclen(line);
@@ -2074,9 +2074,9 @@ skip_space(struct table *t, char *line, struct table_linfo *linfo,
 	}
 	else {
 	    if (*c == '&') {
-		ec = getescapechar(&line);
-		if (ec >= 0) {
-		    c = conv_entity(ec);
+		char *estr = getescapestr(&line, 0, NULL);
+		if (estr) {
+		    c = estr;
 		    ctype = get_mctype(c);
 		    len = get_strwidth(c);
 		    wlen = line - save;
@@ -2998,9 +2998,15 @@ feed_table(struct table *tbl, char *line, struct table_mode *mode,
 		    p++;
 		}
 		else {
-		    int ec;
+		    int simple;
 		    q = p;
-		    switch (ec = getescapechar(&p)) {
+		    r = getescapestr(&p, 0, &simple);
+		    if (!r || !simple) {
+			Strcat_char(tmp, *q);
+			p = q + 1;
+			continue;
+		    }
+		    switch (*r) {
 		    case '<':
 			Strcat_charp(tmp, "&lt;");
 			break;
@@ -3014,16 +3020,7 @@ feed_table(struct table *tbl, char *line, struct table_mode *mode,
 			Strcat_char(tmp, '\n');
 			break;
 		    default:
-			r = conv_entity(ec);
-			if (!r || !*r)
-			    break;
-			if (strlen(r) == 1 && ec == (unsigned char)*r) {
-			    Strcat_char(tmp, *r);
-			    break;
-			}
-		    case -1:
-			Strcat_char(tmp, *q);
-			p = q + 1;
+			Strcat_char(tmp, *r);
 			break;
 		    }
 		}

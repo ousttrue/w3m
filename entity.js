@@ -1,99 +1,94 @@
-// Usage: qjs --std entity.js [test/tab] > outfile
+// Usage: qjs --std entity.js test|tab > outfile
 // See: https://github.com/bellard/quickjs
 
-const a = getEntities();
+const entityMap = getEntities();
 
-function gentable(criteria, item) {
-	const entities = Object.keys(a);
-	for (var i = 0; i < entities.length; ++i) {
-		const b = entities[i];
-		const c = a[b];
-		const d = c.codepoints;
-		if (criteria(b, d)) {
-			item(b, c, d);
-		}
-	}
-}
-
-function gentestitem(b, c, d) {
-	let ha = "0x" + d[0].toString(16).toUpperCase();
-	if (d.length == 2)
-		var hb = "0x" + d[1].toString(16).toUpperCase();
-	else
-		var hb = "";
-	console.log("		<tr>");
-	console.log("			" +
-		"<td>" +
-		b.replace("&", "&amp;") +
-		"</td>" +
-		"<td>" +
-		ha +
-		"</td>" +
-		"<td>" +
-		hb +
-		"</td>" +
-		"<td>" +
-		"&#x" + d[0].toString(16).toUpperCase() + ";" +
-		(d.length == 2 ? "&#x" + d[1].toString(16).toUpperCase() + ";" : "") +
-		"</td>" +
-		"<td>" +
-		b +
-		"</td>" +
-		"<td>" +
-		c.characters.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;') +
-		"</td>");
-	console.log("		</tr>");
+function htmlescape(x) {
+    const escapeMap = {'&': '&amp;', '<': '&lt;', '>': '&gt;'};
+    return x.replaceAll(/[&<>]/g, x => escapeMap[x]);
 }
 
 function gentest() {
-	console.log("<!DOCTYPE html>");
-	console.log("<head>");
-	console.log("	<meta charset=\"utf-8\">");
-	console.log("</head>");
-	console.log("<body>");
-	console.log("	<table>");
-	console.log("		<tr>");
-	console.log("			" +
-		"<th>Name</th><th>Hex 1</th><th>Hex 2</th><th>Hex result</th><th>Name result</th><th>Byte result</th>");
-	console.log("		</tr>");
-
-	gentable((b, d) => d.length == 1 && b[b.length - 1] == ';', gentestitem);
-
-	console.log("<tr><th><hr></th><th><hr></th><th><hr></th><th><hr></th><th><hr></th><th><hr></th></tr>");
-
-	gentable((b, d) => d.length == 1 && b[b.length - 1] != ';', gentestitem);
-
-	console.log("<tr><th><hr></th><th><hr></th><th><hr></th><th><hr></th><th><hr></th><th><hr></th></tr>");
-
-	gentable((b, d) => d.length == 2 && b[b.length - 1] == ';', gentestitem);
-
-	console.log("<tr><th><hr></th><th><hr></th><th><hr></th><th><hr></th><th><hr></th><th><hr></th></tr>");
-
-	gentable((b, d) => d.length == 2 && b[b.length - 1] != ';', gentestitem);
-
-	console.log("	</table>");
-	console.log("</body>");
+    std.out.puts(`<!DOCTYPE html>
+<head><meta charset="utf-8"></head>
+<body><table>
+<tr><th>Name</th><th>Hex 1</th><th>Hex 2</th><th>Hex result</th><th>Name result</th><th>Byte result</th></tr>`);
+    const entities = Object.keys(entityMap);
+    for (const entity of entities) {
+	const entry = entityMap[entity];
+	const c = entry.codepoints;
+	const hex1 = "0x" + c[0].toString(16).toUpperCase();
+	const hex2 = c.length == 2 ? "0x" + c[1].toString(16).toUpperCase() : "";
+	std.out.puts(`<tr><td>${htmlescape(entity)}</td><td>${hex1}</td>` +
+		     `<td>${hex2}</td>` +
+		     `<td>&#x${c[0].toString(16).toUpperCase()};` +
+		     (c.length == 2 ? "&#x" + c[1].toString(16).toUpperCase() + ";" : "") +
+		     `</td><td>${entity}</td>` +
+		     `<td>${htmlescape(entry.characters)}` +
+		     `</td></tr>\n`);
+    }
+    std.out.puts("</table></body>\n");
 }
 
 function gentab() {
-	console.log("%%");
-	gentable(
-	  (b, d) => d.length == 1 && b[b.length - 1] == ';',
-	  (b, c, d) => console.log(b.substr(1, b.length - 2) + "\t0x" + d[0].toString(16).toUpperCase()));
+    const entities = Object.keys(entityMap);
+    entities.sort((a, b) => a.localeCompare(b));
+    std.out.puts(`/* generated using entity.js */
+#ifndef W3M_ENTITY_H
+#define W3M_ENTITY_H
+
+struct entity_item {
+    const char *name;
+    unsigned short unit1, unit2;
+};
+
+const struct entity_item entity[] = {\n`);
+    const charMap = {};
+    let idx = 0;
+    for (const entity of entities) {
+	if (entity.at(-1) == ';' &&
+	    entities.includes(entity.substring(0, entity.length - 1)))
+	    continue;
+	const desc = entityMap[entity]
+	const name = entity.substring(1);
+	let s = "";
+	let unit1 = desc.characters.charCodeAt(0)
+	let unit2 = desc.characters.length > 1 ?
+	    desc.characters.charCodeAt(1) : 0;
+	std.out.puts(`    {"${name}", ${unit1}, ${unit2}},\n`);
+	if (!(name[0] in charMap))
+	    charMap[name[0]] = idx;
+	idx++;
+    }
+    std.out.puts("};\n\n");
+    std.out.puts("const short entity_char_start[] = {\n");
+    let line = "    ";
+    for (let i = 'A'.charCodeAt(); i <= 'z'.charCodeAt(); i++) {
+	const c = String.fromCharCode(i);
+	const next = `/* ${c} */ ${charMap[c] ?? 0}, `;
+	if (line.length + next.length >= 80) {
+	    std.out.puts(line.trimEnd() + '\n');
+	    line = "    ";
+	}
+	line += next;
+    }
+    std.out.puts(line.trimEnd());
+    std.out.puts("\n};\n");
+    std.out.puts("\n#endif\n");
 }
 
 function usage() {
-	console.log("Usage: qjs --std " + scriptArgs[0] + " [test/tab] > outfile");
+    console.log("Usage: qjs --std " + scriptArgs[0] + " test|tab > outfile");
 }
 
 if (scriptArgs.length != 2) {
-	usage();
+    usage();
 } else if (scriptArgs[1] == "test") {
-	gentest();
+    gentest();
 } else if (scriptArgs[1] == "tab") {
-	gentab();
+    gentab();
 } else {
-	usage();
+    usage();
 }
 
 //From the HTML living standard:
@@ -1997,8 +1992,8 @@ function getEntities() {
   "&shcy;": { "codepoints": [1096], "characters": "\u0448" },
   "&shortmid;": { "codepoints": [8739], "characters": "\u2223" },
   "&shortparallel;": { "codepoints": [8741], "characters": "\u2225" },
-  "&shy": { "codepoints": [173], "characters": "" },
-  "&shy;": { "codepoints": [173], "characters": "" },
+  "&shy": { "codepoints": [173], "characters": "\u00AD" },
+  "&shy;": { "codepoints": [173], "characters": "\u00AD" },
   "&sigma;": { "codepoints": [963], "characters": "\u03C3" },
   "&sigmaf;": { "codepoints": [962], "characters": "\u03C2" },
   "&sigmav;": { "codepoints": [962], "characters": "\u03C2" },

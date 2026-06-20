@@ -254,7 +254,7 @@ parse_tag(char **s, int internal)
 	    }
 	    tag->attrid[i] = attr_id;
 	    if (value)
-		tag->value[i] = html_unquote(value->ptr);
+		tag->value[i] = html_unquote_attr(value->ptr);
 	    else
 		tag->value[i] = NULL;
 	}

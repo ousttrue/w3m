@@ -6266,28 +6266,22 @@ static void
 proc_escape(struct readbuffer *obuf, char **str_return)
 {
     char *str = *str_return, *estr;
-    int ech = getescapechar(str_return);
-    int width, n_add = *str_return - str;
+    int width, simple;
     Lineprop mode;
 
-    if (ech < 0) {
+    estr = getescapestr(str_return, 0, &simple);
+    if (!estr) {
 	*str_return = str;
 	proc_mchar(obuf, obuf->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
 	return;
     }
-    mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
-
-    estr = conv_entity(ech);
+    mode = get_mctype(estr);
     check_breakpoint(obuf, obuf->flag & RB_SPECIAL, estr);
     width = get_strwidth(estr);
-    if (width == 1 && ech == (unsigned char)*estr &&
-	ech != '&' && ech != '<' && ech != '>') {
-	if (IS_CNTRL(ech))
-	    mode = PC_CTRL;
+    if (simple && width == 1 && *estr != '&' && *estr != '<' && *estr != '>')
 	push_charp(obuf, width, estr, mode);
-    }
     else
-	push_nchars(obuf, width, str, n_add, mode);
+	push_nchars(obuf, width, str, *str_return - str, mode);
     set_prevchar(obuf->prevchar, estr, strlen(estr));
     obuf->prev_ctype = mode;
 }
@@ -6548,14 +6542,16 @@ HTMLlineproc0(char *line, struct html_feed_environ *h_env, int internal)
 		char ch = *str;
 		if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
 		    char *p = str;
-		    int ech = getescapechar(&p);
-		    if (ech == '\n' || ech == '\r') {
-			ch = '\n';
-			str = p - 1;
-		    }
-		    else if (ech == '\t') {
-			ch = '\t';
-			str = p - 1;
+		    char *estr = getescapestr(&p, 0, NULL);
+		    if (estr) {
+			if (*estr == '\n' || *estr == '\r') {
+			    ch = '\n';
+			    str = p - 1;
+			}
+			else if (*estr == '\t') {
+			    ch = '\t';
+			    str = p - 1;
+			}
 		    }
 		}
 		if (ch != '\n')

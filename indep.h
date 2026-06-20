@@ -47,7 +47,7 @@ extern char *HTML_QUOTE_MAP[];
 
 extern size_t strtoclen(const char *s);
 extern char *conv_entity(unsigned int ch);
-extern int getescapechar(char **s);
+extern char *getescapestr(char **s, int is_attr, int *pis_simple);
 extern char *getescapecmd(char **s);
 extern char *allocStr(const char *s, int len);
 extern int strCmp(const void *s1, const void *s2);
@@ -63,6 +63,7 @@ extern int non_null(const char *s);
 extern void cleanup_line(Str s, int mode);
 extern char *html_quote(char *str);
 extern char *html_unquote(char *str);
+extern char *html_unquote_attr(char *str);
 extern char *file_quote(char *str);
 extern char *file_unquote(char *str);
 extern char *url_quote(char *str);

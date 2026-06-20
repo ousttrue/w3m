@@ -7,7 +7,6 @@ Makefile
 /config.status
 /config.h
 /config.param
-/entity.h
 /funcname.tab
 /funcname.c
 /funcname1.h
