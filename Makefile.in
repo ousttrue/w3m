@@ -161,7 +161,7 @@ entity.h: entity.tab mktable$(EXT)
 	echo '/* $$I''d$$ */' > $@
 	./mktable$(EXT) 100 $(srcdir)/entity.tab >> $@
 
-indep.o: indep.c fm.h entity.h
+indep.o: indep.c fm.h entity.h pathdefs.h
 func.o: funcname.c functable.c funcname1.h
 keybind.o: funcname2.h
 keybind_lynx.o: funcname2.h
