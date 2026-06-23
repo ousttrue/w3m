@@ -158,8 +158,11 @@ tagtable.c: tagtable.tab mktable$(EXT) html.h
 	./mktable$(EXT) 100 $(srcdir)/tagtable.tab > $@
 
 entity.h: entity.tab mktable$(EXT)
-	echo '/* $$I''d$$ */' > $@
+	echo '#ifndef W3M_ENTITY_H' > $@
+	echo '#define W3M_ENTITY_H' >> $@
+	echo '/* $$I''d$$ */' >> $@
 	./mktable$(EXT) 100 $(srcdir)/entity.tab >> $@
+	echo '#endif' >> $@
 
 indep.o: indep.c fm.h entity.h pathdefs.h
 func.o: funcname.c functable.c funcname1.h

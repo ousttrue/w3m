@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef W3M_PROTO_H__
-#define W3M_PROTO_H__
+#ifndef W3M_PROTO_H
+#define W3M_PROTO_H
 extern void nulcmd(void);
 extern void pushEvent(int cmd, void *data);
 extern void pgFore(void);

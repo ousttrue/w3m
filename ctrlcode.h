@@ -1,4 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#ifndef W3M_CTRLCODE_H
+#define W3M_CTRLCODE_H
+
 /* control characters */
 
 #define CTRL_A          1
@@ -143,3 +146,5 @@
 /* c-basic-offset: 4   */
 /* tab-width: 8        */
 /* End:                */
+
+#endif

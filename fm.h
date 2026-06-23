@@ -7,8 +7,8 @@
  * You can use,copy,modify and distribute this program without any permission.
  */
 
-#ifndef FM_H
-#define FM_H
+#ifndef W3M_FM_H
+#define W3M_FM_H
 
 #include "config.h"	/* At top for defines below */
 
@@ -632,4 +632,4 @@ typedef struct _AlarmEvent {
  * Externals
  */
 
-#endif				/* not FM_H */
+#endif				/* not W3M_FM_H */

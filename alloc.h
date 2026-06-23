@@ -4,8 +4,8 @@
  * replacements for w3m's allocation macros which add overflow
  * detection and concentrate the macros in one file
  */
-#ifndef W3_ALLOC_H
-#define W3_ALLOC_H
+#ifndef W3M_ALLOC_H
+#define W3M_ALLOC_H
 
 #include <gc/gc.h>
 #include <limits.h>
