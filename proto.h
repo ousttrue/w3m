@@ -525,7 +525,7 @@ extern void setup_child(int child, int i, int f);
 extern void myExec(char *command);
 extern int mySystem(char *command, int background);
 extern Str myExtCommand(const char *cmd, const char *arg, int redirect);
-extern Str myEditor(const char *cmd, const char *file, int line);
+extern Str editor_cmd(const char *file, int line);
 extern int is_localhost(const char *host);
 extern char *file_to_url(char *file);
 #ifdef USE_M17N

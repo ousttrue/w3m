@@ -613,7 +613,7 @@ input_textarea(FormItemList *fi)
 	form_fputs_decode(fi->value, f);
     fclose(f);
 
-    if (exec_cmd(myEditor(Editor, tmpf, 1)->ptr))
+    if (exec_cmd(editor_cmd(tmpf, 1)->ptr))
 	    goto input_end;
 
     if (fi->readonly)

@@ -15,6 +15,7 @@
 #include "terms.h"
 
 #include <fcntl.h>
+#include <libgen.h>
 #include <time.h>
 #include <signal.h>
 #include <strings.h>
@@ -1514,39 +1515,57 @@ myExtCommand(const char *cmd, const char *arg, int redirect)
 }
 
 Str
-myEditor(const char *cmd, const char *file, int line)
+editor_cmd(const char *file, int line)
 {
-    Str tmp = NULL;
+    Str tmp;
     const char *p;
-    int set_file = FALSE, set_line = FALSE;
+    int n, file_set = FALSE, line_set = FALSE;
 
-    for (p = cmd; *p; p++) {
-	if (*p == '%' && *(p + 1) == 's' && !set_file) {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(cmd, (int)(p - cmd));
+    static const char *eds[] = {
+	"emacs",
+	"hx",		/* helix */
+	"micro",
+	"nano",
+	"nvi",
+	"nvim",
+	"vi",
+	"vim",
+	NULL};
+
+    tmp = Strnew();
+    if (!*Editor)
+	return tmp;
+
+    for (p = Editor; *p; p++) {
+	if (*p == '%' && p[1] == 's') {
 	    Strcat_charp(tmp, file);
-	    set_file = TRUE;
+	    file_set = TRUE;
 	    p++;
 	}
-	else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(cmd, (int)(p - cmd));
+	else if (*p == '%' && p[1] == 'd') {
 	    Strcat(tmp, Sprintf("%d", line));
-	    set_line = TRUE;
+	    line_set = TRUE;
 	    p++;
 	}
-	else {
-	    if (tmp)
-		Strcat_char(tmp, *p);
-	}
+	else
+	    Strcat_char(tmp, *p);
     }
-    if (!set_file) {
-	if (tmp == NULL)
-	    tmp = Strnew_charp(cmd);
-	if (!set_line && line > 1 && strcasestr(cmd, "vi"))
-	    Strcat(tmp, Sprintf(" +%d", line));
-	Strcat_m_charp(tmp, " ", file, NULL);
-    }
+
+    if (file_set)
+	return tmp;
+
+    n = strcspn(Editor, " ");
+    if (!(p = basename(Strnew_charp_n(Editor, n)->ptr)))
+	p = Editor;
+
+    if (!line_set && line > 0)
+	for (const char **e = eds; *e; e++)
+	    if (!strcmp(p, *e)) {
+		Strcat(tmp, Sprintf(" +%d", line));
+		break;
+	    }
+
+    Strcat_m_charp(tmp, " ", file, NULL);
     return tmp;
 }
 

@@ -2762,7 +2762,7 @@ DEFUN(editBf, EDIT, "Edit local source")
 	cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
 			      checkHeader(Currentbuf, "Content-Type:"), NULL);
     else
-	cmd = myEditor(Editor, shell_quote(fn),
+	cmd = editor_cmd(shell_quote(fn),
 		       cur_real_linenumber(Currentbuf));
     exec_cmd(cmd->ptr);
 
@@ -2784,7 +2784,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    exec_cmd(myEditor(Editor, shell_quote(tmpf),
+    exec_cmd(editor_cmd(shell_quote(tmpf),
 		   cur_real_linenumber(Currentbuf))->ptr);
     unlink(tmpf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
