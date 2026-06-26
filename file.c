@@ -6954,6 +6954,8 @@ init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
 	  struct environment *envs, int nenv, TextLineList *buf,
 	  int limit, int indent)
 {
+    envs[0].env = HTML_BODY;
+    envs[0].count = 0;
     envs[0].indent = indent;
 
     obuf->line = Strnew();
