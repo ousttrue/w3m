@@ -20,6 +20,13 @@ triggers:
 environment:
   NPROC: '8'
 tasks:
+  - versions: |
+      set +x
+      for c in cc clang gcc tcc
+      do
+        $c -v >/dev/null 2>&1 || continue
+        printf "%s:\t%s\n" $c "$(2>&1 $c -v | grep 'version ')"
+      done
   - default: |
       cd w3m
       t/build default
