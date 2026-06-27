@@ -4558,13 +4558,13 @@ HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env)
 	    }
 	}
 	if (cmd == HTML_OL) {
-	    envs[h_env->envc].type = '1';
+	    envs[h_env->envc].ltype = '1';
 	    if (parsedtag_get_value(tag, ATTR_TYPE, &p)) {
-		envs[h_env->envc].type = (int)*p;
+		envs[h_env->envc].ltype = (int)*p;
 	    }
 	}
 	if (cmd == HTML_UL)
-	    envs[h_env->envc].type = ul_type(tag, 0);
+	    envs[h_env->envc].ltype = ul_type(tag, 0);
 	flushline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
 	return 1;
     case HTML_N_UL:
@@ -4621,11 +4621,11 @@ HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env)
 	    }
 	    switch (envs[h_env->envc].env) {
 	    case HTML_UL:
-		envs[h_env->envc].type = ul_type(tag, envs[h_env->envc].type);
+		envs[h_env->envc].ltype = ul_type(tag, envs[h_env->envc].ltype);
 		for (i = 0; i < INDENT_INCR - 3; i++)
 		    push_charp(obuf, 1, NBSP, PC_ASCII);
 		tmp = Strnew();
-		switch (envs[h_env->envc].type) {
+		switch (envs[h_env->envc].ltype) {
 		case 'd':
 		    push_symbol(tmp, UL_SYMBOL_DISC, symbol_width, 1);
 		    break;
@@ -4650,8 +4650,8 @@ HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env)
 		break;
 	    case HTML_OL:
 		if (parsedtag_get_value(tag, ATTR_TYPE, &p))
-		    envs[h_env->envc].type = (int)*p;
-		switch ((envs[h_env->envc].count > 0)? envs[h_env->envc].type: '1') {
+		    envs[h_env->envc].ltype = (int)*p;
+		switch ((envs[h_env->envc].count > 0)? envs[h_env->envc].ltype: '1') {
 		case 'i':
 		    num = romanNumeral(envs[h_env->envc].count);
 		    break;

@@ -389,9 +389,9 @@ extern TagAttrInfo AttrMAP[];
 
 struct environment {
     unsigned char env;
-    int type; /* only initialized if env is HTML_OL or HTML_UL */
     int count;
     char indent;
+    int ltype;		 /* only used if env is HTML_OL or HTML_UL */
 };
 
 #define MAX_ENV_LEVEL    20
