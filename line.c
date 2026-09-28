@@ -7,7 +7,6 @@
 int Tabstop = 8;
 int ShowEffect = true;
 
-
 static int
 nextColumn(int n, char* p, const Lineprop* pr)
 {
@@ -20,14 +19,11 @@ nextColumn(int n, char* p, const Lineprop* pr)
             return n + 2;
         return n;
     }
-#ifdef USE_M17N
     if (*pr & PC_UNKNOWN)
         return n + 4;
     return n + wtf_width((wc_uchar*)p);
-#else
-    return n + 1;
-#endif
 }
+
 int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, int mode)
 {
     static int* realColumn = nullptr;
@@ -48,24 +44,20 @@ int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, int mode)
     prevl = l;
     i = 0;
     j = bpos;
-#ifdef USE_M17N
     if (pr[i] & PC_WCHAR2) {
         for (; i < len && pr[i] & PC_WCHAR2; i++)
             realColumn[i] = j;
         if (i > 0 && pr[i - 1] & PC_KANJI && WcOption.use_wide)
             j++;
     }
-#endif
     while (1) {
         realColumn[i] = j;
         if (i == len)
             break;
         j = nextColumn(j, &l[i], &pr[i]);
         i++;
-#ifdef USE_M17N
         for (; i < len && pr[i] & PC_WCHAR2; i++)
             realColumn[i] = realColumn[i - 1];
-#endif
     }
     if (pos >= i)
         return j;
@@ -80,13 +72,9 @@ int columnPos(Line* line, int column)
         if (COLPOS(line, i) > column)
             break;
     }
-#ifdef USE_M17N
     for (i--; i > 0 && line->propBuf[i] & PC_WCHAR2; i--)
         ;
     return i;
-#else
-    return i - 1;
-#endif
 }
 
 int columnLen(Line* line, int column)
@@ -98,10 +86,8 @@ int columnLen(Line* line, int column)
         if (j > column)
             return i;
         i++;
-#ifdef USE_M17N
         while (i < line->len && line->propBuf[i] & PC_WCHAR2)
             i++;
-#endif
     }
     return line->len;
 }
@@ -221,7 +207,6 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
 
     if (ShowEffect) {
         bs = memchr(str, '\b', s->length);
-#ifdef USE_ANSI_COLOR
         if (ocolor) {
             es = memchr(str, ESC_CODE, s->length);
             if (es) {
@@ -233,31 +218,21 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                 color = color_buffer;
             }
         }
-#endif
         if ((bs != NULL)
-#ifdef USE_ANSI_COLOR
-            || (es != NULL)
-#endif
-        ) {
+            || (es != NULL)) {
             char *sp = str, *ep;
             s = Strnew_size(s->length);
             do_copy = true;
             ep = endp;
             if (bs && ep > bs - 2)
                 ep = bs - 2;
-#ifdef USE_ANSI_COLOR
             if (es && ep > es - 2)
                 ep = es - 2;
-#endif
             for (; str < ep && IS_ASCII(*str); str++) {
                 *(prop++) = PE_NORMAL | (IS_CNTRL(*str) ? PC_CTRL : PC_ASCII);
-#ifdef USE_ANSI_COLOR
                 if (color)
                     *(color++) = 0;
-#endif
-#ifdef USE_M17N
                 *(plens++) = plen = 1;
-#endif
             }
             Strcat_charp_n(s, sp, (int)(str - sp));
         }
@@ -266,13 +241,9 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
     if (!do_copy) {
         for (; str < endp && IS_ASCII(*str); str++) {
             *(prop++) = PE_NORMAL | (IS_CNTRL(*str) ? PC_CTRL : PC_ASCII);
-#ifdef USE_ANSI_COLOR
             if (color)
                 *(color++) = 0;
-#endif
-#ifdef USE_M17N
             *(plens++) = plen = 1;
-#endif
         }
     }
 
@@ -280,16 +251,13 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
         if (prop - prop_buffer >= prop_size)
             break;
         if (bs != NULL) {
-#ifdef USE_M17N
             if (str == bs - 2 && !strncmp(str, "__\b\b", 4)) {
                 str += 4;
                 effect = PE_UNDER;
                 if (str < endp)
                     bs = memchr(str, '\b', endp - str);
                 continue;
-            } else
-#endif
-                if (str == bs - 1 && *str == '_') {
+            } else if (str == bs - 1 && *str == '_') {
                 str += 2;
                 effect = PE_UNDER;
                 if (str < endp)
@@ -299,18 +267,12 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                 if (*(str + 1) == '_') {
                     if (s->length) {
                         str += 2;
-#ifdef USE_M17N
                         for (i = 1; i <= plen; i++)
                             *(prop - i) |= PE_UNDER;
-#else
-                        *(prop - 1) |= PE_UNDER;
-#endif
                     } else {
                         str++;
                     }
-                }
-#ifdef USE_M17N
-                else if (!strncmp(str + 1, "\b__", 3)) {
+                } else if (!strncmp(str + 1, "\b__", 3)) {
                     if (s->length) {
                         str += (plen == 1) ? 3 : 4;
                         for (i = 1; i <= plen; i++)
@@ -329,30 +291,23 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                             Strshrink(s, plen);
                             if (s->length) {
                                 prop -= plen;
-#ifdef USE_ANSI_COLOR
                                 if (color)
                                     color -= plen;
-#endif
                                 plen = *(--plens);
                             } else {
                                 plen = 0;
                                 plens = plens_buffer;
                                 prop = prop_buffer;
-#ifdef USE_ANSI_COLOR
                                 if (color)
                                     color = color_buffer;
-#endif
                             }
                             str += 2;
                         }
                     } else {
                         str += 2;
                     }
-                }
-#endif /* USE_M17N */
-                else {
+                } else {
                     if (s->length) {
-#ifdef USE_M17N
                         clen = get_mclen(str + 1);
                         if (plen == clen && !strncmp(str - plen, str + 1, plen)) {
                             for (i = 1; i <= plen; i++)
@@ -362,38 +317,18 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
                             Strshrink(s, plen);
                             if (s->length) {
                                 prop -= plen;
-#ifdef USE_ANSI_COLOR
                                 if (color)
                                     color -= plen;
-#endif
                                 plen = *(--plens);
                             } else {
                                 plen = 0;
                                 plens = plens_buffer;
                                 prop = prop_buffer;
-#ifdef USE_ANSI_COLOR
                                 if (color)
                                     color = color_buffer;
-#endif
                             }
                             str++;
                         }
-#else /* USE_M17N */
-                        if (*(str - 1) == *(str + 1)) {
-                            *(prop - 1) |= PE_BOLD;
-                            str += 2;
-                        } else {
-                            Strshrink(s, 1);
-                            prop = prop == prop_buffer ? prop_buffer : prop - 1;
-#ifdef USE_ANSI_COLOR
-                            if (color)
-                                color = (color == color_buffer
-                                        ? color_buffer
-                                        : color - 1);
-#endif
-                            str++;
-                        }
-#endif /* USE_M17N */
                     } else {
                         str++;
                     }
@@ -422,14 +357,11 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
         }
 
         mode = get_mctype(str) | effect;
-#ifdef USE_ANSI_COLOR
         if (color) {
             *(color++) = cmode;
             mode |= ceffect;
         }
-#endif
         *(prop++) = mode;
-#ifdef USE_M17N
         plen = get_mclen(str);
         if (str + plen > endp)
             plen = endp - str;
@@ -438,17 +370,13 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
             mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
             for (i = 1; i < plen; i++) {
                 *(prop++) = mode;
-#ifdef USE_ANSI_COLOR
                 if (color)
                     *(color++) = cmode;
-#endif
             }
             if (do_copy)
                 Strcat_charp_n(s, (char*)str, plen);
             str += plen;
-        } else
-#endif /* USE_M17N */
-        {
+        } else {
             if (do_copy)
                 Strcat_char(s, (char)*str);
             str++;
@@ -456,11 +384,7 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
         effect = PE_NORMAL;
     }
     *oprop = prop_buffer;
-#ifdef USE_ANSI_COLOR
     if (ocolor)
         *ocolor = check_color ? color_buffer : NULL;
-#endif
     return s;
 }
-
-
