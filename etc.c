@@ -23,14 +23,6 @@
 
 TextList* fileToDelete;
 
-char* mybasename(const char* path)
-{
-    const char* p;
-
-    p = strrchr(path, '/');
-    return allocStr(p ? p + 1 : path, -1);
-}
-
 char* mydirname(const char* s)
 {
     const char* p = s;

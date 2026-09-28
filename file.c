@@ -1541,7 +1541,7 @@ static void
 getAuthCookie(struct http_auth *hauth, char *auth_header,
 	      TextList *extra_header, ParsedURL *pu, HRequest *hr,
 	      FormList *request,
-	      volatile Str *uname, volatile Str *pwd)
+	      Str *uname, Str *pwd)
 {
     Str ss = NULL;
     Str tmp;
@@ -1584,7 +1584,7 @@ getAuthCookie(struct http_auth *hauth, char *auth_header,
     *uname = NULL;
     *pwd = NULL;
 
-    if (!a_found && find_auth_user_passwd(pu, realm, (volatile Str*)uname, (volatile Str*)pwd,
+    if (!a_found && find_auth_user_passwd(pu, realm, uname, pwd,
 					  proxy)) {
 	/* found username & password in passwd file */ ;
     }
@@ -8662,13 +8662,13 @@ lessopen_stream(const char *path)
 static char *
 guess_filename(const char *file)
 {
-    char *p = NULL, *s;
+    char *p = NULL;
 
     if (file != NULL)
-	p = mybasename(file);
+	p = Strnew_charp(mybasename(file))->ptr;
     if (p == NULL || *p == '\0')
 	return DEF_SAVE_FILE;
-    s = p;
+    char*s = p;
     if (*p == '#')
 	p++;
     while (*p != '\0') {
