@@ -3,6 +3,7 @@
  * HTML forms
  */
 #include "buffer.h"
+#include "str_const.h"
 #include "charset.h"
 #include "config.h"
 #include "cookie.h"

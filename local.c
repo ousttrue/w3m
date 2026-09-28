@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "local.h"
+#include "str_gc.h"
 #include "str_const.h"
 #include "charset.h"
 #include "etc.h"
@@ -297,11 +298,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
     int status;
     pid_t pid;
     const char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
-    char* cgi_basename;
 
-#ifdef __MINGW32_VERSION
-    return NULL;
-#else
     status = cgi_filename(uri, &file, &name, &path_info);
     if (check_local_cgi(file, status) < 0)
         return NULL;
@@ -314,8 +311,8 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
     }
     if (qstr)
         uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
-    const char* cgi_dir = mydirname(file);
-    cgi_basename = mybasename(file);
+    const char* cgi_dir = mydirname(file)->ptr;
+    const char* cgi_basename = mybasename(file);
     pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
     /* Don't invoke gc after here, or the program might crash in some platforms */
     if (pid < 0) {
@@ -370,7 +367,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
     fprintf(stderr, "execl(\"%s\", \"%s\", NULL): %s\n",
         file, cgi_basename, strerror(errno));
     exit(1);
-#endif
+
     /*
      * Suppress compiler warning: function might return no value
      * This code is never reached.

@@ -312,7 +312,6 @@ extern void restorePosition(Buffer *buf, Buffer *orig);
 #ifndef USE_ANSI_COLOR
 #define checkType(a,b,c) _checkType(a,b)
 #endif
-extern char *mybasename(const char *s);
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);

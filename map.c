@@ -4,6 +4,7 @@
  */
 #include "map.h"
 
+#include "str_const.h"
 #include "charset.h"
 #include "config.h"
 #include "fm.h"

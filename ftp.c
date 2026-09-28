@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "Str.h"
+#include "str_const.h"
 #include "auth.h"
 #include "charset.h"
 #include "config.h"

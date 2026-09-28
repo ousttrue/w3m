@@ -1,3 +1,3 @@
 #pragma once
 
-const char* mydirname(const char* s);
+const char *mybasename(const char *s);

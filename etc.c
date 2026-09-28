@@ -23,24 +23,6 @@
 
 TextList* fileToDelete;
 
-char* mydirname(const char* s)
-{
-    const char* p = s;
-    while (*p)
-        p++;
-    if (s != p)
-        p--;
-    while (s != p && *p == '/')
-        p--;
-    while (s != p && *p != '/')
-        p--;
-    if (*p != '/')
-        return ".";
-    while (s != p && *p == '/')
-        p--;
-    return allocStr(s, strlen(s) - strlen(p) + 1);
-}
-
 /* get last modified time */
 char* last_modified(Buffer* buf)
 {

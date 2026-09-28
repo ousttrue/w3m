@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "linein.h"
-
+#include "str_const.h"
 #include "alloc.h"
 #include "buffer.h"
 #include "charset.h"

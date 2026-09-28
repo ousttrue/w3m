@@ -53,6 +53,7 @@ add_executable(
   display.c
   etc.c
   str_const.c
+  str_gc.c
   auth.c
   html_parser.c
   search.c
