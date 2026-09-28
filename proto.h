@@ -309,18 +309,12 @@ extern void arrangeCursor(Buffer *buf);
 extern void arrangeLine(Buffer *buf);
 extern void cursorXY(Buffer *buf, int x, int y);
 extern void restorePosition(Buffer *buf, Buffer *orig);
-extern int columnSkip(Buffer *buf, int offset);
-extern int columnPos(Line *line, int column);
-extern int columnLen(Line *line, int column);
 extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
 extern int gethtmlcmd(const char *s);
 #ifndef USE_ANSI_COLOR
 #define checkType(a,b,c) _checkType(a,b)
 #endif
-extern Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor);
-extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
-			int mode);
 extern char *mybasename(const char *s);
 extern char *mydirname(const char *s);
 extern int next_status(char c, int *status);

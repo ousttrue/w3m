@@ -1,6 +1,6 @@
 #ifndef W3M_BUFFER_H
 #define W3M_BUFFER_H
-
+#include "line.h"
 #include "anchor.h"
 #include "charset.h"
 #include "config.h"
@@ -8,79 +8,35 @@
 #include "map.h"
 #include "istream.h"
 
+/* Flags for displayBuffer() */
+#define B_NORMAL 0
+#define B_FORCE_REDRAW 1
+#define B_REDRAW 2
+#define B_SCROLL 3
+#define B_REDRAW_IMAGE 4
+
+/* Buffer Property */
+#define BP_NORMAL 0x0
+#define BP_PIPE 0x1
+#define BP_FRAME 0x2
+#define BP_INTERNAL 0x8
+#define BP_NO_URL 0x10
+#define BP_REDIRECTED 0x20
+#define BP_CLOSE 0x40
+
+/* Link Buffer */
+#define LB_NOLINK -1
+#define LB_FRAME 0 /* rFrame() */
+#define LB_N_FRAME 1
+#define LB_INFO 2 /* pginfo() */
+#define LB_N_INFO 3
+#define LB_SOURCE 4 /* vwSrc() */
+#define LB_N_SOURCE LB_SOURCE
+#define MAX_LB 5
+
 /* mark URL, Message-ID */
 #define CHK_URL		1
 #define CHK_NMID	2
-
-/*
- * Line Property
- */
-
-#define P_CHARTYPE	0x3f00
-#ifdef USE_M17N
-#define PC_ASCII	(WTF_TYPE_ASCII << 8)
-#define PC_CTRL		(WTF_TYPE_CTRL << 8)
-#define PC_WCHAR1	(WTF_TYPE_WCHAR1 << 8)
-#define PC_WCHAR2	(WTF_TYPE_WCHAR2 << 8)
-#define PC_KANJI	(WTF_TYPE_WIDE << 8)
-#define PC_KANJI1	(PC_WCHAR1 | PC_KANJI)
-#define PC_KANJI2	(PC_WCHAR2 | PC_KANJI)
-#define PC_UNKNOWN	(WTF_TYPE_UNKNOWN << 8)
-#define PC_UNDEF	(WTF_TYPE_UNDEF << 8)
-#else
-#define PC_ASCII	0x0000
-#define PC_CTRL		0x0100
-#endif
-#define PC_SYMBOL       0x8000
-
-/* Flags for displayBuffer() */
-#define B_NORMAL	0
-#define B_FORCE_REDRAW	1
-#define B_REDRAW	2
-#define B_SCROLL        3
-#define B_REDRAW_IMAGE	4
-
-/* Buffer Property */
-#define BP_NORMAL	0x0
-#define BP_PIPE		0x1
-#define BP_FRAME	0x2
-#define BP_INTERNAL	0x8
-#define BP_NO_URL	0x10
-#define BP_REDIRECTED   0x20
-#define BP_CLOSE        0x40
-
-/* Link Buffer */
-#define LB_NOLINK	-1
-#define LB_FRAME	0	/* rFrame() */
-#define LB_N_FRAME	1
-#define LB_INFO		2	/* pginfo() */
-#define LB_N_INFO	3
-#define LB_SOURCE	4	/* vwSrc() */
-#define LB_N_SOURCE	LB_SOURCE
-#define MAX_LB		5
-
-typedef unsigned short Lineprop;
-#ifdef USE_ANSI_COLOR
-typedef unsigned char Linecolor;
-#endif
-
-typedef struct _Line {
-    char *lineBuf;
-    Lineprop *propBuf;
-#ifdef USE_ANSI_COLOR
-    Linecolor *colorBuf;
-#endif
-    struct _Line *next;
-    struct _Line *prev;
-    int len;
-    int width;
-    long linenumber;		/* on buffer */
-    long real_linenumber;	/* on file */
-    unsigned short usrflags;
-    int size;
-    int bpos;
-    int bwidth;
-} Line;
 
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL  1
@@ -193,5 +149,7 @@ void gotoLine(Buffer *buf, int n);
 void gotoRealLine(Buffer *buf, int n);
 void reshapeBuffer(Buffer *buf);
 void tmpClearBuffer(Buffer *buf);
+
+int columnSkip(Buffer *buf, int offset);
 
 #endif

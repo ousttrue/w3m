@@ -1,12 +1,6 @@
 #ifndef W3M_LINEIN_H
 #define W3M_LINEIN_H
 
-/* Flags for calcPosition() */
-#define CP_AUTO		0
-#define CP_FORCE	1
-
-#define COLPOS(l,c)	calcPosition(l->lineBuf,l->propBuf,l->len,c,0,CP_AUTO)
-
 /* Completion status. */
 #define CPL_OK		0
 #define CPL_AMBIG	1

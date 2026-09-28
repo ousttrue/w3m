@@ -10,6 +10,8 @@ if(NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 endif()
 
 add_compile_options(
+  -D_DEFAULT_SOURCE
+  -std=c23
   -Wall
   -Wcast-qual
   -Werror=vla
@@ -46,6 +48,7 @@ add_executable(
   main.c
   keybind.c
   file.c
+  line.c
   buffer.c
   display.c
   etc.c

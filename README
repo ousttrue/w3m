@@ -1,3 +1,7 @@
+# cmake build
+
+[WIP] まだ、生成ファイルは configure と Makefile に頼っている。
+
 w3m: WWW wo Miru Tool
 =====================
 

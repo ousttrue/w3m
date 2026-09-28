@@ -64,7 +64,6 @@ char *config_file = NULL;
 
 int squeezeBlankLine = FALSE;
 char *BookmarkFile = NULL;
-int ShowEffect = TRUE;
 
 #define P_INT      0
 #define P_SHORT    1
@@ -480,7 +479,6 @@ int MessageDelay = 2;
 int NoSendReferer = FALSE;
 int PagerMax = PAGER_MAX_LINE;
 int SmartCase = FALSE;
-int Tabstop = 8;
 int UseExternalDirBuffer = TRUE;
 int WrapDefault = FALSE;
 int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;

@@ -11,6 +11,7 @@
 #include "gbk.h"
 #include "gb18030.h"
 #include "uhc.h"
+#include <string.h>
 #ifdef USE_UNICODE
 #include "ucs.h"
 #include "utf8.h"

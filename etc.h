@@ -3,7 +3,6 @@
 
 #include "textlist.h"
 
-#define LINELEN	256		/* Initial line length */
 enum {
     TMPF_DFL,
     TMPF_SRC,
