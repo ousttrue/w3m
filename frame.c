@@ -455,7 +455,7 @@ createFrameFile(struct frameset *f, FILE * f1, Buffer *current, int level,
 #endif
     char *d_target, *p_target, *s_target, *t_target;
     ParsedURL *currentURL, base;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
     int flag;
 
     if (f == NULL)

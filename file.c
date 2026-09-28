@@ -1704,7 +1704,7 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
     Buffer *volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = TRUE;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    SigActionFunc volatile prevtrap = NULL;
     TextList *extra_header = newTextList();
     volatile Str uname = NULL;
     volatile Str pwd = NULL;
@@ -1724,7 +1724,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
     ParsedURL *volatile auth_pu;
 
     tpath = path;
-    prevtrap = NULL;
     add_auth_cookie_flag = 0;
 
     checkRedirection(NULL);
@@ -7131,7 +7130,7 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
 #ifdef USE_IMAGE
     int volatile image_flag;
 #endif
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 
 #ifdef USE_M17N
     if (fmInitialized && graph_ok()) {
@@ -7296,7 +7295,7 @@ Buffer *
 loadHTMLString(Str page)
 {
     URLFile f;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
     Buffer *newBuf;
 
     init_stream(&f, SCM_LOCAL, newStrStream(page));
@@ -7347,7 +7346,7 @@ loadGopherDir0(URLFile *uf, ParsedURL *pu)
     Str lbuf, name, file, host, port, type;
     char *volatile p, *volatile q;
     int link, pre;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 #ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
 #endif
@@ -7511,7 +7510,7 @@ loadBuffer(URLFile *uf, Buffer *volatile newBuf)
 #ifdef USE_ANSI_COLOR
     Linecolor *colorBuffer = NULL;
 #endif
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 
     if (newBuf == NULL)
 	newBuf = newBuffer(INIT_BUFFER_WIDTH);
@@ -7600,7 +7599,7 @@ loadImageBuffer(URLFile *uf, Buffer *newBuf)
     Str tmp, tmpf;
     FILE *src = NULL;
     URLFile f;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
     struct stat st;
     ParsedURL *pu = newBuf ? &newBuf->currentURL : NULL;
 
@@ -7928,7 +7927,7 @@ getNextPage(Buffer *buf, int plen)
 #ifdef USE_ANSI_COLOR
     Linecolor *colorBuffer = NULL;
 #endif
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 
     if (buf->pagerSource == NULL)
 	return NULL;
@@ -8037,7 +8036,7 @@ save2tmp(URLFile uf, const char *tmpf)
 {
     FILE *ff;
     size_t linelen = 0, trbyte = 0;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
     static JMP_BUF env_bak;
     volatile int retval = 0;
     unsigned char *volatile buf = NULL;

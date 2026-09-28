@@ -566,7 +566,7 @@ openSocket(char *const hostname,
     int a1, a2, a3, a4;
     unsigned long adr;
 #endif				/* not INET6 */
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 
     if (fmInitialized) {
 	message(Sprintf(_("Opening socket..."))->ptr, 0, 0);
@@ -2159,7 +2159,7 @@ needs_proxy(char *domain)
 {
     TextListItem *tl;
     volatile int ret = 0;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 
     if (NO_proxy_domains == NULL || NO_proxy_domains->nitem == 0 ||
 	domain == NULL)

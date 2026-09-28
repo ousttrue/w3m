@@ -498,7 +498,6 @@ extern FILE *localcgi_post(char *, char *, FormList *, char *);
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern char *last_modified(Buffer *buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
 extern void setup_child(int child, int i, int f);
@@ -517,7 +516,6 @@ extern char *url_unquote_conv0(const char *url);
 extern char *expandName(char *name);
 extern Str tmpfname(int type, const char *ext);
 extern time_t mymktime(char *timestr);
-extern void (*mySignal(int signal_number, void (*action) (int))) (int);
 #ifdef USE_M17N
 extern void docCSet(void);
 extern void defCSet(void);

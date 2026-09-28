@@ -23,27 +23,6 @@
 
 TextList* fileToDelete;
 
-/* get last modified time */
-char* last_modified(Buffer* buf)
-{
-    TextListItem* ti;
-    struct stat st;
-
-    if (buf->document_header) {
-        for (ti = buf->document_header->first; ti; ti = ti->next) {
-            if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
-                return ti->ptr + 15;
-            }
-        }
-        return "unknown";
-    } else if (buf->currentURL.scheme == SCM_LOCAL) {
-        if (stat(buf->currentURL.file, &st) < 0)
-            return "unknown";
-        return ctime(&st.st_mtime);
-    }
-    return "unknown";
-}
-
 static char roman_num1[] = {
     'i',
     'x',
@@ -751,23 +730,7 @@ mymktime(char* timestr)
     return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
 
-void (*mySignal(int signal_number, void (*action)(int)))(int)
-{
-#ifdef SA_RESTART
-    struct sigaction new_action, old_action;
 
-    sigemptyset(&new_action.sa_mask);
-    new_action.sa_handler = action;
-    if (signal_number == SIGALRM)
-        new_action.sa_flags = 0;
-    else
-        new_action.sa_flags = SA_RESTART;
-    sigaction(signal_number, &new_action, &old_action);
-    return (old_action.sa_handler);
-#else
-    return (signal(signal_number, action));
-#endif
-}
 
 static const char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

@@ -3,6 +3,7 @@
 #define W3M_TERMS_H
 
 #include "config.h"
+#include "subprocess.h"
 
 #define DEFAULT_COLS 80
 extern int LINES, COLS;

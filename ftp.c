@@ -489,7 +489,7 @@ loadFTPDir0(ParsedURL *pu)
     char *realpathname, *fn, *q;
     char **flist;
     int i, nfile, nfile_max;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 #ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
 

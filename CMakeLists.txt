@@ -52,6 +52,7 @@ add_executable(
   buffer.c
   display.c
   etc.c
+  subprocess.c
   str_const.c
   str_gc.c
   auth.c

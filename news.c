@@ -334,7 +334,7 @@ loadNewsgroup0(ParsedURL *pu)
     char *volatile scheme, *volatile group, *volatile list;
     int status, i, first, last;
     volatile int flag = 0, start = 0, end = 0;
-    void (*volatile prevtrap) (SIGNAL_ARG) = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 #ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset, mime_charset;
 
