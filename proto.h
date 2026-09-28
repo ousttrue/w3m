@@ -309,17 +309,11 @@ extern void arrangeCursor(Buffer *buf);
 extern void arrangeLine(Buffer *buf);
 extern void cursorXY(Buffer *buf, int x, int y);
 extern void restorePosition(Buffer *buf, Buffer *orig);
-extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
-extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
-extern int gethtmlcmd(const char *s);
 #ifndef USE_ANSI_COLOR
 #define checkType(a,b,c) _checkType(a,b)
 #endif
 extern char *mybasename(const char *s);
 extern char *mydirname(const char *s);
-extern int next_status(char c, int *status);
-extern int read_token(Str buf, char **instr, int *status, int pre, int append);
-extern Str correct_irrtag(int status);
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
@@ -506,12 +500,6 @@ extern FILE *localcgi_post(char *, char *, FormList *, char *);
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(ParsedURL *pu, char *realm,
-				 volatile Str *uname, volatile Str *pwd, int is_proxy);
-extern void add_auth_user_passwd(ParsedURL *pu, char *realm,
-				 Str uname, Str pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm,
-					Str uname, Str pwd, int is_proxy);
 extern char *last_modified(Buffer *buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);

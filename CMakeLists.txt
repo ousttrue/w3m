@@ -52,6 +52,8 @@ add_executable(
   buffer.c
   display.c
   etc.c
+  auth.c
+  html_parser.c
   search.c
   linein.c
   table.c

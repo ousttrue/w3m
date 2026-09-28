@@ -3,7 +3,7 @@
  * HTML table
  */
 #include "table.h"
-
+#include "html_parser.h"
 #include "Str.h"
 #include "charset.h"
 #include "config.h"

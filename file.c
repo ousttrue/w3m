@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
-
+#include "auth.h"
+#include "html_parser.h"
 #include "backend.h"
 #include "buffer.h"
 #include "charset.h"

@@ -19,6 +19,7 @@
 
 #define IS_CNTRL(x) (GET_MYCTYPE(x) & MYCTYPE_CNTRL)
 #define IS_SPACE(x) (GET_MYCTYPE(x) & MYCTYPE_SPACE)
+#define SKIP_BLANKS(p) do{while(*(p)&&IS_SPACE(*(p)))(p)++;}while(0)
 #define IS_ALPHA(x) (GET_MYCTYPE(x) & MYCTYPE_ALPHA)
 #define IS_DIGIT(x) (GET_MYCTYPE(x) & MYCTYPE_DIGIT)
 #define IS_PRINT(x) (GET_MYCTYPE(x) & MYCTYPE_PRINT)

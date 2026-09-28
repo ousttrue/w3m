@@ -152,4 +152,7 @@ void tmpClearBuffer(Buffer *buf);
 
 int columnSkip(Buffer *buf, int offset);
 
+Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
+Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
+
 #endif

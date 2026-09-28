@@ -13,8 +13,6 @@
 #define FALSE 0
 #define TRUE  1
 
-#define SKIP_BLANKS(p) do{while(*(p)&&IS_SPACE(*(p)))(p)++;}while(0)
-
 struct growbuf {
     char *ptr;
     int length;
