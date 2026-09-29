@@ -10,7 +10,7 @@
 extern char* getescapestr(char** s, int is_attr, int* pis_simple);
 extern char* getescapecmd(char** s);
 
-extern char* remove_space(const char* str);
+extern Str remove_space(const char* str);
 
 extern char* html_quote(const char* str);
 extern char* html_unquote(const char* str);

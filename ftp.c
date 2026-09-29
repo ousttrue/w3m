@@ -561,12 +561,12 @@ Str loadFTPDir0(ParsedURL* pu)
     nfile = 0;
     if (sv_type == UNIXLIKE_SERVER) {
         const char *name, *link, *size, *type_str;
-        char* date;
         int ftype, max_len, len, j;
 
         max_len = 20;
         while (tmp = Strfgets(current_ftp.data), tmp->length > 0) {
             Strchop(tmp);
+            char* date;
             if ((ftype = ex_ftpdir_name_size_date(tmp->ptr,
                      &name,
                      &link,
@@ -601,7 +601,7 @@ Str loadFTPDir0(ParsedURL* pu)
         qsort(flist, nfile, sizeof(char*), strCmp);
         for (j = 0; j < nfile; j++) {
             fn = flist[j];
-            date = strchr(fn, '\n');
+            char* date = Strnew_charp(strchr(fn, '\n'))->ptr;
             if (*(date - 1) == '/') {
                 ftype = FTPDIR_DIR;
                 *date = '\0';

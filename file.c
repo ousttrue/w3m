@@ -787,19 +787,17 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
 
 char* checkHeader(Buffer* buf, const char* field)
 {
-    int len;
-    TextListItem* i;
-    char* p;
-
     if (buf == NULL || field == NULL || buf->document_header == NULL)
         return NULL;
-    len = strlen(field);
-    for (i = buf->document_header->first; i != NULL; i = i->next) {
+
+    int len = strlen(field);
+    for (TextListItem* i = buf->document_header->first; i != NULL; i = i->next) {
         if (!strncasecmp(i->ptr, field, len)) {
-            p = i->ptr + len;
-            return remove_space(p);
+            char* p = i->ptr + len;
+            return remove_space(p)->ptr;
         }
     }
+
     return NULL;
 }
 
@@ -1805,7 +1803,7 @@ load_doc:
         readHeader(&f, t_buf, searchHeader_through, &pu);
         if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL && checkRedirection(&pu)) {
             /* document moved */
-            tpath = url_encode(remove_space(p), NULL, 0);
+            tpath = url_encode(remove_space(p)->ptr, NULL, 0);
             request = NULL;
             UFclose(&f);
             add_auth_cookie_flag = 0;
@@ -2896,7 +2894,7 @@ Str process_img(struct parsed_tag* tag, int width)
 
     if (!parsedtag_get_value(tag, ATTR_SRC, &p))
         return tmp;
-    p = url_encode(remove_space(p), cur_baseURL, cur_document_charset);
+    p = url_encode(remove_space(p)->ptr, cur_baseURL, cur_document_charset);
     q = NULL;
     parsedtag_get_value(tag, ATTR_ALT, &q);
     if (!pseudoInlines && (q == NULL || (*q == '\0' && ignore_null_img_alt)))
@@ -3783,7 +3781,7 @@ process_form_int(struct parsed_tag* tag, int fid)
     parsedtag_get_value(tag, ATTR_METHOD, &p);
     q = "!CURRENT_URL!";
     parsedtag_get_value(tag, ATTR_ACTION, &q);
-    q = url_encode(remove_space(q), cur_baseURL, cur_document_charset);
+    q = url_encode(remove_space(q)->ptr, cur_baseURL, cur_document_charset);
     r = NULL;
     if (parsedtag_get_value(tag, ATTR_ACCEPT_CHARSET, &r))
         r = check_accept_charset(r);
@@ -5285,7 +5283,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                         registerName(buf, id, currentLn(buf), pos);
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
-                        p = url_encode(remove_space(p), base,
+                        p = url_encode(remove_space(p)->ptr, base,
                             buf->document_charset);
                     if (parsedtag_get_value(tag, ATTR_TARGET, &q))
                         q = url_quote_conv(q, buf->document_charset)->ptr;
@@ -5359,7 +5357,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                         }
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
-                        p = url_quote_conv(remove_space(p), buf->document_charset)->ptr;
+                        p = url_quote_conv(remove_space(p)->ptr, buf->document_charset)->ptr;
                         a_img = registerImg(buf, p, s, currentLn(buf), pos);
                         a_img->hseq = iseq;
                         a_img->image = NULL;
@@ -5504,7 +5502,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                         break;
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
                         MapArea* a;
-                        p = url_encode(remove_space(p), base,
+                        p = url_encode(remove_space(p)->ptr, base,
                             buf->document_charset);
                         t = NULL;
                         parsedtag_get_value(tag, ATTR_TARGET, &t);
@@ -5549,7 +5547,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     break;
                 case HTML_BASE:
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-                        p = url_encode(remove_space(p), NULL,
+                        p = url_encode(remove_space(p)->ptr, NULL,
                             buf->document_charset);
                         if (!buf->baseURL)
                             buf->baseURL = New(ParsedURL);
@@ -5569,7 +5567,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                         Str tmp = NULL;
                         int refresh_interval = getMetaRefreshParam(q, &tmp);
                         if (tmp) {
-                            p = url_encode(remove_space(tmp->ptr), base,
+                            p = url_encode(remove_space(tmp->ptr)->ptr, base,
                                 buf->document_charset);
                             buf->event = setAlarmEvent(buf->event,
                                 refresh_interval,
@@ -5704,7 +5702,7 @@ addLink(Buffer* buf, struct parsed_tag* tag)
 
     parsedtag_get_value(tag, ATTR_HREF, &href);
     if (href)
-        href = url_encode(remove_space(href), baseURL(buf),
+        href = url_encode(remove_space(href)->ptr, baseURL(buf),
             buf->document_charset);
     parsedtag_get_value(tag, ATTR_TITLE, &title);
     parsedtag_get_value(tag, ATTR_TYPE, &ctype);

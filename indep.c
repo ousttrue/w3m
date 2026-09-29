@@ -15,7 +15,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 
-char* remove_space(const char* str)
+Str remove_space(const char* str)
 {
     const char *p, *q;
     for (p = str; *p && IS_SPACE(*p); p++)
@@ -25,8 +25,8 @@ char* remove_space(const char* str)
     for (; q > p && IS_SPACE(*(q - 1)); q--)
         ;
     if (*q != '\0')
-        return Strnew_charp_n(p, q - p)->ptr;
-    return p;
+        return Strnew_charp_n(p, q - p);
+    return Strnew_charp(p);
 }
 
 /* Parse an HTML entity.  Returns NULL on failure and a string on success.
@@ -224,11 +224,8 @@ char* html_unquote_attr(const char* str)
     return html_unquote_impl(str, TRUE);
 }
 
-
 #define url_unquote_char(pstr) \
     ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : -1)
-
-
 
 char* file_quote(const char* str)
 {
@@ -360,4 +357,3 @@ shell_quote(const char* str)
         return tmp->ptr;
     return str;
 }
-
