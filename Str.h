@@ -82,4 +82,6 @@ Str Strgrow(Str s);
 #define Strshrinkfirst(s,n)          Strdelete((s),0,(n))
 #define Strfputs(s,f)                fwrite((s)->ptr,1,(s)->length,(f))
 
+char* allocStr(const char* s, int len);
+
 #endif

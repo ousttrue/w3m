@@ -12,7 +12,6 @@
 
 extern char* getescapestr(char** s, int is_attr, int* pis_simple);
 extern char* getescapecmd(char** s);
-extern char* allocStr(const char* s, int len);
 extern int strCmp(const void* s1, const void* s2);
 extern char* currentdir(void);
 #ifndef HAVE_STRCASESTR

@@ -469,3 +469,13 @@ Strfgetall(FILE * f)
     }
     return s;
 }
+
+char* allocStr(const char* s, int len)
+{
+    if (s == NULL)
+        return NULL;
+    if (len < 0)
+        len = strlen(s);
+    return Strnew_charp_n(s, len)->ptr;
+}
+

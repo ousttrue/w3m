@@ -19,15 +19,6 @@
 #include <pwd.h>
 #endif /* __MINGW32_VERSION */
 
-char* allocStr(const char* s, int len)
-{
-    if (s == NULL)
-        return NULL;
-    if (len < 0)
-        len = strlen(s);
-    return Strnew_charp_n(s, len)->ptr;
-}
-
 int strCmp(const void* s1, const void* s2) /* helper for qsort */
 {
     return strcmp(*(const char* const*)s1, *(const char* const*)s2);
