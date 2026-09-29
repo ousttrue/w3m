@@ -2,6 +2,11 @@
 #include "pathdefs.h"
 #include <string.h>
 
+int strCmp(const void* s1, const void* s2) /* helper for qsort */
+{
+    return strcmp(*(const char* const*)s1, *(const char* const*)s2);
+}
+
 const char* mybasename(const char* path)
 {
     const char* p = strrchr(path, '/');

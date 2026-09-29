@@ -2056,6 +2056,19 @@ loadSiteconf(void)
     fclose(fp);
 }
 
+static int strmatchlen(const char* s1, const char* s2, int maxlen)
+{
+    int i;
+
+    /* To allow the maxlen to be negatie (infinity),
+     * compare by "!=" instead of "<=". */
+    for (i = 0; i != maxlen; ++i) {
+        if (!s1[i] || !s2[i] || s1[i] != s2[i])
+            break;
+    }
+    return i;
+}
+
 void* querySiteconf(ParsedURL* query_pu, int field)
 {
     struct siteconf_rec* ent;

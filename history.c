@@ -2,6 +2,7 @@
 #include "history.h"
 
 #include "str_gc.h"
+#include "subprocess.h"
 #include "alloc.h"
 #include "config.h"
 #include "fm.h"

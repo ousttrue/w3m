@@ -22,6 +22,9 @@
 #include <string.h>
 #include <strings.h>
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) > (b) ? (b) : (a))
+
 int symbol_width = 0;
 int symbol_width0 = 0;
 

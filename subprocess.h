@@ -2,6 +2,10 @@
 #include <signal.h>
 #include <stdio.h>
 
+extern const char* CurrentDir;
+extern int CurrentPid;
+
+const char* currentdir(void);
 typedef void (*SigActionFunc)(int);
 extern SigActionFunc mySignal(int signal_number, SigActionFunc action);
 void setup_child(bool is_child, int i, int f);

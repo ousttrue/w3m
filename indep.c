@@ -15,61 +15,6 @@
 #include <sys/param.h>
 #include <sys/types.h>
 
-#ifndef __MINGW32_VERSION
-#include <pwd.h>
-#endif /* __MINGW32_VERSION */
-
-int strCmp(const void* s1, const void* s2) /* helper for qsort */
-{
-    return strcmp(*(const char* const*)s1, *(const char* const*)s2);
-}
-
-char* currentdir(void)
-{
-    char* path;
-#ifdef MAXPATHLEN
-    path = NewAtom_N(char, MAXPATHLEN);
-    getcwd(path, MAXPATHLEN);
-#else
-    path = getcwd(NULL, 0);
-#endif
-    return path;
-}
-
-#ifndef HAVE_STRCASESTR
-/* string search using the simplest algorithm */
-char* strcasestr(const char* s1, const char* s2)
-{
-    int len1, len2;
-    if (s2 == NULL)
-        return (char*)s1;
-    if (*s2 == '\0')
-        return (char*)s1;
-    len1 = strlen(s1);
-    len2 = strlen(s2);
-    while (*s1 && len1 >= len2) {
-        if (strncasecmp(s1, s2, len2) == 0)
-            return (char*)s1;
-        s1++;
-        len1--;
-    }
-    return 0;
-}
-#endif /* HAVE_STRCASESTR */
-
-int strmatchlen(const char* s1, const char* s2, int maxlen)
-{
-    int i;
-
-    /* To allow the maxlen to be negatie (infinity),
-     * compare by "!=" instead of "<=". */
-    for (i = 0; i != maxlen; ++i) {
-        if (!s1[i] || !s2[i] || s1[i] != s2[i])
-            break;
-    }
-    return i;
-}
-
 char* remove_space(char* str)
 {
     char *p, *q;

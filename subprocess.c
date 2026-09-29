@@ -5,6 +5,21 @@
 #include <signal.h>
 #include <stdlib.h>
 
+const char* CurrentDir;
+int CurrentPid;
+
+const char* currentdir(void)
+{
+    char* path;
+#ifdef MAXPATHLEN
+    path = NewAtom_N(char, MAXPATHLEN);
+    getcwd(path, MAXPATHLEN);
+#else
+    path = getcwd(NULL, 0);
+#endif
+    return path;
+}
+
 SigActionFunc mySignal(int signal_number, SigActionFunc action)
 {
     struct sigaction new_action = {

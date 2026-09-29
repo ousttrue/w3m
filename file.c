@@ -38,6 +38,8 @@
 #include <utime.h>
 
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) > (b) ? (b) : (a))
 
 int w3m_debug;
 int w3m_dump = 0;

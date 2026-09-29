@@ -3,6 +3,7 @@
  * HTML forms
  */
 #include "alloc.h"
+#include "subprocess.h"
 #include "buffer.h"
 #include "str_const.h"
 #include "str_gc.h"
