@@ -135,7 +135,7 @@ struct html_feed_environ {
     int nenv;
     int envc;
     int envc_real;
-    char *title;
+    const char *title;
     int blank_lines;
 };
 

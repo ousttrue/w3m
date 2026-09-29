@@ -1,6 +1,6 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
 #include "mymktime.h"
+#include "entity.h"
 #include "str_gc.h"
 #include "auth.h"
 #include "str_const.h"
@@ -1516,7 +1516,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     Buffer* b = NULL;
     Buffer* (*volatile proc)(URLFile*, Buffer*);
     char* volatile tpath;
-    char *t = "text/plain", *volatile real_type = NULL;
+    const char *t = "text/plain", *volatile real_type = NULL;
     Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = TRUE;
@@ -2000,8 +2000,7 @@ page_loaded:
             b->type = allocStr(t, -1);
         if (pu.label) {
             if (proc == loadHTMLBuffer) {
-                Anchor* a;
-                a = searchURLLabel(b, pu.label);
+                Anchor* a = searchURLLabel(b, pu.label);
                 if (a != NULL) {
                     gotoLine(b, a->start.line);
                     if (label_topline)
@@ -2329,7 +2328,7 @@ push_spaces(struct readbuffer* obuf, int pre_mode, int width)
 
 static void
 proc_mchar(struct readbuffer* obuf, int pre_mode,
-    int width, char** str, Lineprop mode)
+    int width, const char** str, Lineprop mode)
 {
     check_breakpoint(obuf, pre_mode, *str);
     obuf->pos += width;
@@ -2866,7 +2865,7 @@ process_n_title(void)
 }
 
 static void
-feed_title(char* str)
+feed_title(const char* str)
 {
     if (pre_title)
         return;
@@ -2885,7 +2884,7 @@ feed_title(char* str)
 
 Str process_img(struct parsed_tag* tag, int width)
 {
-    char *p, *q, *r, *r2 = NULL, *s, *t;
+    const char *p, *q, *r, *r2 = NULL, *s, *t;
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
     int use_image = activeImage && displayImage;
@@ -3092,7 +3091,7 @@ Str process_img(struct parsed_tag* tag, int width)
         n = get_strwidth(q);
         if (use_image) {
             if (n > nw) {
-                char* r;
+                const char* r;
                 for (r = q, n = 0; *r; r += get_mclen(r), n += get_mcwidth(r)) {
                     if (n + get_mcwidth(r) > nw)
                         break;
@@ -3206,7 +3205,7 @@ Str process_input(struct parsed_tag* tag)
     int qlen = 0;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, TRUE));
     }
     if (tmp == NULL)
@@ -3389,7 +3388,7 @@ Str process_button(struct parsed_tag* tag)
     int v;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, TRUE));
     }
     if (tmp == NULL)
@@ -3457,7 +3456,7 @@ Str process_select(struct parsed_tag* tag)
     char* p;
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, TRUE));
     }
 
@@ -3514,7 +3513,7 @@ void feed_select(char* str)
     Str tmp = Strnew();
     int prev_status = cur_status;
     static int prev_spaces = -1;
-    char* p;
+    const char* p;
 
     if (cur_select == NULL)
         return;
@@ -3524,7 +3523,7 @@ void feed_select(char* str)
         p = tmp->ptr;
         if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
             struct parsed_tag* tag;
-            char* q;
+            const char* q;
             if (!(tag = parse_tag(&p, FALSE)))
                 continue;
             switch (tag->tagid) {
@@ -3617,7 +3616,7 @@ Str process_textarea(struct parsed_tag* tag, int width)
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 
     if (cur_form_id < 0) {
-        char* s = "<form_int method=internal action=none>";
+        const char* s = "<form_int method=internal action=none>";
         tmp = process_form(parse_tag(&s, TRUE));
     }
 
@@ -3683,7 +3682,7 @@ Str process_n_textarea(void)
     return tmp;
 }
 
-void feed_textarea(char* str)
+void feed_textarea(const char* str)
 {
     if (cur_textarea == NULL)
         return;
@@ -5098,7 +5097,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
     static Lineprop* outp = NULL;
     static int out_size = 0;
     Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
-    char *p, *q, *r, *s, *t, *str;
+    const char *p, *q, *r, *s, *t, *str;
     Lineprop mode, effect, ex_effect;
     int pos;
     int nlines;
@@ -5764,9 +5763,9 @@ HTMLlineproc3(Buffer* buf, InputStream stream)
 }
 
 static void
-proc_escape(struct readbuffer* obuf, char** str_return)
+proc_escape(struct readbuffer* obuf, const char** str_return)
 {
-    char *str = *str_return, *estr;
+    const char *str = *str_return, *estr;
     int width, simple;
     Lineprop mode;
 
@@ -5860,7 +5859,7 @@ table_start:
     }
 
     while (*line != '\0') {
-        char *str, *p;
+        const char *str, *p;
         int is_tag = FALSE;
         int pre_mode = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
         int end_tag = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->end_tag : obuf->end_tag;
@@ -6031,8 +6030,8 @@ table_start:
             if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
                 char ch = *str;
                 if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
-                    char* p = str;
-                    char* estr = getescapestr(&p, 0, NULL);
+                    const char* p = str;
+                    const char* estr = getescapestr(&p, 0, NULL);
                     if (estr) {
                         if (*estr == '\n' || *estr == '\r') {
                             ch = '\n';

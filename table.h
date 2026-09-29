@@ -126,7 +126,7 @@ struct table_mode {
     unsigned char end_tag;
 };
 
-int feed_table(struct table *tbl, char *line, struct table_mode *mode, int width, int internal);
+int feed_table(struct table *tbl, const char *line, struct table_mode *mode, int width, int internal);
 int visible_length(const char *str);
 struct table *begin_table(int border, int spacing, int padding, int vspace);
 void align(TextLine *lbuf, int width, int mode);

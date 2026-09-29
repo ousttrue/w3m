@@ -216,7 +216,7 @@ extern void feed_select(char *str);
 extern void process_option(void);
 extern Str process_textarea(struct parsed_tag *tag, int width);
 extern Str process_n_textarea(void);
-extern void feed_textarea(char *str);
+extern void feed_textarea(const char *str);
 extern Str process_form(struct parsed_tag *tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(const char *q, Str *refresh_uri);
@@ -444,7 +444,7 @@ extern Anchor *retrieveCurrentAnchor(Buffer *buf);
 extern Anchor *retrieveCurrentImg(Buffer *buf);
 extern Anchor *retrieveCurrentForm(Buffer *buf);
 extern Anchor *searchAnchor(AnchorList *al, char *str);
-extern Anchor *searchURLLabel(Buffer *buf, char *url);
+extern Anchor *searchURLLabel(Buffer *buf, const char *url);
 extern void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
 extern const char *reAnchor(Buffer *buf, char *re);
 #ifdef USE_NNTP

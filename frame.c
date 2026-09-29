@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "alloc.h"
+#include "entity.h"
 #include "str_gc.h"
 #include "buffer.h"
 #include "html_parser.h"
@@ -577,7 +578,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                 }
                 do {
                     int is_tag = FALSE;
-                    char* q;
+                    const char* q;
                     struct parsed_tag* tag;
 
                     do {
@@ -650,7 +651,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
 
                 proc_normal:
                     if (is_tag) {
-                        char* q = tok->ptr;
+                        const char* q = tok->ptr;
                         int j, a_target = 0;
                         ParsedURL url;
 

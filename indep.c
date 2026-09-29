@@ -29,146 +29,6 @@ Str remove_space(const char* str)
     return Strnew_charp(p);
 }
 
-/* Parse an HTML entity.  Returns NULL on failure and a string on success.
- * *str is set to the last byte parsed both on success and failure.
- * is_attr produces stricter processing of `;' for attribute values.
- * If psimple is not NULL, it is set when the entity is single-byte and
- * maps to itself in conv_entity (i.e. it can be displayed).
- */
-char* getescapestr(char** str, int is_attr, int* psimple)
-{
-    char *p = *str, *res;
-    unsigned long ucs;
-    int i, last_match_idx, overflow;
-    const struct entity_item *item, *last_match, *entity_end;
-
-    if (*p == '&')
-        p++;
-    if (*p == '#') {
-        p++;
-        overflow = 0;
-        if (*p == 'x' || *p == 'X') {
-            p++;
-            if (!IS_XDIGIT(*p))
-                goto fail;
-            for (ucs = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++) {
-                ucs = ucs * 0x10 + GET_MYCDIGIT(*p);
-                if (ucs > 0x10FFFF)
-                    overflow = 1;
-            }
-        } else {
-            if (!IS_DIGIT(*p))
-                goto fail;
-            for (ucs = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++) {
-                ucs = ucs * 10 + GET_MYCDIGIT(*p);
-                if (ucs > 0x10FFFF)
-                    overflow = 1;
-            }
-        }
-        if (*p == ';')
-            p++;
-        *str = p;
-        if (ucs == 0 || overflow || (ucs >= 0xD800 && ucs <= 0xDFFF))
-            ucs = 0xFFFD; /* HTML5 behavior for invalid numeric entities */
-    } else {
-        if (!IS_ALPHA(*p))
-            goto fail;
-        item = &entity[entity_char_start[*p - 'A']];
-        last_match = NULL;
-        last_match_idx = -1;
-        entity_end = entity + sizeof(entity) / sizeof(entity[0]);
-        for (i = 1; p[i] != '\0'; i++) {
-            if (item->name[i] == p[i])
-                continue; /* current entry matches */
-            if (!item->name[i]) {
-                /* Found match; save it for the case where there isn't
-                 * anything better. */
-                last_match = item;
-                last_match_idx = i;
-            }
-            /* Cycle to the next entry that could match.
-             * We want to look at all entries that prefix match (0, i - 1). */
-            item++;
-            while (1) {
-                if (item < entity_end && !strncmp(p, item->name, i)) {
-                    if (item->name[i] == p[i])
-                        break; /* found match */
-                    item++; /* try next */
-                } else {
-                    /* out of entries */
-                    item = NULL;
-                    goto done;
-                }
-            }
-        }
-    done:
-        if (!item || item->name[i]) {
-            /* partial match */
-            if (!last_match)
-                goto fail;
-            item = last_match;
-            i = last_match_idx;
-        }
-        if (item->name[i - 1] != ';') {
-            /* In HTML5, some character entities such as &lt; &gt; can be
-             * written without the semicolon (like &gt or &lt).  We encode
-             * these by omitting the semicolon, and then optionally skip it
-             * in the input stream here.
-             *
-             * (Attributes have stricter processing so that &lt=, &gt=,
-             * etc. are not regarded as character entities.)
-             */
-            if (p[i] == ';') /* item allows skipping the last ";"*/
-                i++;
-            else if (is_attr && (p[i] == '=' || IS_ALNUM(p[i])))
-                goto fail;
-        }
-        *str = p + i;
-        ucs = item->unit1;
-        if (item->unit2) {
-            if (!(ucs >= 0xD800 && ucs <= 0xDBFF)) { /* two codepoints */
-                char* a = conv_entity(ucs);
-                char* b = conv_entity(item->unit2);
-                if (psimple)
-                    *psimple = FALSE;
-                return Strnew_m_charp(a, b, NULL)->ptr;
-            }
-            /* two surrogates */
-            ucs = 0x10000 | ((ucs - 0xD800) << 10) | (item->unit2 - 0xDC00);
-        }
-    }
-    res = conv_entity(ucs);
-    if (psimple)
-        *psimple = (ucs == (unsigned char)res[0]) && !res[1];
-    return res;
-fail:
-    *str = p;
-    return NULL;
-}
-
-static char*
-getescapecmd_impl(char** s, int is_attr)
-{
-    char* save = *s;
-    Str tmp;
-    char* value = getescapestr(s, is_attr, NULL);
-
-    if (value)
-        return value;
-
-    if (*save != '&')
-        tmp = Strnew_charp("&");
-    else
-        tmp = Strnew();
-    Strcat_charp_n(tmp, save, *s - save);
-    return tmp->ptr;
-}
-
-char* getescapecmd(char** s)
-{
-    return getescapecmd_impl(s, FALSE);
-}
-
 char* html_quote(const char* str)
 {
     Str tmp = NULL;
@@ -188,40 +48,6 @@ char* html_quote(const char* str)
     if (tmp)
         return tmp->ptr;
     return str;
-}
-
-static char*
-html_unquote_impl(char* str, int is_attr)
-{
-    Str tmp = NULL;
-    char *p, *q;
-
-    for (p = str; *p;) {
-        if (*p == '&') {
-            if (tmp == NULL)
-                tmp = Strnew_charp_n(str, (int)(p - str));
-            q = getescapecmd_impl(&p, is_attr);
-            Strcat_charp(tmp, q);
-        } else {
-            if (tmp)
-                Strcat_char(tmp, *p);
-            p++;
-        }
-    }
-
-    if (tmp)
-        return tmp->ptr;
-    return str;
-}
-
-char* html_unquote(const char* str)
-{
-    return html_unquote_impl(str, FALSE);
-}
-
-char* html_unquote_attr(const char* str)
-{
-    return html_unquote_impl(str, TRUE);
 }
 
 Str Str_form_quote(Str x)
@@ -249,8 +75,6 @@ Str Str_form_quote(Str x)
         return tmp;
     return x;
 }
-
-
 
 const char*
 shell_quote(const char* str)

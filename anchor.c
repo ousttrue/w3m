@@ -196,7 +196,7 @@ searchAnchor(AnchorList *al, char *str)
 }
 
 Anchor *
-searchURLLabel(Buffer *buf, char *url)
+searchURLLabel(Buffer *buf, const char *url)
 {
     return searchAnchor(buf->name, url);
 }

@@ -2,6 +2,7 @@
 #include "alloc.h"
 #define MAINPROGRAM
 #include "backend.h"
+#include "entity.h"
 #include "str_gc.h"
 #include "subprocess.h"
 #include "buffer.h"
