@@ -4,6 +4,7 @@
 #include "myctype.h"
 #include <pwd.h>
 #include <libgen.h>
+#include <stdlib.h>
 
 const char* Editor = DEF_EDITOR;
 const char* personal_document_root = NULL;

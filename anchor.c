@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "anchor.h"
 
+#include "alloc.h"
 #include "config.h"
 #include "display.h"
 #include "fm.h"

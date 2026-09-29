@@ -2,6 +2,7 @@
 #include "parsetag.h"
 
 #include "Str.h"
+#include "alloc.h"
 #include "indep.h"
 #include <strings.h>
 

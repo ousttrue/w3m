@@ -1,4 +1,5 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "alloc.h"
 #include "fm.h"
 #include "str_gc.h"
 #include "proto.h"

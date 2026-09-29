@@ -2,6 +2,7 @@
 #include "parsetagx.h"
 
 #include "Str.h"
+#include "alloc.h"
 #include "fm.h"
 #include "proto.h"
 #include "hash.h"

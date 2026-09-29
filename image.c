@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "image.h"
-
+#include "alloc.h"
 #include "config.h"
 #include "etc.h"
 #include "history.h"

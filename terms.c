@@ -5,6 +5,7 @@
  */
 #include "terms.h"
 
+#include "alloc.h"
 #include "str_const.h"
 #include "buffer.h"
 #include "charset.h"

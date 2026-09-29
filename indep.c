@@ -2,6 +2,7 @@
 #include "indep.h"
 
 #include "Str.h"
+#include "alloc.h"
 #include "config.h"
 #include "entity.h"
 #include "fm.h"
@@ -21,33 +22,273 @@
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
-    24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
     /* DLE DC1 DC2 DC3 DC4 NAK SYN ETB CAN  EM SUB ESC  FS  GS  RS  US */
-    24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
     /* SPC   !   "   #   $   %   &   '   (   )   *   +   ,   -   .   / */
-    24, 72, 76, 40, 8, 40, 41, 77, 72, 72, 72, 40, 72, 8, 0, 64,
+    24,
+    72,
+    76,
+    40,
+    8,
+    40,
+    41,
+    77,
+    72,
+    72,
+    72,
+    40,
+    72,
+    8,
+    0,
+    64,
     /*   0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ? */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 72, 74, 72, 75, 40,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    32,
+    72,
+    74,
+    72,
+    75,
+    40,
     /*   @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O */
-    72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    72,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     /*   P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _ */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 72, 72, 72, 0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    0,
     /*   `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o */
-    72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    72,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     /*   p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~ DEL */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 72, 72, 72, 24,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    72,
+    72,
+    72,
+    72,
+    24,
 
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
+    16,
 };
 
-char *HTML_QUOTE_MAP[] = {
+char* HTML_QUOTE_MAP[] = {
     NULL,
     "&amp;",
     "&lt;",
@@ -58,26 +299,23 @@ char *HTML_QUOTE_MAP[] = {
     NULL,
 };
 
-char *
-allocStr(const char *s, int len)
+char* allocStr(const char* s, int len)
 {
     if (s == NULL)
-	return NULL;
+        return NULL;
     if (len < 0)
-	len = strlen(s);
+        len = strlen(s);
     return Strnew_charp_n(s, len)->ptr;
 }
 
-int
-strCmp(const void *s1, const void *s2) /* helper for qsort */
+int strCmp(const void* s1, const void* s2) /* helper for qsort */
 {
-    return strcmp(*(const char * const *)s1, *(const char * const *)s2);
+    return strcmp(*(const char* const*)s1, *(const char* const*)s2);
 }
 
-char *
-currentdir(void)
+char* currentdir(void)
 {
-    char *path;
+    char* path;
 #ifdef MAXPATHLEN
     path = NewAtom_N(char, MAXPATHLEN);
     getcwd(path, MAXPATHLEN);
@@ -87,90 +325,82 @@ currentdir(void)
     return path;
 }
 
-
-
-
-
 #ifndef HAVE_STRCASESTR
 /* string search using the simplest algorithm */
-char *
-strcasestr(const char *s1, const char *s2)
+char* strcasestr(const char* s1, const char* s2)
 {
     int len1, len2;
     if (s2 == NULL)
-	return (char *)s1;
+        return (char*)s1;
     if (*s2 == '\0')
-	return (char *)s1;
+        return (char*)s1;
     len1 = strlen(s1);
     len2 = strlen(s2);
     while (*s1 && len1 >= len2) {
-	if (strncasecmp(s1, s2, len2) == 0)
-	    return (char *)s1;
-	s1++;
-	len1--;
+        if (strncasecmp(s1, s2, len2) == 0)
+            return (char*)s1;
+        s1++;
+        len1--;
     }
     return 0;
 }
-#endif		/* HAVE_STRCASESTR */
+#endif /* HAVE_STRCASESTR */
 
-int
-strmatchlen(const char *s1, const char *s2, int maxlen)
+int strmatchlen(const char* s1, const char* s2, int maxlen)
 {
     int i;
 
     /* To allow the maxlen to be negatie (infinity),
      * compare by "!=" instead of "<=". */
     for (i = 0; i != maxlen; ++i) {
-	if (!s1[i] || !s2[i] || s1[i] != s2[i])
-	    break;
+        if (!s1[i] || !s2[i] || s1[i] != s2[i])
+            break;
     }
     return i;
 }
 
-char *
-remove_space(char *str)
+char* remove_space(char* str)
 {
     char *p, *q;
 
-    for (p = str; *p && IS_SPACE(*p); p++) ;
-    for (q = p; *q; q++) ;
-    for (; q > p && IS_SPACE(*(q - 1)); q--) ;
+    for (p = str; *p && IS_SPACE(*p); p++)
+        ;
+    for (q = p; *q; q++)
+        ;
+    for (; q > p && IS_SPACE(*(q - 1)); q--)
+        ;
     if (*q != '\0')
-	return Strnew_charp_n(p, q - p)->ptr;
+        return Strnew_charp_n(p, q - p)->ptr;
     return p;
 }
 
-int
-non_null(const char *s)
+int non_null(const char* s)
 {
     if (s == NULL)
-	return FALSE;
+        return FALSE;
     while (*s) {
-	if (!IS_SPACE(*s))
-	    return TRUE;
-	s++;
+        if (!IS_SPACE(*s))
+            return TRUE;
+        s++;
     }
     return FALSE;
 }
 
-void
-cleanup_line(Str s, int mode)
+void cleanup_line(Str s, int mode)
 {
-    if (s->length >= 2 &&
-	s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
-	Strshrink(s, 2);
-	Strcat_char(s, '\n');
-    }
-    else if (Strlastchar(s) == '\r')
-	s->ptr[s->length - 1] = '\n';
+    if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
+        Strshrink(s, 2);
+        Strcat_char(s, '\n');
+    } else if (Strlastchar(s) == '\r')
+        s->ptr[s->length - 1] = '\n';
     else if (Strlastchar(s) != '\n')
-	Strcat_char(s, '\n');
+        Strcat_char(s, '\n');
     if (mode != PAGER_MODE) {
-	int i;
-	for (i = 0; i < s->length; i++) {
-	    if (s->ptr[i] == '\0')
-		s->ptr[i] = ' ';
-	}
+        int i;
+        for (i = 0; i < s->length; i++) {
+            if (s->ptr[i] == '\0')
+                s->ptr[i] = ' ';
+        }
     }
 }
 
@@ -180,8 +410,7 @@ cleanup_line(Str s, int mode)
  * If psimple is not NULL, it is set when the entity is single-byte and
  * maps to itself in conv_entity (i.e. it can be displayed).
  */
-char *
-getescapestr(char **str, int is_attr, int *psimple)
+char* getescapestr(char** str, int is_attr, int* psimple)
 {
     char *p = *str, *res;
     unsigned long ucs;
@@ -189,391 +418,366 @@ getescapestr(char **str, int is_attr, int *psimple)
     const struct entity_item *item, *last_match, *entity_end;
 
     if (*p == '&')
-	p++;
+        p++;
     if (*p == '#') {
-	p++;
-	overflow = 0;
-	if (*p == 'x' || *p == 'X') {
-	    p++;
-	    if (!IS_XDIGIT(*p))
-		goto fail;
-	    for (ucs = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++) {
-		ucs = ucs * 0x10 + GET_MYCDIGIT(*p);
-		if (ucs > 0x10FFFF)
-		    overflow = 1;
-	    }
-	}
-	else {
-	    if (!IS_DIGIT(*p))
-		goto fail;
-	    for (ucs = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++) {
-		ucs = ucs * 10 + GET_MYCDIGIT(*p);
-		if (ucs > 0x10FFFF)
-		    overflow = 1;
-	    }
-	}
-	if (*p == ';')
-	    p++;
-	*str = p;
-	if (ucs == 0 || overflow || (ucs >= 0xD800 && ucs <= 0xDFFF))
-	    ucs = 0xFFFD; /* HTML5 behavior for invalid numeric entities */
-    }
-    else {
-	if (!IS_ALPHA(*p))
-	    goto fail;
-	item = &entity[entity_char_start[*p - 'A']];
-	last_match = NULL;
-	last_match_idx = -1;
-	entity_end = entity + sizeof(entity) / sizeof(entity[0]);
-	for (i = 1; p[i] != '\0'; i++) {
-	    if (item->name[i] == p[i])
-		continue; /* current entry matches */
-	    if (!item->name[i]) {
-		/* Found match; save it for the case where there isn't
-		 * anything better. */
-		last_match = item;
-		last_match_idx = i;
-	    }
-	    /* Cycle to the next entry that could match.
-	     * We want to look at all entries that prefix match (0, i - 1). */
-	    item++;
-	    while (1) {
-		if (item < entity_end && !strncmp(p, item->name, i)) {
-		    if (item->name[i] == p[i])
-			break; /* found match */
-		    item++; /* try next */
-		}
-		else {
-		    /* out of entries */
-		    item = NULL;
-		    goto done;
-		}
-	    }
-	}
-done:
-	if (!item || item->name[i]) {
-	    /* partial match */
-	    if (!last_match)
-		goto fail;
-	    item = last_match;
-	    i = last_match_idx;
-	}
-	if (item->name[i - 1] != ';') {
-	    /* In HTML5, some character entities such as &lt; &gt; can be
-	     * written without the semicolon (like &gt or &lt).  We encode
-	     * these by omitting the semicolon, and then optionally skip it
-	     * in the input stream here.
-	     *
-	     * (Attributes have stricter processing so that &lt=, &gt=,
-	     * etc. are not regarded as character entities.)
-	     */
-	    if (p[i] == ';') /* item allows skipping the last ";"*/
-		i++;
-	    else if (is_attr && (p[i] == '=' || IS_ALNUM(p[i])))
-		goto fail;
-	}
-	*str = p + i;
-	ucs = item->unit1;
-	if (item->unit2) {
-	    if (!(ucs >= 0xD800 && ucs <= 0xDBFF)) { /* two codepoints */
-		char *a = conv_entity(ucs);
-		char *b = conv_entity(item->unit2);
-		if (psimple)
-		    *psimple = FALSE;
-		return Strnew_m_charp(a, b, NULL)->ptr;
-	    }
-	    /* two surrogates */
-	    ucs = 0x10000 | ((ucs - 0xD800) << 10) | (item->unit2 - 0xDC00);
-	}
+        p++;
+        overflow = 0;
+        if (*p == 'x' || *p == 'X') {
+            p++;
+            if (!IS_XDIGIT(*p))
+                goto fail;
+            for (ucs = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++) {
+                ucs = ucs * 0x10 + GET_MYCDIGIT(*p);
+                if (ucs > 0x10FFFF)
+                    overflow = 1;
+            }
+        } else {
+            if (!IS_DIGIT(*p))
+                goto fail;
+            for (ucs = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++) {
+                ucs = ucs * 10 + GET_MYCDIGIT(*p);
+                if (ucs > 0x10FFFF)
+                    overflow = 1;
+            }
+        }
+        if (*p == ';')
+            p++;
+        *str = p;
+        if (ucs == 0 || overflow || (ucs >= 0xD800 && ucs <= 0xDFFF))
+            ucs = 0xFFFD; /* HTML5 behavior for invalid numeric entities */
+    } else {
+        if (!IS_ALPHA(*p))
+            goto fail;
+        item = &entity[entity_char_start[*p - 'A']];
+        last_match = NULL;
+        last_match_idx = -1;
+        entity_end = entity + sizeof(entity) / sizeof(entity[0]);
+        for (i = 1; p[i] != '\0'; i++) {
+            if (item->name[i] == p[i])
+                continue; /* current entry matches */
+            if (!item->name[i]) {
+                /* Found match; save it for the case where there isn't
+                 * anything better. */
+                last_match = item;
+                last_match_idx = i;
+            }
+            /* Cycle to the next entry that could match.
+             * We want to look at all entries that prefix match (0, i - 1). */
+            item++;
+            while (1) {
+                if (item < entity_end && !strncmp(p, item->name, i)) {
+                    if (item->name[i] == p[i])
+                        break; /* found match */
+                    item++; /* try next */
+                } else {
+                    /* out of entries */
+                    item = NULL;
+                    goto done;
+                }
+            }
+        }
+    done:
+        if (!item || item->name[i]) {
+            /* partial match */
+            if (!last_match)
+                goto fail;
+            item = last_match;
+            i = last_match_idx;
+        }
+        if (item->name[i - 1] != ';') {
+            /* In HTML5, some character entities such as &lt; &gt; can be
+             * written without the semicolon (like &gt or &lt).  We encode
+             * these by omitting the semicolon, and then optionally skip it
+             * in the input stream here.
+             *
+             * (Attributes have stricter processing so that &lt=, &gt=,
+             * etc. are not regarded as character entities.)
+             */
+            if (p[i] == ';') /* item allows skipping the last ";"*/
+                i++;
+            else if (is_attr && (p[i] == '=' || IS_ALNUM(p[i])))
+                goto fail;
+        }
+        *str = p + i;
+        ucs = item->unit1;
+        if (item->unit2) {
+            if (!(ucs >= 0xD800 && ucs <= 0xDBFF)) { /* two codepoints */
+                char* a = conv_entity(ucs);
+                char* b = conv_entity(item->unit2);
+                if (psimple)
+                    *psimple = FALSE;
+                return Strnew_m_charp(a, b, NULL)->ptr;
+            }
+            /* two surrogates */
+            ucs = 0x10000 | ((ucs - 0xD800) << 10) | (item->unit2 - 0xDC00);
+        }
     }
     res = conv_entity(ucs);
     if (psimple)
-	*psimple = (ucs == (unsigned char)res[0]) && !res[1];
+        *psimple = (ucs == (unsigned char)res[0]) && !res[1];
     return res;
 fail:
     *str = p;
     return NULL;
 }
 
-static char *
-getescapecmd_impl(char **s, int is_attr)
+static char*
+getescapecmd_impl(char** s, int is_attr)
 {
-    char *save = *s;
+    char* save = *s;
     Str tmp;
-    char *value = getescapestr(s, is_attr, NULL);
+    char* value = getescapestr(s, is_attr, NULL);
 
     if (value)
-	return value;
+        return value;
 
     if (*save != '&')
-	tmp = Strnew_charp("&");
+        tmp = Strnew_charp("&");
     else
-	tmp = Strnew();
+        tmp = Strnew();
     Strcat_charp_n(tmp, save, *s - save);
     return tmp->ptr;
 }
 
-char *
-getescapecmd(char **s)
+char* getescapecmd(char** s)
 {
     return getescapecmd_impl(s, FALSE);
 }
 
-char *
-html_quote(char *str)
+char* html_quote(char* str)
 {
     Str tmp = NULL;
     char *p, *q;
 
     for (p = str; *p; p++) {
-	q = html_quote_char(*p);
-	if (q) {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(str, (int)(p - str));
-	    Strcat_charp(tmp, q);
-	}
-	else {
-	    if (tmp)
-		Strcat_char(tmp, *p);
-	}
+        q = html_quote_char(*p);
+        if (q) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            Strcat_charp(tmp, q);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
     }
     if (tmp)
-	return tmp->ptr;
+        return tmp->ptr;
     return str;
 }
 
-static char *
-html_unquote_impl(char *str, int is_attr)
+static char*
+html_unquote_impl(char* str, int is_attr)
 {
     Str tmp = NULL;
     char *p, *q;
 
     for (p = str; *p;) {
-	if (*p == '&') {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(str, (int)(p - str));
-	    q = getescapecmd_impl(&p, is_attr);
-	    Strcat_charp(tmp, q);
-	}
-	else {
-	    if (tmp)
-		Strcat_char(tmp, *p);
-	    p++;
-	}
+        if (*p == '&') {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            q = getescapecmd_impl(&p, is_attr);
+            Strcat_charp(tmp, q);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+            p++;
+        }
     }
 
     if (tmp)
-	return tmp->ptr;
+        return tmp->ptr;
     return str;
 }
 
-char *
-html_unquote(char *str) {
+char* html_unquote(char* str)
+{
     return html_unquote_impl(str, FALSE);
 }
 
-char *
-html_unquote_attr(char *str) {
+char* html_unquote_attr(char* str)
+{
     return html_unquote_impl(str, TRUE);
 }
 
 static const char xdigit[0x10] = "0123456789ABCDEF";
 
 #define url_unquote_char(pstr) \
-  ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? \
-    (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : \
-   -1)
+    ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : -1)
 
-char *
-url_quote(char *str)
+char* url_quote(char* str)
 {
     Str tmp = NULL;
-    const char *p;
+    const char* p;
 
     for (p = str; *p; p++) {
-	if (is_url_quote(*p)) {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(str, (int)(p - str));
-	    Strcat_char(tmp, '%');
-	    Strcat_char(tmp, xdigit[((unsigned char)*p >> 4) & 0xF]);
-	    Strcat_char(tmp, xdigit[(unsigned char)*p & 0xF]);
-	}
-	else {
-	    if (tmp)
-		Strcat_char(tmp, *p);
-	}
+        if (is_url_quote(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            Strcat_char(tmp, '%');
+            Strcat_char(tmp, xdigit[((unsigned char)*p >> 4) & 0xF]);
+            Strcat_char(tmp, xdigit[(unsigned char)*p & 0xF]);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
     }
     if (tmp)
-	return tmp->ptr;
+        return tmp->ptr;
     return str;
 }
 
-char *
-file_quote(char *str)
+char* file_quote(char* str)
 {
     Str tmp = NULL;
-    char *p;
+    char* p;
     char buf[4];
 
     for (p = str; *p; p++) {
-	if (is_file_quote(*p)) {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(str, (int)(p - str));
-	    sprintf(buf, "%%%02X", (unsigned char)*p);
-	    Strcat_charp(tmp, buf);
-	}
-	else {
-	    if (tmp)
-		Strcat_char(tmp, *p);
-	}
+        if (is_file_quote(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            sprintf(buf, "%%%02X", (unsigned char)*p);
+            Strcat_charp(tmp, buf);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
     }
     if (tmp)
-	return tmp->ptr;
+        return tmp->ptr;
     return str;
 }
 
-char *
-file_unquote(char *str)
+char* file_unquote(char* str)
 {
     Str tmp = NULL;
     char *p, *q;
     int c;
 
     for (p = str; *p;) {
-	if (*p == '%') {
-	    q = p;
-	    c = url_unquote_char(&q);
-	    if (c >= 0) {
-		if (tmp == NULL)
-		    tmp = Strnew_charp_n(str, (int)(p - str));
-		if (c != '\0' && c != '\n' && c != '\r')
-		    Strcat_char(tmp, (char)c);
-		p = q;
-		continue;
-	    }
-	}
-	if (tmp)
-	    Strcat_char(tmp, *p);
-	p++;
+        if (*p == '%') {
+            q = p;
+            c = url_unquote_char(&q);
+            if (c >= 0) {
+                if (tmp == NULL)
+                    tmp = Strnew_charp_n(str, (int)(p - str));
+                if (c != '\0' && c != '\n' && c != '\r')
+                    Strcat_char(tmp, (char)c);
+                p = q;
+                continue;
+            }
+        }
+        if (tmp)
+            Strcat_char(tmp, *p);
+        p++;
     }
     if (tmp)
-	return tmp->ptr;
+        return tmp->ptr;
     return str;
 }
 
-Str
-Str_form_quote(Str x)
+Str Str_form_quote(Str x)
 {
     Str tmp = NULL;
     char *p = x->ptr, *ep = x->ptr + x->length;
     char buf[4];
 
     for (; p < ep; p++) {
-	if (*p == ' ') {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-	    Strcat_char(tmp, '+');
-	}
-	else if (is_url_unsafe(*p)) {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-	    sprintf(buf, "%%%02X", (unsigned char)*p);
-	    Strcat_charp(tmp, buf);
-	}
-	else {
-	    if (tmp)
-		Strcat_char(tmp, *p);
-	}
+        if (*p == ' ') {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+            Strcat_char(tmp, '+');
+        } else if (is_url_unsafe(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+            sprintf(buf, "%%%02X", (unsigned char)*p);
+            Strcat_charp(tmp, buf);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
     }
     if (tmp)
-	return tmp;
+        return tmp;
     return x;
 }
 
-
-Str
-Str_url_unquote(Str x, int is_form, int safe)
+Str Str_url_unquote(Str x, int is_form, int safe)
 {
     Str tmp = NULL;
     char *p = x->ptr, *ep = x->ptr + x->length, *q;
     int c;
 
     for (; p < ep;) {
-	if (is_form && *p == '+') {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-	    Strcat_char(tmp, ' ');
-	    p++;
-	    continue;
-	}
-	else if (*p == '%') {
-	    q = p;
-	    c = url_unquote_char(&q);
-	    if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
-		if (tmp == NULL)
-		    tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-		Strcat_char(tmp, (char)c);
-		p = q;
-		continue;
-	    }
-	}
-	if (tmp)
-	    Strcat_char(tmp, *p);
-	p++;
+        if (is_form && *p == '+') {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+            Strcat_char(tmp, ' ');
+            p++;
+            continue;
+        } else if (*p == '%') {
+            q = p;
+            c = url_unquote_char(&q);
+            if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
+                if (tmp == NULL)
+                    tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+                Strcat_char(tmp, (char)c);
+                p = q;
+                continue;
+            }
+        }
+        if (tmp)
+            Strcat_char(tmp, *p);
+        p++;
     }
     if (tmp)
-	return tmp;
+        return tmp;
     return x;
 }
 
-const char *
-shell_quote(const char *str)
+const char*
+shell_quote(const char* str)
 {
     Str tmp = NULL;
-    const char *p;
+    const char* p;
 
     for (p = str; *p; p++) {
-	if (is_shell_unsafe(*p)) {
-	    if (tmp == NULL)
-		tmp = Strnew_charp_n(str, (int)(p - str));
-	    Strcat_char(tmp, '\\');
-	    Strcat_char(tmp, *p);
-	}
-	else {
-	    if (tmp)
-		Strcat_char(tmp, *p);
-	}
+        if (is_shell_unsafe(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            Strcat_char(tmp, '\\');
+            Strcat_char(tmp, *p);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
     }
     if (tmp)
-	return tmp->ptr;
+        return tmp->ptr;
     return str;
 }
 
-void *
-xrealloc(void *ptr, size_t size)
+void* xrealloc(void* ptr, size_t size)
 {
-    void *newptr = realloc(ptr, size);
+    void* newptr = realloc(ptr, size);
     if (newptr == NULL) {
-	fprintf(stderr, "Out of memory\n");
-	exit(-1);
+        fprintf(stderr, "Out of memory\n");
+        exit(-1);
     }
     return newptr;
 }
 
-void *
-w3m_GC_realloc_atomic(void *ptr, size_t size)
+void* w3m_GC_realloc_atomic(void* ptr, size_t size)
 {
     return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
 }
 
-void
-w3m_GC_free(void *ptr)
+void w3m_GC_free(void* ptr)
 {
     GC_FREE(ptr);
 }
 
-void
-growbuf_init(struct growbuf *gb)
+void growbuf_init(struct growbuf* gb)
 {
     gb->ptr = NULL;
     gb->length = 0;
@@ -582,8 +786,7 @@ growbuf_init(struct growbuf *gb)
     gb->free_proc = &w3m_GC_free;
 }
 
-void
-growbuf_init_without_GC(struct growbuf *gb)
+void growbuf_init_without_GC(struct growbuf* gb)
 {
     gb->ptr = NULL;
     gb->length = 0;
@@ -592,30 +795,28 @@ growbuf_init_without_GC(struct growbuf *gb)
     gb->free_proc = &free;
 }
 
-void
-growbuf_clear(struct growbuf *gb)
+void growbuf_clear(struct growbuf* gb)
 {
-    (*gb->free_proc) (gb->ptr);
+    (*gb->free_proc)(gb->ptr);
     gb->ptr = NULL;
     gb->length = 0;
     gb->area_size = 0;
 }
 
-Str
-growbuf_to_Str(struct growbuf *gb)
+Str growbuf_to_Str(struct growbuf* gb)
 {
     Str s;
 
     if (gb->free_proc == &w3m_GC_free) {
-	growbuf_reserve(gb, gb->length + 1);
-	gb->ptr[gb->length] = '\0';
-	s = New(struct _Str);
-	s->ptr = gb->ptr;
-	s->length = gb->length;
-	s->area_size = gb->area_size;
+        growbuf_reserve(gb, gb->length + 1);
+        gb->ptr[gb->length] = '\0';
+        s = New(struct _Str);
+        s->ptr = gb->ptr;
+        s->length = gb->length;
+        s->area_size = gb->area_size;
     } else {
-	s = Strnew_charp_n(gb->ptr, gb->length);
-	(*gb->free_proc) (gb->ptr);
+        s = Strnew_charp_n(gb->ptr, gb->length);
+        (*gb->free_proc)(gb->ptr);
     }
     gb->ptr = NULL;
     gb->length = 0;
@@ -623,66 +824,64 @@ growbuf_to_Str(struct growbuf *gb)
     return s;
 }
 
-void
-growbuf_reserve(struct growbuf *gb, int leastarea)
+void growbuf_reserve(struct growbuf* gb, int leastarea)
 {
     int newarea;
 
     if (gb->area_size < leastarea) {
-	newarea = gb->area_size * 3 / 2;
-	if (newarea < leastarea)
-	    newarea = leastarea;
-	newarea += 16;
-	gb->ptr = (*gb->realloc_proc) (gb->ptr, newarea);
-	gb->area_size = newarea;
+        newarea = gb->area_size * 3 / 2;
+        if (newarea < leastarea)
+            newarea = leastarea;
+        newarea += 16;
+        gb->ptr = (*gb->realloc_proc)(gb->ptr, newarea);
+        gb->area_size = newarea;
     }
 }
 
-void
-growbuf_append(struct growbuf *gb, const unsigned char *src, int len)
+void growbuf_append(struct growbuf* gb, const unsigned char* src, int len)
 {
     growbuf_reserve(gb, gb->length + len);
     memcpy(&gb->ptr[gb->length], src, len);
     gb->length += len;
 }
 
-static const char *
-w3m_dir(const char *name, const char *dft)
+static const char*
+w3m_dir(const char* name, const char* dft)
 {
 #ifdef USE_PATH_ENVVAR
-    char *value = getenv(name);
+    char* value = getenv(name);
     return value ? value : dft;
 #else
     return dft;
 #endif
 }
 
-const char *
+const char*
 w3m_auxbin_dir(void)
 {
     return w3m_dir("W3M_AUXBIN_DIR", AUXBIN_DIR);
 }
 
-const char *
+const char*
 w3m_lib_dir(void)
 {
     /* FIXME: use W3M_CGIBIN_DIR? */
     return w3m_dir("W3M_LIB_DIR", CGIBIN_DIR);
 }
 
-const char *
+const char*
 w3m_etc_dir(void)
 {
     return w3m_dir("W3M_ETC_DIR", ETC_DIR);
 }
 
-const char *
+const char*
 w3m_conf_dir(void)
 {
     return w3m_dir("W3M_CONF_DIR", CONF_DIR);
 }
 
-const char *
+const char*
 w3m_help_dir(void)
 {
     return w3m_dir("W3M_HELP_DIR", HELP_DIR);

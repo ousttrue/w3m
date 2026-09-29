@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "local.h"
+#include "alloc.h"
 #include "str_gc.h"
 #include "str_const.h"
 #include "charset.h"

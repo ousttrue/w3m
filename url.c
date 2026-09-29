@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "url.h"
 
+#include "alloc.h"
 #include "str_gc.h"
 #include "Str.h"
 #include "charset.h"

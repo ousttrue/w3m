@@ -2,6 +2,7 @@
 /* 
  * HTML forms
  */
+#include "alloc.h"
 #include "buffer.h"
 #include "str_const.h"
 #include "str_gc.h"

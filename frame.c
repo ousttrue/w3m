@@ -1,4 +1,5 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "alloc.h"
 #include "buffer.h"
 #include "html_parser.h"
 #include "charset.h"

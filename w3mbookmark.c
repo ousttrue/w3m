@@ -6,6 +6,7 @@
 #include "parsetag.h"
 #include "textlist.h"
 
+#include <gc/gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 
