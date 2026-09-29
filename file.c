@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
+#include "mymktime.h"
 #include "str_gc.h"
 #include "auth.h"
 #include "str_const.h"

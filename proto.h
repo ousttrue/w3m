@@ -504,7 +504,6 @@ extern char *url_unquote_conv0(const char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 #endif
 extern Str tmpfname(int type, const char *ext);
-extern time_t mymktime(char *timestr);
 #ifdef USE_M17N
 extern void docCSet(void);
 extern void defCSet(void);
