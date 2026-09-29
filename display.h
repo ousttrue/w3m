@@ -7,9 +7,6 @@
 void fmInit(void);
 void fmTerm(void);
 
-extern char fmInitialized;
-extern char QuietMessage;
-extern char TrapSignal;
 #ifdef USE_COLOR
 extern int useColor;
 extern int highIntensityColors;

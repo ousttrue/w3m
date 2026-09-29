@@ -2,6 +2,7 @@
 #include "Str.h"
 #include "myctype.h"
 #include "str_gc.h"
+#include "subprocess.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -102,7 +103,7 @@ bool is_localhost(const char* host)
 }
 static const char xdigit[0x10] = "0123456789ABCDEF";
 
-struct Url copyParsedURL(const ParsedURL* q)
+struct Url copyParsedURL(const struct Url* q)
 {
     struct Url url;
     if (q) {
@@ -115,7 +116,7 @@ struct Url copyParsedURL(const ParsedURL* q)
         url.label = allocStr(q->label, -1);
         url.query = allocStr(q->query, -1);
     } else {
-        memset(&url, 0, sizeof(ParsedURL));
+        memset(&url, 0, sizeof(struct Url));
         url.scheme = SCM_UNKNOWN;
     }
     return url;
@@ -289,7 +290,6 @@ struct Url parseURL(const char* src, const struct Url* current)
     /*          ^p is here  */
 analyze_url:
     const char* q = p;
-#ifdef INET6
     if (*q == '[') { /* rfc2732,rfc2373 compliance */
         p++;
         while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
@@ -297,7 +297,6 @@ analyze_url:
         if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == NULL))
             p = q;
     }
-#endif
     while (*p && strchr(":/@?#", *p) == NULL)
         p++;
     switch (*p) {
@@ -446,3 +445,241 @@ do_label:
 
     return url;
 }
+
+Str file_quote(const char* str)
+{
+    Str tmp = NULL;
+    char buf[4];
+    for (const char* p = str; *p; p++) {
+        if (is_file_quote(*p)) {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(str, (int)(p - str));
+            sprintf(buf, "%%%02X", (unsigned char)*p);
+            Strcat_charp(tmp, buf);
+        } else {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
+    }
+    if (tmp)
+        return tmp;
+    return Strnew_charp(str);
+}
+
+#define url_unquote_char(pstr) \
+    ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : -1)
+
+Str file_unquote(const char* str)
+{
+    Str tmp = NULL;
+    const char *p, *q;
+
+    for (p = str; *p;) {
+        if (*p == '%') {
+            q = p;
+            int c = url_unquote_char(&q);
+            if (c >= 0) {
+                if (tmp == NULL)
+                    tmp = Strnew_charp_n(str, (int)(p - str));
+                if (c != '\0' && c != '\n' && c != '\r')
+                    Strcat_char(tmp, (char)c);
+                p = q;
+                continue;
+            }
+        }
+        if (tmp)
+            Strcat_char(tmp, *p);
+        p++;
+    }
+    if (tmp)
+        return tmp;
+    return Strnew_charp(str);
+}
+
+Str Str_url_unquote(Str x, bool is_form, bool safe)
+{
+    Str tmp = NULL;
+    char *p = x->ptr, *ep = x->ptr + x->length, *q;
+    int c;
+
+    for (; p < ep;) {
+        if (is_form && *p == '+') {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+            Strcat_char(tmp, ' ');
+            p++;
+            continue;
+        } else if (*p == '%') {
+            q = p;
+            c = url_unquote_char(&q);
+            if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
+                if (tmp == NULL)
+                    tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+                Strcat_char(tmp, (char)c);
+                p = q;
+                continue;
+            }
+        }
+        if (tmp)
+            Strcat_char(tmp, *p);
+        p++;
+    }
+    if (tmp)
+        return tmp;
+    return x;
+}
+struct Url parseURL2(const char* src, const struct Url* current)
+{
+    // Str tmp;
+
+    struct Url url = parseURL(src, current);
+    if (url.scheme == SCM_MAILTO)
+        return url;
+    if (url.scheme == SCM_DATA)
+        return url;
+
+    const char* p;
+    if (url.scheme == SCM_NEWS || url.scheme == SCM_NEWS_GROUP) {
+        if (url.file && !strchr(url.file, '@') && (!(p = strchr(url.file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
+            url.scheme = SCM_NEWS_GROUP;
+        else
+            url.scheme = SCM_NEWS;
+        return url;
+    }
+    if (url.scheme == SCM_NNTP || url.scheme == SCM_NNTP_GROUP) {
+        if (url.file && *url.file == '/')
+            url.file = allocStr(url.file + 1, -1);
+        if (url.file && !strchr(url.file, '@') && (!(p = strchr(url.file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
+            url.scheme = SCM_NNTP_GROUP;
+        else
+            url.scheme = SCM_NNTP;
+        if (current && (current->scheme == SCM_NNTP || current->scheme == SCM_NNTP_GROUP)) {
+            if (url.host == NULL) {
+                url.host = current->host;
+                url.port = current->port;
+            }
+        }
+        return url;
+    }
+    if (url.scheme == SCM_LOCAL) {
+        const char* q = expandName(file_unquote(url.file)->ptr)->ptr;
+        url.file = file_quote(q)->ptr;
+    }
+
+    bool relative_uri = false;
+    if (current
+        && (url.scheme == current->scheme || (url.scheme == SCM_FTP && current->scheme == SCM_FTPDIR) || (url.scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI))
+        && url.host == NULL) {
+        /* Copy omitted element from the current URL */
+        url.user = current->user;
+        url.pass = current->pass;
+        url.host = current->host;
+        url.port = current->port;
+        if (url.file && *url.file) {
+            if ((url.scheme != SCM_GOPHER
+                    && url.scheme != SCM_GOPHERS)
+                && url.file[0] != '/') {
+                /* file is relative [process 1] */
+                p = url.file;
+                if (current->file) {
+                    Str tmp = Strnew_charp(current->file);
+                    while (tmp->length > 0) {
+                        if (Strlastchar(tmp) == '/')
+                            break;
+                        Strshrink(tmp, 1);
+                    }
+                    Strcat_charp(tmp, p);
+                    url.file = tmp->ptr;
+                    relative_uri = true;
+                }
+            } else if ((url.scheme == SCM_GOPHER
+                           || url.scheme == SCM_GOPHERS)
+                && url.file[0] == '/') {
+                p = url.file;
+                url.file = allocStr(p + 1, -1);
+            }
+        } else { /* scheme:[?query][#label] */
+            url.file = current->file;
+            if (!url.query)
+                url.query = current->query;
+        }
+        /* comment: query part need not to be completed
+         * from the current URL. */
+    }
+    if (url.file) {
+        if (url.scheme == SCM_LOCAL && url.file[0] != '/' && strcmp(url.file, "-")) {
+            /* local file, relative path */
+            Str tmp = Strnew_charp(CurrentDir);
+            if (Strlastchar(tmp) != '/')
+                Strcat_char(tmp, '/');
+            Strcat(tmp, file_unquote(url.file));
+            url.file = file_quote(cleanupName(tmp->ptr)->ptr)->ptr;
+        } else if (url.scheme == SCM_HTTP || url.scheme == SCM_HTTPS) {
+            if (relative_uri) {
+                /* In this case, pu->file is created by [process 1] above.
+                 * pu->file may contain relative path (for example,
+                 * "/foo/../bar/./baz.html"), cleanupName() must be applied.
+                 * When the entire abs_path is given, it still may contain
+                 * elements like `//', `..' or `.' in the pu->file. It is
+                 * server's responsibility to canonicalize such path.
+                 */
+                url.file = cleanupName(url.file)->ptr;
+            }
+        } else if (
+            (url.scheme != SCM_GOPHER
+                && url.scheme != SCM_GOPHERS)
+            && url.file[0] == '/') {
+            /*
+             * this happens on the following conditions:
+             * (1) ftp scheme (2) local, looks like absolute path.
+             * In both case, there must be no side effect with
+             * cleanupName(). (I hope so...)
+             */
+            url.file = cleanupName(url.file)->ptr;
+        }
+        if (url.scheme == SCM_LOCAL) {
+            url.real_file = cleanupName(
+                file_unquote(url.file)->ptr)
+                                ->ptr;
+        }
+    }
+    return url;
+}
+
+Str file_to_url(const char* file, const char* CurrentDir)
+{
+    Str tmp;
+    char* drive = NULL;
+
+    if (!(file = expandPath(file)->ptr))
+        return NULL;
+    if (IS_ALPHA(file[0]) && file[1] == ':') {
+        drive = allocStr(file, 2);
+        file += 2;
+    } else
+        if (file[0] != '/') {
+        tmp = Strnew_charp(CurrentDir);
+        if (Strlastchar(tmp) != '/')
+            Strcat_char(tmp, '/');
+        Strcat_charp(tmp, file);
+        file = tmp->ptr;
+    }
+    tmp = Strnew_charp("file://");
+    if (drive)
+        Strcat_charp(tmp, drive);
+    Strcat_charp(tmp, file_quote(cleanupName(file)->ptr)->ptr);
+    return tmp;
+}
+
+Str url_unquote_conv(const char* url, wc_ces charset)
+{
+    wc_uint8 old_auto_detect = WcOption.auto_detect;
+    Str tmp = Str_url_unquote(Strnew_charp(url), false, true);
+    if (!charset || charset == WC_CES_US_ASCII)
+        charset = SystemCharset;
+    WcOption.auto_detect = WC_OPT_DETECT_ON;
+    tmp = convertLine(false, tmp, RAW_MODE, &charset, charset);
+    WcOption.auto_detect = old_auto_detect;
+    return tmp;
+}
+

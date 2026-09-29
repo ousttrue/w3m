@@ -331,13 +331,12 @@ frame_download_source(struct frame_body* b, ParsedURL* currentURL,
 {
     Buffer* buf;
     struct frameset* ret_frameset = NULL;
-    ParsedURL url;
 
     if (b == NULL || b->url == NULL || b->url[0] == '\0')
         return NULL;
     if (b->baseURL)
         baseURL = b->baseURL;
-    parseURL2(b->url, &url, currentURL);
+    struct Url url = parseURL2(b->url, currentURL);
     switch (url.scheme) {
     case SCM_LOCAL:
         b->flags = 0;
@@ -551,7 +550,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                                              : "(no name)");
                     break;
                 }
-                parseURL2(frame.body->url, &base, currentURL);
+                base = parseURL2(frame.body->url, currentURL);
                 p_target = f->name;
                 s_target = frame.body->name;
                 t_target = "_blank";
@@ -795,7 +794,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                                 tag->value[j] = url_encode(remove_space(tag->value[j])->ptr,
                                     &base, charset);
                                 tag->need_reconstruct = TRUE;
-                                parseURL2(tag->value[j], &url, &base);
+                                url = parseURL2(tag->value[j], &base);
                                 if (url.scheme == SCM_UNKNOWN ||
 #ifndef USE_W3MMAILER
                                     url.scheme == SCM_MAILTO ||

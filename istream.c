@@ -469,7 +469,7 @@ ssl_check_cert_ident(X509 * x, char *hostname)
 }
 
 Str
-ssl_get_certificate(SSL * ssl, char *hostname)
+ssl_get_certificate(SSL * ssl, const char *hostname)
 {
     BIO *bp;
     X509 *x;

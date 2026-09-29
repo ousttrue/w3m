@@ -77,7 +77,6 @@ extern int ssl_path_modified;
 #endif
 #endif
 
-void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);
 int needs_proxy(const char* domain);
 char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset);
 int openSocket(const char* hostname, 

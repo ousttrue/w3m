@@ -1,4 +1,5 @@
 #include "auth.h"
+#include "subprocess.h"
 #include "str_gc.h"
 #include "alloc.h"
 #include "myctype.h"

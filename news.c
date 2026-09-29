@@ -209,7 +209,7 @@ add_news_message(Str str, int index, char* date, char* name, char* subject,
     if (group)
         Strcat(str, Sprintf("<td><a href=\"%s%s/%d\">%s</a>\n", scheme, group, index, html_quote(subject)));
     else
-        Strcat(str, Sprintf("<td><a href=\"%s%s\">%s</a>\n", scheme, html_quote(file_quote(mid)), html_quote(subject)));
+        Strcat(str, Sprintf("<td><a href=\"%s%s\">%s</a>\n", scheme, html_quote(file_quote(mid)->ptr), html_quote(subject)));
 }
 
 /*
@@ -239,7 +239,7 @@ add_news_message(Str str, int index, char* date, char* name, char* subject,
 InputStream
 openNewsStream(ParsedURL* pu)
 {
-    const char *host, *mode, *group;
+    const char *host, *mode;
     int port, status;
 
     if (pu->file == NULL || *pu->file == '\0')
@@ -254,7 +254,7 @@ openNewsStream(ParsedURL* pu)
         return NULL;
     }
 
-    char *p;
+    const char* p;
     if (pu->scheme != SCM_NNTP && pu->scheme != SCM_NNTP_GROUP && (p = strchr(host, ':'))) {
         host = allocStr(host, p - host);
         port = atoi(p + 1);
@@ -282,23 +282,23 @@ openNewsStream(ParsedURL* pu)
     }
     if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NEWS) {
         /* News article */
-        group = file_unquote(allocStr(pu->file, -1));
-        p = strchr(group, '/');
-        if (p == NULL) { /* <message-id> */
+        char* group = file_unquote(allocStr(pu->file, -1))->ptr;
+        char* q = allocStr(strchr(group, '/'), -1);
+        if (q == NULL) { /* <message-id> */
             if (!strchr(group, '@'))
                 return NULL;
-            p = group;
+            q = group;
         } else { /* <newsgroup>/<message-id or article-number> */
-            *p++ = '\0';
+            *q++ = '\0';
             news_command(&current_news, "GROUP", group, &status);
             if (status != 211)
                 return NULL;
         }
-        if (strchr(p, '@')) /* <message-id> */
-            news_command(&current_news, "ARTICLE", Sprintf("<%s>", p)->ptr,
+        if (strchr(q, '@')) /* <message-id> */
+            news_command(&current_news, "ARTICLE", Sprintf("<%s>", q)->ptr,
                 &status);
         else /* <article-number> */
-            news_command(&current_news, "ARTICLE", p, &status);
+            news_command(&current_news, "ARTICLE", q, &status);
         if (status != 220)
             return NULL;
         return current_news.rf;
@@ -342,7 +342,7 @@ Str loadNewsgroup0(ParsedURL* pu)
         refresh();
     }
     qgroup = html_quote(group);
-    group = file_unquote(group);
+    group = file_unquote(group)->ptr;
     page = Strnew_m_charp("<html>\n<head>\n<base href=\"",
         parsedURL2Str(pu)->ptr, "\">\n<title>Newsgroup: ",
         qgroup, "</title>\n</head>\n<body>\n<h1>Newsgroup: ",
@@ -496,7 +496,7 @@ news_list:
             i = 0;
         Strcat(page,
             Sprintf("<tr><td align=right>%d<td><a href=\"%s%s\">%s</a>\n", i,
-                scheme, html_quote(file_quote(p)), html_quote(p)));
+                scheme, html_quote(file_quote(p)->ptr), html_quote(p)));
     }
     if (flag == 2)
         Strcat_charp(page, "</table>\n");

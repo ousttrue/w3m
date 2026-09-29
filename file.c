@@ -1543,7 +1543,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
 load_doc:
     {
         char* sc_redirect;
-        parseURL2(tpath, &pu, current);
+        pu = parseURL2(tpath, current);
         sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
         if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
             tpath = (char*)sc_redirect;
@@ -2980,7 +2980,7 @@ Str process_img(struct parsed_tag* tag, int width)
             Image image;
             ParsedURL u;
 
-            parseURL2(p, &u, cur_baseURL);
+            u = parseURL2(p, cur_baseURL);
             image.url = parsedURL2Str(&u)->ptr;
             if (!uncompressed_file_type(u.file, &image.ext))
                 image.ext = filename_extension(u.file, TRUE)->ptr;
@@ -5365,7 +5365,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                             ParsedURL u;
                             Image* image;
 
-                            parseURL2(a_img->url, &u, base);
+                            u = parseURL2(a_img->url, base);
                             a_img->image = image = New(Image);
                             image->url = parsedURL2Str(&u)->ptr;
                             if (!uncompressed_file_type(u.file, &image->ext))
@@ -5551,7 +5551,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                             buf->document_charset);
                         if (!buf->baseURL)
                             buf->baseURL = New(ParsedURL);
-                        parseURL2(p, buf->baseURL, &buf->currentURL);
+                        *buf->baseURL = parseURL2(p, &buf->currentURL);
 #if defined(USE_M17N) || defined(USE_IMAGE)
                         base = buf->baseURL;
 #endif
@@ -6750,7 +6750,7 @@ Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
-    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
+    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)->ptr), RAW_MODE,
         charset, doc_charset);
     q = html_quote(tmp->ptr);
     tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
@@ -6867,7 +6867,7 @@ Str loadGopherSearch(ParsedURL* pu, wc_ces* charset)
 
     tmp = parsedURL2Str(pu);
     p = html_quote(tmp->ptr);
-    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
+    tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)->ptr), RAW_MODE,
         charset, doc_charset);
     q = html_quote(tmp->ptr);
     tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,

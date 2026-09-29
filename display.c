@@ -17,10 +17,6 @@
 #include <math.h>
 #include <signal.h>
 
-char fmInitialized = FALSE;
-char QuietMessage = FALSE;
-char TrapSignal = TRUE;
-
 #ifdef USE_COLOR
 int useColor = TRUE;
 int highIntensityColors = FALSE;
@@ -305,7 +301,7 @@ make_lastline_link(Buffer *buf, char *title, char *url)
     }
     if (!url)
 	return s;
-    parseURL2(url, &pu, baseURL(buf));
+    pu = parseURL2(url, baseURL(buf));
     u = parsedURL2Str(&pu);
     if (DecodeURL)
 	u = Strnew_charp(url_decode2(u->ptr, buf));
@@ -775,7 +771,7 @@ redrawLine(Buffer *buf, Line *l, int i)
 	if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
 	    a = retrieveAnchor(buf->href, l->linenumber, pos + j);
 	    if (a) {
-		parseURL2(a->url, &url, baseURL(buf));
+		url = parseURL2(a->url, baseURL(buf));
 		if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
 		    for (k = a->start.pos; k < a->end.pos; k++)
 			pr[k - pos] |= PE_VISITED;
@@ -976,7 +972,7 @@ redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos)
 	if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
 	    a = retrieveAnchor(buf->href, l->linenumber, pos + j);
 	    if (a) {
-		parseURL2(a->url, &url, baseURL(buf));
+		url = parseURL2(a->url, baseURL(buf));
 		if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
 		    for (k = a->start.pos; k < a->end.pos; k++)
 			pr[k - pos] |= PE_VISITED;

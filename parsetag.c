@@ -1,9 +1,8 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "parsetag.h"
-
 #include "Str.h"
 #include "alloc.h"
 #include "indep.h"
+#include "url.h"
 #include <strings.h>
 
 char *

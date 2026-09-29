@@ -48,7 +48,7 @@ typedef struct {
     char *ext;
     int compression;
     int content_encoding;
-    char *guess_type;
+    const char *guess_type;
 #ifdef USE_SSL
     char *ssl_certificate;
 #endif

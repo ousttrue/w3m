@@ -86,7 +86,7 @@ Str loadLocalDir(const char* dname)
     qdir = html_quote(Str_conv_from_system(dirname)->ptr);
     /* FIXME: gettextize? */
     tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
-        html_quote(file_quote(dirname->ptr)),
+        html_quote(file_quote(dirname->ptr)->ptr),
         "\">\n<TITLE>Directory list of ", qdir,
         "</TITLE>\n</HEAD>\n<BODY>\n<H1>Directory list of ",
         qdir, "</H1>\n", NULL);
@@ -139,7 +139,7 @@ Str loadLocalDir(const char* dname)
             else
                 Strcat_charp(tmp, "[FILE] ");
         }
-        Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)), NULL);
+        Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)->ptr), NULL);
         if (S_ISDIR(st.st_mode))
             Strcat_char(tmp, '/');
         Strcat_m_charp(tmp, "\">", html_quote(conv_from_system(p)), NULL);

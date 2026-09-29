@@ -465,7 +465,7 @@ ftp_read:
     if (pu->file == NULL || *pu->file == '\0' || pu->file[strlen(pu->file) - 1] == '/')
         goto ftp_dir;
 
-    realpathname = file_unquote(pu->file);
+    realpathname = file_unquote(pu->file)->ptr;
     if (*realpathname == '/' && *(realpathname + 1) == '~')
         realpathname++;
     /* Get file */
@@ -513,7 +513,7 @@ Str loadFTPDir0(ParsedURL* pu)
             ftp_command(&current_ftp, "NLST", NULL, &status);
         pu->file = "/";
     } else {
-        realpathname = file_unquote(pu->file);
+        realpathname = file_unquote(pu->file)->ptr;
         if (*realpathname == '/' && *(realpathname + 1) == '~')
             realpathname++;
         if (sv_type == UNIXLIKE_SERVER) {
@@ -532,7 +532,7 @@ Str loadFTPDir0(ParsedURL* pu)
     if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
     fn = html_quote(tmp->ptr);
-    tmp = convertLine(false, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
+    tmp = convertLine(false, Strnew_charp(file_unquote(tmp->ptr)->ptr), RAW_MODE,
         charset, doc_charset);
     q = html_quote(tmp->ptr);
     FTPDIRtmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", fn,
@@ -617,7 +617,7 @@ Str loadFTPDir0(ParsedURL* pu)
                 doc_charset);
             if (ftype == FTPDIR_LINK)
                 Strcat_char(tmp, '@');
-            Strcat_m_charp(FTPDIRtmp, "<a href=\"", html_quote(file_quote(fn)),
+            Strcat_m_charp(FTPDIRtmp, "<a href=\"", html_quote(file_quote(fn)->ptr),
                 "\">", html_quote(tmp->ptr), "</a>", NULL);
             for (i = get_Str_strwidth(tmp); i <= max_len; i++) {
                 if ((max_len % 2 + i) % 2)
@@ -645,7 +645,7 @@ Str loadFTPDir0(ParsedURL* pu)
             tmp = convertLine(NULL, Strnew_charp(fn), RAW_MODE, charset,
                 doc_charset);
             Strcat_m_charp(FTPDIRtmp, "<li><a href=\"",
-                html_quote(file_quote(fn)), "\">",
+                html_quote(file_quote(fn)->ptr), "\">",
                 html_quote(tmp->ptr), "</a>\n", NULL);
         }
         Strcat_charp(FTPDIRtmp, "</ul>\n");

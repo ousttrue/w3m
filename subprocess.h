@@ -4,6 +4,9 @@
 
 extern const char* CurrentDir;
 extern int CurrentPid;
+extern bool fmInitialized;
+extern bool QuietMessage;
+extern bool TrapSignal;
 
 const char* currentdir(void);
 typedef void (*SigActionFunc)(int);

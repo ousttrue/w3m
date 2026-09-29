@@ -2001,7 +2001,7 @@ loadSiteconf(void)
                 ParsedURL pu;
                 if (!url || !*url)
                     continue;
-                parseURL2(url, &pu, NULL);
+                pu = parseURL2(url, NULL);
                 newent->url = parsedURL2Str(&pu)->ptr;
             }
             /* If we have an extra or unknown option, ignore this record

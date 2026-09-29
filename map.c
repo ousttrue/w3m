@@ -287,7 +287,7 @@ follow_map_panel(Buffer *buf, char *name)
 	a = (MapArea *) al->ptr;
 	if (!a)
 	    continue;
-	parseURL2(a->url, &pu, baseURL(buf));
+	pu = parseURL2(a->url, baseURL(buf));
 	p = parsedURL2Str(&pu)->ptr;
 	q = html_quote(p);
 	if (DecodeURL)
@@ -427,7 +427,7 @@ append_map_info(Buffer *buf, Str tmp, FormItemList *fi)
 	a = (MapArea *) al->ptr;
 	if (!a)
 	    continue;
-	parseURL2(a->url, &pu, baseURL(buf));
+	pu = parseURL2(a->url, baseURL(buf));
 	q = html_quote(parsedURL2Str(&pu)->ptr);
 	p = html_quote(url_decode2(a->url, buf));
 	Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"",
@@ -452,7 +452,7 @@ append_link_info(Buffer *buf, Str html, LinkList * link)
     Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
     for (l = link; l; l = l->next) {
 	if (l->url) {
-	    parseURL2(l->url, &pu, baseURL(buf));
+	    pu = parseURL2(l->url, baseURL(buf));
 	    url = html_quote(parsedURL2Str(&pu)->ptr);
 	}
 	else
@@ -501,7 +501,7 @@ append_frame_info(Buffer *buf, Str html, struct frameset *set, int level)
 		Strcat_m_charp(html, "<a href=\"", q, "\">", NULL);
 		if (frame.body->name) {
 		    p = html_quote(url_unquote_conv(frame.body->name,
-						    buf->document_charset));
+						    buf->document_charset)->ptr);
 		    Strcat_charp(html, p);
 		}
 		if (DecodeURL)
@@ -610,7 +610,7 @@ page_info_panel(Buffer *buf)
 
     a = retrieveCurrentAnchor(buf);
     if (a != NULL) {
-	parseURL2(a->url, &pu, baseURL(buf));
+	pu = parseURL2(a->url, baseURL(buf));
 	p = parsedURL2Str(&pu)->ptr;
 	q = html_quote(p);
 	if (DecodeURL)
@@ -623,7 +623,7 @@ page_info_panel(Buffer *buf)
     }
     a = retrieveCurrentImg(buf);
     if (a != NULL) {
-	parseURL2(a->url, &pu, baseURL(buf));
+	pu = parseURL2(a->url, baseURL(buf));
 	p = parsedURL2Str(&pu)->ptr;
 	q = html_quote(p);
 	if (DecodeURL)

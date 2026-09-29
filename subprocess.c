@@ -4,9 +4,13 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 const char* CurrentDir;
 int CurrentPid;
+bool fmInitialized = false;
+bool QuietMessage = false;
+bool TrapSignal = true;
 
 const char* currentdir(void)
 {

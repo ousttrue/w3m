@@ -19,7 +19,6 @@ Str editor_cmd(const char* file, int line);
 Str expandPath(const char* name);
 /// expand `~` to username in string
 Str expandName(const char* name);
-Str file_to_url(const char* file, const char* CurrentDir);
 /// resolve relative path etc. for example /path/../to/../some
 Str cleanupName(const char* name);
 Str base64_encode(const char* src, size_t len);
@@ -47,5 +46,4 @@ enum LineMode {
 };
 void cleanup_line(Str s, enum LineMode mode);
 Str convertLine(bool do_chop, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
-char *url_unquote_conv(const char *url, wc_ces charset);
 Str filename_extension(const char* patch, bool is_url);
