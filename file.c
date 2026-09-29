@@ -346,7 +346,7 @@ uncompressed_file_type(const char* path, char** ext)
     fn = Strnew_charp(path);
     Strshrink(fn, slen);
     if (ext)
-        *ext = filename_extension(fn->ptr, 0);
+        *ext = filename_extension(fn->ptr, 0)->ptr;
     t0 = guessContentType(fn->ptr);
     if (t0 == NULL)
         t0 = "text/plain";
@@ -1575,7 +1575,7 @@ load_doc:
                     b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
                         NULL);
                     if (b != NULL && b != NO_BUFFER) {
-                        copyParsedURL(&b->currentURL, &pu);
+                        b->currentURL = pu;
                         b->filename = b->currentURL.real_file;
                     }
                     return b;
@@ -1659,7 +1659,7 @@ load_doc:
             request = NULL;
             UFclose(&f);
             current = New(ParsedURL);
-            copyParsedURL(current, &pu);
+            *current = pu;
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
             status = HTST_NORMAL;
@@ -1808,7 +1808,7 @@ load_doc:
             UFclose(&f);
             add_auth_cookie_flag = 0;
             current = New(ParsedURL);
-            copyParsedURL(current, &pu);
+            *current = copyParsedURL(&pu);
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
             status = HTST_NORMAL;
@@ -1881,7 +1881,7 @@ page_loaded:
         }
         b = loadHTMLString(page);
         if (b) {
-            copyParsedURL(&b->currentURL, &pu);
+            b->currentURL = copyParsedURL(&pu);
             b->real_scheme = pu.scheme;
             b->real_type = t;
             if (src)
@@ -1978,7 +1978,7 @@ page_loaded:
 
     if (t_buf == NULL)
         t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    copyParsedURL(&t_buf->currentURL, &pu);
+    t_buf->currentURL = copyParsedURL(&pu);
     t_buf->filename = pu.real_file ? pu.real_file : pu.file ? conv_to_system(pu.file)
                                                             : NULL;
     if (flag & RG_FRAME) {
@@ -2983,7 +2983,7 @@ Str process_img(struct parsed_tag* tag, int width)
             parseURL2(p, &u, cur_baseURL);
             image.url = parsedURL2Str(&u)->ptr;
             if (!uncompressed_file_type(u.file, &image.ext))
-                image.ext = filename_extension(u.file, TRUE);
+                image.ext = filename_extension(u.file, TRUE)->ptr;
             image.cache = NULL;
             image.width = w;
             image.height = i;
@@ -5369,7 +5369,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                             a_img->image = image = New(Image);
                             image->url = parsedURL2Str(&u)->ptr;
                             if (!uncompressed_file_type(u.file, &image->ext))
-                                image->ext = filename_extension(u.file, TRUE);
+                                image->ext = filename_extension(u.file, TRUE)->ptr;
                             image->cache = NULL;
                             image->width = (w > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : w;
                             image->height = (h > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : h;
@@ -7203,7 +7203,7 @@ openGeneralPagerBuffer(InputStream stream)
 
     content_charset = 0;
     t_buf = newBuffer(INIT_BUFFER_WIDTH);
-    copyParsedURL(&t_buf->currentURL, NULL);
+    t_buf->currentURL = copyParsedURL(0);
     t_buf->currentURL.scheme = SCM_LOCAL;
     t_buf->currentURL.file = "-";
     if (SearchHeader) {

@@ -1,6 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "http_request.h"
-
+#include "local.h"
 #include "alloc.h"
 #include "str_gc.h"
 #include "Str.h"
@@ -13,18 +12,15 @@
 #include "html.h"
 #include "myctype.h"
 #include "rc.h"
-#include "regex.h"
 #include "terms.h"
 #include "version.h"
 
 #include <strings.h>
-
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
 #include <openssl/err.h>
 
 /* see rc.c, "dns_order" and dnsorders[] */
@@ -178,8 +174,6 @@ void initMimeTypes(void)
     for (i = 0, tl = mimetypes_list->first; tl; i++, tl = tl->next)
         UserMimeTypes[i] = loadMimeTypes(tl->ptr);
 }
-
-
 
 static void
 KeyAbort(SIGNAL_ARG)
@@ -455,8 +449,8 @@ baseURL(Buffer* buf)
         return &buf->currentURL;
 }
 
-int openSocket(char* const hostname,
-    char* remoteport_name, unsigned short remoteport_num)
+int openSocket(const char* hostname,
+    const char* remoteport_name, unsigned short remoteport_num)
 {
     volatile int sock = -1;
 #ifdef INET6
@@ -635,12 +629,6 @@ error:
     TRAP_OFF;
     return -1;
 }
-
-
-
-
-
-
 
 void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 {
@@ -1202,7 +1190,7 @@ retry:
     uf.scheme = pu->scheme;
     uf.url = parsedURL2Str(pu)->ptr;
     pu->is_nocache = (option->flag & RG_NOCACHE);
-    uf.ext = filename_extension(pu->file, 1);
+    uf.ext = filename_extension(pu->file, 1)->ptr;
 
     hr->command = HR_COMMAND_GET;
     hr->flag = 0;
@@ -1743,31 +1731,6 @@ end:
     return ret;
 }
 
-char* filename_extension(char* path, int is_url)
-{
-    char *last_dot = "", *p = path;
-    int i;
-
-    if (path == NULL)
-        return last_dot;
-    if (*p == '.')
-        p++;
-    for (; *p; p++) {
-        if (*p == '.') {
-            last_dot = p;
-        } else if (is_url && *p == '?')
-            break;
-    }
-    if (*last_dot == '.') {
-        for (i = 1; i < 8 && last_dot[i]; i++) {
-            if (is_url && !IS_ALNUM(last_dot[i]))
-                break;
-        }
-        return allocStr(last_dot, i);
-    } else
-        return last_dot;
-}
-
 #ifdef USE_EXTERNAL_URI_LOADER
 static struct table2** urimethods;
 static struct table2 default_urimethods[] = {
@@ -1966,7 +1929,8 @@ url_to_charset(char* url, ParsedURL* base, wc_ces doc_charset)
 char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset)
 {
     return url_quote_conv((char*)url,
-        url_to_charset(url, base, doc_charset))->ptr;
+        url_to_charset(url, base, doc_charset))
+        ->ptr;
 }
 
 char* url_decode2(char* url, Buffer* buf)
@@ -1988,5 +1952,3 @@ char* url_decode0(char* url)
     return url_unquote_conv((char*)url, 0);
 }
 #endif /* !defined(USE_M17N) */
-
-

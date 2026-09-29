@@ -54,3 +54,4 @@ w3m_help_dir(void)
 {
     return w3m_dir("W3M_HELP_DIR", HELP_DIR);
 }
+

@@ -303,7 +303,7 @@ void resetFrameElement(union frameset_element* f_element,
         deleteFrameSetElement(*f_element);
         f_element->set = buf->frameset;
         f_element->set->currentURL = New(ParsedURL);
-        copyParsedURL(f_element->set->currentURL, &buf->currentURL);
+        *f_element->set->currentURL = copyParsedURL(&buf->currentURL);
         buf->frameset = popFrameTree(&(buf->frameQ));
         f_element->set->name = f_name;
     } else {
@@ -375,7 +375,7 @@ frame_download_source(struct frame_body* b, ParsedURL* currentURL,
         ret_frameset = buf->frameset;
         ret_frameset->name = b->name;
         ret_frameset->currentURL = New(ParsedURL);
-        copyParsedURL(ret_frameset->currentURL, &buf->currentURL);
+        *ret_frameset->currentURL = copyParsedURL(&buf->currentURL);
         buf->frameset = popFrameTree(&(buf->frameQ));
     }
     discardBuffer(buf);
@@ -936,7 +936,7 @@ renderFrame(Buffer* Cbuf, int force_reload)
 #ifdef USE_M17N
     buf->document_charset = Cbuf->document_charset;
 #endif
-    copyParsedURL(&buf->currentURL, &Cbuf->currentURL);
+    buf->currentURL = copyParsedURL(&Cbuf->currentURL);
     preFormUpdateBuffer(buf);
     return buf;
 }

@@ -48,4 +48,4 @@ enum LineMode {
 void cleanup_line(Str s, enum LineMode mode);
 Str convertLine(bool do_chop, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
 char *url_unquote_conv(const char *url, wc_ces charset);
-
+Str filename_extension(const char* patch, bool is_url);

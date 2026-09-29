@@ -102,23 +102,22 @@ bool is_localhost(const char* host)
 }
 static const char xdigit[0x10] = "0123456789ABCDEF";
 
-void copyParsedURL(ParsedURL* p, const ParsedURL* q)
+struct Url copyParsedURL(const ParsedURL* q)
 {
-    if (q == NULL) {
-        memset(p, 0, sizeof(ParsedURL));
-        p->scheme = SCM_UNKNOWN;
-        return;
+    struct Url url = *q;
+    if (q) {
+        url.user = allocStr(q->user, -1);
+        url.pass = allocStr(q->pass, -1);
+        url.host = allocStr(q->host, -1);
+        url.file = allocStr(q->file, -1);
+        url.real_file = allocStr(q->real_file, -1);
+        url.label = allocStr(q->label, -1);
+        url.query = allocStr(q->query, -1);
+    } else {
+        memset(&url, 0, sizeof(ParsedURL));
+        url.scheme = SCM_UNKNOWN;
     }
-    p->scheme = q->scheme;
-    p->port = q->port;
-    p->is_nocache = q->is_nocache;
-    p->user = allocStr(q->user, -1);
-    p->pass = allocStr(q->pass, -1);
-    p->host = allocStr(q->host, -1);
-    p->file = allocStr(q->file, -1);
-    p->real_file = allocStr(q->real_file, -1);
-    p->label = allocStr(q->label, -1);
-    p->query = allocStr(q->query, -1);
+    return url;
 }
 
 Str url_quote(const char* str)
@@ -209,15 +208,16 @@ void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
     url = url_quote(url)->ptr; /* quote 0x01-0x20, 0x7F-0xFF */
 
     const char* p = url;
-    copyParsedURL(p_url, NULL);
+    *p_url = copyParsedURL(NULL);
     p_url->scheme = SCM_MISSING;
 
     /* RFC1808: Relative Uniform Resource Locators
      * 4.  Resolving Relative URLs
      */
     if (*url == '\0' || *url == '#') {
-        if (current)
-            copyParsedURL(p_url, current);
+        if (current){
+            *p_url = copyParsedURL(current);
+        }
         goto do_label;
     }
 #if defined(__EMX__) || defined(__CYGWIN__)

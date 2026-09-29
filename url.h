@@ -46,7 +46,7 @@ const char* schemeNumToName(enum UrlScheme scheme);
 enum UrlScheme getURLScheme(const char** url);
 int getDefaultPort(enum UrlScheme scheme);
 bool is_localhost(const char* host);
-void copyParsedURL(ParsedURL *p, const ParsedURL *q);
+struct Url copyParsedURL(const ParsedURL *q);
 Str url_quote(const char* str);
 Str url_quote_conv(const char* x, wc_ces c);
 void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current);

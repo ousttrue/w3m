@@ -530,3 +530,27 @@ char* url_unquote_conv(const char* url, wc_ces charset)
     return tmp->ptr;
 }
 
+Str filename_extension(const char* path, bool is_url)
+{
+    const char* last_dot = "";
+    if (path) {
+        const char* p = path;
+        if (*p == '.')
+            p++;
+        for (; *p; p++) {
+            if (*p == '.') {
+                last_dot = p;
+            } else if (is_url && *p == '?')
+                break;
+        }
+        if (*last_dot == '.') {
+            int i = 1;
+            for (; i < 8 && last_dot[i]; i++) {
+                if (is_url && !IS_ALNUM(last_dot[i]))
+                    break;
+            }
+            return Strnew_charp_n(last_dot, i);
+        }
+    }
+    return Strnew_charp(last_dot);
+}

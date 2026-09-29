@@ -17,6 +17,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #ifdef __EMX__
 #include <limits.h> /* _MAX_PATH ? */
@@ -292,7 +293,8 @@ cgi_filename(const char* uri, const char** fn, const char** name, const char** p
     return CGIFN_LIBDIR;
 }
 
-FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
+FILE* localcgi_post(const char* uri,
+    const char* qstr, FormList* request, const char* referer)
 {
     FILE *fr = NULL, *fw = NULL;
     int status;

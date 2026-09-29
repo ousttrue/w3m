@@ -169,7 +169,6 @@ extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
 extern int currentLn(Buffer *buf);
-extern char *filename_extension(char *patch, int is_url);
 #ifdef USE_EXTERNAL_URI_LOADER
 extern void initURIMethods(void);
 extern Str searchURIMethods(ParsedURL *pu);
@@ -395,8 +394,6 @@ extern void touch_cursor(void);
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 extern ParsedURL *baseURL(Buffer *buf);
-extern int openSocket(char *hostname, char *remoteport_name,
-		      unsigned short remoteport_num);
 extern Str parsedURL2Str(const ParsedURL *pu);
 extern Str parsedURL2RefererStr(ParsedURL *pu);
 extern void init_stream(URLFile *uf, int scheme, InputStream stream);
@@ -482,8 +479,6 @@ extern Str decodeMIME0(Str orgstr);
 #endif
 extern Str localCookie(void);
 extern void set_environ(const char *var, const char *value);
-extern FILE *localcgi_post(char *, char *, FormList *, char *);
-#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
