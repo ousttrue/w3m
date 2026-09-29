@@ -81,3 +81,4 @@ int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, int mode);
 int columnPos(Line* line, int column);
 int columnLen(Line* line, int column);
 Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor);
+

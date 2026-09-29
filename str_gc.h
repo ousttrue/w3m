@@ -39,4 +39,13 @@ enum TmpFileType {
 };
 Str tmpfname(int CurrentPid, enum TmpFileType type, const char* ext);
 
+enum LineMode {
+    RAW_MODE,
+    PAGER_MODE,
+    HTML_MODE,
+    HEADER_MODE,
+};
+void cleanup_line(Str s, enum LineMode mode);
 Str convertLine(bool do_chop, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
+char *url_unquote_conv(const char *url, wc_ces charset);
+

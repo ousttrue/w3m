@@ -388,3 +388,4 @@ Str checkType(Str s, Lineprop** oprop, Linecolor** ocolor)
         *ocolor = check_color ? color_buffer : NULL;
     return s;
 }
+

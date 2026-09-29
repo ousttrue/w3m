@@ -497,12 +497,7 @@ extern FILE *localcgi_post(char *, char *, FormList *, char *);
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-#ifdef USE_M17N
-extern char *url_unquote_conv(const char *url, wc_ces charset);
-#else
-extern char *url_unquote_conv0(const char *url);
-#define url_unquote_conv(url, charset) url_unquote_conv0(url)
-#endif
+
 #ifdef USE_M17N
 extern void docCSet(void);
 extern void defCSet(void);

@@ -13,13 +13,6 @@
 #define FALSE 0
 #define TRUE 1
 
-enum {
-    RAW_MODE,
-    PAGER_MODE,
-    HTML_MODE,
-    HEADER_MODE,
-};
-
 extern unsigned char QUOTE_MAP[];
 extern char* HTML_QUOTE_MAP[];
 #define HTML_QUOTE_MASK 0x07 /* &, <, >, ", ' */
@@ -48,7 +41,6 @@ extern char* strcasestr(const char* s1, const char* s2);
 int strmatchlen(const char* s1, const char* s2, int maxlen);
 extern char* remove_space(char* str);
 extern int non_null(const char* s);
-extern void cleanup_line(Str s, int mode);
 extern char* html_quote(char* str);
 extern char* html_unquote(char* str);
 extern char* html_unquote_attr(char* str);
