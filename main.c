@@ -2068,7 +2068,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
+    buf = getpipe(myExtCommand(cmd, shell_quote(tmpf)->ptr, TRUE)->ptr);
     if (buf == NULL) {
         disp_message("Execution failed", TRUE);
         return;
@@ -2678,7 +2678,7 @@ DEFUN(editBf, EDIT, "Edit local source")
         cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
             checkHeader(Currentbuf, "Content-Type:"), NULL);
     else
-        cmd = editor_cmd(shell_quote(fn),
+        cmd = editor_cmd(shell_quote(fn)->ptr,
             cur_real_linenumber(Currentbuf));
     exec_cmd(cmd->ptr);
 
@@ -2700,7 +2700,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     }
     saveBuffer(Currentbuf, f, TRUE);
     fclose(f);
-    exec_cmd(editor_cmd(shell_quote(tmpf),
+    exec_cmd(editor_cmd(shell_quote(tmpf)->ptr,
         cur_real_linenumber(Currentbuf))
             ->ptr);
     unlink(tmpf);
@@ -2985,7 +2985,7 @@ handleMailto(char* url)
         if ((pos = strchr(to->ptr, '?')) != NULL)
             Strtruncate(to, pos - to->ptr);
     }
-    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)->ptr),
+    exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)->ptr)->ptr,
         FALSE)
             ->ptr);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -5183,7 +5183,7 @@ invoke_browser(const char* url)
         browser = allocStr(browser, len - 2);
         bg = 1;
     }
-    cmd = myExtCommand(browser, shell_quote(url), FALSE);
+    cmd = myExtCommand(browser, shell_quote(url)->ptr, FALSE);
     Strremovetrailingspaces(cmd);
     fmTerm();
     mySystem(cmd->ptr, bg);

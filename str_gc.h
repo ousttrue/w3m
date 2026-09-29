@@ -47,3 +47,6 @@ enum LineMode {
 void cleanup_line(Str s, enum LineMode mode);
 Str convertLine(bool do_chop, Str line, int mode, wc_ces* charset, wc_ces doc_charset);
 Str filename_extension(const char* patch, bool is_url);
+Str remove_space(const char* str);
+Str Str_form_quote(Str x);
+Str shell_quote(const char* str);

@@ -5110,7 +5110,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
     char* id = NULL;
     int hseq, form_id;
     Str line;
-    char* endp;
+    const char* endp;
     char symbol = '\0';
     int internal = 0;
     Anchor** a_textarea = NULL;
@@ -7450,7 +7450,7 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
         header = conv_to_system(header);
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
     if (!(mc_stat & MCSTAT_REPNAME)) {
-        Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
+        Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr)->ptr);
         command = tmp;
     }
 
@@ -7939,7 +7939,7 @@ lessopen_stream(const char* path)
     if (!n)
         return NULL;
 
-    tmpf = Sprintf(lessopen, shell_quote(path));
+    tmpf = Sprintf(lessopen, shell_quote(path)->ptr);
     fp = popen(tmpf->ptr, "r");
     if (fp == NULL) {
         return NULL;

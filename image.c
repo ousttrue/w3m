@@ -699,7 +699,7 @@ getImageSize(ImageCache * cache)
     tmp = Strnew();
     if (!strchr(Imgdisplay, '/'))
 	Strcat_m_charp(tmp, w3m_auxbin_dir(), "/", NULL);
-    Strcat_m_charp(tmp, Imgdisplay, " -size ", shell_quote(cache->file), NULL);
+    Strcat_m_charp(tmp, Imgdisplay, " -size ", shell_quote(cache->file)->ptr, NULL);
     f = popen(tmp->ptr, "r");
     if (!f)
 	return FALSE;
