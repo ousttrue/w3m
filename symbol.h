@@ -3,7 +3,7 @@
 
 #include "Str.h"
 #include "config.h"
-#include "url.h"
+#include "http_request.h"
 
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)

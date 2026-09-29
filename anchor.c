@@ -11,7 +11,7 @@
 #include "rc.h"
 #include "regex.h"
 #include "terms.h"
-#include "url.h"
+#include "http_request.h"
 
 #include <strings.h>
 

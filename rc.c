@@ -20,7 +20,7 @@
 #include "search.h"
 #include "symbol.h"
 #include "terms.h"
-#include "url.h"
+#include "http_request.h"
 #include "version.h"
 
 #include <errno.h>

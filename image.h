@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "html.h"
+#include "http_request.h"
 
 #include <sys/types.h>
 

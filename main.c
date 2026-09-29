@@ -28,7 +28,7 @@
 #include "tab.h"
 #include "terms.h"
 #include "util.h"
-#include "url.h"
+#include "http_request.h"
 #include "version.h"
 
 #include <errno.h>

@@ -1,5 +1,5 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#include "url.h"
+#include "http_request.h"
 
 #include "alloc.h"
 #include "str_gc.h"

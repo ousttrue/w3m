@@ -6,7 +6,7 @@
 #include "terms.h"
 #include "fm.h"
 #include "proto.h"
-#include "url.h"
+#include "http_request.h"
 
 #include <signal.h>
 

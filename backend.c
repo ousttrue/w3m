@@ -9,7 +9,7 @@
 #include "proto.h"
 #include "rc.h"
 #include "terms.h"
-#include "url.h"
+#include "http_request.h"
 
 #include <gc/gc.h>
 #include <stdio.h>

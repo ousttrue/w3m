@@ -27,7 +27,7 @@
 #include "tab.h"
 #include "table.h"
 #include "terms.h"
-#include "url.h"
+#include "http_request.h"
 
 #include <fcntl.h>
 #include <math.h>

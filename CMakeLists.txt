@@ -73,7 +73,7 @@ add_executable(
   symbol.c
   entity.c
   terms.c
-  url.c
+  http_request.c
   ftp.c
   mimehead.c
   regex.c

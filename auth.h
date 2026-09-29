@@ -1,5 +1,5 @@
 #pragma once
-#include "html.h"
+#include "url.h"
 #include "Str.h"
 
 int find_auth_user_passwd(ParsedURL* pu, char* realm,

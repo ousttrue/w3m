@@ -45,19 +45,6 @@ typedef struct {
     int flag;
 } URLOption;
 
-typedef struct _ParsedURL {
-    int scheme;
-    char *user;
-    char *pass;
-    char *host;
-    int port;
-    char *file;
-    char *real_file;
-    char *query;
-    char *label;
-    int is_nocache;
-} ParsedURL;
-
 typedef struct {
     unsigned char scheme;
     char is_cgi;
@@ -398,29 +385,5 @@ struct environment {
 #define MAX_INDENT_LEVEL 10
 
 #define INDENT_INCR IndentIncr
-
-/*
- * Those SCM_ define the indeces of DefaultPort in url.c and scheme_str[] in
- * _parsedURL2Str in url.c
- */
-#define SCM_UNKNOWN	255
-#define SCM_MISSING	254
-#define SCM_HTTP	0
-#define SCM_GOPHER	1
-#define SCM_FTP		2
-#define SCM_FTPDIR	3
-#define SCM_LOCAL	4
-#define SCM_LOCAL_CGI	5
-#define SCM_EXEC	6
-#define SCM_NNTP	7
-#define SCM_NNTP_GROUP	8
-#define SCM_NEWS	9
-#define SCM_NEWS_GROUP	10
-#define SCM_DATA	11
-#define SCM_MAILTO      12
-#define SCM_GOPHERS	13
-#ifdef USE_SSL
-#define SCM_HTTPS       14
-#endif				/* USE_SSL */
 
 #endif
