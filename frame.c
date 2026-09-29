@@ -669,7 +669,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                             /* "BASE" is prohibit tag */
                             if (parsedtag_get_value(tag, ATTR_HREF, &q)) {
                                 q = url_encode(remove_space(q)->ptr, NULL, charset);
-                                parseURL(q, &base, NULL);
+                                base = parseURL(q, NULL);
                             }
                             if (parsedtag_get_value(tag, ATTR_TARGET, &q)) {
                                 if (!strcasecmp(q, "_self"))

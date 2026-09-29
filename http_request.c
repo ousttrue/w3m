@@ -636,7 +636,7 @@ void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
     Str tmp;
     int relative_uri = FALSE;
 
-    parseURL(url, pu, current);
+    *pu = parseURL(url, current);
 #ifndef USE_W3MMAILER
     if (pu->scheme == SCM_MAILTO)
         return;

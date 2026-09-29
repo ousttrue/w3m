@@ -701,7 +701,7 @@ int load_cookies(struct cookie** cookie)
         ck->comment = NULL;
         ck->portl = NULL;
         ck->commentURL = NULL;
-        parseURL(readcol(&str)->ptr, &ck->url, NULL);
+        ck->url = parseURL(readcol(&str)->ptr, NULL);
         if (!*str)
             break;
         ck->name = readcol(&str);
