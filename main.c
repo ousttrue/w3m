@@ -1338,7 +1338,7 @@ dump_extra(Buffer* buf)
 #ifdef USE_SSL
     if (buf->ssl_certificate) {
         Str tmp = Strnew();
-        char* p;
+        const char* p;
         for (p = buf->ssl_certificate; *p; p++) {
             Strcat_char(tmp, *p);
             if (*p == '\n') {

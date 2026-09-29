@@ -27,10 +27,10 @@
 
 #ifdef USE_IMAGE
 typedef struct {
-    char *url;
+    const char *url;
     ParsedURL *current;
-    char *file;
-    char *touch;
+    const char *file;
+    const char *touch;
     pid_t pid;
     char loaded;
     int index;
@@ -41,15 +41,15 @@ typedef struct {
 } ImageCache;
 
 typedef struct {
-    char *url;
-    char *ext;
+    const char *url;
+    const char *ext;
     short width;
     short height;
     short xoffset;
     short yoffset;
     short y;
     short rows;
-    char *map;
+    const char *map;
     char ismap;
     int touch;
     ImageCache *cache;

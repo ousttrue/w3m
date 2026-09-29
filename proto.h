@@ -394,7 +394,6 @@ extern void free_ssl_ctx(void);
 extern ParsedURL *baseURL(Buffer *buf);
 extern Str parsedURL2Str(const ParsedURL *pu);
 extern Str parsedURL2RefererStr(ParsedURL *pu);
-extern void init_stream(URLFile *uf, int scheme, InputStream stream);
 extern int mailcapMatch(struct mailcap *mcap, const char *type);
 extern struct mailcap *searchMailcap(struct mailcap *table, const char *type);
 extern void initMailcap(void);

@@ -1,8 +1,8 @@
 #pragma once
 #include "url.h"
+#include "url_stream.h"
 #include "Str.h"
 #include "form.h"
-#include "html.h"
 #include "textlist.h"
 
 #define NO_REFERER ((char*)-1)

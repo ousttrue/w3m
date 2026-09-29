@@ -489,21 +489,19 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
  */
 void reshapeBuffer(Buffer* buf)
 {
-    URLFile f;
-    Buffer sbuf;
-#ifdef USE_M17N
     wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
 
     buf->need_reshape = FALSE;
     buf->width = INIT_BUFFER_WIDTH;
     if (buf->sourcefile == NULL)
         return;
-    init_stream(&f, SCM_LOCAL, NULL);
+
+    struct UrlStream f = init_stream(SCM_LOCAL, NULL);
     examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile,
         &f);
     if (f.stream == NULL)
         return;
+    Buffer sbuf;
     copyBuffer(&sbuf, buf);
     clearBuffer(buf);
     while (buf->frameset) {
@@ -525,8 +523,7 @@ void reshapeBuffer(Buffer* buf)
 
     if (buf->header_source) {
         if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source || !strcmp(buf->currentURL.file, "-")) {
-            URLFile h;
-            init_stream(&h, SCM_LOCAL, NULL);
+            URLFile h = init_stream(SCM_LOCAL, NULL);
             examineFile(buf->header_source, &h);
             if (h.stream) {
                 readHeader(&h, buf, TRUE, NULL);

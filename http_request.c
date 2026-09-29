@@ -250,7 +250,7 @@ str_to_ssl_version(const char* name)
 }
 
 static SSL*
-openSSLHandle(int sock, const char* hostname, char** p_cert)
+openSSLHandle(int sock, const char* hostname, const char** p_cert)
 {
     SSL* handle = NULL;
     static char* old_ssl_forbid_method = NULL;
@@ -939,20 +939,6 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
     return tmp;
 }
 
-void init_stream(URLFile* uf, int scheme, InputStream stream)
-{
-    memset(uf, 0, sizeof(URLFile));
-    uf->stream = stream;
-    uf->scheme = scheme;
-    uf->encoding = ENC_7BIT;
-    uf->is_cgi = FALSE;
-    uf->compression = CMP_NOCOMPRESS;
-    uf->content_encoding = CMP_NOCOMPRESS;
-    uf->guess_type = NULL;
-    uf->ext = NULL;
-    uf->modtime = -1;
-}
-
 URLFile
 openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     URLOption* option, FormList* request, TextList* extra_header,
@@ -961,24 +947,20 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     Str tmp;
     int sock, scheme;
     const char* p;
-#ifdef USE_GOPHER
     Str gophertmp;
     char type;
     int n;
-#endif
-    URLFile uf;
     HRequest hr0;
-#ifdef USE_SSL
     SSL* sslh = NULL;
-#endif /* USE_SSL */
 
     if (hr == NULL)
         hr = &hr0;
 
+    URLFile uf;
     if (ouf) {
         uf = *ouf;
     } else {
-        init_stream(&uf, SCM_MISSING, NULL);
+        uf = init_stream(SCM_MISSING, NULL);
     }
 
     const char* u = url;

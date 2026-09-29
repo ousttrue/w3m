@@ -114,9 +114,7 @@ typedef struct _Buffer {
     char* mailcap_source;
     char* header_source;
     char search_header;
-#ifdef USE_SSL
-    char* ssl_certificate;
-#endif
+    const char* ssl_certificate;
     char image_flag;
     char image_loaded;
     char need_reshape;

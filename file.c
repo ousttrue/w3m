@@ -321,8 +321,8 @@ compress_application_type(int compression)
     return NULL;
 }
 
-static char*
-uncompressed_file_type(const char* path, char** ext)
+static const char*
+uncompressed_file_type(const char* path, const char** ext)
 {
     int len, slen;
     Str fn;
@@ -381,8 +381,8 @@ void examineFile(const char* path, URLFile* uf)
     if (!do_download) {
         check_compression(path, uf);
         if (uf->compression != CMP_NOCOMPRESS) {
-            char* ext = uf->ext;
-            char* t0 = uncompressed_file_type(path, &ext);
+            const char* ext = uf->ext;
+            const char* t0 = uncompressed_file_type(path, &ext);
             uf->guess_type = t0;
             uf->ext = ext;
             uncompress_stream(uf, NULL);
@@ -568,12 +568,11 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                         "\" alt=\"X-Image-URL\">", NULL);
                 }
                 if (src) {
-                    URLFile f;
-                    Line* l;
                     wc_ces old_charset = newBuf->document_charset;
-                    init_stream(&f, SCM_LOCAL, newStrStream(src));
+                    URLFile f = init_stream(SCM_LOCAL, newStrStream(src));
                     loadHTMLstream(&f, newBuf, NULL, TRUE);
                     UFclose(&f);
+                    Line* l;
                     for (l = newBuf->lastLine; l && l->real_linenumber;
                         l = l->prev)
                         l->real_linenumber = 0;
@@ -1697,6 +1696,8 @@ load_doc:
                                  ->ptr,
                 FALSE);
             break;
+        default:
+            break;
         }
         if (page && page->length > 0)
             goto page_loaded;
@@ -1879,7 +1880,7 @@ load_doc:
     } else if (pu.scheme == SCM_FTP) {
         check_compression(path, &f);
         if (f.compression != CMP_NOCOMPRESS) {
-            char* t1 = uncompressed_file_type(pu.file, NULL);
+            const char* t1 = uncompressed_file_type(pu.file, NULL);
             real_type = f.guess_type;
             if (t1)
                 t = t1;
@@ -6800,13 +6801,9 @@ phase2:
 Buffer*
 loadHTMLString(Str page)
 {
-    URLFile f;
     volatile SigActionFunc prevtrap = NULL;
-    Buffer* newBuf;
-
-    init_stream(&f, SCM_LOCAL, newStrStream(page));
-
-    newBuf = newBuffer(INIT_BUFFER_WIDTH);
+    URLFile f = init_stream(SCM_LOCAL, newStrStream(page));
+    Buffer* newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
         TRAP_OFF;
         discardBuffer(newBuf);
@@ -7110,7 +7107,7 @@ image_buffer:
         return NULL;
     newBuf->mailcap_source = tmpf->ptr;
 
-    init_stream(&f, SCM_LOCAL, newStrStream(tmp));
+    f = init_stream(SCM_LOCAL, newStrStream(tmp));
     loadHTMLstream(&f, newBuf, src, TRUE);
     UFclose(&f);
     fclose(src);
@@ -7203,17 +7200,13 @@ static Buffer*
 loadcmdout(const char* cmd,
     Buffer* (*loadproc)(URLFile*, Buffer*), Buffer* defaultbuf)
 {
-    FILE* f;
-    Buffer* buf;
-    URLFile uf;
-
     if (cmd == NULL || *cmd == '\0')
         return NULL;
-    f = popen(cmd, "r");
+    FILE* f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    init_stream(&uf, SCM_UNKNOWN, newFileStream(f, pclose));
-    buf = loadproc(&uf, defaultbuf);
+    URLFile uf = init_stream(SCM_UNKNOWN, newFileStream(f, pclose));
+    Buffer* buf = loadproc(&uf, defaultbuf);
     UFclose(&uf);
     return buf;
 }
@@ -7292,9 +7285,7 @@ openGeneralPagerBuffer(InputStream stream)
     Buffer* buf;
     char* t = "text/plain";
     Buffer* t_buf = NULL;
-    URLFile uf;
-
-    init_stream(&uf, SCM_UNKNOWN, stream);
+    URLFile uf = init_stream(SCM_UNKNOWN, stream);
 
     content_charset = 0;
     t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -7388,7 +7379,7 @@ Line* getNextPage(Buffer* buf, int plen)
     }
     TRAP_ON;
 
-    init_stream(&uf, SCM_UNKNOWN, NULL);
+    uf = init_stream(SCM_UNKNOWN, NULL);
     for (i = 0; i < plen; i++) {
         if (!(lineBuf2 = StrmyISgets(buf->pagerSource)))
             return NULL;

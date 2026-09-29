@@ -49,6 +49,7 @@ add_executable(
   main.c
   keybind.c
   url.c
+  url_stream.c
   growbuf.c
   alloc.c
   file.c

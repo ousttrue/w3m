@@ -35,38 +35,6 @@ struct table2 {
     char *item2;
 };
 
-typedef struct {
-    char *referer;
-    int flag;
-} URLOption;
-
-typedef struct {
-    unsigned char scheme;
-    char is_cgi;
-    char encoding;
-    union input_stream *stream;
-    char *ext;
-    int compression;
-    int content_encoding;
-    const char *guess_type;
-#ifdef USE_SSL
-    char *ssl_certificate;
-#endif
-    char *url;
-    time_t modtime;
-} URLFile;
-
-#define CMP_NOCOMPRESS   0
-#define CMP_COMPRESS     1
-#define CMP_GZIP         2
-#define CMP_BZIP2        3
-#define CMP_DEFLATE      4
-#define CMP_BROTLI       5
-
-#define ENC_7BIT	0
-#define ENC_BASE64	1
-#define ENC_QUOTE	2
-#define ENC_UUENCODE	3
 
 #define HTML_UNKNOWN	0
 #define HTML_A		1

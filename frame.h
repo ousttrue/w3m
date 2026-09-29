@@ -30,9 +30,7 @@ struct frame_body {
     char *referer;
     AnchorList *nameList;
     FormList *request;
-#ifdef USE_SSL
-    char *ssl_certificate;
-#endif
+    const char *ssl_certificate;
 };
 
 union frameset_element {

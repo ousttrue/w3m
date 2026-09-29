@@ -116,7 +116,7 @@ int ISread_n(InputStream stream, unsigned char *dst, int bufsize);
 extern int ISfileno(InputStream stream);
 extern int ISeos(InputStream stream);
 #ifdef USE_SSL
-extern void ssl_accept_this_site(char *hostname);
+extern void ssl_accept_this_site(const char *hostname);
 extern Str ssl_get_certificate(SSL * ssl, const char *hostname);
 #endif
 

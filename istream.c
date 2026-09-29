@@ -327,7 +327,7 @@ ISfileno(InputStream stream)
 static Str accept_this_site;
 
 void
-ssl_accept_this_site(char *hostname)
+ssl_accept_this_site(const char *hostname)
 {
     if (hostname)
 	accept_this_site = Strnew_charp(hostname);

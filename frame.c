@@ -347,11 +347,9 @@ frame_download_source(struct frame_body* b, ParsedURL* currentURL,
         buf = loadGeneralFile(b->url,
             baseURL ? baseURL : currentURL,
             b->referer, flag | RG_FRAME_SRC, b->request);
-#ifdef USE_SSL
         /* XXX certificate? */
         if (buf && buf != NO_BUFFER)
             b->ssl_certificate = buf->ssl_certificate;
-#endif
         w3m_dump &= ~DUMP_FRAME;
         is_redisplay = FALSE;
         break;
@@ -530,7 +528,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                 }
                 /* fall through */
             case F_BODY:
-                init_stream(&f2, SCM_LOCAL, NULL);
+                f2 = init_stream(SCM_LOCAL, NULL);
                 if (frame.body->source) {
                     fflush(f1);
                     examineFile(frame.body->source, &f2);

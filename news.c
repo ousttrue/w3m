@@ -434,7 +434,7 @@ Str loadNewsgroup0(ParsedURL* pu)
                 pu->scheme == SCM_NNTP_GROUP ? qgroup : NULL);
         }
     } else {
-        init_stream(&f, SCM_NEWS, current_news.rf);
+        f = init_stream(SCM_NEWS, current_news.rf);
         buf = newBuffer(INIT_BUFFER_WIDTH);
         for (i = start; i <= end && i <= last; i++) {
             news_command(&current_news, "HEAD", Sprintf("%d", i)->ptr,
