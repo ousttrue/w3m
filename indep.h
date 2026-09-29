@@ -65,12 +65,6 @@ extern Str Str_form_quote(Str x);
 #define Str_form_unquote(x) Str_url_unquote((x), TRUE, FALSE)
 extern const char* shell_quote(const char* str);
 
-extern const char* w3m_auxbin_dir(void);
-extern const char* w3m_lib_dir(void);
-extern const char* w3m_etc_dir(void);
-extern const char* w3m_conf_dir(void);
-extern const char* w3m_help_dir(void);
-
 extern char* CurrentDir;
 extern int CurrentPid;
 

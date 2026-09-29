@@ -4,6 +4,7 @@
  */
 #include "rc.h"
 #include "alloc.h"
+#include "str_const.h"
 #include "str_gc.h"
 #include "charset.h"
 #include "config.h"
