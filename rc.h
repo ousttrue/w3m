@@ -163,7 +163,6 @@ extern int show_srch_str;
 extern int space_autocomplete;
 extern int squeezeBlankLine;
 extern int use_cookie;
-extern int use_lessopen;
 extern int vi_prec_num;
 extern int zeroBasedLinkNo;
 

@@ -10,7 +10,7 @@
 struct parsed_tag {
     unsigned char tagid;
     unsigned char *attrid;
-    char **value;
+    const char **value;
     unsigned char *map;
     char need_reconstruct;
 };

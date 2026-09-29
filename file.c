@@ -55,7 +55,6 @@ static int need_number = 0;
 
 static int _MoveFile(const char* path1, const char* path2);
 static void uncompress_stream(URLFile* uf, const char** src);
-static FILE* lessopen_stream(const char* path);
 static Buffer* loadcmdout(const char* cmd,
     Buffer* (*loadproc)(URLFile*, Buffer*),
     Buffer* defaultbuf);
@@ -380,20 +379,6 @@ void examineFile(const char* path, URLFile* uf)
     }
     uf->stream = openIS(path);
     if (!do_download) {
-        if (use_lessopen && getenv("LESSOPEN") != NULL) {
-            FILE* fp;
-            uf->guess_type = guessContentType(path);
-            if (uf->guess_type == NULL)
-                uf->guess_type = "text/plain";
-            if (is_html_type(uf->guess_type))
-                return;
-            if ((fp = lessopen_stream(path))) {
-                UFclose(uf);
-                uf->stream = newFileStream(fp, pclose);
-                uf->guess_type = "text/plain";
-                return;
-            }
-        }
         check_compression(path, uf);
         if (uf->compression != CMP_NOCOMPRESS) {
             char* ext = uf->ext;
@@ -1621,14 +1606,13 @@ static Str loadLocalDir(const char* dname)
  * loadGeneralFile: load file to buffer
  */
 Buffer*
-loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
+loadGeneralFile(const char* path, ParsedURL* volatile current, char* referer,
     int flag, FormList* volatile request)
 {
     URLFile f, *volatile of = NULL;
     ParsedURL pu;
     Buffer* b = NULL;
     Buffer* (*volatile proc)(URLFile*, Buffer*);
-    char* volatile tpath;
     const char *t = "text/plain", *volatile real_type = NULL;
     Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
@@ -1648,7 +1632,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     HRequest hr;
     ParsedURL* volatile auth_pu;
 
-    tpath = path;
+    const char* volatile tpath = path;
     add_auth_cookie_flag = 0;
 
     checkRedirection(NULL);
@@ -3620,7 +3604,7 @@ Str process_n_select(void)
     return select_str;
 }
 
-void feed_select(char* str)
+void feed_select(const char* str)
 {
     Str tmp = Strnew();
     int prev_status = cur_status;
@@ -5933,7 +5917,7 @@ table_width(struct html_feed_environ* h_env, int table_level)
 }
 
 /* HTML processing first pass */
-void HTMLlineproc0(char* line, struct html_feed_environ* h_env, int internal)
+void HTMLlineproc0(const char* line, struct html_feed_environ* h_env, int internal)
 {
     Lineprop mode;
     int cmd;
@@ -8016,56 +8000,3 @@ uncompress_stream(URLFile* uf, const char** src)
     UFhalfclose(uf);
     uf->stream = newFileStream(f1, fclose);
 }
-
-static FILE*
-lessopen_stream(const char* path)
-{
-    char* lessopen;
-    FILE* fp;
-    Str tmpf;
-    int c, n = 0;
-
-    lessopen = getenv("LESSOPEN");
-    if (lessopen == NULL || lessopen[0] == '\0')
-        return NULL;
-
-    if (lessopen[0] != '|') /* filename mode, not supported m(__)m */
-        return NULL;
-
-    /* pipe mode */
-    ++lessopen;
-
-    /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
-    for (const char* f = lessopen; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%') /* Literal % */
-                f++;
-            else if (*++f == 's') {
-                if (n)
-                    return NULL;
-                n++;
-            } else
-                return NULL;
-        }
-    }
-    if (!n)
-        return NULL;
-
-    tmpf = Sprintf(lessopen, shell_quote(path)->ptr);
-    fp = popen(tmpf->ptr, "r");
-    if (fp == NULL) {
-        return NULL;
-    }
-    c = getc(fp);
-    if (c == EOF) {
-        pclose(fp);
-        return NULL;
-    }
-    ungetc(c, fp);
-    return fp;
-}
-
-
-
-
-

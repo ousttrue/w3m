@@ -176,15 +176,13 @@ extern void chkExternalURIBuffer(Buffer *buf);
 #endif
 extern ParsedURL *schemeToProxy(int scheme);
 
-extern wc_ces url_to_charset(char *url, ParsedURL *base,
-			     wc_ces doc_charset);
 extern char *url_decode2(char *url, Buffer *buf);
 
 extern void examineFile(const char *path, URLFile *uf);
 extern char *acceptableEncoding(void);
 extern int dir_exist(const char *path);
 extern int is_html_type(const char *type);
-extern Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer,
+extern Buffer *loadGeneralFile(const char *path, ParsedURL *current, char *referer,
 			       int flag, FormList *request);
 extern int is_boundary(const unsigned char *, const unsigned char *);
 extern void push_render_image(Str str, int width, int limit,
@@ -212,7 +210,7 @@ extern Str process_button(struct parsed_tag *tag);
 extern Str process_n_button(void);
 extern Str process_select(struct parsed_tag *tag);
 extern Str process_n_select(void);
-extern void feed_select(char *str);
+extern void feed_select(const char *str);
 extern void process_option(void);
 extern Str process_textarea(struct parsed_tag *tag, int width);
 extern Str process_n_textarea(void);
@@ -223,7 +221,7 @@ extern int getMetaRefreshParam(const char *q, Str *refresh_uri);
 extern int HTMLtagproc1(struct parsed_tag *tag,
 			struct html_feed_environ *h_env);
 extern void HTMLlineproc2(Buffer *buf, TextLineList *tl);
-extern void HTMLlineproc0(char *istr, struct html_feed_environ *h_env,
+extern void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
 			  int internal);
 #define HTMLlineproc1(x,y) HTMLlineproc0(x,y,TRUE)
 extern Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);

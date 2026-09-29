@@ -504,7 +504,6 @@ int show_cookie = FALSE;
 int show_srch_str = TRUE;
 int space_autocomplete = FALSE;
 int use_cookie = TRUE;
-int use_lessopen = FALSE;
 int vi_prec_num = FALSE;
 int zeroBasedLinkNo = FALSE;
 
@@ -845,8 +844,6 @@ struct param_ptr params6[] = {
         NULL },
     { "bgextviewer", P_INT, PI_ONOFF, (void*)&BackgroundExtViewer,
         CMT_BGEXTVIEW, NULL },
-    { "use_lessopen", P_INT, PI_ONOFF, (void*)&use_lessopen, CMT_USE_LESSOPEN,
-        NULL },
     { NULL, 0, 0, NULL, NULL, NULL },
 };
 

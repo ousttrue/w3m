@@ -954,7 +954,7 @@ void init_stream(URLFile* uf, int scheme, InputStream stream)
 }
 
 URLFile
-openURL(char* url, ParsedURL* pu, ParsedURL* current,
+openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     URLOption* option, FormList* request, TextList* extra_header,
     URLFile* ouf, HRequest* hr, unsigned char* status)
 {
@@ -1435,7 +1435,7 @@ make_domain_list(char* domain_list)
 }
 
 static int
-domain_match(char* pat, char* domain)
+domain_match(const char* pat, const char* domain)
 {
     if (domain == NULL)
         return 0;
@@ -1727,9 +1727,8 @@ schemeToProxy(int scheme)
     return pu;
 }
 
-#ifdef USE_M17N
 wc_ces
-url_to_charset(char* url, ParsedURL* base, wc_ces doc_charset)
+url_to_charset(const char* url, ParsedURL* base, wc_ces doc_charset)
 {
     ParsedURL* pu;
     ParsedURL pu_buf;
@@ -1750,7 +1749,7 @@ url_to_charset(char* url, ParsedURL* base, wc_ces doc_charset)
 
 char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset)
 {
-    return url_quote_conv((char*)url,
+    return url_quote_conv(url,
         url_to_charset(url, base, doc_charset))
         ->ptr;
 }
@@ -1764,13 +1763,3 @@ char* url_decode2(char* url, Buffer* buf)
     url_charset = buf ? url_to_charset(url, baseURL((Buffer*)buf), buf->document_charset) : url_to_charset(url, NULL, 0);
     return url_unquote_conv((char*)url, url_charset)->ptr;
 }
-
-#else /* !defined(USE_M17N) */
-
-char* url_decode0(char* url)
-{
-    if (!DecodeURL)
-        return (char*)url;
-    return url_unquote_conv((char*)url, 0);
-}
-#endif /* !defined(USE_M17N) */

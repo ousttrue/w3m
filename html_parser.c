@@ -182,21 +182,22 @@ int next_status(const char c, int* status)
     return 0;
 }
 
-int read_token(Str buf, char** instr, int* status, int pre, int append)
+int read_token(Str buf, const char** instr, int* status, int pre, int append)
 {
-    char* p;
     int prev_status;
 
     if (!append)
         Strclear(buf);
     if (**instr == '\0')
         return 0;
+
+    const char* p;
     for (p = *instr; *p; p++) {
         /* Drop Unicode soft hyphen */
-        if (*(unsigned char*)p == 0210
-            && *(unsigned char*)(p + 1) == 0200
-            && *(unsigned char*)(p + 2) == 0201
-            && *(unsigned char*)(p + 3) == 0255) {
+        if (*(const unsigned char*)p == 0210
+            && *(const unsigned char*)(p + 1) == 0200
+            && *(const unsigned char*)(p + 2) == 0201
+            && *(const unsigned char*)(p + 3) == 0255) {
             p += 3;
             continue;
         }
@@ -268,5 +269,3 @@ proc_end:
     *instr = p;
     return 1;
 }
-
-

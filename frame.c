@@ -484,7 +484,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
             union frameset_element frame;
             struct frameset* f_frameset;
             int i = c + r * f->col;
-            char* p = "";
+            const char* p = "";
             int status = R_ST_NORMAL;
             Str tok = Strnew();
             int pre_mode = 0;

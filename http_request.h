@@ -29,7 +29,7 @@ typedef struct http_request {
 
 Str HTTPrequestMethod(HRequest* hr);
 Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
-URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
+URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     URLOption* option, FormList* request,
     TextList* extra_header, URLFile* ouf,
     HRequest* hr, unsigned char* status);
@@ -79,6 +79,6 @@ extern int ssl_path_modified;
 
 int needs_proxy(const char* domain);
 char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset);
-int openSocket(const char* hostname, 
-        const char* remoteport_name, unsigned short remoteport_num);
-
+int openSocket(const char* hostname,
+    const char* remoteport_name, unsigned short remoteport_num);
+wc_ces url_to_charset(const char* url, ParsedURL* base, wc_ces doc_charset);

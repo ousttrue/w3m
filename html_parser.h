@@ -28,4 +28,4 @@
 
 int gethtmlcmd(const char* s);
 int next_status(char c, int* status);
-int read_token(Str buf, char** instr, int* status, int pre, int append);
+int read_token(Str buf, const char** instr, int* status, int pre, int append);

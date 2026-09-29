@@ -57,7 +57,7 @@ int symbol_width0 = 0;
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
 static struct table* newTable(void);
-static void pushdata(struct table* t, int row, int col, char* data);
+static void pushdata(struct table* t, int row, int col, const char* data);
 static void print_item(struct table* t, int row, int col, int width, Str buf);
 static void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
 static void do_refill(struct table* tbl, int row, int col, int maxlimit);
@@ -311,7 +311,7 @@ check_row(struct table* t, int row)
     }
 }
 
-void pushdata(struct table* t, int row, int col, char* data)
+void pushdata(struct table* t, int row, int col, const char* data)
 {
     check_row(t, row);
     if (t->tabdata[row][col] == NULL)
@@ -321,7 +321,7 @@ void pushdata(struct table* t, int row, int col, char* data)
 }
 
 static void
-suspend_or_pushdata(struct table* tbl, char* line)
+suspend_or_pushdata(struct table* tbl, const char* line)
 {
     if (tbl->flag & TBL_IN_COL)
         pushdata(tbl, tbl->row, tbl->col, line);
@@ -412,7 +412,7 @@ int visible_length(const char* str)
 }
 
 static int
-visible_length_plain(char* str)
+visible_length_plain(const char* str)
 {
     int len = 0, max_len = 0;
 
@@ -441,14 +441,14 @@ visible_length_plain(char* str)
 }
 
 static int
-maximum_visible_length(char* str, int offset)
+maximum_visible_length(const char* str, int offset)
 {
     visible_length_offset = offset;
     return visible_length(str);
 }
 
 static int
-maximum_visible_length_plain(char* str, int offset)
+maximum_visible_length_plain(const char* str, int offset)
 {
     visible_length_offset = offset;
     return visible_length_plain(str);
@@ -2071,7 +2071,7 @@ skip_space(struct table* t, const char* line, struct table_linfo* linfo,
 
 static void
 feed_table_inline_tag(struct table* tbl,
-    char* line, struct table_mode* mode, int width)
+    const char* line, struct table_mode* mode, int width)
 {
     check_rowcol(tbl, mode);
     pushdata(tbl, tbl->row, tbl->col, line);
@@ -2084,7 +2084,7 @@ feed_table_inline_tag(struct table* tbl,
 
 static void
 feed_table_block_tag(struct table* tbl,
-    char* line, struct table_mode* mode, int indent, int cmd)
+    const char* line, struct table_mode* mode, int indent, int cmd)
 {
     int offset;
     if (mode->indent_level <= 0 && indent == -1)
@@ -2180,7 +2180,7 @@ table_close_anchor0(struct table* tbl, struct table_mode* mode)
 #define ATTR_ROWSPAN_MAX 32766
 
 static int
-feed_table_tag(struct table* tbl, char* line, struct table_mode* mode,
+feed_table_tag(struct table* tbl, const char* line, struct table_mode* mode,
     int width, struct parsed_tag* tag)
 {
     int cmd;
@@ -2913,7 +2913,7 @@ int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
     if (!(mode->pre_mode & TBLM_PLAIN) && !(*line == '<' && line[strlen(line) - 1] == '>') && strchr(line, '&') != NULL) {
         tmp = Strnew();
         for (p = line; *p;) {
-            char *q, *r;
+            const char *q, *r;
             if (*p == '&') {
                 if (!strncasecmp(p, "&amp;", 5) || !strncasecmp(p, "&gt;", 4) || !strncasecmp(p, "&lt;", 4)) {
                     /* do not convert */
@@ -3015,12 +3015,11 @@ void feed_table1(struct table* tbl, Str tok, struct table_mode* mode, int width)
 {
     Str tokbuf;
     int status;
-    char* line;
     if (!tok)
         return;
     tokbuf = Strnew();
     status = R_ST_NORMAL;
-    line = tok->ptr;
+    const char* line = tok->ptr;
     while (read_token(tokbuf, &line, &status, mode->pre_mode & TBLM_PREMODE, 0))
         feed_table(tbl, tokbuf->ptr, mode, width, TRUE);
 }
