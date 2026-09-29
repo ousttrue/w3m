@@ -477,8 +477,6 @@ extern Str decodeMIME0(Str orgstr);
 #define decodeWord(ow,charset) decodeWord0(ow)
 #define decodeMIME(orgstr,charset) decodeMIME0(orgstr)
 #endif
-extern Str localCookie(void);
-extern void set_environ(const char *var, const char *value);
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);

@@ -1,5 +1,4 @@
 #include "http_request.h"
-#include "local.h"
 #include "alloc.h"
 #include "str_gc.h"
 #include "Str.h"

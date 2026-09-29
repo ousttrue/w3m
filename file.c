@@ -19,7 +19,6 @@
 #include "funcname1.h"
 #include "html.h"
 #include "linein.h"
-#include "local.h"
 #include "myctype.h"
 #include "parsetagx.h"
 #include "rc.h"
@@ -29,6 +28,7 @@
 #include "terms.h"
 #include "http_request.h"
 
+#include <dirent.h>
 #include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
@@ -248,6 +248,9 @@ loadSomething(URLFile* f,
         buf->type = "text/plain";
     return buf;
 }
+
+#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
+#define IS_DIRECTORY(m) (((m) & S_IFMT) == S_IFDIR)
 
 int dir_exist(const char* path)
 {
@@ -1504,6 +1507,117 @@ Str getLinkNumberStr(int correction)
     return Sprintf("[%d]", cur_hseq + correction - !!zeroBasedLinkNo);
 }
 
+static Str loadLocalDir(const char* dname)
+{
+    Str tmp;
+    DIR* d;
+    struct dirent* dir;
+    struct stat st;
+    char** flist;
+    char *p, *qdir;
+    Str fbuf = Strnew();
+    struct stat lst;
+    char lbuf[1024];
+    int i, l, nrow = 0, n = 0, maxlen = 0;
+    int nfile, nfile_max = 100;
+    Str dirname;
+
+    d = opendir(dname);
+    if (d == NULL)
+        return NULL;
+    dirname = Strnew_charp(dname);
+    if (Strlastchar(dirname) != '/')
+        Strcat_char(dirname, '/');
+    qdir = html_quote(Str_conv_from_system(dirname)->ptr);
+    /* FIXME: gettextize? */
+    tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
+        html_quote(file_quote(dirname->ptr)->ptr),
+        "\">\n<TITLE>Directory list of ", qdir,
+        "</TITLE>\n</HEAD>\n<BODY>\n<H1>Directory list of ",
+        qdir, "</H1>\n", NULL);
+    flist = New_N(char*, nfile_max);
+    nfile = 0;
+    while ((dir = readdir(d)) != NULL) {
+        flist[nfile++] = allocStr(dir->d_name, -1);
+        if (nfile == nfile_max) {
+            nfile_max *= 2;
+            flist = New_Reuse(char*, flist, nfile_max);
+        }
+        if (multicolList) {
+            l = strlen(dir->d_name);
+            if (l > maxlen)
+                maxlen = l;
+            n++;
+        }
+    }
+    closedir(d);
+
+    if (multicolList) {
+        l = COLS / (maxlen + 2);
+        if (!l)
+            l = 1;
+        nrow = (n + l - 1) / l;
+        n = 1;
+        Strcat_charp(tmp, "<TABLE CELLPADDING=0>\n<TR VALIGN=TOP>\n");
+    }
+    qsort(flist, nfile, sizeof(char*), strCmp);
+    for (i = 0; i < nfile; i++) {
+        p = flist[i];
+        if (strcmp(p, ".") == 0)
+            continue;
+        Strcopy(fbuf, dirname);
+        if (Strlastchar(fbuf) != '/')
+            Strcat_char(fbuf, '/');
+        Strcat_charp(fbuf, p);
+        if (lstat(fbuf->ptr, &lst) < 0)
+            continue;
+        if (stat(fbuf->ptr, &st) < 0)
+            continue;
+        if (multicolList) {
+            if (n == 1)
+                Strcat_charp(tmp, "<TD><NOBR>");
+        } else {
+            if (S_ISLNK(lst.st_mode))
+                Strcat_charp(tmp, "[LINK] ");
+            else if (S_ISDIR(st.st_mode))
+                Strcat_charp(tmp, "[DIR]&nbsp; ");
+            else
+                Strcat_charp(tmp, "[FILE] ");
+        }
+        Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)->ptr), NULL);
+        if (S_ISDIR(st.st_mode))
+            Strcat_char(tmp, '/');
+        Strcat_m_charp(tmp, "\">", html_quote(conv_from_system(p)), NULL);
+        if (S_ISDIR(st.st_mode))
+            Strcat_char(tmp, '/');
+        Strcat_charp(tmp, "</A>");
+        if (multicolList) {
+            if (n++ == nrow) {
+                Strcat_charp(tmp, "</NOBR></TD>\n");
+                n = 1;
+            } else {
+                Strcat_charp(tmp, "<BR>\n");
+            }
+        } else {
+            if (S_ISLNK(lst.st_mode)) {
+                if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
+                    lbuf[l] = '\0';
+                    Strcat_m_charp(tmp, " -> ",
+                        html_quote(conv_from_system(lbuf)), NULL);
+                    if (S_ISDIR(st.st_mode))
+                        Strcat_char(tmp, '/');
+                }
+            }
+            Strcat_charp(tmp, "<br>\n");
+        }
+    }
+    if (multicolList) {
+        Strcat_charp(tmp, "</TR>\n</TABLE>\n");
+    }
+    Strcat_charp(tmp, "</BODY>\n</HTML>\n");
+
+    return tmp;
+}
 /*
  * loadGeneralFile: load file to buffer
  */

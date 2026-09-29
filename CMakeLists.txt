@@ -64,7 +64,6 @@ add_executable(
   search.c
   linein.c
   table.c
-  local.c
   form.c
   map.c
   frame.c
@@ -102,19 +101,33 @@ add_executable(
   hash.c
   myctype.c
   str_gc.c
+  str_const.c
   url.c
   subprocess.c)
 target_compile_definitions(mktable PRIVATE DUMMY)
 target_link_libraries(mktable PRIVATE indep wc gc)
 
 # w3mbookmark
-add_executable(w3mbookmark w3mbookmark.c entity.c str_gc.c url.c subprocess.c)
+add_executable(
+  w3mbookmark
+  w3mbookmark.c
+  entity.c
+  str_gc.c
+  str_const.c
+  url.c
+  subprocess.c)
 target_compile_definitions(w3mbookmark PRIVATE DUMMY)
 target_link_libraries(w3mbookmark PRIVATE indep wc gc)
 
 # w3mhelperpanel
-add_executable(w3mhelperpanel w3mhelperpanel.c entity.c str_gc.c url.c
-               subprocess.c)
+add_executable(
+  w3mhelperpanel
+  w3mhelperpanel.c
+  entity.c
+  str_gc.c
+  str_const.c
+  url.c
+  subprocess.c)
 target_compile_definitions(w3mhelperpanel PRIVATE DUMMY)
 target_link_libraries(w3mhelperpanel PRIVATE indep wc gc)
 
