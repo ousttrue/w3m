@@ -557,7 +557,6 @@ extern void dictwordat(void);
 #define dictword nulcmd
 #define dictwordat nulcmd
 #endif				/* not USE_DICT */
-extern char *guess_save_name(Buffer *buf, const char *file);
 
 extern void wrapToggle(void);
 

@@ -50,3 +50,4 @@ Str filename_extension(const char* patch, bool is_url);
 Str remove_space(const char* str);
 Str Str_form_quote(Str x);
 Str shell_quote(const char* str);
+Str guess_filename(const char* file);

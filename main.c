@@ -4650,18 +4650,18 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
-    Str fn;
-    char* file;
-
     if (Currentbuf->sourcefile == NULL)
         return;
     PermitSaveToPipe = TRUE;
+
+    char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
-            Currentbuf->currentURL.real_file));
+            Currentbuf->currentURL.real_file)->ptr);
     else
-        file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
+        file = guess_save_name(Currentbuf, Currentbuf->currentURL.file)->ptr;
 
+    Str fn;
     if (param_dl_dir) {
         fn = expandPath(param_dl_dir);
         if (Strlastchar(fn) != '/')

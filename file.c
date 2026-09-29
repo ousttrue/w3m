@@ -53,7 +53,6 @@ extern int fold_pre;
 static int frame_source = 0;
 static int need_number = 0;
 
-static char* guess_filename(const char* file);
 static int _MoveFile(const char* path1, const char* path2);
 static void uncompress_stream(URLFile* uf, const char** src);
 static FILE* lessopen_stream(const char* path);
@@ -1982,10 +1981,9 @@ page_loaded:
             fclose(src);
         }
         if (do_download || gopher_download) {
-            char* file;
             if (!src)
                 return NULL;
-            file = guess_filename(pu.file);
+            char* file = guess_filename(pu.file)->ptr;
             if (f.scheme == SCM_GOPHER || f.scheme == SCM_GOPHERS)
                 file = Sprintf("%s.html", file)->ptr;
             if (f.scheme == SCM_NEWS_GROUP)
@@ -2022,9 +2020,9 @@ page_loaded:
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
                 f.modtime = st.st_mtime;
-            file = conv_from_system(guess_save_name(NULL, pu.real_file));
+            file = conv_from_system(guess_save_name(NULL, pu.real_file)->ptr);
         } else
-            file = guess_save_name(t_buf, pu.file);
+            file = guess_save_name(t_buf, pu.file)->ptr;
         if (doFileSave(f, file) == 0)
             UFhalfclose(&f);
         else
@@ -2076,11 +2074,11 @@ page_loaded:
             if (pu.scheme == SCM_LOCAL) {
                 UFclose(&f);
                 _doFileCopy(pu.real_file,
-                    conv_from_system(guess_save_name(NULL, pu.real_file)), TRUE);
+                    conv_from_system(guess_save_name(NULL, pu.real_file)->ptr), TRUE);
             } else {
                 if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
                     f.stream = newEncodedStream(f.stream, f.encoding);
-                if (doFileSave(f, guess_save_name(t_buf, pu.file)) == 0)
+                if (doFileSave(f, guess_save_name(t_buf, pu.file)->ptr) == 0)
                     UFhalfclose(&f);
                 else
                     UFclose(&f);
@@ -8067,42 +8065,7 @@ lessopen_stream(const char* path)
     return fp;
 }
 
-static char*
-guess_filename(const char* file)
-{
-    char* p = NULL;
 
-    if (file != NULL)
-        p = Strnew_charp(mybasename(file))->ptr;
-    if (p == NULL || *p == '\0')
-        return DEF_SAVE_FILE;
-    char* s = p;
-    if (*p == '#')
-        p++;
-    while (*p != '\0') {
-        if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-            *p = '\0';
-            break;
-        }
-        p++;
-    }
-    return s;
-}
 
-char* guess_save_name(Buffer* buf, const char* path)
-{
-    if (buf && buf->document_header) {
-        Str name = NULL;
-        char *p, *q;
-        if ((p = checkHeader(buf, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
-            path = name->ptr;
-        else if ((p = checkHeader(buf, "Content-Type:")) != NULL && (q = strcasestr(p, "name")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "name", 4, &name))
-            path = name->ptr;
-    }
-    return guess_filename(path);
-}
 
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
+

@@ -1,4 +1,5 @@
 #include "str_gc.h"
+#include "str_const.h"
 #include "config.h"
 #include "indep.h"
 #include "myctype.h"
@@ -549,4 +550,24 @@ Str shell_quote(const char* str)
     if (tmp)
         return tmp;
     return Strnew_charp(str);
+}
+
+Str guess_filename(const char* file)
+{
+    Str str = NULL;
+    if (file != NULL)
+        str = Strnew_charp(mybasename(file));
+    if (str == NULL || str->length == 0)
+        return Strnew_charp(DEF_SAVE_FILE);
+    char* p = str->ptr;
+    if (*p == '#')
+        p++;
+    while (*p != '\0') {
+        if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
+            *p = '\0';
+            break;
+        }
+        p++;
+    }
+    return str;
 }

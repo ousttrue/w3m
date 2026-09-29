@@ -76,54 +76,38 @@ static int is_saved = 1;
 static Str make_cookie(struct cookie* cookie);
 static Str portlist2str(struct portlist* first);
 static Str readcol(char** p);
-static char* FQDN(const char* host);
-static char* domain_match(char* host, char* domain);
 static int check_avoid_wrong_number_of_dots_domain(Str domain);
 static int load_cookies(struct cookie** cookie);
-static int match_cookie(ParsedURL* pu, struct cookie* cookie, char* domainname);
 static int port_match(struct portlist* first, int port);
 static int sync_cookies(void);
 static struct cookie* get_cookie(struct cookie* first_node, Str domain, Str path, Str name);
 static struct cookie* nth_cookie(int n);
 static struct portlist* make_portlist(Str port);
-static unsigned int total_dot_number(char* p, char* ep, unsigned int max_count);
 static void check_expired_cookies(void);
 static void unlink_cookie(struct cookie** list, struct cookie* cookie);
 
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
 
-char* FQDN(const char* host)
+static Str FQDN(const char* host)
 {
-    char* p;
-#ifndef INET6
-    struct hostent* entry;
-#else /* INET6 */
-    int* af;
-#endif /* INET6 */
-
     if (host == NULL)
         return NULL;
 
     if (strcasecmp(host, "localhost") == 0)
-        return host;
+        return Strnew_charp(host);
 
+    const char* p;
     for (p = host; *p && *p != '.'; p++)
         ;
 
     if (*p == '.')
-        return host;
+        return Strnew_charp(host);
 
-#ifndef INET6
-    if (!(entry = gethostbyname(host)))
-        return NULL;
-
-    return allocStr(entry->h_name, -1);
-#else /* INET6 */
+    int* af;
     for (af = ai_family_order_table[DNS_order];; af++) {
         int error;
         struct addrinfo hints;
         struct addrinfo *res, *res0;
-        char* namebuf;
 
         memset(&hints, 0, sizeof(hints));
         hints.ai_flags = AI_CANONNAME;
@@ -141,7 +125,7 @@ char* FQDN(const char* host)
         for (res = res0; res != NULL; res = res->ai_next) {
             if (res->ai_canonname) {
                 /* found */
-                namebuf = Strnew_charp(res->ai_canonname)->ptr;
+                Str namebuf = Strnew_charp(res->ai_canonname);
                 freeaddrinfo(res0);
                 return namebuf;
             }
@@ -153,7 +137,6 @@ char* FQDN(const char* host)
     }
     /* all failed */
     return NULL;
-#endif /* INET6 */
 }
 
 void parse_cookie(void)
@@ -168,7 +151,7 @@ void parse_cookie(void)
 }
 
 unsigned int
-total_dot_number(char* p, char* ep, unsigned int max_count)
+total_dot_number(const char* p, const char* ep, unsigned int max_count)
 {
     unsigned int count = 0;
     if (!ep)
@@ -181,22 +164,20 @@ total_dot_number(char* p, char* ep, unsigned int max_count)
     return count;
 }
 
-char* domain_match(char* host, char* domain)
+const char* domain_match(const char* host, const char* domain)
 {
-    int m0, m1;
-
     /* [RFC 2109] s. 2, "domain-match", case 1
      * (both are IP and identical)
      */
     regexCompile("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", 0);
-    m0 = regexMatch(host, -1, 1);
-    m1 = regexMatch(domain, -1, 1);
+    int m0 = regexMatch(host, -1, 1);
+    int m1 = regexMatch(domain, -1, 1);
     if (m0 && m1) {
         if (strcasecmp(host, domain) == 0)
             return host;
     } else if (!m0 && !m1) {
         int offset;
-        char* domain_p;
+        const char* domain_p;
         /*
          * "." match all domains (w3m only),
          * and ".local" match local domains ([DRAFT 12] s. 2)
@@ -305,7 +286,7 @@ Str make_cookie(struct cookie* cookie)
     return tmp;
 }
 
-int match_cookie(ParsedURL* pu, struct cookie* cookie, char* domainname)
+int match_cookie(ParsedURL* pu, struct cookie* cookie, const char* domainname)
 {
     if (!domainname)
         return 0;
@@ -345,12 +326,11 @@ Str find_cookie(ParsedURL* pu)
     Str tmp;
     struct cookie *p, *p1, *fco = NULL;
     int version = 0;
-    char *fq_domainname, *domainname;
 
-    fq_domainname = FQDN(pu->host);
+    Str fq_domainname = FQDN(pu->host);
     check_expired_cookies();
     for (p = First_cookie; p; p = p->next) {
-        domainname = (p->version == 0) ? fq_domainname : pu->host;
+        const char* domainname = (p->version == 0) ? fq_domainname->ptr : pu->host;
         if (p->flag & COO_USE && match_cookie(pu, p, domainname)) {
             for (p1 = fco; p1 && Strcasecmp(p1->name, p->name);
                 p1 = p1->next)
@@ -417,7 +397,7 @@ int add_cookie(ParsedURL* pu, Str name, Str value,
     int flag, Str comment, int version, Str port, Str commentURL)
 {
     struct cookie* p;
-    char* domainname = (version == 0) ? FQDN(pu->host) : pu->host;
+    const char* domainname = (version == 0) ? FQDN(pu->host)->ptr : pu->host;
     Str odomain = domain, opath = path;
     struct portlist* portlist = NULL;
     int use_security = !(flag & COO_OVERRIDE);
@@ -443,7 +423,7 @@ int add_cookie(ParsedURL* pu, Str name, Str value,
         return COO_ENODOT;
 
     if (domain) {
-        char* dp;
+        const char* dp;
         /* [DRAFT 12] s. 4.2.2 (does not apply in the case that
          * host name is the same as domain attribute for version 0
          * cookie)
