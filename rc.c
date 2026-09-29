@@ -58,8 +58,6 @@ int pixel_per_line_i = DEFAULT_PIXEL_PER_LINE;
 int set_pixel_per_line = FALSE;
 #endif
 
-char* rc_dir = NULL;
-char* tmp_dir;
 char* mkd_tmp_dir = NULL;
 char* config_file = NULL;
 

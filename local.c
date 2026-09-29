@@ -41,7 +41,7 @@ writeLocalCookie(void)
 
     if (Local_cookie_file)
         return;
-    Local_cookie_file = tmpfname(TMPF_COOKIE, NULL)->ptr;
+    Local_cookie_file = tmpfname(CurrentPid, TMPF_COOKIE, NULL)->ptr;
     set_environ("LOCAL_COOKIE_FILE", Local_cookie_file);
     f = fopen(Local_cookie_file, "wb");
     if (!f)
@@ -305,7 +305,7 @@ FILE* localcgi_post(char* uri, char* qstr, FormList* request, char* referer)
         return NULL;
     writeLocalCookie();
     if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
-        tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+        tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
         fw = fopen(tmpf, "w");
         if (!fw)
             return NULL;

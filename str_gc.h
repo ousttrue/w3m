@@ -3,6 +3,8 @@
 
 extern const char* Editor;
 extern const char* personal_document_root;
+extern char* rc_dir;
+extern char* tmp_dir;
 
 Str mydirname(const char* s);
 Str romanNumeral(int n);
@@ -15,4 +17,16 @@ Str expandPath(const char* name);
 Str expandName(const char* name);
 Str file_to_url(const char* file, const char* CurrentDir);
 /// resolve relative path etc. for example /path/../to/../some
-Str cleanupName(const char *name);
+Str cleanupName(const char* name);
+Str base64_encode(const char* src, size_t len);
+
+enum TmpFileType {
+    TMPF_DFL,
+    TMPF_SRC,
+    TMPF_FRAME,
+    TMPF_CACHE,
+    TMPF_COOKIE,
+    TMPF_HIST,
+    MAX_TMPF_TYPE,
+};
+Str tmpfname(int CurrentPid, enum TmpFileType type, const char* ext);

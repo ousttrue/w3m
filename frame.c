@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "alloc.h"
+#include "str_gc.h"
 #include "buffer.h"
 #include "html_parser.h"
 #include "charset.h"
@@ -931,7 +932,7 @@ renderFrame(Buffer *Cbuf, int force_reload)
     wc_ces doc_charset = DocumentCharset;
 #endif
 
-    tmp = tmpfname(TMPF_FRAME, ".html");
+    tmp = tmpfname(CurrentPid, TMPF_FRAME, ".html");
     f = fopen(tmp->ptr, "w");
     if (f == NULL)
 	return NULL;

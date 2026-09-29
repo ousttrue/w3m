@@ -2063,7 +2063,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
     f = fopen(tmpf, "w");
     if (f == NULL) {
         disp_message(Sprintf(_("Can't save buffer to %s"), cmd)->ptr, TRUE);
@@ -2695,7 +2695,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     char* tmpf;
     FILE* f;
 
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
     f = fopen(tmpf, "w");
     if (f == NULL) {
         disp_err_message(Sprintf(_("Can't open %s"), tmpf)->ptr, TRUE);
@@ -3192,7 +3192,7 @@ query_from_followform(Str* query, FormItemList* fi, int multipart)
     FILE* body = NULL;
 
     if (multipart) {
-        *query = tmpfname(TMPF_DFL, NULL);
+        *query = tmpfname(CurrentPid, TMPF_DFL, NULL);
         body = fopen((*query)->ptr, "w");
         if (body == NULL) {
             return;
@@ -4812,7 +4812,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
             wc_bool old_fix_width_conv;
 #endif
             FILE* f;
-            Str tmpf = tmpfname(TMPF_SRC, NULL);
+            Str tmpf = tmpfname(CurrentPid, TMPF_SRC, NULL);
             f = fopen(tmpf->ptr, "w");
             if (f == NULL)
                 return;

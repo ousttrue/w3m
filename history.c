@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "history.h"
 
+#include "str_gc.h"
 #include "alloc.h"
 #include "config.h"
 #include "etc.h"
@@ -128,7 +129,7 @@ saveUrlHistory(void)
 
     mtime = URLHist->mtime;
 
-    tmpf = tmpfname(TMPF_HIST, NULL)->ptr;
+    tmpf = tmpfname(CurrentPid, TMPF_HIST, NULL)->ptr;
     if ((f = fopen(tmpf, "w")) == NULL)
 	goto fail;
 

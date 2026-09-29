@@ -552,7 +552,7 @@ readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
     if (thru && !newBuf->header_source
 	&& !image_source
 	) {
-	tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+	tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
 	src = fopen(tmpf, "w");
 	if (src)
 	    newBuf->header_source = tmpf;
@@ -1952,7 +1952,7 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 	FILE *src;
 	if (image_source)
 	    return NULL;
-	tmp = tmpfname(TMPF_SRC, ".html");
+	tmp = tmpfname(CurrentPid, TMPF_SRC, ".html");
 	src = fopen(tmp->ptr, "w");
 	if (src) {
 	    Str s;
@@ -6508,7 +6508,7 @@ loadHTMLBuffer(URLFile *f, Buffer *newBuf)
 	newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (newBuf->sourcefile == NULL &&
 	(f->scheme != SCM_LOCAL || newBuf->mailcap)) {
-	tmp = tmpfname(TMPF_SRC, ".html");
+	tmp = tmpfname(CurrentPid, TMPF_SRC, ".html");
 	src = fopen(tmp->ptr, "w");
 	if (src)
 	    newBuf->sourcefile = tmp->ptr;
@@ -7170,7 +7170,7 @@ loadBuffer(URLFile *uf, Buffer *volatile newBuf)
 
     if (newBuf->sourcefile == NULL &&
 	(uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
-	tmpf = tmpfname(TMPF_SRC, NULL);
+	tmpf = tmpfname(CurrentPid, TMPF_SRC, NULL);
 	src = fopen(tmpf->ptr, "w");
 	if (src)
 	    newBuf->sourcefile = tmpf->ptr;
@@ -7275,7 +7275,7 @@ loadImageBuffer(URLFile *uf, Buffer *newBuf)
 	newBuf->sourcefile = cache->file;
 
     tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    tmpf = tmpfname(TMPF_SRC, ".html");
+    tmpf = tmpfname(CurrentPid, TMPF_SRC, ".html");
     src = fopen(tmpf->ptr, "w");
     if (src == NULL)
         return NULL;
@@ -7722,7 +7722,7 @@ doExternal(URLFile uf, const char *type, Buffer *defaultbuf)
 	if (tmpf->ptr[0] == '.')
 	    ext = tmpf->ptr;
     }
-    tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
+    tmpf = tmpfname(CurrentPid, TMPF_DFL, (ext && *ext) ? ext : NULL);
 
     if (IStype(uf.stream) != IST_ENCODED)
 	uf.stream = newEncodedStream(uf.stream, uf.encoding);
@@ -7891,7 +7891,7 @@ _doFileCopy(char *tmpf, char *defstr, int download)
 	    }
 	    return -1;
 	}
-	lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+	lock = tmpfname(CurrentPid, TMPF_DFL, ".lock")->ptr;
 	symlink(p, lock);
 	flush_tty();
 	pid = fork();
@@ -7985,7 +7985,7 @@ doFileSave(URLFile uf, const char *defstr)
 	    disp_err_message(msg->ptr, FALSE);
 	    return -1;
 	}
-	lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+	lock = tmpfname(CurrentPid, TMPF_DFL, ".lock")->ptr;
 	symlink(p, lock);
 	flush_tty();
 	pid = fork();
@@ -8145,7 +8145,7 @@ uncompress_stream(URLFile *uf, char **src)
     if (uf->scheme != SCM_LOCAL
 	&& !image_source
 	) {
-	tmpf = tmpfname(TMPF_DFL, ext)->ptr;
+	tmpf = tmpfname(CurrentPid, TMPF_DFL, ext)->ptr;
     }
 
     /* child1 -- stdout|f1=uf -> parent */

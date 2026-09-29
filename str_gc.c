@@ -2,12 +2,15 @@
 #include "config.h"
 #include "indep.h"
 #include "myctype.h"
+#include "textlist.h"
 #include <pwd.h>
 #include <libgen.h>
 #include <stdlib.h>
 
 const char* Editor = DEF_EDITOR;
 const char* personal_document_root = NULL;
+char* rc_dir = NULL;
+char* tmp_dir;
 
 Str mydirname(const char* s)
 {
@@ -374,4 +377,93 @@ Str cleanupName(const char* name)
         }
     }
     return buf;
+}
+
+static const char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+static void Strcatc(Str x, char y)
+{
+    ((x)->ptr[(x)->length++] = (y));
+}
+
+Str base64_encode(const char* src, size_t len)
+{
+    Str dest;
+    const unsigned char *in, *endw, *s;
+    unsigned long j;
+    size_t k;
+
+    s = (const unsigned char*)src;
+
+    k = len;
+    if (k % 3)
+        k += 3 - (k % 3);
+
+    k = k / 3 * 4;
+
+    if (!len || k + 1 < len)
+        return Strnew();
+
+    dest = Strnew_size(k);
+    if (dest->area_size <= k) {
+        Strfree(dest);
+        return Strnew();
+    }
+
+    in = s;
+
+    endw = s + len - 2;
+
+    while (in < endw) {
+        j = *in++;
+        j = j << 8 | *in++;
+        j = j << 8 | *in++;
+
+        Strcatc(dest, Base64Table[(j >> 18) & 0x3f]);
+        Strcatc(dest, Base64Table[(j >> 12) & 0x3f]);
+        Strcatc(dest, Base64Table[(j >> 6) & 0x3f]);
+        Strcatc(dest, Base64Table[j & 0x3f]);
+    }
+
+    if (s + len - in) {
+        j = *in++;
+        if (s + len - in) {
+            j = j << 8 | *in++;
+            j = j << 8;
+            Strcatc(dest, Base64Table[(j >> 18) & 0x3f]);
+            Strcatc(dest, Base64Table[(j >> 12) & 0x3f]);
+            Strcatc(dest, Base64Table[(j >> 6) & 0x3f]);
+        } else {
+            j = j << 8;
+            j = j << 8;
+            Strcatc(dest, Base64Table[(j >> 18) & 0x3f]);
+            Strcatc(dest, Base64Table[(j >> 12) & 0x3f]);
+            Strcatc(dest, '=');
+        }
+        Strcatc(dest, '=');
+    }
+    dest->ptr[dest->length] = '\0';
+    return dest;
+}
+
+TextList* fileToDelete;
+
+static const char* tmpf_base[MAX_TMPF_TYPE] = {
+    "tmp",
+    "src",
+    "frame",
+    "cache",
+    "cookie",
+    "hist",
+};
+static unsigned int tmpf_seq[MAX_TMPF_TYPE];
+
+Str tmpfname(int CurrentPid, enum TmpFileType type, const char* ext)
+{
+    Str tmpf = Sprintf("%s/w3m%s%d-%d%s",
+        type == TMPF_HIST ? rc_dir : tmp_dir,
+        tmpf_base[type],
+        CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
+    pushText(fileToDelete, tmpf->ptr);
+    return tmpf;
 }

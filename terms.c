@@ -4,7 +4,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
-
+#include "str_gc.h"
 #include "alloc.h"
 #include "str_const.h"
 #include "buffer.h"

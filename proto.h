@@ -503,7 +503,6 @@ extern char *url_unquote_conv(const char *url, wc_ces charset);
 extern char *url_unquote_conv0(const char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 #endif
-extern Str tmpfname(int type, const char *ext);
 #ifdef USE_M17N
 extern void docCSet(void);
 extern void defCSet(void);
@@ -588,7 +587,6 @@ extern Str getLinkNumberStr(int correction);
 
 extern void dispVer(void);
 
-extern Str base64_encode(const char *src, size_t len);
 
 extern void userMessage(void);
 #endif

@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "image.h"
+#include "str_gc.h"
 #include "alloc.h"
 #include "config.h"
 #include "etc.h"
@@ -569,7 +570,7 @@ getImage(Image * image, ParsedURL *current, int flag)
 	cache = New(ImageCache);
 	cache->url = image->url;
 	cache->current = current;
-	cache->file = tmpfname(TMPF_DFL, image->ext)->ptr;
+	cache->file = tmpfname(CurrentPid, TMPF_DFL, image->ext)->ptr;
 	cache->pid = 0;
 	cache->index = 0;
 	cache->loaded = IMG_FLAG_UNLOADED;
@@ -580,7 +581,7 @@ getImage(Image * image, ParsedURL *current, int flag)
 	    if (image->height > 0 && image->height % pixel_per_line_i > 0)
 		image->height += (pixel_per_line_i - image->height % pixel_per_line_i);
 	}
-	cache->touch = tmpfname(TMPF_DFL, NULL)->ptr;
+	cache->touch = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
 
 	cache->width = image->width ;
 	cache->height = image->height ;

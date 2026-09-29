@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "buffer.h"
-
+#include "str_gc.h"
 #include "Str.h"
 #include "alloc.h"
 #include "charset.h"
@@ -645,7 +645,7 @@ writeBufferCache(Buffer *buf)
     if (buf->firstLine == NULL)
 	goto _error1;
 
-    tmp = tmpfname(TMPF_CACHE, NULL);
+    tmp = tmpfname(CurrentPid, TMPF_CACHE, NULL);
     buf->savecache = tmp->ptr;
     cache = fopen(buf->savecache, "w");
     if (!cache)

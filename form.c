@@ -599,7 +599,7 @@ form_fputs_decode(Str s, FILE * f)
 void
 input_textarea(FormItemList *fi)
 {
-    char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    char *tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
     Str tmp;
     FILE *f;
 #ifdef USE_M17N
