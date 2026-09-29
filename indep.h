@@ -17,7 +17,7 @@ extern char* html_unquote(char* str);
 extern char* html_unquote_attr(char* str);
 extern char* file_quote(char* str);
 extern char* file_unquote(char* str);
-extern char* url_quote(char* str);
+extern char* url_quote(const char* str);
 static inline char* url_quote_conv(const char* x, wc_ces c)
 {
     return url_quote(wc_conv_strict(x, InnerCharset, c)->ptr);

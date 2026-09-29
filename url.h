@@ -26,14 +26,17 @@ enum UrlScheme {
 
 struct Url {
     enum UrlScheme scheme;
-    char* user;
-    char* pass;
-    char* host;
+    const char* user;
+    const char* pass;
+    const char* host;
     int port;
-    char* file;
-    char* real_file;
-    char* query;
-    char* label;
+    const char* file;
+    const char* real_file;
+    const char* query;
+    const char* label;
     int is_nocache;
 };
 typedef struct Url ParsedURL;
+
+const char* schemeNumToName(enum UrlScheme scheme);
+enum UrlScheme getURLScheme(const char** url);

@@ -42,6 +42,11 @@ typedef struct {
     short bottom_margin;
 } Breakpoint;
 
+struct cmdtable {
+    char *cmdname;
+    int cmd;
+};
+
 struct readbuffer {
     Str line;
     Lineprop cprop;

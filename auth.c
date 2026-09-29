@@ -61,8 +61,8 @@ add_auth_pass_entry(const struct auth_pass* ent, int netrc, int override)
 }
 
 static struct auth_pass*
-find_auth_pass_entry(char* host, int port, char* realm, char* uname,
-    int is_proxy)
+find_auth_pass_entry(const char* host, int port, const char* realm, const char* uname,
+    bool is_proxy)
 {
     struct auth_pass* ent;
     for (ent = passwords; ent != NULL; ent = ent->next) {
@@ -285,4 +285,3 @@ void loadPasswd(void)
     }
     return;
 }
-

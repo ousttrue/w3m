@@ -401,12 +401,9 @@ extern void free_ssl_ctx(void);
 extern ParsedURL *baseURL(Buffer *buf);
 extern int openSocket(char *hostname, char *remoteport_name,
 		      unsigned short remoteport_num);
-extern void parseURL(char *url, ParsedURL *p_url, ParsedURL *current);
 extern void copyParsedURL(ParsedURL *p, const ParsedURL *q);
-extern void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
 extern Str parsedURL2Str(const ParsedURL *pu);
 extern Str parsedURL2RefererStr(ParsedURL *pu);
-extern int getURLScheme(char **url);
 extern void init_stream(URLFile *uf, int scheme, InputStream stream);
 extern int mailcapMatch(struct mailcap *mcap, const char *type);
 extern struct mailcap *searchMailcap(struct mailcap *table, const char *type);

@@ -730,7 +730,6 @@ int main(int argc, char** argv)
     for (i = 0; i < load_argc; i++) {
         SearchHeader = search_header;
         DefaultType = default_type;
-        char* url;
         int retry = 0;
 
         if (!*load_argv[i]) {
@@ -738,7 +737,7 @@ int main(int argc, char** argv)
             continue;
         }
 
-        url = load_argv[i];
+        const char* url = load_argv[i];
         if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
         retry_as_local_file:
             url = file_to_url(load_argv[i], CurrentDir)->ptr;

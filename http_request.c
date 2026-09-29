@@ -110,28 +110,6 @@ static int
 #endif /* USE_SSL */
     };
 
-struct cmdtable schemetable[] = {
-    { "http", SCM_HTTP },
-    { "gopher", SCM_GOPHER },
-    { "gophers", SCM_GOPHERS },
-    { "ftp", SCM_FTP },
-    { "local", SCM_LOCAL },
-    { "file", SCM_LOCAL },
-    /*  {"exec", SCM_EXEC}, */
-    { "nntp", SCM_NNTP },
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    { "news", SCM_NEWS },
-    /*  {"news", SCM_NEWS_GROUP}, */
-    { "data", SCM_DATA },
-#ifndef USE_W3MMAILER
-    { "mailto", SCM_MAILTO },
-#endif
-#ifdef USE_SSL
-    { "https", SCM_HTTPS },
-#endif /* USE_SSL */
-    { NULL, SCM_UNKNOWN },
-};
-
 static struct table2 DefaultGuess[] = {
     { "html", "text/html" },
     { "htm", "text/html" },
@@ -156,7 +134,6 @@ static struct table2 DefaultGuess[] = {
 };
 
 static void add_index_file(ParsedURL* pu, URLFile* uf);
-static char* schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -736,7 +713,7 @@ error:
 #define COPYPATH_LOWERCASE 4
 
 static char*
-copyPath(char* orgpath, int length, int option)
+copyPath(const char* orgpath, int length, int option)
 {
     Str tmp = Strnew();
     char ch;
@@ -763,14 +740,13 @@ copyPath(char* orgpath, int length, int option)
     return tmp->ptr;
 }
 
-void parseURL(char* url, ParsedURL* p_url, ParsedURL* current)
+void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current)
 {
-    char *p, *q, *qq;
     Str tmp;
 
     url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
 
-    p = url;
+    const char* p = url;
     copyParsedURL(p_url, NULL);
     p_url->scheme = SCM_MISSING;
 
@@ -873,7 +849,7 @@ void parseURL(char* url, ParsedURL* p_url, ParsedURL* current)
     p += 2; /* scheme://foo         */
     /*          ^p is here  */
 analyze_url:
-    q = p;
+    const char* q = p;
 #ifdef INET6
     if (*q == '[') { /* rfc2732,rfc2373 compliance */
         p++;
@@ -886,11 +862,11 @@ analyze_url:
     while (*p && strchr(":/@?#", *p) == NULL)
         p++;
     switch (*p) {
-    case ':':
+    case ':': {
         /* scheme://user:pass@host or
          * scheme://host:port
          */
-        qq = q;
+        const char* qq = q;
         q = ++p;
         while (*p && strchr("@/?#", *p) == NULL)
             p++;
@@ -908,6 +884,7 @@ analyze_url:
         p_url->port = atoi(tmp->ptr);
         /* *p is one of ['\0', '/', '?', '#'] */
         break;
+    }
     case '@':
         /* scheme://user@...            */
         p_url->user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
@@ -997,7 +974,7 @@ analyze_file:
     } else
 #endif /* USE_GOPHER */
     {
-        char* cgi = strchr(p, '?');
+        const char* cgi = strchr(p, '?');
     again:
         while (*p && *p != '#' && p != cgi)
             p++;
@@ -1068,7 +1045,7 @@ void copyParsedURL(ParsedURL* p, const ParsedURL* q)
     p->query = allocStr(q->query, -1);
 }
 
-void parseURL2(char* url, ParsedURL* pu, ParsedURL* current)
+void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current)
 {
     char* p;
     Str tmp;
@@ -1373,40 +1350,6 @@ Str parsedURL2RefererStr(ParsedURL* pu)
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
-int getURLScheme(char** url)
-{
-    char *p = *url, *q;
-    int i;
-    int scheme = SCM_MISSING;
-
-    while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
-        p++;
-    if (*p == ':') { /* scheme found */
-        scheme = SCM_UNKNOWN;
-        for (i = 0; (q = schemetable[i].cmdname) != NULL; i++) {
-            int len = strlen(q);
-            if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-                scheme = schemetable[i].cmd;
-                *url = p + 1;
-                break;
-            }
-        }
-    }
-    return scheme;
-}
-
-static char*
-schemeNumToName(int scheme)
-{
-    int i;
-
-    for (i = 0; schemetable[i].cmdname != NULL; i++) {
-        if (schemetable[i].cmd == scheme)
-            return schemetable[i].cmdname;
-    }
-    return NULL;
-}
-
 static char*
 otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
 {
@@ -1610,7 +1553,7 @@ openURL(char* url, ParsedURL* pu, ParsedURL* current,
 {
     Str tmp;
     int sock, scheme;
-    char *p, *q, *u;
+    char *p, *q;
 #ifdef USE_GOPHER
     Str gophertmp;
     char type;
@@ -1631,7 +1574,7 @@ openURL(char* url, ParsedURL* pu, ParsedURL* current,
         init_stream(&uf, SCM_MISSING, NULL);
     }
 
-    u = url;
+    const char* u = url;
     scheme = getURLScheme(&u);
     if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
         u = file_to_url(url, CurrentDir)->ptr; /* force to local file */
@@ -2455,4 +2398,3 @@ bool is_localhost(const char* host)
         return TRUE;
     return FALSE;
 }
-

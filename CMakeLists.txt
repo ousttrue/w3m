@@ -25,6 +25,7 @@ add_compile_options(
   -Wtype-limits
   -Wuninitialized
   -Wunused
+  -Wno-unused-result
   -g
   -O2)
 
@@ -47,6 +48,7 @@ add_executable(
   ${TARGET_NAME}
   main.c
   keybind.c
+  url.c
   growbuf.c
   alloc.c
   file.c
