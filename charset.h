@@ -1,14 +1,12 @@
 #pragma once
 #include "config.h"
-
+#include "str_gc.h"
 #include "libwc/wc.h"
 #include "libwc/wc_types.h"
 #include "libwc/wtf.h"
 
-extern const wc_ces InnerCharset;
 extern wc_ces DisplayCharset;
 extern wc_ces DocumentCharset;
-extern wc_ces SystemCharset;
 extern wc_ces BookmarkCharset;
 extern char ExtHalfdump;
 extern char FollowLocale;

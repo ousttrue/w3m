@@ -12,7 +12,6 @@
 #include "config.h"
 #include "display.h"
 #include "download.h"
-#include "etc.h"
 #include "frame.h"
 #include "fm.h"
 #include "func.h"
@@ -471,21 +470,6 @@ acceptableEncoding(void)
 	Strcat_charp(encodings, p);
     }
     return encodings->ptr;
-}
-
-/* 
- * convert line
- */
-Str
-convertLine(URLFile *uf, Str line, int mode, wc_ces * charset,
-	    wc_ces doc_charset)
-{
-    line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
-    if (mode != RAW_MODE)
-	cleanup_line(line, mode);
-    if (uf && uf->scheme == SCM_NEWS)
-	Strchop(line);
-    return line;
 }
 
 int

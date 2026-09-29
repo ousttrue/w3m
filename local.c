@@ -4,7 +4,6 @@
 #include "str_gc.h"
 #include "str_const.h"
 #include "charset.h"
-#include "etc.h"
 #include "proto.h"
 #include "rc.h"
 #include "terms.h"

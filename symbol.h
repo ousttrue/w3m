@@ -16,12 +16,8 @@ extern int symbol_width0;
 #ifdef USE_M17N
 extern char **get_symbol(wc_ces charset, int *width);
 extern char **set_symbol(int width);
-extern Str convertLine(URLFile *uf, Str line, int mode, wc_ces * charset,
-		       wc_ces doc_charset);
 #else
 extern char **get_symbol(void);
-extern Str convertLine0(URLFile *uf, Str line, int mode);
-#define convertLine(uf,line,mode,charset,dcharset) convertLine0(uf,line,mode)
 #endif
 extern void push_symbol(Str str, char symbol, int width, int n);
 #ifdef USE_UNICODE

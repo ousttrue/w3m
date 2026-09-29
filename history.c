@@ -4,7 +4,6 @@
 #include "str_gc.h"
 #include "alloc.h"
 #include "config.h"
-#include "etc.h"
 #include "fm.h"
 #include "proto.h"
 #include "rc.h"

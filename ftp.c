@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "Str.h"
+#include "str_gc.h"
 #include "alloc.h"
 #include "str_const.h"
 #include "auth.h"
@@ -533,7 +534,7 @@ loadFTPDir0(ParsedURL *pu)
 	Strcat_char(tmp, '/');
     fn = html_quote(tmp->ptr);
     tmp =
-	convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
+	convertLine(false, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
 		    charset, doc_charset);
     q = html_quote(tmp->ptr);
     FTPDIRtmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", fn,

@@ -4,7 +4,6 @@
 #include "charset.h"
 #include "config.h"
 #include "display.h"
-#include "etc.h"
 #include "fm.h"
 #include "proto.h"
 #include "myctype.h"
@@ -435,11 +434,12 @@ loadNewsgroup0(ParsedURL *pu)
 		continue;
 	    *q = '\0';
 	    tmp = decodeMIME(Strnew_charp(s), &mime_charset);
-	    s = convertLine(&f, tmp, HEADER_MODE,
+	    bool do_chop = f.scheme == SCM_NEWS;
+	    s = convertLine(do_chop, tmp, HEADER_MODE,
 			    mime_charset ? &mime_charset : charset,
 			    mime_charset ? mime_charset : doc_charset)->ptr;
 	    tmp = decodeMIME(Strnew_charp(n), &mime_charset);
-	    n = convertLine(&f, tmp, HEADER_MODE,
+	    n = convertLine(do_chop, tmp, HEADER_MODE,
 			    mime_charset ? &mime_charset : charset,
 			    mime_charset ? mime_charset : doc_charset)->ptr;
 	    add_news_message(page, i, t, n, s, p, scheme,

@@ -51,7 +51,6 @@ add_executable(
   line.c
   buffer.c
   display.c
-  etc.c
   mymktime.c
   subprocess.c
   str_const.c

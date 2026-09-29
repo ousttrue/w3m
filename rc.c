@@ -9,7 +9,6 @@
 #include "config.h"
 #include "cookie.h"
 #include "display.h"
-#include "etc.h"
 #include "fm.h"
 #include "proto.h"
 #include "menu.h"
@@ -569,10 +568,8 @@ int MaxNewsMessage = 50;
 #endif
 
 #ifdef USE_M17N
-const wc_ces InnerCharset = WC_CES_WTF;
 wc_ces DisplayCharset = DISPLAY_CHARSET;
 wc_ces DocumentCharset = DOCUMENT_CHARSET;
-wc_ces SystemCharset = SYSTEM_CHARSET;
 wc_ces BookmarkCharset = SYSTEM_CHARSET;
 char ExtHalfdump = FALSE;
 char FollowLocale = TRUE;

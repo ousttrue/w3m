@@ -10,7 +10,6 @@
 #include "cookie.h"
 #include "display.h"
 #include "download.h"
-#include "etc.h"
 #include "fm.h"
 #include "func.h"
 #include "proto.h"
@@ -232,7 +231,7 @@ int main(int argc, char** argv)
     deprecated = 1 << 2;
 #endif
 
-    fileToDelete = newTextList();
+    initFileToDelete();
 
     /*
      * An empty URL means to open a new tab. If -N was provided we need
@@ -5822,7 +5821,6 @@ getCodePage(void)
 void deleteFiles(void)
 {
     Buffer* buf;
-    char* f;
 
     for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
         while (Firstbuf && Firstbuf != NO_BUFFER) {
@@ -5831,7 +5829,9 @@ void deleteFiles(void)
             Firstbuf = buf;
         }
     }
-    while ((f = popText(fileToDelete)) != NULL) {
+
+    const char* f;
+    while ((f = popFileToDelete()) != NULL) {
         unlink(f);
         if (enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
             Str firstframe = Strnew_charp(f);

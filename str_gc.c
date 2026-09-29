@@ -7,6 +7,8 @@
 #include <libgen.h>
 #include <stdlib.h>
 
+const wc_ces InnerCharset = WC_CES_WTF;
+wc_ces SystemCharset = SYSTEM_CHARSET;
 const char* Editor = DEF_EDITOR;
 const char* personal_document_root = NULL;
 char* rc_dir = NULL;
@@ -448,6 +450,21 @@ Str base64_encode(const char* src, size_t len)
 
 TextList* fileToDelete;
 
+void initFileToDelete()
+{
+    fileToDelete = newTextList();
+}
+
+void pushTmpFile(const char* tmpf)
+{
+    pushText(fileToDelete, tmpf);
+}
+
+const char* popFileToDelete()
+{
+    return popText(fileToDelete);
+}
+
 static const char* tmpf_base[MAX_TMPF_TYPE] = {
     "tmp",
     "src",
@@ -466,4 +483,31 @@ Str tmpfname(int CurrentPid, enum TmpFileType type, const char* ext)
         CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
     pushText(fileToDelete, tmpf->ptr);
     return tmpf;
+}
+
+/*
+ * convert line
+ */
+Str convertLine(bool do_chop, Str line, int mode, wc_ces* charset, wc_ces doc_charset)
+{
+    line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
+    if (mode != RAW_MODE)
+        cleanup_line(line, mode);
+    // if (uf && uf->scheme == SCM_NEWS)
+    if (do_chop)
+        Strchop(line);
+    return line;
+}
+
+char* url_unquote_conv(const char* url, wc_ces charset)
+{
+    wc_uint8 old_auto_detect = WcOption.auto_detect;
+    Str tmp;
+    tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
+    if (!charset || charset == WC_CES_US_ASCII)
+        charset = SystemCharset;
+    WcOption.auto_detect = WC_OPT_DETECT_ON;
+    tmp = convertLine(false, tmp, RAW_MODE, &charset, charset);
+    WcOption.auto_detect = old_auto_detect;
+    return tmp->ptr;
 }
