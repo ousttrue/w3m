@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "indep.h"
-
+#include "growbuf.h"
 #include <fcntl.h>
 #include <stdio.h>
 

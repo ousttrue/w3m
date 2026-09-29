@@ -47,6 +47,7 @@ add_executable(
   ${TARGET_NAME}
   main.c
   keybind.c
+  growbuf.c
   file.c
   line.c
   buffer.c

@@ -13,14 +13,6 @@
 #define FALSE 0
 #define TRUE 1
 
-struct growbuf {
-    char* ptr;
-    int length;
-    int area_size;
-    void* (*realloc_proc)(void*, size_t);
-    void (*free_proc)(void*);
-};
-
 enum {
     RAW_MODE,
     PAGER_MODE,
@@ -72,18 +64,11 @@ extern Str Str_url_unquote(Str x, int is_form, int safe);
 extern Str Str_form_quote(Str x);
 #define Str_form_unquote(x) Str_url_unquote((x), TRUE, FALSE)
 extern const char* shell_quote(const char* str);
-#define xmalloc(s) xrealloc(NULL, s)
 extern void* xrealloc(void* ptr, size_t size);
-extern void* w3m_GC_realloc_atomic(void* ptr, size_t size);
-extern void w3m_GC_free(void* ptr);
-extern void growbuf_init(struct growbuf* gb);
-extern void growbuf_init_without_GC(struct growbuf* gb);
-extern void growbuf_clear(struct growbuf* gb);
-extern Str growbuf_to_Str(struct growbuf* gb);
-extern void growbuf_reserve(struct growbuf* gb, int leastarea);
-extern void growbuf_append(struct growbuf* gb, const unsigned char* src, int len);
-#define GROWBUF_ADD_CHAR(gb, ch) ((((gb)->length >= (gb)->area_size) ? growbuf_reserve(gb, (gb)->length + 1) : (void)0), (void)((gb)->ptr[(gb)->length++] = (ch)))
-
+static inline void* xmalloc(size_t s)
+{
+    return xrealloc(NULL, s);
+}
 extern const char* w3m_auxbin_dir(void);
 extern const char* w3m_lib_dir(void);
 extern const char* w3m_etc_dir(void);
