@@ -367,7 +367,7 @@ setModtime(const char* path, time_t modtime)
     return utime(path, &t);
 }
 
-void examineFile(char* path, URLFile* uf)
+void examineFile(const char* path, URLFile* uf)
 {
     struct stat stbuf;
 
@@ -1518,7 +1518,7 @@ loadGeneralFile(char* path, ParsedURL* volatile current, char* referer,
     Buffer* b = NULL;
     Buffer* (*volatile proc)(URLFile*, Buffer*);
     char* volatile tpath;
-    char *t = "text/plain", *p, *volatile real_type = NULL;
+    char *t = "text/plain", *volatile real_type = NULL;
     Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = TRUE;
@@ -1633,7 +1633,10 @@ load_doc:
     if (header_string)
         header_string = NULL;
     TRAP_ON;
-    if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy && needs_proxy(pu.host))) {
+    const char* p;
+    if (pu.scheme == SCM_HTTP
+        || pu.scheme == SCM_HTTPS
+        || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy && needs_proxy(pu.host))) {
 
         if (fmInitialized) {
             term_cbreak();
@@ -1734,7 +1737,7 @@ load_doc:
         if (t == NULL)
             t = "text/plain";
     } else if (pu.scheme == SCM_GOPHER || pu.scheme == SCM_GOPHERS) {
-        p = pu.file;
+        const char* p = pu.file;
         while (*p == '/')
             ++p;
         switch (*p) {
@@ -5265,7 +5268,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     break;
                 case HTML_A:
                     if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                        p = url_quote_conv(p, buf->document_charset);
+                        p = url_quote_conv(p, buf->document_charset)->ptr;
                         if (!idFrame || strcmp(idFrame->body->name, p)) {
                             idFrame = search_frame(renderFrameSet, p);
                             if (idFrame && idFrame->body->attr != F_BODY)
@@ -5278,14 +5281,14 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     hseq = 0;
                     id = NULL;
                     if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
-                        id = url_quote_conv(id, name_charset);
+                        id = url_quote_conv(id, name_charset)->ptr;
                         registerName(buf, id, currentLn(buf), pos);
                     }
                     if (parsedtag_get_value(tag, ATTR_HREF, &p))
                         p = url_encode(remove_space(p), base,
                             buf->document_charset);
                     if (parsedtag_get_value(tag, ATTR_TARGET, &q))
-                        q = url_quote_conv(q, buf->document_charset);
+                        q = url_quote_conv(q, buf->document_charset)->ptr;
                     if (parsedtag_get_value(tag, ATTR_REFERER, &r))
                         r = url_encode(r, base,
                             buf->document_charset);
@@ -5356,8 +5359,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                         }
                         s = NULL;
                         parsedtag_get_value(tag, ATTR_TITLE, &s);
-                        p = url_quote_conv(remove_space(p),
-                            buf->document_charset);
+                        p = url_quote_conv(remove_space(p), buf->document_charset)->ptr;
                         a_img = registerImg(buf, p, s, currentLn(buf), pos);
                         a_img->hseq = iseq;
                         a_img->image = NULL;
@@ -5557,7 +5559,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
 #endif
                     }
                     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-                        buf->baseTarget = url_quote_conv(p, buf->document_charset);
+                        buf->baseTarget = url_quote_conv(p, buf->document_charset)->ptr;
                     break;
                 case HTML_META:
                     p = q = NULL;
@@ -5653,11 +5655,11 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                 }
                 id = NULL;
                 if (parsedtag_get_value(tag, ATTR_ID, &id)) {
-                    id = url_quote_conv(id, name_charset);
+                    id = url_quote_conv(id, name_charset)->ptr;
                     registerName(buf, id, currentLn(buf), pos);
                 }
                 if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-                    p = url_quote_conv(p, buf->document_charset);
+                    p = url_quote_conv(p, buf->document_charset)->ptr;
                     if (!idFrame || strcmp(idFrame->body->name, p)) {
                         idFrame = search_frame(renderFrameSet, p);
                         if (idFrame && idFrame->body->attr != F_BODY)
@@ -7558,7 +7560,7 @@ _MoveFile(const char* path1, const char* path2)
     return 0;
 }
 
-int _doFileCopy(char* tmpf, char* defstr, int download)
+int _doFileCopy(const char* tmpf, const char* defstr, int download)
 {
     Str msg;
     Str filen;
@@ -7976,7 +7978,7 @@ guess_filename(const char* file)
     return s;
 }
 
-char* guess_save_name(Buffer* buf, char* path)
+char* guess_save_name(Buffer* buf, const char* path)
 {
     if (buf && buf->document_header) {
         Str name = NULL;

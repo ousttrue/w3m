@@ -107,7 +107,7 @@ loadUrlHistory(void)
 	Strremovetrailingspaces(line);
 	if (line->length == 0)
 	    continue;
-	pushHist(URLHist, url_quote(line->ptr));
+	pushHist(URLHist, url_quote(line->ptr)->ptr);
     }
     fclose(f);
     return 0;

@@ -1,4 +1,8 @@
 #pragma once
+#include "libwc/wc.h"
+#include "libwc/ces.h"
+
+extern const char* HostName;
 
 /*
  * Those SCM_ define the indeces of DefaultPort in url.c and scheme_str[] in
@@ -40,3 +44,9 @@ typedef struct Url ParsedURL;
 
 const char* schemeNumToName(enum UrlScheme scheme);
 enum UrlScheme getURLScheme(const char** url);
+int getDefaultPort(enum UrlScheme scheme);
+bool is_localhost(const char* host);
+void copyParsedURL(ParsedURL *p, const ParsedURL *q);
+Str url_quote(const char* str);
+Str url_quote_conv(const char* x, wc_ces c);
+void parseURL(const char* url, ParsedURL* p_url, ParsedURL* current);

@@ -4,8 +4,11 @@
 
 #include <sys/stat.h>
 #include <dirent.h>
+#include "Str.h"
 
 #define NOT_REGULAR(m)  (((m) & S_IFMT) != S_IFREG)
 #define IS_DIRECTORY(m) (((m) & S_IFMT) == S_IFDIR)
+
+Str loadLocalDir(const char *dirname);
 
 #endif

@@ -176,18 +176,12 @@ extern Str searchURIMethods(ParsedURL *pu);
 extern void chkExternalURIBuffer(Buffer *buf);
 #endif
 extern ParsedURL *schemeToProxy(int scheme);
-#ifdef USE_M17N
+
 extern wc_ces url_to_charset(char *url, ParsedURL *base,
 			     wc_ces doc_charset);
-extern char *url_encode(char *url, ParsedURL *base,
-			wc_ces doc_charset);
 extern char *url_decode2(char *url, Buffer *buf);
-#else /* !defined(USE_M17N) */
-#define url_encode(url, base, cs) url_quote(url)
-extern char *url_decode0(char *url);
-#define url_decode2(url, buf) url_decode0(url)
-#endif /* !defined(USE_M17N) */
-extern void examineFile(char *path, URLFile *uf);
+
+extern void examineFile(const char *path, URLFile *uf);
 extern char *acceptableEncoding(void);
 extern int dir_exist(const char *path);
 extern int is_html_type(const char *type);
@@ -268,8 +262,10 @@ extern Buffer *openGeneralPagerBuffer(InputStream stream);
 extern Line *getNextPage(Buffer *buf, int plen);
 extern int save2tmp(URLFile uf, const char *tmpf);
 extern Buffer *doExternal(URLFile uf, const char *type, Buffer *defaultbuf);
-extern int _doFileCopy(char *tmpf, char *defstr, int download);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
+extern int _doFileCopy(const char *tmpf, const char *defstr, int download);
+static inline int  doFileCopy(const char *tmpf, const char *defstr){
+    return _doFileCopy(tmpf, defstr, false);
+}
 extern int doFileMove(char *tmpf, char *defstr);
 extern int doFileSave(URLFile uf, const char *defstr);
 extern int checkCopyFile(const char *path1, const char *path2);
@@ -401,7 +397,6 @@ extern void free_ssl_ctx(void);
 extern ParsedURL *baseURL(Buffer *buf);
 extern int openSocket(char *hostname, char *remoteport_name,
 		      unsigned short remoteport_num);
-extern void copyParsedURL(ParsedURL *p, const ParsedURL *q);
 extern Str parsedURL2Str(const ParsedURL *pu);
 extern Str parsedURL2RefererStr(ParsedURL *pu);
 extern void init_stream(URLFile *uf, int scheme, InputStream stream);
@@ -414,7 +409,6 @@ extern Str unquote_mailcap(char *qstr, const char *type, char *name, char *attr,
 			   int *mc_stat);
 extern char *guessContentType(const char *filename);
 extern TextList *make_domain_list(char *domain_list);
-extern int needs_proxy(char *domain);
 extern InputStream openFTPStream(ParsedURL *pu, URLFile *uf);
 #ifdef USE_M17N
 extern Str loadFTPDir(ParsedURL *pu, wc_ces * charset);
@@ -487,7 +481,6 @@ extern Str decodeMIME0(Str orgstr);
 #define decodeMIME(orgstr,charset) decodeMIME0(orgstr)
 #endif
 extern Str localCookie(void);
-extern Str loadLocalDir(char *dirname);
 extern void set_environ(const char *var, const char *value);
 extern FILE *localcgi_post(char *, char *, FormList *, char *);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
@@ -571,7 +564,7 @@ extern void dictwordat(void);
 #define dictword nulcmd
 #define dictwordat nulcmd
 #endif				/* not USE_DICT */
-extern char *guess_save_name(Buffer *buf, char *file);
+extern char *guess_save_name(Buffer *buf, const char *file);
 
 extern void wrapToggle(void);
 

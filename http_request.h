@@ -37,7 +37,6 @@ URLFile openURL(char* url, ParsedURL* pu, ParsedURL* current,
 extern Str header_string;
 extern int override_content_type;
 extern int override_user_agent;
-extern char* HostName;
 extern char* w3m_reqlog;
 
 extern char use_proxy;
@@ -78,7 +77,7 @@ extern int ssl_path_modified;
 #endif
 #endif
 
-bool is_localhost(const char* host);
 
 void parseURL2(const char* url, ParsedURL* pu, ParsedURL* current);
-void parseURL(const char *url, ParsedURL *p_url, ParsedURL *current);
+int needs_proxy(const char *domain);
+char *url_encode(const char *url, ParsedURL *base, wc_ces doc_charset);

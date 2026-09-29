@@ -25,7 +25,7 @@ struct frame_body {
     char *name;
     char *url;
     ParsedURL *baseURL;
-    char *source;
+    const char *source;
     char *type;
     char *referer;
     AnchorList *nameList;

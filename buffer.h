@@ -60,7 +60,7 @@ typedef struct _BufferPos {
 } BufferPos;
 
 typedef struct _Buffer {
-    char *filename;
+    const char *filename;
     char *buffername;
     Line *firstLine;
     Line *topLine;

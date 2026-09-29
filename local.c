@@ -61,7 +61,7 @@ Str localCookie(void)
     return Local_cookie;
 }
 
-Str loadLocalDir(char* dname)
+Str loadLocalDir(const char* dname)
 {
     Str tmp;
     DIR* d;

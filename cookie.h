@@ -50,7 +50,7 @@ Str find_cookie(ParsedURL *pu);
 int add_cookie(ParsedURL *pu, Str name, Str value, time_t expires,
 	       Str domain, Str path, int flag, Str comment, int version,
 	       Str port, Str commentURL);
-int check_cookie_accept_domain(char *domain);
+int check_cookie_accept_domain(const char *domain);
 void cooLst(void);
 void initCookie(void);
 void parse_cookie(void);
