@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "istream.h"
-
+#include "alloc.h"
 #include "config.h"
 #include "rc.h"
 #include "terms.h"

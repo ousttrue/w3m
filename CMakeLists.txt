@@ -48,6 +48,7 @@ add_executable(
   main.c
   keybind.c
   growbuf.c
+  alloc.c
   file.c
   line.c
   buffer.c

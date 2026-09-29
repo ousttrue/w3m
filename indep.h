@@ -64,20 +64,12 @@ extern Str Str_url_unquote(Str x, int is_form, int safe);
 extern Str Str_form_quote(Str x);
 #define Str_form_unquote(x) Str_url_unquote((x), TRUE, FALSE)
 extern const char* shell_quote(const char* str);
-extern void* xrealloc(void* ptr, size_t size);
-static inline void* xmalloc(size_t s)
-{
-    return xrealloc(NULL, s);
-}
+
 extern const char* w3m_auxbin_dir(void);
 extern const char* w3m_lib_dir(void);
 extern const char* w3m_etc_dir(void);
 extern const char* w3m_conf_dir(void);
 extern const char* w3m_help_dir(void);
-
-#define NewWithoutGC(type) ((type*)xmalloc(sizeof(type)))
-#define NewWithoutGC_N(type, n) ((type*)xmalloc((n) * sizeof(type)))
-#define NewWithoutGC_Reuse(type, ptr, n) ((type*)xrealloc(ptr, (n) * sizeof(type)))
 
 extern char* CurrentDir;
 extern int CurrentPid;

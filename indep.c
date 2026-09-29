@@ -10,7 +10,6 @@
 #include "myctype.h"
 #include "pathdefs.h"
 
-#include <gc/gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/param.h>
@@ -757,16 +756,6 @@ shell_quote(const char* str)
     return str;
 }
 
-void* xrealloc(void* ptr, size_t size)
-{
-    void* newptr = realloc(ptr, size);
-    if (newptr == NULL) {
-        fprintf(stderr, "Out of memory\n");
-        exit(-1);
-    }
-    return newptr;
-}
-
 static const char*
 w3m_dir(const char* name, const char* dft)
 {
@@ -808,7 +797,3 @@ w3m_help_dir(void)
 {
     return w3m_dir("W3M_HELP_DIR", HELP_DIR);
 }
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

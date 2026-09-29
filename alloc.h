@@ -16,6 +16,9 @@ z_mult_no_oflow_(size_t n, size_t size)
     return n * size;
 }
 
+//
+// with GC
+//
 #define New(type) \
     (GC_MALLOC(sizeof(type)))
 
@@ -30,3 +33,15 @@ z_mult_no_oflow_(size_t n, size_t size)
 
 #define New_Reuse(type, ptr, n) \
     (GC_REALLOC((ptr), z_mult_no_oflow_((n), sizeof(type))))
+
+//
+// without GC
+//
+void* xrealloc(void* ptr, size_t size);
+static inline void* xmalloc(size_t s)
+{
+    return xrealloc(NULL, s);
+}
+#define NewWithoutGC(type) ((type*)xmalloc(sizeof(type)))
+#define NewWithoutGC_N(type, n) ((type*)xmalloc((n) * sizeof(type)))
+#define NewWithoutGC_Reuse(type, ptr, n) ((type*)xrealloc(ptr, (n) * sizeof(type)))

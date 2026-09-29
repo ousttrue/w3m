@@ -1,6 +1,5 @@
 #include "growbuf.h"
 #include "alloc.h"
-#include "indep.h"
 #include <gc/gc.h>
 #include <stdlib.h>
 
