@@ -94,18 +94,6 @@ char* remove_space(char* str)
     return p;
 }
 
-int non_null(const char* s)
-{
-    if (s == NULL)
-        return FALSE;
-    while (*s) {
-        if (!IS_SPACE(*s))
-            return TRUE;
-        s++;
-    }
-    return FALSE;
-}
-
 /* Parse an HTML entity.  Returns NULL on failure and a string on success.
  * *str is set to the last byte parsed both on success and failure.
  * is_attr produces stricter processing of `;' for attribute values.

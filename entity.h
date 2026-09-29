@@ -2150,4 +2150,6 @@ const short entity_char_start[] = {
     /* z */ 2112,
 };
 
+extern char* conv_entity(unsigned int ch);
+
 #endif

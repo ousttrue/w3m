@@ -1,7 +1,4 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef W3M_INDEP_H
-#define W3M_INDEP_H
-
+#pragma once
 #include "Str.h"
 #include "config.h"
 #include "libwc/wc.h"
@@ -13,8 +10,6 @@
 #define FALSE 0
 #define TRUE 1
 
-extern size_t strtoclen(const char* s);
-extern char* conv_entity(unsigned int ch);
 extern char* getescapestr(char** s, int is_attr, int* pis_simple);
 extern char* getescapecmd(char** s);
 extern char* allocStr(const char* s, int len);
@@ -25,7 +20,6 @@ extern char* strcasestr(const char* s1, const char* s2);
 #endif
 int strmatchlen(const char* s1, const char* s2, int maxlen);
 extern char* remove_space(char* str);
-extern int non_null(const char* s);
 extern char* html_quote(char* str);
 extern char* html_unquote(char* str);
 extern char* html_unquote_attr(char* str);
@@ -44,5 +38,3 @@ extern const char* shell_quote(const char* str);
 
 extern char* CurrentDir;
 extern int CurrentPid;
-
-#endif
