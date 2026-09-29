@@ -1671,7 +1671,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = Currentbuf->LINES / 2 - Currentbuf->cursorY;
+    offsety = /*Currentbuf->LINES / 2*/ - Currentbuf->cursorY;
     if (offsety != 0) {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, FALSE);
         arrangeLine(Currentbuf);
