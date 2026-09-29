@@ -26,83 +26,81 @@ enum {
     DISPLAY_INS_DEL_FONTIFY,
 };
 
-
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
-#define MAXIMUM_PIXEL_PER_CHAR  32.0
-#define MINIMUM_PIXEL_PER_CHAR  4.0
+#define MAXIMUM_PIXEL_PER_CHAR 32.0
+#define MINIMUM_PIXEL_PER_CHAR 4.0
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
-#define SCONF_RESERVED		0
-#define SCONF_SUBSTITUTE_URL	1
-#define SCONF_URL_CHARSET	2
-#define SCONF_NO_REFERER_FROM	3
-#define SCONF_NO_REFERER_TO	4
-#define SCONF_USER_AGENT	5
-#define SCONF_N_FIELD		6
-#define query_SCONF_SUBSTITUTE_URL(pu) ((char *)querySiteconf(pu, SCONF_SUBSTITUTE_URL))
-#define query_SCONF_USER_AGENT(pu) ((const char *)querySiteconf(pu, SCONF_USER_AGENT))
-#define query_SCONF_URL_CHARSET(pu) ((const wc_ces *)querySiteconf(pu, SCONF_URL_CHARSET))
-#define query_SCONF_NO_REFERER_FROM(pu) ((const int *)querySiteconf(pu, SCONF_NO_REFERER_FROM))
-#define query_SCONF_NO_REFERER_TO(pu) ((const int *)querySiteconf(pu, SCONF_NO_REFERER_TO))
+#define SCONF_RESERVED 0
+#define SCONF_SUBSTITUTE_URL 1
+#define SCONF_URL_CHARSET 2
+#define SCONF_NO_REFERER_FROM 3
+#define SCONF_NO_REFERER_TO 4
+#define SCONF_USER_AGENT 5
+#define SCONF_N_FIELD 6
+#define query_SCONF_SUBSTITUTE_URL(pu) ((char*)querySiteconf(pu, SCONF_SUBSTITUTE_URL))
+#define query_SCONF_USER_AGENT(pu) ((const char*)querySiteconf(pu, SCONF_USER_AGENT))
+#define query_SCONF_URL_CHARSET(pu) ((const wc_ces*)querySiteconf(pu, SCONF_URL_CHARSET))
+#define query_SCONF_NO_REFERER_FROM(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_FROM))
+#define query_SCONF_NO_REFERER_TO(pu) ((const int*)querySiteconf(pu, SCONF_NO_REFERER_TO))
 
 #ifdef USE_IMAGE
-#define DEFAULT_PIXEL_PER_CHAR  7.0	/* arbitrary */
-#define DEFAULT_PIXEL_PER_LINE  14.0	/* arbitrary */
+#define DEFAULT_PIXEL_PER_CHAR 7.0 /* arbitrary */
+#define DEFAULT_PIXEL_PER_LINE 14.0 /* arbitrary */
 #else
-#define DEFAULT_PIXEL_PER_CHAR  8.0	/* arbitrary */
+#define DEFAULT_PIXEL_PER_CHAR 8.0 /* arbitrary */
 #endif
 
-Buffer *load_option_panel(void);
-char *auxbinFile(const char *base);
-char *confFile(const char *base);
-char *get_param_option(char *name);
-char *rcFile(char *base);
-int set_param_option(char *option);
-int str_to_bool(const char *value, int old);
-void *querySiteconf(ParsedURL *query_pu, int field);
+Buffer* load_option_panel(void);
+Str auxbinFile(const char* base);
+Str confFile(const char* base);
+char* get_param_option(char* name);
+Str rcFile(const char* base);
+int set_param_option(char* option);
+int str_to_bool(const char* value, int old);
+void* querySiteconf(ParsedURL* query_pu, int field);
 void init_rc(void);
-void panel_set_option(struct parsed_tagarg *arg);
-void show_params(FILE * fp);
+void panel_set_option(struct parsed_tagarg* arg);
+void show_params(FILE* fp);
 void sync_with_option(void);
 
-extern char *AcceptEncoding;
-extern char *AcceptLang;
-extern char *AcceptMedia;
-extern char *BookmarkFile;
-extern char *ExtBrowser2;
-extern char *ExtBrowser3;
-extern char *ExtBrowser4;
-extern char *ExtBrowser5;
-extern char *ExtBrowser6;
-extern char *ExtBrowser7;
-extern char *ExtBrowser8;
-extern char *ExtBrowser9;
-extern char *ExtBrowser;
-extern char *Mailer;
-extern char *NNTP_mode;
-extern char *NNTP_server;
-extern char *UserAgent;
-extern char *cgi_bin;
-extern char *config_file;
-extern char *cookie_accept_domains;
-extern char *cookie_avoid_wrong_number_of_dots;
-extern char *cookie_reject_domains;
-extern char *document_root;
-extern char *ftppasswd;
-extern char *index_file;
-extern char *keymap_file;
-extern char *mailcap_files;
-extern char *mimetypes_files;
-extern char *mkd_tmp_dir;
-extern char *param_dl_dir;
-extern char *param_tmp_dir;
-extern char *passwd_file;
-extern char *personal_document_root;
-extern char *pre_form_file;
-extern char *rc_dir;
-extern char *siteconf_file;
-extern char *tmp_dir;
+extern char* AcceptEncoding;
+extern char* AcceptLang;
+extern char* AcceptMedia;
+extern char* BookmarkFile;
+extern char* ExtBrowser2;
+extern char* ExtBrowser3;
+extern char* ExtBrowser4;
+extern char* ExtBrowser5;
+extern char* ExtBrowser6;
+extern char* ExtBrowser7;
+extern char* ExtBrowser8;
+extern char* ExtBrowser9;
+extern char* ExtBrowser;
+extern char* Mailer;
+extern char* NNTP_mode;
+extern char* NNTP_server;
+extern char* UserAgent;
+extern char* cgi_bin;
+extern char* config_file;
+extern char* cookie_accept_domains;
+extern char* cookie_avoid_wrong_number_of_dots;
+extern char* cookie_reject_domains;
+extern char* document_root;
+extern char* ftppasswd;
+extern char* index_file;
+extern char* keymap_file;
+extern char* mailcap_files;
+extern char* mimetypes_files;
+extern char* mkd_tmp_dir;
+extern char* param_dl_dir;
+extern char* param_tmp_dir;
+extern char* passwd_file;
+extern char* pre_form_file;
+extern char* rc_dir;
+extern char* siteconf_file;
+extern char* tmp_dir;
 extern char ArgvIsURL;
 extern char AutoUncompress;
 extern char DecodeCTE;
@@ -115,8 +113,7 @@ extern char RenderFrame;
 extern char TargetSelf;
 extern char UseAltEntity;
 extern char UseGraphicChar;
-extern const char *DirBufferCommand;
-extern const char *Editor;
+extern const char* DirBufferCommand;
 extern double pixel_per_char;
 extern int BackgroundExtViewer;
 extern int CrossOriginReferer;
@@ -175,26 +172,26 @@ extern int vi_prec_num;
 extern int zeroBasedLinkNo;
 
 #ifdef INET6
-#define DNS_ORDER_UNSPEC     0
+#define DNS_ORDER_UNSPEC 0
 #define DNS_ORDER_INET_INET6 1
 #define DNS_ORDER_INET6_INET 2
-#define DNS_ORDER_INET_ONLY  4
+#define DNS_ORDER_INET_ONLY 4
 #define DNS_ORDER_INET6_ONLY 6
 extern int DNS_order;
 #endif
 
 #ifdef USE_DICT
 extern int UseDictCommand;
-extern const char *DictCommand;
-extern const char *DictPrompt;
-#endif				/* USE_DICT */
+extern const char* DictCommand;
+extern const char* DictPrompt;
+#endif /* USE_DICT */
 
 #ifdef USE_EXTERNAL_URI_LOADER
-extern char *urimethodmap_files;
+extern char* urimethodmap_files;
 #endif
 
 #ifndef USE_HELP_CGI
-char *helpFile(const char *base);
+char* helpFile(const char* base);
 #endif
 
 #ifdef USE_HISTORY
@@ -204,7 +201,7 @@ extern int SaveURLHist;
 #endif
 
 #ifdef USE_IMAGE
-extern char *Imgdisplay;
+extern char* Imgdisplay;
 extern double image_scale;
 extern double pixel_per_line;
 extern int autoImage;
@@ -217,7 +214,7 @@ extern int useExtImageViewer;
 extern int view_unseenobject;
 #else
 extern int view_unseenobject;
-extern int displayImage;	/* XXX: emacs-w3m use display_image=off */
+extern int displayImage; /* XXX: emacs-w3m use display_image=off */
 #endif
 
 #ifdef USE_MARK
@@ -225,7 +222,7 @@ extern int use_mark;
 #endif
 
 #ifdef USE_MIGEMO
-extern char *migemo_command;
+extern char* migemo_command;
 extern int use_migemo;
 #endif
 

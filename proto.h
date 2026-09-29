@@ -353,7 +353,6 @@ extern Anchor *retrieveCurrentMap(Buffer *buf);
 extern MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 			   char *coords);
 extern Buffer *page_info_panel(Buffer *buf);
-extern pid_t open_pipe_rw(FILE ** fr, FILE ** fw);
 extern int initscr(void);
 extern void move(int line, int column);
 #ifdef USE_M17N
@@ -498,22 +497,12 @@ extern FILE *localcgi_post(char *, char *, FormList *, char *);
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern Str romanNumeral(int n);
-extern Str romanAlphabet(int n);
-extern void setup_child(int child, int i, int f);
-extern void myExec(char *command);
-extern int mySystem(char *command, int background);
-extern Str myExtCommand(const char *cmd, const char *arg, int redirect);
-extern Str editor_cmd(const char *file, int line);
-extern int is_localhost(const char *host);
-extern char *file_to_url(char *file);
 #ifdef USE_M17N
 extern char *url_unquote_conv(const char *url, wc_ces charset);
 #else
 extern char *url_unquote_conv0(const char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 #endif
-extern char *expandName(char *name);
 extern Str tmpfname(int type, const char *ext);
 extern time_t mymktime(char *timestr);
 #ifdef USE_M17N

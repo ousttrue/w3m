@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
+#include "str_gc.h"
 #include "auth.h"
 #include "str_const.h"
 #include "html_parser.h"
@@ -573,7 +574,7 @@ xface2xpm(char *xface)
 	return cache->file;
     cache->loaded = IMG_FLAG_ERROR;
 
-    f = popen(Sprintf("%s > %s", shell_quote(auxbinFile(XFACE2XPM)),
+    f = popen(Sprintf("%s > %s", shell_quote(auxbinFile(XFACE2XPM)->ptr),
 		      shell_quote(cache->file))->ptr, "w");
     if (!f)
 	return NULL;
@@ -1706,9 +1707,9 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
     int volatile searchHeader_through = TRUE;
     SigActionFunc volatile prevtrap = NULL;
     TextList *extra_header = newTextList();
-    volatile Str uname = NULL;
-    volatile Str pwd = NULL;
-    volatile Str realm = NULL;
+    Str uname = NULL;
+    Str pwd = NULL;
+    Str realm = NULL;
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
     URLOption url_option;
@@ -8271,7 +8272,7 @@ _doFileCopy(char *tmpf, char *defstr, int download)
 		p = unescape_spaces(Strnew_charp(q))->ptr;
 		p = conv_to_system(p);
 	    }
-	    p = expandPath(p);
+	    p = expandPath(p)->ptr;
 	    if (!checkOverWrite(p))
 		return -1;
 	}
@@ -8322,7 +8323,7 @@ _doFileCopy(char *tmpf, char *defstr, int download)
 	if (*p == '|' && PermitSaveToPipe)
 	    is_pipe = TRUE;
 	else {
-	    p = expandPath(p);
+	    p = expandPath(p)->ptr;
 	    if (!checkOverWrite(p))
 		return -1;
 	}
@@ -8360,7 +8361,7 @@ doFileSave(URLFile uf, const char *defstr)
     char *lock;
 
     if (param_dl_dir && *param_dl_dir) {
-	filen = Strnew_charp(expandPath(param_dl_dir));
+	filen = expandPath(param_dl_dir);
 	if (Strlastchar(filen) != '/')
 	    Strcat_char(filen, '/');
 	Strcat_charp(filen, defstr);
@@ -8418,7 +8419,7 @@ doFileSave(URLFile uf, const char *defstr)
 	*(p + 1) = '\0';
 	if (*q == '\0')
 	    return -1;
-	p = expandPath(q);
+	p = expandPath(q)->ptr;
 	if (!checkOverWrite(p))
 	    return -1;
 	if (checkSaveFile(uf.stream, p) < 0) {
@@ -8532,7 +8533,7 @@ uncompress_stream(URLFile *uf, char **src)
     for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
 	if (uf->compression == d->type) {
 	    if (d->auxbin_p)
-		expand_cmd = auxbinFile(d->cmd);
+		expand_cmd = auxbinFile(d->cmd)->ptr;
 	    else
 		expand_cmd = d->cmd;
 	    expand_name = d->name;

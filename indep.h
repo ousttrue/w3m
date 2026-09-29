@@ -50,8 +50,6 @@ extern char *getescapecmd(char **s);
 extern char *allocStr(const char *s, int len);
 extern int strCmp(const void *s1, const void *s2);
 extern char *currentdir(void);
-extern char *cleanupName(const char *name);
-extern char *expandPath(char *name);
 #ifndef HAVE_STRCASESTR
 extern char *strcasestr(const char *s1, const char *s2);
 #endif

@@ -78,4 +78,8 @@ extern int ssl_ca_default;
 extern int ssl_path_modified;
 #endif
 #endif
+
+bool is_localhost(const char *host);
+
 #endif
+

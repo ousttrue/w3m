@@ -51,7 +51,7 @@ syncUrlHistory(void)
     HistItem *item;
     struct stat st;
 
-    if (stat(rcFile(HISTORY_FILE), &st)) {
+    if (stat(rcFile(HISTORY_FILE)->ptr, &st)) {
 	if (errno == ENOENT)
 	    return 0;
 	else
@@ -89,7 +89,7 @@ loadUrlHistory(void)
 
     if (URLHist == NULL)
 	return 1;
-    if ((f = fopen(rcFile(HISTORY_FILE), "rt")) == NULL)
+    if ((f = fopen(rcFile(HISTORY_FILE)->ptr, "rt")) == NULL)
 	return 1;
 
     if (fstat(fileno(f), &st) == -1) {
@@ -145,7 +145,7 @@ saveUrlHistory(void)
 	goto fail;
 
     URLHist->mtime = (long long)st.st_mtime;
-    if (rename(tmpf, rcFile(HISTORY_FILE)))
+    if (rename(tmpf, rcFile(HISTORY_FILE)->ptr))
 	goto fail;
 
     return;

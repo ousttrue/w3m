@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #define MAINPROGRAM
 #include "backend.h"
+#include "str_gc.h"
 #include "subprocess.h"
 #include "buffer.h"
 #include "charset.h"
@@ -340,7 +341,7 @@ int main(int argc, char** argv)
                 if (Strlastchar(tmp) != '/')
                     Strcat_char(tmp, '/');
                 Strcat_charp(tmp, BookmarkFile);
-                BookmarkFile = cleanupName(tmp->ptr);
+                BookmarkFile = cleanupName(tmp->ptr)->ptr;
             }
         } else if (ISOPT("-cols"))
             opt_cols = atoi(NXTARG());
@@ -386,7 +387,7 @@ int main(int argc, char** argv)
                 set_pixel_per_char = TRUE;
             }
         } else if (ISOPT("-reqlog"))
-            w3m_reqlog = rcFile("request.log");
+            w3m_reqlog = rcFile("request.log")->ptr;
         else if (ISOPT("-session")) {
             session_file = NXTARG();
         } else if (ISOPT("-show-option")) {
@@ -411,7 +412,7 @@ int main(int argc, char** argv)
                 if (Strlastchar(tmp) != '/')
                     Strcat_char(tmp, '/');
                 Strcat_charp(tmp, CookieFile);
-                CookieFile = cleanupName(tmp->ptr);
+                CookieFile = cleanupName(tmp->ptr)->ptr;
             }
         }
 #endif /* USE_COOKIE */
@@ -572,10 +573,10 @@ int main(int argc, char** argv)
     CurrentTab = NULL;
     CurrentKey = -1;
     if (BookmarkFile == NULL)
-        BookmarkFile = rcFile(BOOKMARK);
+        BookmarkFile = rcFile(BOOKMARK)->ptr;
 #ifdef USE_COOKIE
     if (!CookieFile)
-        CookieFile = rcFile(COOKIE_FILE);
+        CookieFile = rcFile(COOKIE_FILE)->ptr;
 #endif
 
     if (!isatty(1) && !w3m_dump) /* redirected output */
@@ -612,7 +613,7 @@ int main(int argc, char** argv)
         char *sf, **session;
         int max = 16, n = 0;
 
-        sf = session_file ? session_file : rcFile(SESSION_FILE);
+        sf = session_file ? session_file : rcFile(SESSION_FILE)->ptr;
         session = New_N(char*, max);
         if (!(fp = fopen(sf, "r"))) {
             Str err = Sprintf("Cannot restore session %s - %s", sf,
@@ -742,7 +743,7 @@ int main(int argc, char** argv)
         url = load_argv[i];
         if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
         retry_as_local_file:
-            url = file_to_url(load_argv[i]);
+            url = file_to_url(load_argv[i], CurrentDir)->ptr;
         else
             url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
         if (w3m_dump == DUMP_HEAD) {
@@ -2212,9 +2213,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
 static void
 cmd_loadfile(char* fn)
 {
-    Buffer* buf;
-
-    buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
+    Buffer* buf = loadGeneralFile(file_to_url(fn, CurrentDir)->ptr, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
         char* emsg = Sprintf(_("%s not found"), conv_from_system(fn))->ptr;
         disp_err_message(emsg, FALSE);
@@ -4330,7 +4329,7 @@ int _strSession(char* sf)
     struct stat st;
 
     if (!sf)
-        sf = session_file ? session_file : rcFile(SESSION_FILE);
+        sf = session_file ? session_file : rcFile(SESSION_FILE)->ptr;
 
     while (stat(sf, &st) == 0) {
         Str msg = Strnew_charp(_("Session file exists. Overwrite?"));
@@ -4379,7 +4378,7 @@ DEFUN(strSession, STORE, "Store session")
     saveUrlHistory();
 #endif
 
-    def = session_file ? session_file : rcFile(SESSION_FILE);
+    def = session_file ? session_file : rcFile(SESSION_FILE)->ptr;
     if (!(sf = inputFilenameHist(Strnew_m_charp("Session file [",
                                      def,
                                      "]? ", NULL)
@@ -4629,7 +4628,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
             file = unescape_spaces(Strnew_charp(qfile))->ptr;
             file = conv_to_system(file);
         }
-        file = expandPath(file);
+        file = expandPath(file)->ptr;
         if (!checkOverWrite(file)) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -4666,7 +4665,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
 
     if (param_dl_dir) {
-        fn = Strnew_charp(expandPath(param_dl_dir));
+        fn = expandPath(param_dl_dir);
         if (Strlastchar(fn) != '/')
             Strcat_char(fn, '/');
         Strcat_charp(fn, file);
@@ -6391,7 +6390,7 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)
     d->url = url;
     if (save[0] != '/' && save[0] != '~')
         save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-    d->save = expandPath(save);
+    d->save = expandPath(save)->ptr;
     d->lock = lock;
     d->size = size;
     d->time = time(0);

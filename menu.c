@@ -1941,11 +1941,11 @@ initMenu(void)
 	MainMenuEncode = TRUE;
     }
 #endif
-    if ((mf = fopen(confFile(MENU_FILE), "rt")) != NULL) {
+    if ((mf = fopen(confFile(MENU_FILE)->ptr, "rt")) != NULL) {
 	interpret_menu(mf);
 	fclose(mf);
     }
-    if ((mf = fopen(rcFile(MENU_FILE), "rt")) != NULL) {
+    if ((mf = fopen(rcFile(MENU_FILE)->ptr, "rt")) != NULL) {
 	interpret_menu(mf);
 	fclose(mf);
     }

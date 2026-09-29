@@ -191,12 +191,12 @@ initKeymap(int force)
 {
     FILE *kf;
 
-    if ((kf = fopen(confFile(KEYMAP_FILE), "rt")) != NULL) {
+    if ((kf = fopen(confFile(KEYMAP_FILE)->ptr, "rt")) != NULL) {
 	interpret_keymap(kf, &sys_current_keymap_file,
 			 force || !keymap_initialized);
 	fclose(kf);
     }
-    if ((kf = fopen(rcFile(keymap_file), "rt")) != NULL) {
+    if ((kf = fopen(rcFile(keymap_file)->ptr, "rt")) != NULL) {
 	interpret_keymap(kf, &current_keymap_file,
 			 force || !keymap_initialized);
 	fclose(kf);
@@ -713,11 +713,11 @@ initMouseAction(void)
 	    Strnew_charp(symbol[N_GRAPH_SYMBOL + 13])->ptr;
     }
 
-    if ((mf = fopen(confFile(MOUSE_FILE), "rt")) != NULL) {
+    if ((mf = fopen(confFile(MOUSE_FILE)->ptr, "rt")) != NULL) {
 	interpret_mouse_action(mf);
 	fclose(mf);
     }
-    if ((mf = fopen(rcFile(MOUSE_FILE), "rt")) != NULL) {
+    if ((mf = fopen(rcFile(MOUSE_FILE)->ptr, "rt")) != NULL) {
 	interpret_mouse_action(mf);
 	fclose(mf);
     }

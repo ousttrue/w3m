@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "Str.h"
+#include "str_gc.h"
 #include "config.h"
 #include "indep.h"
 #include "parsetag.h"
@@ -229,7 +230,7 @@ main(void)
     }
 
     mode = tag_get_value(cgiarg, "mode");
-    bmark = expandPath(tag_get_value(cgiarg, "bmark"));
+    bmark = expandPath(tag_get_value(cgiarg, "bmark"))->ptr;
     url = tag_get_value(cgiarg, "url");
     title = tag_get_value(cgiarg, "title");
     charset = tag_get_value(cgiarg, "charset");

@@ -1,5 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "fm.h"
+#include "str_gc.h"
 #include "proto.h"
 #include "history.h"
 #include "myctype.h"
@@ -194,7 +195,7 @@ loadMailcap(char *filename)
     Str tmp;
     struct mailcap *mcap;
 
-    f = fopen(expandPath(filename), "r");
+    f = fopen(expandPath(filename)->ptr, "r");
     if (f == NULL)
 	return NULL;
     i = 0;

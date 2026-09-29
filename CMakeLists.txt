@@ -95,12 +95,12 @@ target_compile_definitions(mktable PRIVATE DUMMY)
 target_link_libraries(mktable PRIVATE indep wc gc)
 
 # w3mbookmark
-add_executable(w3mbookmark w3mbookmark.c entity.c)
+add_executable(w3mbookmark w3mbookmark.c entity.c str_gc.c)
 target_compile_definitions(w3mbookmark PRIVATE DUMMY)
 target_link_libraries(w3mbookmark PRIVATE indep wc gc)
 
 # w3mhelperpanel
-add_executable(w3mhelperpanel w3mhelperpanel.c entity.c)
+add_executable(w3mhelperpanel w3mhelperpanel.c entity.c str_gc.c)
 target_compile_definitions(w3mhelperpanel PRIVATE DUMMY)
 target_link_libraries(w3mhelperpanel PRIVATE indep wc gc)
 

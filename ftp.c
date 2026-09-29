@@ -486,8 +486,9 @@ loadFTPDir0(ParsedURL *pu)
     Str tmp;
     int status;
     volatile int sv_type;
-    char *realpathname, *fn, *q;
-    char **flist;
+    char *realpathname;
+    const char*fn, *q;
+    const char **flist;
     int i, nfile, nfile_max;
     volatile SigActionFunc prevtrap = NULL;
 #ifdef USE_M17N

@@ -1,4 +1,5 @@
 #include "auth.h"
+#include "str_gc.h"
 #include "alloc.h"
 #include "myctype.h"
 #include "indep.h"
@@ -231,12 +232,11 @@ parsePasswd(FILE* fp, int netrc)
 
 FILE* openSecretFile(char* fname)
 {
-    char* efname;
-    struct stat st;
-
     if (fname == NULL)
         return NULL;
-    efname = expandPath(fname);
+
+    char* efname = expandPath(fname)->ptr;
+    struct stat st;
     if (stat(efname, &st) < 0)
         return NULL;
 
