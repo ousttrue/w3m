@@ -1,55 +1,46 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef W3M_ISTREAM_H
-#define W3M_ISTREAM_H
-
+#pragma once
 #include "config.h"
 #include "indep.h"
 #include "growbuf.h"
 #include <fcntl.h>
 #include <stdio.h>
-
-#ifdef USE_SSL
 #include <openssl/ssl.h>
-#endif
 
 struct stream_buffer {
-    unsigned char *buf;
+    unsigned char* buf;
     int size, cur, next;
 };
 
-typedef struct stream_buffer *StreamBuffer;
+typedef struct stream_buffer* StreamBuffer;
 
-#ifdef USE_SSL
 struct ssl_handle {
-    SSL *ssl;
+    SSL* ssl;
     int sock;
 };
-#endif
 
 struct ens_handle {
-    union input_stream *is;
+    union input_stream* is;
     struct growbuf gb;
     int pos;
     char encoding;
 };
 
-
 struct base_stream {
     struct stream_buffer stream;
-    void *handle;
+    void* handle;
     char type;
     char iseos;
-    int (*read) (int *, unsigned char *, int);
-    int (*close) (int *);
+    int (*read)(int*, unsigned char*, int);
+    int (*close)(int*);
 };
 
 struct file_stream {
     struct stream_buffer stream;
-    FILE *handle;
+    FILE* handle;
     char type;
     char iseos;
-    int (*read) (FILE *, char *, int);
-    int (*close) (FILE *);
+    int (*read)(FILE*, char*, int);
+    int (*close)(FILE*);
 };
 
 struct str_stream {
@@ -57,50 +48,44 @@ struct str_stream {
     Str handle;
     char type;
     char iseos;
-    int (*read) (Str, char *, int);
-    int (*close) (int);
+    int (*read)(Str, char*, int);
+    int (*close)(int);
 };
 
-#ifdef USE_SSL
 struct ssl_stream {
     struct stream_buffer stream;
-    struct ssl_handle *handle;
+    struct ssl_handle* handle;
     char type;
     char iseos;
-    int (*read) (struct ssl_handle *, char *, int);
-    int (*close) (struct ssl_handle *);
+    int (*read)(struct ssl_handle*, char*, int);
+    int (*close)(struct ssl_handle*);
 };
-#endif				/* USE_SSL */
 
 struct encoded_stream {
     struct stream_buffer stream;
-    struct ens_handle *handle;
+    struct ens_handle* handle;
     char type;
     char iseos;
-    int (*read) (struct ens_handle *, char *, int);
-    int (*close) (struct ens_handle *);
+    int (*read)(struct ens_handle*, char*, int);
+    int (*close)(struct ens_handle*);
 };
 
 union input_stream {
     struct base_stream base;
     struct file_stream file;
     struct str_stream str;
-#ifdef USE_SSL
     struct ssl_stream ssl;
-#endif				/* USE_SSL */
     struct encoded_stream ens;
 };
 
-typedef struct base_stream *BaseStream;
+typedef struct base_stream* BaseStream;
 
-typedef union input_stream *InputStream;
+typedef union input_stream* InputStream;
 
 extern InputStream newInputStream(int des);
-extern InputStream newFileStream(FILE * f, int (*closep) (FILE *));
+extern InputStream newFileStream(FILE* f, int (*closep)(FILE*));
 extern InputStream newStrStream(Str s);
-#ifdef USE_SSL
-extern InputStream newSSLStream(SSL * ssl, int sock);
-#endif
+extern InputStream newSSLStream(SSL* ssl, int sock);
 extern InputStream newEncodedStream(InputStream is, char encoding);
 extern int ISclose(InputStream stream);
 extern int ISgetc(InputStream stream);
@@ -108,37 +93,27 @@ extern int ISundogetc(InputStream stream);
 extern Str StrISgets2(InputStream stream, char crnl);
 #define StrISgets(stream) StrISgets2(stream, FALSE)
 #define StrmyISgets(stream) StrISgets2(stream, TRUE)
-void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl);
+void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl);
 #ifdef unused
 extern int ISread(InputStream stream, Str buf, int count);
 #endif
-int ISread_n(InputStream stream, unsigned char *dst, int bufsize);
+int ISread_n(InputStream stream, unsigned char* dst, int bufsize);
 extern int ISfileno(InputStream stream);
 extern int ISeos(InputStream stream);
-#ifdef USE_SSL
-extern void ssl_accept_this_site(const char *hostname);
-extern Str ssl_get_certificate(SSL * ssl, const char *hostname);
-#endif
+extern void ssl_accept_this_site(const char* hostname);
+extern Str ssl_get_certificate(SSL* ssl, const char* hostname);
 
-#define IST_BASIC	0
-#define IST_FILE	1
-#define IST_STR		2
-#define IST_SSL		3
-#define IST_ENCODED	4
-#define IST_UNCLOSE	0x10
+#define IST_BASIC 0
+#define IST_FILE 1
+#define IST_STR 2
+#define IST_SSL 3
+#define IST_ENCODED 4
+#define IST_UNCLOSE 0x10
 
 #define IStype(stream) ((stream)->base.type)
 #define iseos(stream) ((stream)->base.iseos)
 #define str_of(stream) ((stream)->str.handle)
-#ifdef USE_SSL
 #define ssl_socket_of(stream) ((stream)->ssl.handle->sock)
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
-#endif
 
-#ifdef USE_BINMODE_STREAM
-#define openIS(path) newInputStream(open((path),O_RDONLY|O_BINARY))
-#else
-#define openIS(path) newInputStream(open((path),O_RDONLY))
-#endif				/* USE_BINMODE_STREAM */
-
-#endif
+#define openIS(path) newInputStream(open((path), O_RDONLY))

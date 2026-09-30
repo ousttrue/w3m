@@ -431,7 +431,7 @@ writestr(char* s)
  */
 #define IMG_BUF_SZ 3072
 
-void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
+void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
     Str buf;
     char* size;
@@ -447,7 +447,7 @@ void put_image_osc5379(char* url, int x, int y, int w, int h, int sx, int sy, in
     MOVE(Currentbuf->cursorY, Currentbuf->cursorX);
 }
 
-void put_image_iterm2(char* url, int x, int y, int w, int h)
+void put_image_iterm2(const char* url, int x, int y, int w, int h)
 {
     Str buf;
     char cbuf[IMG_BUF_SZ];
@@ -487,7 +487,7 @@ void put_image_iterm2(char* url, int x, int y, int w, int h)
 void ttymode_set(int mode, int imode);
 void ttymode_reset(int mode, int imode);
 
-void put_image_kitty(char* url, int x, int y, int w, int h, int sx, int sy, int sw,
+void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
     int sh, int cols, int rows)
 {
     Str buf, base64;
@@ -667,7 +667,7 @@ save_first_animation_frame(const char* path)
     return NULL;
 }
 
-void put_image_sixel(char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
+void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image)
 {
     pid_t pid;
     int do_anim;

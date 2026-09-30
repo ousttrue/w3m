@@ -222,7 +222,7 @@ drawImage(void)
 	    if (!i->cache->touch || stat(i->cache->file,&st))
 	      return;
 
-	    char *url = i->cache->file;
+	    const char *url = i->cache->file;
 
 	    int x = i->x / pixel_per_char_i;
 	    int y = i->y / pixel_per_line_i;
@@ -609,7 +609,7 @@ getImage(Image * image, ParsedURL *current, int flag)
 }
 
 static int
-parseImageHeader(char *path, u_int *width, u_int *height)
+parseImageHeader(const char *path, u_int *width, u_int *height)
 {
     FILE *fp;
     unsigned char buf[8];

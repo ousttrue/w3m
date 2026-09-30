@@ -144,7 +144,7 @@ global char *MyProgramName init("w3m");
 global int activeImage init(FALSE);
 #endif
 #ifdef USE_IMAGE
-global char *image_source init(NULL);
+global const char *image_source init(NULL);
 #endif
 
 global int is_redisplay init(FALSE);
