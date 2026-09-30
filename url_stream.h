@@ -3,13 +3,6 @@
 #include <time.h>
 #include "input_stream.h"
 
-enum StreamEncoding {
-    ENC_7BIT,
-    ENC_BASE64,
-    ENC_QUOTE,
-    ENC_UUENCODE,
-};
-
 enum CompressionType {
     CMP_NOCOMPRESS = 0,
     CMP_COMPRESS = 1,
@@ -21,7 +14,7 @@ enum CompressionType {
 
 struct UrlStream {
     enum UrlScheme scheme;
-    union input_stream* stream;
+    struct input_stream* stream;
     enum StreamEncoding encoding;
     bool is_cgi;
     enum CompressionType compression;
@@ -46,5 +39,5 @@ typedef struct {
     int flag;
 } URLOption;
 
-struct UrlStream init_stream(enum UrlScheme scheme, union input_stream* stream);
+struct UrlStream init_stream(enum UrlScheme scheme, struct input_stream* stream);
 

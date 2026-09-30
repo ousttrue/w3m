@@ -77,7 +77,7 @@ extern struct frameset *popFrameTree(struct frameset_queue **fqpp);
 extern void resetFrameElement(union frameset_element *f_element, Buffer *buf,
 			      char *referer, FormList *request);
 extern Buffer *renderFrame(Buffer *Cbuf, int force_reload);
-extern union frameset_element *search_frame(struct frameset *fset, char *name);
+extern union frameset_element *search_frame(struct frameset *fset, const char *name);
 
 extern struct frameset *renderFrameSet;
 

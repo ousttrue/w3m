@@ -558,7 +558,7 @@ wtf_get_code(const wc_uchar *p)
 }
 
 wc_bool
-wtf_is_hangul(wc_uchar *p)
+wtf_is_hangul(const wc_uchar *p)
 {
     if (*p > 0xa0)
 	return (wtf_gr_ccs == WC_CCS_KS_X_1001 || wtf_gr_ccs == WC_CCS_JOHAB_1);

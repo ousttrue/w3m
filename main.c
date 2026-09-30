@@ -193,7 +193,7 @@ int main(int argc, char** argv)
     Buffer* newbuf = NULL;
     char* p;
     int c, i;
-    union input_stream* redin;
+    struct input_stream* redin;
     char* line_str = NULL;
     char** load_argv;
     FormList* request;
@@ -5984,7 +5984,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
 }
 
 AlarmEvent*
-setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, void* data)
+setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, const void* data)
 {
     if (event == NULL)
         event = New(AlarmEvent);
@@ -6382,7 +6382,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
     moveTab(CurrentTab, tab ? tab : FirstTab, false);
 }
 
-void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)
+void addDownloadList(pid_t pid, const char* url, const char* save, const char* lock, size_t size)
 {
     DownloadList* d;
 

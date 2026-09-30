@@ -1,6 +1,6 @@
 #include "url_stream.h"
 
-struct UrlStream init_stream(enum UrlScheme scheme, union input_stream* stream)
+struct UrlStream init_stream(enum UrlScheme scheme, struct input_stream* stream)
 {
     struct UrlStream uf = {
         .scheme = scheme,

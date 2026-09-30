@@ -128,7 +128,7 @@ extern void stopI(void);
 #ifdef USE_ALARM
 extern void setAlarm(void);
 extern AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
-    int cmd, void* data);
+    int cmd, const void* data);
 #else
 #define setAlarm nulcmd
 #endif
@@ -251,8 +251,8 @@ extern void saveBuffer(Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(Buffer* buf, FILE* f, int cont);
 extern Buffer* getshell(char* cmd);
 extern Buffer* getpipe(char* cmd);
-extern Buffer* openPagerBuffer(union input_stream* stream, Buffer* buf);
-extern Buffer* openGeneralPagerBuffer(union input_stream* stream);
+extern Buffer* openPagerBuffer(struct input_stream* stream, Buffer* buf);
+extern Buffer* openGeneralPagerBuffer(struct input_stream* stream);
 extern Line* getNextPage(Buffer* buf, int plen);
 extern int save2tmp(URLFile uf, const char* tmpf);
 extern Buffer* doExternal(URLFile uf, const char* type, Buffer* defaultbuf);
@@ -264,7 +264,7 @@ static inline int doFileCopy(const char* tmpf, const char* defstr)
 extern int doFileMove(char* tmpf, char* defstr);
 extern int doFileSave(URLFile uf, const char* defstr);
 extern int checkCopyFile(const char* path1, const char* path2);
-extern int checkSaveFile(union input_stream* stream, const char* path);
+extern int checkSaveFile(struct input_stream* stream, const char* path);
 extern int checkOverWrite(const char* path);
 extern int confirm(Str prompt);
 extern char confirm_multi(const char* prompt);
@@ -341,8 +341,6 @@ extern int getMapXY(Buffer* buf, Anchor* a, int* x, int* y);
 extern MapArea* retrieveCurrentMapArea(Buffer* buf);
 #endif
 extern Anchor* retrieveCurrentMap(Buffer* buf);
-extern MapArea* newMapArea(char* url, char* target, char* alt, char* shape,
-    char* coords);
 extern Buffer* page_info_panel(Buffer* buf);
 extern int initscr(void);
 extern void move(int line, int column);
@@ -399,7 +397,7 @@ extern char* acceptableMimeTypes(void);
 extern struct mailcap* searchExtViewer(const char* type);
 extern char* guessContentType(const char* filename);
 extern TextList* make_domain_list(char* domain_list);
-extern union input_stream* openFTPStream(ParsedURL* pu, URLFile* uf);
+extern struct input_stream* openFTPStream(ParsedURL* pu, URLFile* uf);
 #ifdef USE_M17N
 extern Str loadFTPDir(ParsedURL* pu, wc_ces* charset);
 #else
@@ -409,7 +407,7 @@ extern Str loadFTPDir0(ParsedURL* pu);
 extern void closeFTP(void);
 extern void disconnectFTP(void);
 #ifdef USE_NNTP
-extern union input_stream* openNewsStream(ParsedURL* pu);
+extern struct input_stream* openNewsStream(ParsedURL* pu);
 #ifdef USE_M17N
 extern Str loadNewsgroup(ParsedURL* pu, wc_ces* charset);
 #else
@@ -423,11 +421,11 @@ extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
     Anchor** anchor_return, char* referer,
     char* title, unsigned char key, int line,
     int pos);
-extern Anchor* registerHref(Buffer* buf, char* url, char* target,
-    char* referer, char* title, unsigned char key,
+extern Anchor* registerHref(Buffer* buf, const char* url, const char* target,
+    const char* referer, const char* title, unsigned char key,
     int line, int pos);
 extern Anchor* registerName(Buffer* buf, char* url, int line, int pos);
-extern Anchor* registerImg(Buffer* buf, char* url, char* title, int line,
+extern Anchor* registerImg(Buffer* buf, const char* url, const char* title, int line,
     int pos);
 extern Anchor* registerForm(Buffer* buf, FormList* flist,
     struct parsed_tag* tag, int line, int pos);

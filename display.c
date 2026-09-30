@@ -278,7 +278,7 @@ static void do_color(Linecolor c);
 #endif
 
 static Str
-make_lastline_link(Buffer *buf, char *title, char *url)
+make_lastline_link(Buffer *buf, const char *title, const char *url)
 {
     Str s = NULL, u;
 #ifdef USE_M17N

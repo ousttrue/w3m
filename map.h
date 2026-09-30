@@ -7,22 +7,23 @@
 #include "textlist.h"
 
 typedef struct _MapArea {
-    char *url;
-    char *target;
-    char *alt;
-#ifdef USE_IMAGE
+    const char* url;
+    const char* target;
+    const char* alt;
     char shape;
-    short *coords;
+    short* coords;
     int ncoords;
     short center_x;
     short center_y;
-#endif
 } MapArea;
 
 typedef struct _MapList {
     Str name;
-    GeneralList *area;
-    struct _MapList *next;
+    GeneralList* area;
+    struct _MapList* next;
 } MapList;
+
+MapArea* newMapArea(const char* url,
+    const char* target, const char* alt, const char* shape, const char* coords);
 
 #endif

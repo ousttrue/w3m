@@ -310,13 +310,11 @@ follow_map_panel(Buffer *buf, char *name)
 #endif
 
 MapArea *
-newMapArea(char *url, char *target, char *alt, char *shape, char *coords)
+newMapArea(const char *url, const char *target, const char *alt, const char *shape, const char *coords)
 {
     MapArea *a = New(MapArea);
-#ifdef USE_IMAGE
     char *p;
     int i, max;
-#endif
 
     a->url = url;
     a->target = target;

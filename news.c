@@ -26,7 +26,7 @@ typedef struct _News {
     char* host;
     int port;
     char* mode;
-    union input_stream* rf;
+    struct input_stream* rf;
     FILE* wf;
 } News;
 
@@ -70,7 +70,7 @@ news_close(News* news)
     if (!news->host)
         return;
     if (news->rf) {
-        IStypeUnclose(news->rf, false);
+        news->rf->unclose = false;
         ISclose(news->rf);
         news->rf = NULL;
     }
@@ -95,7 +95,7 @@ news_open(News* news)
     news->wf = fdopen(fd, "wb");
     if (!news->rf || !news->wf)
         goto open_err;
-    IStypeUnclose(news->rf, true);
+    news->rf->unclose = true;
     news_command(news, NULL, NULL, &status);
     if (status != 200 && status != 201)
         goto open_err;
@@ -236,7 +236,7 @@ add_news_message(Str str, int index, char* date, char* name, char* subject,
  * <message-id> = <unique>@<full_domain_name>
  */
 
-union input_stream*
+struct input_stream*
 openNewsStream(ParsedURL* pu)
 {
     const char *host, *mode;

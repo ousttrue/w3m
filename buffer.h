@@ -59,7 +59,7 @@ typedef struct _BufferPos {
 
 typedef struct _Buffer {
     const char* filename;
-    char* buffername;
+    const char* buffername;
     Line* firstLine;
     Line* topLine;
     Line* currentLine;
@@ -81,7 +81,7 @@ typedef struct _Buffer {
     short rootY;
     short COLS;
     short LINES;
-    union input_stream* pagerSource;
+    struct input_stream* pagerSource;
     AnchorList* href;
     AnchorList* name;
     AnchorList* img;
@@ -107,11 +107,11 @@ typedef struct _Buffer {
 #endif
     TextList* document_header;
     FormItemList* form_submit;
-    char* savecache;
-    char* edit;
+    const char* savecache;
+    const char* edit;
     struct mailcap* mailcap;
-    char* mailcap_source;
-    char* header_source;
+    const char* mailcap_source;
+    const char* header_source;
     char search_header;
     const char* ssl_certificate;
     char image_flag;

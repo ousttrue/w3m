@@ -852,7 +852,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                     }
                 token_end:
                     Strclear(tok);
-                } while (*p != '\0' || !iseos(f2.stream));
+                } while (*p != '\0' || !f2.stream->iseos);
                 if (pre_mode & RB_PLAIN)
                     fputs("</PRE_PLAIN>\n", f1);
                 else if (pre_mode & RB_INTXTA)
@@ -940,7 +940,7 @@ renderFrame(Buffer* Cbuf, int force_reload)
 }
 
 union frameset_element*
-search_frame(struct frameset* fset, char* name)
+search_frame(struct frameset* fset, const char* name)
 {
     int i;
     union frameset_element* e = NULL;
