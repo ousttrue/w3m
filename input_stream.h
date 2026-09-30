@@ -21,47 +21,60 @@ struct ens_handle {
     char encoding;
 };
 
+enum InputStreamType {
+    IST_BASIC = 0,
+    IST_FILE = 1,
+    IST_STR = 2,
+    IST_SSL = 3,
+    IST_ENCODED = 4,
+};
+
 struct base_stream {
     struct stream_buffer stream;
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     void* handle;
-    char type;
-    char iseos;
     int (*read)(int*, unsigned char*, int);
     int (*close)(int*);
 };
 
 struct file_stream {
     struct stream_buffer stream;
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     FILE* handle;
-    char type;
-    char iseos;
     int (*read)(FILE*, char*, int);
     int (*close)(FILE*);
 };
 
 struct str_stream {
     struct stream_buffer stream;
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     Str handle;
-    char type;
-    char iseos;
     int (*read)(Str, char*, int);
     int (*close)(int);
 };
 
 struct ssl_stream {
     struct stream_buffer stream;
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     struct ssl_handle* handle;
-    char type;
-    char iseos;
     int (*read)(struct ssl_handle*, char*, int);
     int (*close)(struct ssl_handle*);
 };
 
 struct encoded_stream {
     struct stream_buffer stream;
+    enum InputStreamType type;
+    bool iseos;
+    bool unclose;
     struct ens_handle* handle;
-    char type;
-    char iseos;
     int (*read)(struct ens_handle*, char*, int);
     int (*close)(struct ens_handle*);
 };
@@ -97,14 +110,16 @@ extern int ISeos(union input_stream* stream);
 extern void ssl_accept_this_site(const char* hostname);
 extern Str ssl_get_certificate(SSL* ssl, const char* hostname);
 
-#define IST_BASIC 0
-#define IST_FILE 1
-#define IST_STR 2
-#define IST_SSL 3
-#define IST_ENCODED 4
-#define IST_UNCLOSE 0x10
+static inline enum InputStreamType IStype(union input_stream* s) { return (s->base.type); }
+static inline void IStypeUnclose(union input_stream* s, bool unclose)
+{
+    s->base.unclose = unclose;
+}
+static inline bool ISisUnclose(union input_stream* s)
+{
+    return s->base.unclose;
+}
 
-#define IStype(stream) ((stream)->base.type)
 #define iseos(stream) ((stream)->base.iseos)
 #define str_of(stream) ((stream)->str.handle)
 #define ssl_socket_of(stream) ((stream)->ssl.handle->sock)

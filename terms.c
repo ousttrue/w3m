@@ -533,7 +533,7 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
                     Strcat_charp(buf, "[0]");
                     argv[1] = buf->ptr;
                 } else {
-                    argv[1] = (char*)url;
+                    argv[1] = url;
                 }
                 argv[2] = tmpf;
                 argv[3] = NULL;

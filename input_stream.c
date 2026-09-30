@@ -177,7 +177,7 @@ int ISclose(union input_stream* stream)
     if (stream == NULL)
         return -1;
     if (stream->base.close != NULL) {
-        if (stream->base.type & IST_UNCLOSE) {
+        if (ISisUnclose(stream)) {
             return -1;
         }
         prevtrap = mySignal(SIGINT, SIG_IGN);
@@ -287,7 +287,7 @@ int ISfileno(union input_stream* stream)
 {
     if (stream == NULL)
         return -1;
-    switch (IStype(stream) & ~IST_UNCLOSE) {
+    switch (IStype(stream)) {
     case IST_BASIC:
         return *(int*)stream->base.handle;
     case IST_FILE:
@@ -312,7 +312,7 @@ void ssl_accept_this_site(const char* hostname)
 }
 
 static int
-ssl_match_cert_ident(const char* ident, int ilen, char* hostname)
+ssl_match_cert_ident(const char* ident, int ilen, const char* hostname)
 {
     /* RFC2818 3.1.  Server Identity
      * Names may contain the wildcard
@@ -342,7 +342,7 @@ ssl_match_cert_ident(const char* ident, int ilen, char* hostname)
 }
 
 static Str
-ssl_check_cert_ident(X509* x, char* hostname)
+ssl_check_cert_ident(X509* x, const char* hostname)
 {
     int i;
     Str ret = NULL;
