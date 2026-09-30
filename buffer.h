@@ -5,7 +5,6 @@
 #include "config.h"
 #include "form.h"
 #include "map.h"
-#include "istream.h"
 
 /* Flags for displayBuffer() */
 #define B_NORMAL 0
@@ -82,7 +81,7 @@ typedef struct _Buffer {
     short rootY;
     short COLS;
     short LINES;
-    InputStream pagerSource;
+    union input_stream* pagerSource;
     AnchorList* href;
     AnchorList* name;
     AnchorList* img;

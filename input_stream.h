@@ -80,26 +80,24 @@ union input_stream {
 
 typedef struct base_stream* BaseStream;
 
-typedef union input_stream* InputStream;
-
-extern InputStream newInputStream(int des);
-extern InputStream newFileStream(FILE* f, int (*closep)(FILE*));
-extern InputStream newStrStream(Str s);
-extern InputStream newSSLStream(SSL* ssl, int sock);
-extern InputStream newEncodedStream(InputStream is, char encoding);
-extern int ISclose(InputStream stream);
-extern int ISgetc(InputStream stream);
-extern int ISundogetc(InputStream stream);
-extern Str StrISgets2(InputStream stream, char crnl);
+extern union input_stream* newInputStream(int des);
+extern union input_stream* newFileStream(FILE* f, int (*closep)(FILE*));
+extern union input_stream* newStrStream(Str s);
+extern union input_stream* newSSLStream(SSL* ssl, int sock);
+extern union input_stream* newEncodedStream(union input_stream* is, char encoding);
+extern int ISclose(union input_stream* stream);
+extern int ISgetc(union input_stream* stream);
+extern int ISundogetc(union input_stream* stream);
+extern Str StrISgets2(union input_stream* stream, char crnl);
 #define StrISgets(stream) StrISgets2(stream, FALSE)
 #define StrmyISgets(stream) StrISgets2(stream, TRUE)
-void ISgets_to_growbuf(InputStream stream, struct growbuf* gb, char crnl);
+void ISgets_to_growbuf(union input_stream* stream, struct growbuf* gb, char crnl);
 #ifdef unused
-extern int ISread(InputStream stream, Str buf, int count);
+extern int ISread(union input_stream* stream, Str buf, int count);
 #endif
-int ISread_n(InputStream stream, unsigned char* dst, int bufsize);
-extern int ISfileno(InputStream stream);
-extern int ISeos(InputStream stream);
+int ISread_n(union input_stream* stream, unsigned char* dst, int bufsize);
+extern int ISfileno(union input_stream* stream);
+extern int ISeos(union input_stream* stream);
 extern void ssl_accept_this_site(const char* hostname);
 extern Str ssl_get_certificate(SSL* ssl, const char* hostname);
 

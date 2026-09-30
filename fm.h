@@ -141,13 +141,13 @@ extern int REV_LB[];
 global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 #ifdef USE_IMAGE
-global int activeImage init(FALSE);
+global int activeImage init(false);
 #endif
 #ifdef USE_IMAGE
 global const char *image_source init(NULL);
 #endif
 
-global int is_redisplay init(FALSE);
+global int is_redisplay init(false);
 #ifdef USE_ALARM
 enum {
     AL_UNSET,

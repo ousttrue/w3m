@@ -15,7 +15,7 @@
 #include <errno.h>
 
 const char *SearchString;
-int WrapSearch = FALSE;
+int WrapSearch = false;
 
 static void
 set_mark(Line *l, int pos, int epos)
@@ -29,7 +29,7 @@ set_mark(Line *l, int pos, int epos)
 static FILE *migemor = NULL, *migemow = NULL;
 static int migemo_running;
 static int migemo_pid = 0;
-int migemo_active = FALSE;
+int migemo_active = false;
 
 void
 init_migemo(void)
@@ -53,7 +53,7 @@ open_migemo(char *migemo_command)
 	goto err0;
     if (migemo_pid == 0) {
 	/* child */
-	setup_child(FALSE, 2, -1);
+	setup_child(false, 2, -1);
 	myExec(migemo_command);
 	/* XXX: ifdef __EMX__, use start /f ? */
     }
@@ -124,7 +124,7 @@ forwardSearch(Buffer *buf, const char *str)
 {
     const char *p, *first, *last;
     Line *l, *begin;
-    int wrapped = FALSE;
+    int wrapped = false;
     int icase, pos;
 
     icase = ignorecase(str);
@@ -179,7 +179,7 @@ forwardSearch(Buffer *buf, const char *str)
 		if (l == NULL) {
 		    if (WrapSearch && !wrapped) {
 			l = buf->firstLine;
-			wrapped = TRUE;
+			wrapped = true;
 		    }
 		    else {
 			break;
@@ -188,7 +188,7 @@ forwardSearch(Buffer *buf, const char *str)
 	    }
 	    else if (WrapSearch) {
 		l = buf->firstLine;
-		wrapped = TRUE;
+		wrapped = true;
 	    }
 	    else {
 		break;
@@ -221,7 +221,7 @@ backwardSearch(Buffer *buf, const char *str)
 {
     const char *p, *q, *found, *found_last, *first, *last;
     Line *l, *begin;
-    int wrapped = FALSE;
+    int wrapped = false;
     int icase, pos;
 
     icase = ignorecase(str);

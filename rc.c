@@ -52,16 +52,16 @@ static struct rc_search_table* RC_search_table;
 static int RC_table_size;
 
 int pixel_per_char_i = DEFAULT_PIXEL_PER_CHAR;
-int set_pixel_per_char = FALSE;
+int set_pixel_per_char = false;
 #ifdef USE_IMAGE
 int pixel_per_line_i = DEFAULT_PIXEL_PER_LINE;
-int set_pixel_per_line = FALSE;
+int set_pixel_per_line = false;
 #endif
 
 char* mkd_tmp_dir = NULL;
 char* config_file = NULL;
 
-int squeezeBlankLine = FALSE;
+int squeezeBlankLine = false;
 char* BookmarkFile = NULL;
 
 #define P_INT 0
@@ -85,7 +85,7 @@ char* BookmarkFile = NULL;
 /* FIXME: gettextize here */
 #ifdef USE_M17N
 static wc_ces OptionCharset = WC_CES_US_ASCII; /* FIXME: charset of source code */
-static int OptionEncode = FALSE;
+static int OptionEncode = false;
 #endif
 
 #define CMT_HELPER N_("External Viewer Setup")
@@ -349,8 +349,8 @@ static struct sel_c displayinsdel[] = {
 
 #ifdef USE_MOUSE
 static struct sel_c wheelmode[] = {
-    { TRUE, "1", N_("A:relative to screen height") },
-    { FALSE, "0", N_("B:fixed speed") },
+    { true, "1", N_("A:relative to screen height") },
+    { false, "0", N_("B:fixed speed") },
     { 0, NULL, NULL }
 };
 #endif /* MOUSE */
@@ -442,77 +442,77 @@ char* param_tmp_dir = NULL;
 char* passwd_file = NULL;
 char* pre_form_file = NULL;
 char* siteconf_file = NULL;
-char ArgvIsURL = TRUE;
-char AutoUncompress = FALSE;
-char DecodeCTE = FALSE;
-char DisableCenter = FALSE;
-char DisplayBorders = FALSE;
-char LocalhostOnly = FALSE;
-char MetaRefresh = FALSE;
-char PreserveTimestamp = TRUE;
-char RenderFrame = FALSE;
-char TargetSelf = FALSE;
-char UseAltEntity = FALSE;
+char ArgvIsURL = true;
+char AutoUncompress = false;
+char DecodeCTE = false;
+char DisableCenter = false;
+char DisplayBorders = false;
+char LocalhostOnly = false;
+char MetaRefresh = false;
+char PreserveTimestamp = true;
+char RenderFrame = false;
+char TargetSelf = false;
+char UseAltEntity = false;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 const char* DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
-int BackgroundExtViewer = TRUE;
-int CrossOriginReferer = TRUE;
-int DecodeURL = FALSE;
+int BackgroundExtViewer = true;
+int CrossOriginReferer = true;
+int DecodeURL = false;
 int DefaultURLString = DEFAULT_URL_CURRENT;
-int FoldLine = FALSE;
-int FoldPre = FALSE;
-int FoldTextarea = FALSE;
+int FoldLine = false;
+int FoldPre = false;
+int FoldTextarea = false;
 int FollowRedirection = 10;
-int IgnoreCase = TRUE;
+int IgnoreCase = true;
 int IndentIncr = 4;
 int MailtoOptions = MAILTO_OPTIONS_IGNORE;
-int MarkAllPages = FALSE;
+int MarkAllPages = false;
 int MaxCols = 0;
 int MessageDelay = 2;
-int NoSendReferer = FALSE;
+int NoSendReferer = false;
 int PagerMax = PAGER_MAX_LINE;
-int SmartCase = FALSE;
-int UseExternalDirBuffer = TRUE;
-int WrapDefault = FALSE;
+int SmartCase = false;
+int UseExternalDirBuffer = true;
+int WrapDefault = false;
 int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
-int accept_cookie = TRUE;
-int clear_buffer = TRUE;
-int close_tab_back = FALSE;
-int confirm_on_quit = TRUE;
-int disable_secret_security_check = FALSE;
-int displayColumnNumber = FALSE;
+int accept_cookie = true;
+int clear_buffer = true;
+int close_tab_back = false;
+int confirm_on_quit = true;
+int disable_secret_security_check = false;
+int displayColumnNumber = false;
 int displayInsDel = DISPLAY_INS_DEL_NORMAL;
-int displayLineInfo = FALSE;
-int displayLink = FALSE;
-int displayLinkNumber = FALSE;
-int emacs_like_lineedit = FALSE;
+int displayLineInfo = false;
+int displayLink = false;
+int displayLinkNumber = false;
+int emacs_like_lineedit = false;
 int enable_inline_image;
-int exit_on_last = FALSE;
-int ftppass_hostnamegen = TRUE;
-int ignore_null_img_alt = TRUE;
-int label_topline = FALSE;
-int multicolList = FALSE;
-int nextpage_topline = FALSE;
-int open_tab_blank = FALSE;
-int open_tab_dl_list = FALSE;
-int pseudoInlines = TRUE;
-int retryAsHttp = TRUE;
-int rl_paste = FALSE;
-int showLineNum = FALSE;
-int show_cookie = FALSE;
-int show_srch_str = TRUE;
-int space_autocomplete = FALSE;
-int use_cookie = TRUE;
-int vi_prec_num = FALSE;
-int zeroBasedLinkNo = FALSE;
+int exit_on_last = false;
+int ftppass_hostnamegen = true;
+int ignore_null_img_alt = true;
+int label_topline = false;
+int multicolList = false;
+int nextpage_topline = false;
+int open_tab_blank = false;
+int open_tab_dl_list = false;
+int pseudoInlines = true;
+int retryAsHttp = true;
+int rl_paste = false;
+int showLineNum = false;
+int show_cookie = false;
+int show_srch_str = true;
+int space_autocomplete = false;
+int use_cookie = true;
+int vi_prec_num = false;
+int zeroBasedLinkNo = false;
 
 #ifdef INET6
 int DNS_order = DNS_ORDER_UNSPEC;
 #endif
 
 #ifdef USE_DICT
-int UseDictCommand = TRUE;
+int UseDictCommand = true;
 const char* DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
 const char* DictPrompt = "(dictionary)!";
 #endif /* USE_DICT */
@@ -522,39 +522,39 @@ char* urimethodmap_files = NULL;
 #endif
 
 #ifdef USE_HISTORY
-int UseHistory = TRUE;
+int UseHistory = true;
 int URLHistSize = 100;
-int SaveURLHist = TRUE;
+int SaveURLHist = true;
 #endif
 
 #ifdef USE_IMAGE
 double pixel_per_line = DEFAULT_PIXEL_PER_LINE;
-int displayImage = TRUE;
-int view_unseenobject = FALSE;
-int autoImage = TRUE;
+int displayImage = true;
+int view_unseenobject = false;
+int autoImage = true;
 int maxLoadImage = 4;
-int useExtImageViewer = TRUE;
+int useExtImageViewer = true;
 double image_scale = 100;
 char* Imgdisplay = IMGDISPLAY;
-int image_map_list = TRUE;
+int image_map_list = true;
 #else
-int view_unseenobject = TRUE;
-int displayImage = FALSE; /* XXX: emacs-w3m use display_image=off */
+int view_unseenobject = true;
+int displayImage = false; /* XXX: emacs-w3m use display_image=off */
 #endif
 
 #ifdef USE_MARK
-int use_mark = FALSE;
+int use_mark = false;
 #endif
 
 #ifdef USE_MIGEMO
-int use_migemo = FALSE;
+int use_migemo = false;
 char* migemo_command = DEF_MIGEMO_COMMAND;
 #endif
 
 #ifdef USE_MOUSE
-int use_mouse = TRUE;
-int reverse_mouse = FALSE;
-int relative_wheel_scroll = FALSE;
+int use_mouse = true;
+int reverse_mouse = false;
+int relative_wheel_scroll = false;
 int relative_wheel_scroll_ratio = 30;
 int fixed_wheel_scroll_count = 5;
 #endif
@@ -569,11 +569,11 @@ int MaxNewsMessage = 50;
 wc_ces DisplayCharset = DISPLAY_CHARSET;
 wc_ces DocumentCharset = DOCUMENT_CHARSET;
 wc_ces BookmarkCharset = SYSTEM_CHARSET;
-char ExtHalfdump = FALSE;
-char FollowLocale = TRUE;
-char UseContentCharset = TRUE;
-char SearchConv = TRUE;
-char SimplePreserveSpace = FALSE;
+char ExtHalfdump = false;
+char FollowLocale = true;
+char UseContentCharset = true;
+char SearchConv = true;
+char SimplePreserveSpace = false;
 #endif
 
 #ifdef USE_SSL
@@ -584,12 +584,12 @@ char* ssl_cipher = "DEFAULT:!LOW:!RC4:!EXP";
 #else
 char* ssl_cipher = NULL;
 #endif
-int ssl_verify_server = TRUE;
+int ssl_verify_server = true;
 char* ssl_cert_file = NULL;
 char* ssl_key_file = NULL;
 char* ssl_ca_path = NULL;
 char* ssl_ca_file = DEF_CAFILE;
-int ssl_ca_default = TRUE;
+int ssl_ca_default = true;
 #endif
 
 #ifdef USE_W3MMAILER
@@ -1530,7 +1530,7 @@ void sync_with_option(void)
     if (fmInitialized && (displayImage || enable_inline_image))
         initImage();
 #else
-    displayImage = FALSE; /* XXX */
+    displayImage = false; /* XXX */
 #endif
     loadPasswd();
     loadPreForm();
@@ -1555,7 +1555,7 @@ void sync_with_option(void)
     wtf_init(DocumentCharset, DisplayCharset);
 #endif
     if (fmInitialized) {
-        initKeymap(FALSE);
+        initKeymap(false);
 #ifdef USE_MOUSE
         initMouseAction();
 #endif /* MOUSE */
@@ -1757,7 +1757,7 @@ load_option_panel(void)
                 InnerCharset)
                           ->ptr;
 #endif
-        OptionEncode = TRUE;
+        OptionEncode = true;
     }
 #endif
     src = Strdup(optionpanel_str);
@@ -1839,11 +1839,11 @@ void panel_set_option(struct parsed_tagarg* arg)
     Str s = Strnew(), tmp;
 
     if (config_file == NULL) {
-        disp_message("There's no config file... config not saved", FALSE);
+        disp_message("There's no config file... config not saved", false);
     } else {
         f = fopen(config_file, "wt");
         if (f == NULL) {
-            disp_message("Can't write option!", FALSE);
+            disp_message("Can't write option!", false);
         }
     }
     while (arg) {
@@ -1938,7 +1938,7 @@ newSiteconfRec(void)
     ent->next = NULL;
     ent->url = NULL;
     ent->re_url = NULL;
-    ent->url_exact = FALSE;
+    ent->url_exact = false;
     memset(ent->mask, 0, sizeof(ent->mask));
 
     ent->substitute_url = NULL;
@@ -2002,7 +2002,7 @@ loadSiteconf(void)
             /* If we have an extra or unknown option, ignore this record
              * for future extensions. */
             if (strcmp(opt, "exact") == 0) {
-                newent->url_exact = TRUE;
+                newent->url_exact = true;
             } else if (*opt != 0)
                 continue;
             if (*p)

@@ -2,6 +2,7 @@
 #include "display.h"
 
 #include "buffer.h"
+#include "indep.h"
 #include "charset.h"
 #include "config.h"
 #include "display.h"
@@ -18,8 +19,8 @@
 #include <signal.h>
 
 #ifdef USE_COLOR
-int useColor = TRUE;
-int highIntensityColors = FALSE;
+int useColor = true;
+int highIntensityColors = false;
 int basic_color = 8;	/* don't change */
 int anchor_color = 4;	/* blue  */
 int image_color = 2;	/* green */
@@ -28,9 +29,9 @@ int form_color = 1;	/* red   */
 int bg_color = 8;	/* don't change */
 int mark_color = 6;	/* cyan */
 #endif				/* USE_BG_COLOR */
-int useActiveColor = FALSE;
+int useActiveColor = false;
 int active_color = 6;	/* cyan */
-int useVisitedColor = FALSE;
+int useVisitedColor = false;
 int visited_color = 5;	/* magenta  */
 #endif				/* USE_COLOR */
 
@@ -223,7 +224,7 @@ fmTerm(void)
 	    mouse_end();
 #endif				/* USE_MOUSE */
 	reset_tty();
-	fmInitialized = FALSE;
+	fmInitialized = false;
     }
 }
 
@@ -243,7 +244,7 @@ fmInit(void)
 	    initImage();
 #endif
     }
-    fmInitialized = TRUE;
+    fmInitialized = true;
 }
 
 /* 
@@ -267,7 +268,7 @@ static void redrawNLine(Buffer *buf, int n);
 static Line *redrawLine(Buffer *buf, Line *l, int i);
 #ifdef USE_IMAGE
 static int image_touch = 0;
-static int draw_image_flag = FALSE;
+static int draw_image_flag = false;
 static Line *redrawLineImage(Buffer *buf, Line *l, int i);
 #endif
 static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos);
@@ -498,7 +499,7 @@ displayBuffer(Buffer *buf, int mode)
 		clearImage();
 		loadImage(buf, IMG_FLAG_STOP);
 		image_touch++;
-		draw_image_flag = FALSE;
+		draw_image_flag = false;
 	    }
 #endif
 	    redrawBuffer(buf);
@@ -523,7 +524,7 @@ displayBuffer(Buffer *buf, int mode)
 	Strcat_charp(msg, _("\tNo Line"));
     }
     if (delayed_msg != NULL) {
-	disp_message(delayed_msg, FALSE);
+	disp_message(delayed_msg, false);
 	delayed_msg = NULL;
 	refresh();
     }
@@ -809,48 +810,48 @@ redrawLine(Buffer *buf, Line *l, int i)
 	rcol = ncol;
     }
     if (somode) {
-	somode = FALSE;
+	somode = false;
 	standend();
     }
     if (ulmode) {
-	ulmode = FALSE;
+	ulmode = false;
 	underlineend();
     }
     if (bomode) {
-	bomode = FALSE;
+	bomode = false;
 	boldend();
     }
     if (emph_mode) {
-	emph_mode = FALSE;
+	emph_mode = false;
 	boldend();
     }
 
     if (anch_mode) {
-	anch_mode = FALSE;
+	anch_mode = false;
 	EFFECT_ANCHOR_END;
     }
     if (imag_mode) {
-	imag_mode = FALSE;
+	imag_mode = false;
 	EFFECT_IMAGE_END;
     }
     if (form_mode) {
-	form_mode = FALSE;
+	form_mode = false;
 	EFFECT_FORM_END;
     }
     if (visited_mode) {
-	visited_mode = FALSE;
+	visited_mode = false;
 	EFFECT_VISITED_END;
     }
     if (active_mode) {
-	active_mode = FALSE;
+	active_mode = false;
 	EFFECT_ACTIVE_END;
     }
     if (mark_mode) {
-	mark_mode = FALSE;
+	mark_mode = false;
 	EFFECT_MARK_END;
     }
     if (graph_mode) {
-	graph_mode = FALSE;
+	graph_mode = false;
 	graphend();
     }
 #ifdef USE_ANSI_COLOR
@@ -896,7 +897,7 @@ redrawLineImage(Buffer *buf, Line *l, int i)
 		    (image->height < 0 && cache->height > 0)) {
 		    image->width = cache->width;
 		    image->height = cache->height;
-		    buf->need_reshape = TRUE;
+		    buf->need_reshape = true;
 		}
 		x = (int)((rcol - column + buf->rootX) * pixel_per_char);
 		y = (int)(i * pixel_per_line);
@@ -926,7 +927,7 @@ redrawLineImage(Buffer *buf, Line *l, int i)
 		    h = (int)(LASTLINE * pixel_per_line - y);
 		addImage(cache, x, y, sx, sy, w, h);
 		image->touch = image_touch;
-		draw_image_flag = TRUE;
+		draw_image_flag = true;
 	    }
 	}
 	rcol = COLPOS(l, pos + j + 1);
@@ -1013,48 +1014,48 @@ redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos)
 	rcol = ncol;
     }
     if (somode) {
-	somode = FALSE;
+	somode = false;
 	standend();
     }
     if (ulmode) {
-	ulmode = FALSE;
+	ulmode = false;
 	underlineend();
     }
     if (bomode) {
-	bomode = FALSE;
+	bomode = false;
 	boldend();
     }
     if (emph_mode) {
-	emph_mode = FALSE;
+	emph_mode = false;
 	boldend();
     }
 
     if (anch_mode) {
-	anch_mode = FALSE;
+	anch_mode = false;
 	EFFECT_ANCHOR_END;
     }
     if (imag_mode) {
-	imag_mode = FALSE;
+	imag_mode = false;
 	EFFECT_IMAGE_END;
     }
     if (form_mode) {
-	form_mode = FALSE;
+	form_mode = false;
 	EFFECT_FORM_END;
     }
     if (visited_mode) {
-	visited_mode = FALSE;
+	visited_mode = false;
 	EFFECT_VISITED_END;
     }
     if (active_mode) {
-	active_mode = FALSE;
+	active_mode = false;
 	EFFECT_ACTIVE_END;
     }
     if (mark_mode) {
-	mark_mode = FALSE;
+	mark_mode = false;
 	EFFECT_MARK_END;
     }
     if (graph_mode) {
-	graph_mode = FALSE;
+	graph_mode = false;
 	graphend();
     }
 #ifdef USE_ANSI_COLOR
@@ -1068,14 +1069,14 @@ redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos)
 if (m & effect) { \
     if (!modeflag) { \
 	action_start; \
-	modeflag = TRUE; \
+	modeflag = true; \
     } \
 }
 
 #define do_effect2(effect,modeflag,action_start,action_end) \
 if (modeflag) { \
     action_end; \
-    modeflag = FALSE; \
+    modeflag = false; \
 }
 
 static void
@@ -1095,7 +1096,7 @@ do_effects(Lineprop m)
     do_effect2(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
     if (graph_mode) {
 	graphend();
-	graph_mode = FALSE;
+	graph_mode = false;
     }
 
     /* effect start */
@@ -1164,7 +1165,7 @@ addChar(char c, Lineprop mode)
 	if (graph_ok() && c < N_GRAPH_SYMBOL) {
 	    if (!graph_mode) {
 		graphstart();
-		graph_mode = TRUE;
+		graph_mode = true;
 	    }
 #ifdef USE_M17N
 	    if (w == 2 && WcOption.use_wide)
@@ -1305,13 +1306,13 @@ disp_message_nsec(const char *s, int redraw_current, int sec, int purge, int mou
 void
 disp_message(const char *s, int redraw_current)
 {
-    disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
+    disp_message_nsec(s, redraw_current, 10, false, true);
 }
 #ifdef USE_MOUSE
 void
 disp_message_nomouse(char *s, int redraw_current)
 {
-    disp_message_nsec(s, redraw_current, 10, FALSE, FALSE);
+    disp_message_nsec(s, redraw_current, 10, false, false);
 }
 #endif
 
@@ -1327,7 +1328,7 @@ cursorUp0(Buffer *buf, int n)
     if (buf->cursorY > 0)
 	cursorUpDown(buf, -1);
     else {
-	buf->topLine = lineSkip(buf, buf->topLine, -n, FALSE);
+	buf->topLine = lineSkip(buf, buf->topLine, -n, false);
 	if (buf->currentLine->prev != NULL)
 	    buf->currentLine = buf->currentLine->prev;
 	arrangeLine(buf);
@@ -1359,7 +1360,7 @@ cursorDown0(Buffer *buf, int n)
     if (buf->cursorY < buf->LINES - 1)
 	cursorUpDown(buf, 1);
     else {
-	buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+	buf->topLine = lineSkip(buf, buf->topLine, n, false);
 	if (buf->currentLine->next != NULL)
 	    buf->currentLine = buf->currentLine->next;
 	arrangeLine(buf);
@@ -1393,7 +1394,7 @@ cursorUpDown(Buffer *buf, int n)
 
     if (buf->firstLine == NULL)
 	return;
-    if ((buf->currentLine = currentLineSkip(buf, cl, n, FALSE)) == cl)
+    if ((buf->currentLine = currentLineSkip(buf, cl, n, false)) == cl)
 	return;
     arrangeLine(buf);
 }
@@ -1497,7 +1498,7 @@ arrangeCursor(Buffer *buf)
     /* Arrange line */
     if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->LINES
 	|| buf->currentLine->linenumber < buf->topLine->linenumber) {
-	buf->topLine = lineSkip(buf, buf->currentLine, 0, FALSE);
+	buf->topLine = lineSkip(buf, buf->currentLine, 0, false);
     }
     /* Arrange column */
     while (buf->pos < 0 && buf->currentLine->prev && buf->currentLine->bpos) {
@@ -1604,7 +1605,7 @@ void
 restorePosition(Buffer *buf, Buffer *orig)
 {
     buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1,
-			    FALSE);
+			    false);
     gotoLine(buf, CUR_LINENUMBER(orig));
     buf->pos = orig->pos;
     if (buf->currentLine && orig->currentLine)

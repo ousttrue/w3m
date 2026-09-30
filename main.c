@@ -2,6 +2,7 @@
 #include "alloc.h"
 #define MAINPROGRAM
 #include "backend.h"
+#include "input_stream.h"
 #include "entity.h"
 #include "str_gc.h"
 #include "subprocess.h"
@@ -68,7 +69,7 @@ static void sig_chld(int signo);
 static void SigPipe(SIGNAL_ARG);
 #endif
 
-static int need_resize_screen = FALSE;
+static int need_resize_screen = false;
 static void resize_hook(SIGNAL_ARG);
 static void resize_screen(void);
 
@@ -104,7 +105,7 @@ typedef struct _Event {
 #define PREC_NUM (prec_num ? prec_num : 1)
 #define PREC_LIMIT 10000
 
-int do_download = FALSE;
+int do_download = false;
 DownloadList* FirstDL = NULL;
 DownloadList* LastDL = NULL;
 
@@ -137,10 +138,10 @@ static Str err_msg;
 static GC_warn_proc orig_GC_warn_proc = NULL;
 static char* session_bak;
 static char* session_file;
-static int add_download_list = FALSE;
-static int check_target = TRUE;
+static int add_download_list = false;
+static int check_target = true;
 static int deprecated;
-static int display_ok = FALSE;
+static int display_ok = false;
 static int on_target = 1;
 static int prec_num = 0;
 static int prev_key = -1;
@@ -191,18 +192,18 @@ int main(int argc, char** argv)
     Buffer* newbuf = NULL;
     char* p;
     int c, i;
-    InputStream redin;
+    union input_stream* redin;
     char* line_str = NULL;
     char** load_argv;
     FormList* request;
     int load_argc = 0;
-    int load_bookmark = FALSE;
-    int visual_start = FALSE;
-    int open_new_tab = FALSE;
-    char search_header = FALSE;
+    int load_bookmark = false;
+    int visual_start = false;
+    int open_new_tab = false;
+    char search_header = false;
     char* default_type = NULL;
     char* post_file = NULL;
-    int opt_restore = FALSE;
+    int opt_restore = false;
 #ifdef USE_M17N
     char* Locale = NULL;
     wc_uint8 auto_detect;
@@ -327,9 +328,9 @@ int main(int argc, char** argv)
          */
         if (ISOPT("-backend")) {
             deprecated |= 1;
-            w3m_backend = TRUE;
+            w3m_backend = true;
         } else if (ISOPT("-backend_batch")) {
-            w3m_backend = TRUE;
+            w3m_backend = true;
             if (!backend_batch_commands)
                 backend_batch_commands = newTextList();
             pushText(backend_batch_commands, NXTARG());
@@ -345,7 +346,7 @@ int main(int argc, char** argv)
         } else if (ISOPT("-cols"))
             opt_cols = atoi(NXTARG());
         else if (ISOPT("-debug"))
-            w3m_debug = TRUE;
+            w3m_debug = true;
         else if (ISOPT("-dump"))
             w3m_dump = DUMP_BUFFER;
         else if (ISOPT("-dump_both"))
@@ -362,7 +363,7 @@ int main(int argc, char** argv)
             w3m_dump = DUMP_HALFDUMP;
         else if (ISOPT("-halfload")) {
             w3m_dump = 0;
-            w3m_halfload = TRUE;
+            w3m_halfload = true;
             DefaultType = default_type = "text/html";
         } else if (ISOPT("-header")) {
             Str hs;
@@ -373,9 +374,9 @@ int main(int argc, char** argv)
         else if (ISOPT("-no-graph"))
             UseGraphicChar = GRAPHIC_CHAR_ASCII;
         else if (ISOPT("-no-proxy"))
-            use_proxy = FALSE;
+            use_proxy = false;
         else if (ISOPT("-num"))
-            showLineNum = TRUE;
+            showLineNum = true;
         else if (ISOPT("-post"))
             post_file = NXTARG();
         else if (ISOPT("-ppc")) {
@@ -383,7 +384,7 @@ int main(int argc, char** argv)
             ppc = atof(NXTARG());
             if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR) {
                 pixel_per_char = ppc;
-                set_pixel_per_char = TRUE;
+                set_pixel_per_char = true;
             }
         } else if (ISOPT("-reqlog"))
             w3m_reqlog = rcFile("request.log")->ptr;
@@ -401,9 +402,9 @@ int main(int argc, char** argv)
 
 #ifdef USE_COOKIE
         else if (ISOPT("-no-cookie"))
-            use_cookie = accept_cookie = FALSE;
+            use_cookie = accept_cookie = false;
         else if (ISOPT("-cookie"))
-            use_cookie = accept_cookie = TRUE;
+            use_cookie = accept_cookie = true;
         else if (ISOPT("-cookie-jar")) {
             CookieFile = NXTARG();
             if (CookieFile[0] != '~' && CookieFile[0] != '/') {
@@ -422,7 +423,7 @@ int main(int argc, char** argv)
             ppc = atof(NXTARG());
             if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR * 2) {
                 pixel_per_line = ppc;
-                set_pixel_per_line = TRUE;
+                set_pixel_per_line = true;
             }
         } else if (ISOPT("-ri"))
             enable_inline_image = INLINE_IMG_OSC5379;
@@ -432,7 +433,7 @@ int main(int argc, char** argv)
 
 #ifdef USE_MOUSE
         else if (ISOPT("-no-mouse"))
-            use_mouse = FALSE;
+            use_mouse = false;
 #endif /* USE_MOUSE */
 
 #ifdef USE_SSL
@@ -452,13 +453,13 @@ int main(int argc, char** argv)
 
         /* Single-letter flags */
         else if (ISOPT("-B"))
-            load_bookmark = TRUE;
+            load_bookmark = true;
         else if (ISOPT("-F"))
-            RenderFrame = TRUE;
+            RenderFrame = true;
         else if (ISOPT("-N"))
-            open_new_tab = TRUE;
+            open_new_tab = true;
         else if (ISOPT("-R"))
-            opt_restore = TRUE;
+            opt_restore = true;
         else if (CHKOPT("-T"))
             DefaultType = default_type = getarg(argv, &i);
         else if (ISOPT("-V")) {
@@ -467,7 +468,7 @@ int main(int argc, char** argv)
         } else if (ISOPT("-W"))
             WrapDefault = !WrapDefault;
         else if (ISOPT("-X"))
-            use_ti_te = FALSE;
+            use_ti_te = false;
 
         else if (ISOPT("-h"))
             help();
@@ -475,7 +476,7 @@ int main(int argc, char** argv)
             if (atoi(getarg(argv, &i)) > 0)
                 PagerMax = atoi(argv[i]);
         } else if (ISOPT("-m"))
-            SearchHeader = search_header = TRUE;
+            SearchHeader = search_header = true;
         else if (ISOPT("-o")) {
             /* "?" is undocumented and only kept for backwards compatibility */
             if (!argv[i + 1] || !strcmp(argv[i + 1], "?")) {
@@ -493,14 +494,14 @@ int main(int argc, char** argv)
                 exit(2);
             }
         } else if (ISOPT("-r"))
-            ShowEffect = FALSE;
+            ShowEffect = false;
         else if (ISOPT("-s"))
-            squeezeBlankLine = TRUE;
+            squeezeBlankLine = true;
         else if (CHKOPT("-t")) {
             if (atoi(getarg(argv, &i)) > 0)
                 Tabstop = atoi(argv[i]);
         } else if (ISOPT("-v"))
-            visual_start = TRUE;
+            visual_start = true;
 
 #ifdef INET6
         else if (ISOPT("-4") || ISOPT("-6"))
@@ -509,10 +510,10 @@ int main(int argc, char** argv)
 
 #ifdef USE_COLOR
         else if (ISOPT("-M"))
-            useColor = FALSE;
+            useColor = false;
         else if (ISOPT("-H")) {
             deprecated |= 1;
-            highIntensityColors = TRUE;
+            highIntensityColors = true;
         }
 #endif /* USE_COLOR */
 
@@ -521,7 +522,7 @@ int main(int argc, char** argv)
             DocumentCharset = wc_guess_charset_short(getarg(argv, &i),
                 DocumentCharset);
             WcOption.auto_detect = WC_OPT_DETECT_OFF;
-            UseContentCharset = FALSE;
+            UseContentCharset = false;
         } else if (CHKOPT("-O"))
             DisplayCharset = wc_guess_charset_short(getarg(argv, &i),
                 DisplayCharset);
@@ -593,7 +594,7 @@ int main(int argc, char** argv)
     }
 #ifdef USE_IMAGE
     else if (w3m_halfdump && displayImage)
-        activeImage = TRUE;
+        activeImage = true;
 #endif
 
     sync_with_option();
@@ -617,7 +618,7 @@ int main(int argc, char** argv)
         if (!(fp = fopen(sf, "r"))) {
             Str err = Sprintf("Cannot restore session %s - %s", sf,
                 strerror(errno));
-            disp_err_message(err->ptr, FALSE);
+            disp_err_message(err->ptr, false);
             fmTerm();
             return 1;
         }
@@ -734,7 +735,7 @@ int main(int argc, char** argv)
         int retry = 0;
 
         if (!*load_argv[i]) {
-            open_new_tab = TRUE;
+            open_new_tab = true;
             continue;
         }
 
@@ -797,7 +798,7 @@ int main(int argc, char** argv)
             break;
         }
         proc_buf(newbuf, search_header, open_new_tab);
-        open_new_tab = FALSE;
+        open_new_tab = false;
     }
     if (w3m_dump) {
 #ifdef USE_COOKIE
@@ -807,7 +808,7 @@ int main(int argc, char** argv)
     }
 
     if (add_download_list) {
-        add_download_list = FALSE;
+        add_download_list = false;
         CurrentTab = LastTab;
         if (!FirstTab) {
             FirstTab = LastTab = CurrentTab = newTab();
@@ -834,12 +835,12 @@ int main(int argc, char** argv)
         w3m_exit(!!err_msg);
     }
     if (err_msg)
-        disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
+        disp_message_nsec(err_msg->ptr, false, 1, true, false);
 
-    SearchHeader = FALSE;
+    SearchHeader = false;
     DefaultType = NULL;
 #ifdef USE_M17N
-    UseContentCharset = TRUE;
+    UseContentCharset = true;
     WcOption.auto_detect = auto_detect;
 #endif
 
@@ -851,7 +852,7 @@ int main(int argc, char** argv)
     /* main loop */
     for (;;) {
         if (add_download_list) {
-            add_download_list = FALSE;
+            add_download_list = false;
             ldDL();
         }
         if (Currentbuf->submit) {
@@ -859,7 +860,7 @@ int main(int argc, char** argv)
             Currentbuf->submit = NULL;
             gotoLine(Currentbuf, a->start.line);
             Currentbuf->pos = a->start.pos;
-            _followForm(TRUE);
+            _followForm(true);
             continue;
         }
         /* event processing */
@@ -891,7 +892,7 @@ int main(int argc, char** argv)
             CurrentAlarm = &DefaultAlarm;
 #endif
 #ifdef USE_MOUSE
-        mouse_action.in_action = FALSE;
+        mouse_action.in_action = false;
         if (use_mouse)
             mouse_active();
 #endif /* USE_MOUSE */
@@ -1240,9 +1241,9 @@ make_optional_header_string(char* s)
     hs = Strnew_size(strlen(s) + 3);
     Strcopy_charp_n(hs, s, p - s);
     if (!Strcasecmp_charp(hs, "content-type"))
-        override_content_type = TRUE;
+        override_content_type = true;
     if (!Strcasecmp_charp(hs, "user-agent"))
-        override_user_agent = TRUE;
+        override_user_agent = true;
     Strcat_charp(hs, ": ");
     if (*(++p)) { /* not null header */
         SKIP_BLANKS(p); /* skip white spaces */
@@ -1379,7 +1380,7 @@ do_dump(Buffer* buf)
         dump_source(buf);
     if (w3m_dump == DUMP_BUFFER) {
         int i;
-        saveBuffer(buf, stdout, FALSE);
+        saveBuffer(buf, stdout, false);
         if (displayLinkNumber && buf->href) {
             int nanchor = buf->href->nanchor;
             printf("\nReferences:\n\n");
@@ -1545,14 +1546,14 @@ intTrap(SIGNAL_ARG)
 static void
 resize_hook(SIGNAL_ARG)
 {
-    need_resize_screen = TRUE;
+    need_resize_screen = true;
     mySignal(SIGWINCH, resize_hook);
 }
 
 static void
 resize_screen(void)
 {
-    need_resize_screen = FALSE;
+    need_resize_screen = false;
     setlinescols();
     setupscreen();
     if (CurrentTab)
@@ -1584,7 +1585,7 @@ nscroll(int n, int mode)
     if (buf->firstLine == NULL)
         return;
     lnum = cur->linenumber;
-    buf->topLine = lineSkip(buf, top, n, FALSE);
+    buf->topLine = lineSkip(buf, top, n, false);
     if (buf->topLine == top) {
         lnum += n;
         if (lnum < buf->topLine->linenumber)
@@ -1673,7 +1674,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
         return;
     offsety = /*Currentbuf->LINES / 2*/ - Currentbuf->cursorY;
     if (offsety != 0) {
-        Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, FALSE);
+        Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, false);
         arrangeLine(Currentbuf);
         displayBuffer(Currentbuf, B_NORMAL);
     }
@@ -1742,11 +1743,11 @@ disp_srchresult(int result, const char* prompt, const char* str)
     if (str == NULL)
         str = "";
     if (result & SR_NOTFOUND)
-        disp_message(Sprintf("Not found: %s", str)->ptr, TRUE);
+        disp_message(Sprintf("Not found: %s", str)->ptr, true);
     else if (result & SR_WRAPPED)
-        disp_message(Sprintf("Search wrapped: %s", str)->ptr, TRUE);
+        disp_message(Sprintf("Search wrapped: %s", str)->ptr, true);
     else if (show_srch_str)
-        disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
+        disp_message(Sprintf("%s%s", prompt, str)->ptr, true);
 }
 
 static int
@@ -1754,7 +1755,7 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
 {
     static Buffer sbuf;
     char* str;
-    int do_next_search = FALSE;
+    int do_next_search = false;
 
     if (ch == 0 && buf == NULL) {
         SAVE_BUFPOSITION(&sbuf); /* search starting point */
@@ -1765,11 +1766,11 @@ dispincsrch(int ch, Str buf, Lineprop* prop)
     switch (ch) {
     case 022: /* C-r */
         searchRoutine = backwardSearch;
-        do_next_search = TRUE;
+        do_next_search = true;
         break;
     case 023: /* C-s */
         searchRoutine = forwardSearch;
-        do_next_search = TRUE;
+        do_next_search = true;
         break;
 
 #ifdef USE_MIGEMO
@@ -1840,7 +1841,7 @@ srch(int (*func)(Buffer*, const char*), const char* prompt)
 {
     const char* str;
     int result;
-    int disp = FALSE;
+    int disp = false;
     int pos;
 
     str = searchKeyData();
@@ -1852,7 +1853,7 @@ srch(int (*func)(Buffer*, const char*), const char* prompt)
             displayBuffer(Currentbuf, B_NORMAL);
             return;
         }
-        disp = TRUE;
+        disp = true;
     }
     pos = Currentbuf->pos;
     if (func == forwardSearch)
@@ -1903,7 +1904,7 @@ srch_nxtprv(int reverse)
     /* *INDENT-ON* */
 
     if (searchRoutine == NULL) {
-        disp_message(_("No previous regular expression"), TRUE);
+        disp_message(_("No previous regular expression"), true);
         return;
     }
     if (reverse != 0)
@@ -2017,7 +2018,7 @@ DEFUN(cd, CD, "Change working directory")
 
     dir = inputFilename(_("cd to? "), NULL);
     if (chdir(dir) == -1)
-        disp_err_message(strerror(errno), FALSE);
+        disp_err_message(strerror(errno), false);
     CurrentDir = currentdir();
 }
 
@@ -2063,14 +2064,14 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
     f = fopen(tmpf, "w");
     if (f == NULL) {
-        disp_message(Sprintf(_("Can't save buffer to %s"), cmd)->ptr, TRUE);
+        disp_message(Sprintf(_("Can't save buffer to %s"), cmd)->ptr, true);
         return;
     }
-    saveBuffer(Currentbuf, f, TRUE);
+    saveBuffer(Currentbuf, f, true);
     fclose(f);
-    buf = getpipe(myExtCommand(cmd, shell_quote(tmpf)->ptr, TRUE)->ptr);
+    buf = getpipe(myExtCommand(cmd, shell_quote(tmpf)->ptr, true)->ptr);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        disp_message("Execution failed", true);
         return;
     } else {
         buf->filename = cmd;
@@ -2104,7 +2105,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
     }
     buf = getpipe(cmd);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        disp_message("Execution failed", true);
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -2137,7 +2138,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     mySignal(SIGINT, prevtrap);
     term_raw();
     if (buf == NULL) {
-        disp_message(_("Execution failed"), TRUE);
+        disp_message(_("Execution failed"), true);
         return;
     } else {
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
@@ -2214,7 +2215,7 @@ cmd_loadfile(char* fn)
     Buffer* buf = loadGeneralFile(file_to_url(fn, CurrentDir)->ptr, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
         char* emsg = Sprintf(_("%s not found"), conv_from_system(fn))->ptr;
-        disp_err_message(emsg, FALSE);
+        disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
@@ -2486,7 +2487,7 @@ nope:
 /* Quit */
 DEFUN(quitfm, ABORT EXIT, "Quit without confirmation")
 {
-    _quitfm(FALSE);
+    _quitfm(false);
 }
 
 /* Question and Quit */
@@ -2502,17 +2503,17 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     int ok;
     char cmd;
 
-    ok = FALSE;
+    ok = false;
     do {
         buf = selectBuffer(Firstbuf, Currentbuf, &cmd);
         switch (cmd) {
         case 'B':
-            ok = TRUE;
+            ok = true;
             break;
         case '\n':
         case ' ':
             Currentbuf = buf;
-            ok = TRUE;
+            ok = true;
             break;
         case 'D':
             delBuffer(buf);
@@ -2590,7 +2591,7 @@ _goLine(const char* l)
         Currentbuf->topLine = Currentbuf->currentLine = Currentbuf->firstLine;
     } else if (*l == '$') {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->lastLine,
-            -(Currentbuf->LINES + 1) / 2, TRUE);
+            -(Currentbuf->LINES + 1) / 2, true);
         Currentbuf->currentLine = Currentbuf->lastLine;
     } else
         gotoRealLine(Currentbuf, atoi(l));
@@ -2664,14 +2665,14 @@ cur_real_linenumber(Buffer* buf)
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source")
 {
-    char* fn = Currentbuf->filename;
+    const char* fn = Currentbuf->filename;
     Str cmd;
 
     if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
         (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
         Currentbuf->real_scheme != SCM_LOCAL || !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
         Currentbuf->bufferprop & BP_FRAME) { /* Frame */
-        disp_err_message("Can't edit other than local file", TRUE);
+        disp_err_message("Can't edit other than local file", true);
         return;
     }
     if (Currentbuf->edit)
@@ -2695,10 +2696,10 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
     f = fopen(tmpf, "w");
     if (f == NULL) {
-        disp_err_message(Sprintf(_("Can't open %s"), tmpf)->ptr, TRUE);
+        disp_err_message(Sprintf(_("Can't open %s"), tmpf)->ptr, true);
         return;
     }
-    saveBuffer(Currentbuf, f, TRUE);
+    saveBuffer(Currentbuf, f, true);
     fclose(f);
     exec_cmd(editor_cmd(shell_quote(tmpf)->ptr,
         cur_real_linenumber(Currentbuf))
@@ -2751,7 +2752,7 @@ DEFUN(nextMk, NEXT_MARK, "Go to the next mark")
         l = l->next;
         i = 0;
     }
-    disp_message(_("No mark exist after here"), TRUE);
+    disp_message(_("No mark exist after here"), true);
 }
 
 /* Go to previous mark */
@@ -2785,7 +2786,7 @@ DEFUN(prevMk, PREV_MARK, "Go to the previous mark")
         if (l != NULL)
             i = l->len - 1;
     }
-    disp_message(_("No mark exist before here"), TRUE);
+    disp_message(_("No mark exist before here"), true);
 }
 
 /* Mark place to which the regular expression matches */
@@ -2807,7 +2808,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
     }
     str = conv_search_string(str, DisplayCharset);
     if ((str = regexCompile(str, 1)) != NULL) {
-        disp_message(str, TRUE);
+        disp_message(str, true);
         return;
     }
     MarkString = str;
@@ -2857,7 +2858,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
     if (buf == NULL) {
         char* emsg = Sprintf("Can't load %s", url)->ptr;
-        disp_err_message(emsg, FALSE);
+        disp_err_message(emsg, false);
         return NULL;
     }
 
@@ -2868,27 +2869,27 @@ loadLink(char* url, char* target, char* referer, FormList* request)
         return NULL;
     }
     if (!on_target) /* open link as an indivisual page */
-        return loadNormalBuf(buf, TRUE);
+        return loadNormalBuf(buf, true);
 
     if (do_download) /* download (thus no need to render frames) */
-        return loadNormalBuf(buf, FALSE);
+        return loadNormalBuf(buf, false);
 
     if (target == NULL || /* no target specified (that means this page is not a frame page) */
         !strcmp(target, "_top") || /* this link is specified to be opened as an indivisual * page */
         !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
     ) {
-        return loadNormalBuf(buf, TRUE);
+        return loadNormalBuf(buf, true);
     }
     nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
     if (nfbuf == NULL) {
         /* original page (that contains <frameset> tag) doesn't exist */
-        return loadNormalBuf(buf, TRUE);
+        return loadNormalBuf(buf, true);
     }
 
     f_element = search_frame(nfbuf->frameset, target);
     if (f_element == NULL) {
         /* specified target doesn't exist in this frameset */
-        return loadNormalBuf(buf, TRUE);
+        return loadNormalBuf(buf, true);
     }
 
     /* frame page */
@@ -2918,7 +2919,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
             if (label_topline)
                 Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
                     Currentbuf->currentLine->linenumber - Currentbuf->topLine->linenumber,
-                    FALSE);
+                    false);
             Currentbuf->pos = al->start.pos;
             arrangeCursor(Currentbuf);
         }
@@ -2936,7 +2937,7 @@ gotoLabel(char* label)
 
     al = searchURLLabel(Currentbuf, label);
     if (al == NULL) {
-        disp_message(Sprintf(_("%s is not found"), label)->ptr, TRUE);
+        disp_message(Sprintf(_("%s is not found"), label)->ptr, true);
         return;
     }
     buf = newBuffer(Currentbuf->width);
@@ -2952,7 +2953,7 @@ gotoLabel(char* label)
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
             Currentbuf->currentLine->linenumber
                 - Currentbuf->topLine->linenumber,
-            FALSE);
+            false);
     Currentbuf->pos = al->start.pos;
     arrangeCursor(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2972,7 +2973,7 @@ handleMailto(char* url)
         return 0;
 #else
     if (!non_null(Mailer)) {
-        disp_err_message(_("no mailer is specified"), TRUE);
+        disp_err_message(_("no mailer is specified"), true);
         return 1;
     }
 #endif
@@ -2986,7 +2987,7 @@ handleMailto(char* url)
             Strtruncate(to, pos - to->ptr);
     }
     exec_cmd(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)->ptr)->ptr,
-        FALSE)
+        false)
             ->ptr);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     pushHashHist(URLHist, url);
@@ -3009,7 +3010,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 #ifdef USE_IMAGE
     a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
-        _followForm(FALSE);
+        _followForm(false);
         return;
     }
     if (a && a->image && a->image->ismap) {
@@ -3019,13 +3020,13 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 #else
     a = retrieveCurrentMap(Currentbuf);
     if (a) {
-        _followForm(FALSE);
+        _followForm(false);
         return;
     }
 #endif
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
-        _followForm(FALSE);
+        _followForm(false);
         return;
     }
     if (*a->url == '#') { /* index within this buffer */
@@ -3082,7 +3083,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
     buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         char* emsg = Sprintf(_("Can't load %s"), a->url)->ptr;
-        disp_err_message(emsg, FALSE);
+        disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
     }
@@ -3297,7 +3298,7 @@ query_from_followform(Str* query, FormItemList* fi, int multipart)
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form")
 {
-    _followForm(TRUE);
+    _followForm(true);
 }
 
 static void
@@ -3322,7 +3323,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
         p = inputStrHist(_("TEXT:"), fi->value ? fi->value->ptr : NULL, TextHist);
         if (p == NULL || fi->readonly)
             break;
@@ -3336,7 +3337,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
         p = inputFilenameHist(_("Filename:"), fi->value ? fi->value->ptr : NULL,
             NULL);
         if (p == NULL || fi->readonly)
@@ -3351,7 +3352,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
             break;
         }
         p = inputLine(_("Password:"), fi->value ? fi->value->ptr : NULL,
@@ -3368,7 +3369,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly)
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
         input_textarea(fi);
         formUpdateBuffer(a, Currentbuf, fi);
         break;
@@ -3377,7 +3378,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
             break;
         }
         formRecheckRadio(a, Currentbuf, fi);
@@ -3387,7 +3388,7 @@ _followForm(int submit)
             goto do_submit;
         if (fi->readonly) {
             /* FIXME: gettextize? */
-            disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
+            disp_message_nsec("Read only field!", false, 1, true, false);
             break;
         }
         fi->checked = !fi->checked;
@@ -3465,7 +3466,7 @@ _followForm(int submit)
             do_internal(tmp2->ptr, tmp->ptr);
         } else {
             disp_err_message("Can't send form because of illegal method.",
-                FALSE);
+                false);
         }
         break;
     case FORM_INPUT_RESET:
@@ -3493,7 +3494,7 @@ _followForm(int submit)
 DEFUN(goMain, MAIN, "Goto main content")
 {
     if (!Currentbuf->mainline) {
-        disp_err_message(_("<main> not found"), FALSE);
+        disp_err_message(_("<main> not found"), false);
         return;
     }
     gotoLine(Currentbuf, Currentbuf->mainline);
@@ -3602,25 +3603,25 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
 /* go to the next anchor */
 DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink")
 {
-    _nextA(FALSE);
+    _nextA(false);
 }
 
 /* go to the previous anchor */
 DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink")
 {
-    _prevA(FALSE);
+    _prevA(false);
 }
 
 /* go to the next visited anchor */
 DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink")
 {
-    _nextA(TRUE);
+    _nextA(true);
 }
 
 /* go to the previous visited anchor */
 DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink")
 {
-    _prevA(TRUE);
+    _prevA(true);
 }
 
 /* go to the next [visited] anchor */
@@ -3639,13 +3640,13 @@ _nextA(int visited)
         return;
 
     an = retrieveCurrentAnchor(Currentbuf);
-    if (visited != TRUE && an == NULL)
+    if (visited != true && an == NULL)
         an = retrieveCurrentForm(Currentbuf);
 
     y = Currentbuf->currentLine->linenumber;
     x = Currentbuf->pos;
 
-    if (visited == TRUE) {
+    if (visited == true) {
         n = hl->nmark;
     }
 
@@ -3655,18 +3656,18 @@ _nextA(int visited)
             int hseq = an->hseq + 1;
             do {
                 if (hseq >= hl->nmark) {
-                    if (visited == TRUE)
+                    if (visited == true)
                         return;
                     an = pan;
                     goto _end;
                 }
                 po = &hl->marks[hseq];
                 an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
-                if (visited != TRUE && an == NULL)
+                if (visited != true && an == NULL)
                     an = retrieveAnchor(Currentbuf->formitem, po->line,
                         po->pos);
                 hseq++;
-                if (visited == TRUE && an) {
+                if (visited == true && an) {
                     url = parseURL2(an->url, baseURL(Currentbuf));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
@@ -3675,17 +3676,17 @@ _nextA(int visited)
             } while (an == NULL || an == pan);
         } else {
             an = closest_next_anchor(Currentbuf->href, NULL, x, y);
-            if (visited != TRUE)
+            if (visited != true)
                 an = closest_next_anchor(Currentbuf->formitem, an, x, y);
             if (an == NULL) {
-                if (visited == TRUE)
+                if (visited == true)
                     return;
                 an = pan;
                 break;
             }
             x = an->start.pos;
             y = an->start.line;
-            if (visited == TRUE) {
+            if (visited == true) {
                 url = parseURL2(an->url, baseURL(Currentbuf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
@@ -3693,7 +3694,7 @@ _nextA(int visited)
             }
         }
     }
-    if (visited == TRUE)
+    if (visited == true)
         return;
 
 _end:
@@ -3722,13 +3723,13 @@ _prevA(int visited)
         return;
 
     an = retrieveCurrentAnchor(Currentbuf);
-    if (visited != TRUE && an == NULL)
+    if (visited != true && an == NULL)
         an = retrieveCurrentForm(Currentbuf);
 
     y = Currentbuf->currentLine->linenumber;
     x = Currentbuf->pos;
 
-    if (visited == TRUE) {
+    if (visited == true) {
         n = hl->nmark;
     }
 
@@ -3738,18 +3739,18 @@ _prevA(int visited)
             int hseq = an->hseq - 1;
             do {
                 if (hseq < 0) {
-                    if (visited == TRUE)
+                    if (visited == true)
                         return;
                     an = pan;
                     goto _end;
                 }
                 po = hl->marks + hseq;
                 an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
-                if (visited != TRUE && an == NULL)
+                if (visited != true && an == NULL)
                     an = retrieveAnchor(Currentbuf->formitem, po->line,
                         po->pos);
                 hseq--;
-                if (visited == TRUE && an) {
+                if (visited == true && an) {
                     url = parseURL2(an->url, baseURL(Currentbuf));
                     if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                         goto _end;
@@ -3758,17 +3759,17 @@ _prevA(int visited)
             } while (an == NULL || an == pan);
         } else {
             an = closest_prev_anchor(Currentbuf->href, NULL, x, y);
-            if (visited != TRUE)
+            if (visited != true)
                 an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
             if (an == NULL) {
-                if (visited == TRUE)
+                if (visited == true)
                     return;
                 an = pan;
                 break;
             }
             x = an->start.pos;
             y = an->start.line;
-            if (visited == TRUE) {
+            if (visited == true) {
                 url = parseURL2(an->url, baseURL(Currentbuf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
                     goto _end;
@@ -3776,7 +3777,7 @@ _prevA(int visited)
             }
         }
     }
-    if (visited == TRUE)
+    if (visited == true)
         return;
 
 _end:
@@ -4075,21 +4076,21 @@ checkBackBuffer(Buffer* buf)
 
     if (fbuf) {
         if (fbuf->frameQ)
-            return TRUE; /* Currentbuf has stacked frames */
+            return true; /* Currentbuf has stacked frames */
         /* when no frames stacked and next is frame source, try next's
          * nextBuffer */
         if (RenderFrame && fbuf == buf->nextBuffer) {
             if (fbuf->nextBuffer != NULL)
-                return TRUE;
+                return true;
             else
-                return FALSE;
+                return false;
         }
     }
 
     if (buf->nextBuffer)
-        return TRUE;
+        return true;
 
-    return FALSE;
+    return false;
 }
 
 /* delete current buffer and back to the previous buffer */
@@ -4099,12 +4100,12 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
 
     if (!checkBackBuffer(Currentbuf)) {
         if (exit_on_last && nTab == 1)
-            _quitfm(FALSE);
+            _quitfm(false);
         else if (close_tab_back || exit_on_last) {
             deleteTab(CurrentTab);
             displayBuffer(Currentbuf, B_FORCE_REDRAW);
         } else
-            disp_message(_("Can't go back..."), TRUE);
+            disp_message(_("Can't go back..."), true);
         return;
     }
 
@@ -4127,7 +4128,7 @@ DEFUN(backBf, BACK, "Close current buffer and return to the one below in stack")
                 rFrame();
                 Currentbuf->topLine = lineSkip(Currentbuf,
                     Currentbuf->firstLine, top - 1,
-                    FALSE);
+                    false);
                 gotoLine(Currentbuf, linenumber);
                 Currentbuf->pos = pos;
                 Currentbuf->currentColumn = currentColumn;
@@ -4160,7 +4161,7 @@ cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
     buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         char* emsg = Sprintf(_("Can't load %s"), conv_from_system(url))->ptr;
-        disp_err_message(emsg, FALSE);
+        disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
         if (RenderFrame && Currentbuf->frameset != NULL)
@@ -4237,7 +4238,7 @@ goURL0(const char* prompt, int relative)
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
 {
-    goURL0("Goto URL: ", FALSE);
+    goURL0("Goto URL: ", false);
 }
 
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
@@ -4261,14 +4262,14 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 
 DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 {
-    goURL0("Goto relative URL: ", TRUE);
+    goURL0("Goto relative URL: ", true);
 }
 
 static void
 cmd_loadBuffer(Buffer* buf, int prop, int linkid)
 {
     if (buf == NULL) {
-        disp_err_message("Can't load string", FALSE);
+        disp_err_message("Can't load string", false);
     } else if (buf != NO_BUFFER) {
         buf->bufferprop |= (BP_INTERNAL | prop);
         if (!(buf->bufferprop & BP_NO_URL))
@@ -4350,7 +4351,7 @@ int _strSession(char* sf)
             if ((url = baseURL(buf)))
                 fprintf(f, "%s\n", parsedURL2Str(url)->ptr);
             else
-                disp_err_message(buf->buffername, FALSE);
+                disp_err_message(buf->buffername, false);
         }
         sep = "\n";
     }
@@ -4360,7 +4361,7 @@ int _strSession(char* sf)
     return 0;
 
 fail:
-    disp_err_message(strerror(errno), FALSE);
+    disp_err_message(strerror(errno), false);
     return -1;
 }
 
@@ -4386,7 +4387,7 @@ DEFUN(strSession, STORE, "Store session")
     if (!*sf)
         sf = def;
     if (_strSession(sf))
-        disp_err_message("Unable to store session", FALSE);
+        disp_err_message("Unable to store session", false);
 }
 
 /* option setting */
@@ -4530,18 +4531,18 @@ anchorMn(Anchor* (*menu_func)(Buffer*), int go)
 /* accesskey */
 DEFUN(accessKey, ACCESSKEY, "Pop up accesskey menu")
 {
-    anchorMn(accesskey_menu, TRUE);
+    anchorMn(accesskey_menu, true);
 }
 
 /* list menu */
 DEFUN(listMn, LIST_MENU, "Pop up menu for hyperlinks to browse to")
 {
-    anchorMn(list_menu, TRUE);
+    anchorMn(list_menu, true);
 }
 
 DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 {
-    anchorMn(list_menu, FALSE);
+    anchorMn(list_menu, false);
 }
 #endif
 
@@ -4582,24 +4583,24 @@ DEFUN(ldHist, HISTORY, "Show browsing history")
 DEFUN(svHist, SAVE_HISTORY, "Save browsing history")
 {
     saveUrlHistory();
-    disp_message_nsec("History written", TRUE, 1, FALSE, TRUE);
+    disp_message_nsec("History written", true, 1, false, true);
 }
 #endif /* USE_HISTORY */
 
 /* download HREF link */
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
 {
-    do_download = TRUE;
+    do_download = true;
     followA();
-    do_download = FALSE;
+    do_download = false;
 }
 
 /* download IMG link */
 DEFUN(svI, SAVE_IMAGE, "Save inline image")
 {
-    do_download = TRUE;
+    do_download = true;
     followI();
-    do_download = FALSE;
+    do_download = false;
 }
 
 /* save buffer */
@@ -4619,7 +4620,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
     }
     file = conv_to_system(qfile ? qfile : file);
     if (*file == '|') {
-        is_pipe = TRUE;
+        is_pipe = true;
         f = popen(file + 1, "w");
     } else {
         if (qfile) {
@@ -4632,14 +4633,14 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
             return;
         }
         f = fopen(file, "w");
-        is_pipe = FALSE;
+        is_pipe = false;
     }
     if (f == NULL) {
         char* emsg = Sprintf(_("Can't open %s"), conv_from_system(file))->ptr;
-        disp_err_message(emsg, TRUE);
+        disp_err_message(emsg, true);
         return;
     }
-    saveBuffer(Currentbuf, f, TRUE);
+    saveBuffer(Currentbuf, f, true);
     if (is_pipe)
         pclose(f);
     else
@@ -4652,7 +4653,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 {
     if (Currentbuf->sourcefile == NULL)
         return;
-    PermitSaveToPipe = TRUE;
+    PermitSaveToPipe = true;
 
     char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
@@ -4671,7 +4672,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     }
 
     doFileCopy(Currentbuf->sourcefile, file);
-    PermitSaveToPipe = FALSE;
+    PermitSaveToPipe = false;
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -4729,7 +4730,7 @@ disp:
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
 #endif
-    disp_message_nomouse(&s->ptr[offset], TRUE);
+    disp_message_nomouse(&s->ptr[offset], true);
 }
 
 /* peek URL */
@@ -4787,7 +4788,7 @@ DEFUN(curURL, PEEK, "Show current address")
     while (offset < s->length && p[offset] & PC_WCHAR2)
         offset++;
 #endif
-    disp_message_nomouse(&s->ptr[offset], TRUE);
+    disp_message_nomouse(&s->ptr[offset], true);
 }
 /* view HTML source */
 
@@ -4821,7 +4822,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
                 : 0;
             WcOption.fix_width_conv = WC_FALSE;
 #endif
-            saveBufferBody(Currentbuf, f, TRUE);
+            saveBufferBody(Currentbuf, f, true);
 #ifdef USE_M17N
             DisplayCharset = old_charset;
             WcOption.fix_width_conv = old_fix_width_conv;
@@ -4878,7 +4879,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 DEFUN(foldPre, FOLD_PRE, "Fold long lines in <pre> elements")
 {
     fold_pre = 1;
-    Currentbuf->need_reshape = TRUE;
+    Currentbuf->need_reshape = true;
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     fold_pre = FoldPre;
 }
@@ -4899,12 +4900,12 @@ DEFUN(reload, RELOAD, "Load current document anew")
             ldDL();
             return;
         }
-        disp_err_message(_("Can't reload..."), TRUE);
+        disp_err_message(_("Can't reload..."), true);
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
-        disp_err_message(_("Can't reload stdin"), TRUE);
+        disp_err_message(_("Can't reload stdin"), true);
         return;
     }
     fold_pre = FoldPre;
@@ -4964,13 +4965,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
 #ifdef USE_M17N
     DocumentCharset = old_charset;
 #endif
-    SearchHeader = FALSE;
+    SearchHeader = false;
     DefaultType = NULL;
 
     if (multipart)
         unlink(request->body);
     if (buf == NULL) {
-        disp_err_message(_("Can't reload..."), TRUE);
+        disp_err_message(_("Can't reload..."), true);
         return;
     } else if (buf == NO_BUFFER) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -5008,11 +5009,11 @@ _docCSet(wc_ces charset)
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
     if (Currentbuf->sourcefile == NULL) {
-        disp_message("Can't reload...", FALSE);
+        disp_message("Can't reload...", false);
         return;
     }
     Currentbuf->document_charset = charset;
-    Currentbuf->need_reshape = TRUE;
+    Currentbuf->need_reshape = true;
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -5183,7 +5184,7 @@ invoke_browser(const char* url)
         browser = allocStr(browser, len - 2);
         bg = 1;
     }
-    cmd = myExtCommand(browser, shell_quote(url)->ptr, FALSE);
+    cmd = myExtCommand(browser, shell_quote(url)->ptr, false);
     Strremovetrailingspaces(cmd);
     fmTerm();
     mySystem(cmd->ptr, bg);
@@ -5194,12 +5195,12 @@ invoke_browser(const char* url)
 DEFUN(extbrz, EXTERN, "Display using an external browser")
 {
     if (Currentbuf->bufferprop & BP_INTERNAL) {
-        disp_err_message(_("Can't browse..."), TRUE);
+        disp_err_message(_("Can't browse..."), true);
         return;
     }
     if (Currentbuf->currentURL.scheme == SCM_LOCAL && !strcmp(Currentbuf->currentURL.file, "-")) {
         /* file is std input */
-        disp_err_message(_("Can't browse stdin"), TRUE);
+        disp_err_message(_("Can't browse stdin"), true);
         return;
     }
     invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
@@ -5249,7 +5250,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
 #endif
 
-    disp_message(tmp->ptr, FALSE);
+    disp_message(tmp->ptr, false);
 }
 
 #ifdef USE_IMAGE
@@ -5259,9 +5260,9 @@ DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
         initImage();
     if (!activeImage)
         return;
-    displayImage = TRUE;
+    displayImage = true;
     Currentbuf->image_flag = IMG_FLAG_AUTO;
-    Currentbuf->need_reshape = TRUE;
+    Currentbuf->need_reshape = true;
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
@@ -5363,7 +5364,7 @@ do_mouse_action(int btn, int x, int y)
     if (!(map && map->func))
         map = &mouse_action.default_map[btn];
     if (map && map->func) {
-        mouse_action.in_action = TRUE;
+        mouse_action.in_action = true;
         mouse_action.cursorX = x;
         mouse_action.cursorY = y;
         CurrentKey = -1;
@@ -5478,9 +5479,9 @@ process_mouse(int btn, int x, int y)
 DEFUN(msToggle, MOUSE_TOGGLE, "Toggle mouse support")
 {
     if (use_mouse) {
-        use_mouse = FALSE;
+        use_mouse = false;
     } else {
-        use_mouse = TRUE;
+        use_mouse = true;
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -5660,17 +5661,17 @@ DEFUN(closeTMs, CLOSE_TAB_MOUSE, "Close tab at mouse pointer")
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
 {
-    disp_message(Sprintf("w3m version %s", W3M_VERSION)->ptr, TRUE);
+    disp_message(Sprintf("w3m version %s", W3M_VERSION)->ptr, true);
 }
 
 DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
 {
     if (WrapSearch) {
-        WrapSearch = FALSE;
-        disp_message(_("Wrap search off"), TRUE);
+        WrapSearch = false;
+        disp_message(_("Wrap search off"), true);
     } else {
-        WrapSearch = TRUE;
-        disp_message(_("Wrap search on"), TRUE);
+        WrapSearch = true;
+        disp_message(_("Wrap search on"), true);
     }
 }
 
@@ -5695,7 +5696,7 @@ execdict(char* word)
                   ->ptr;
     buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
-        disp_message("Execution failed", TRUE);
+        disp_message("Execution failed", true);
         return;
     } else if (buf != NO_BUFFER) {
         buf->filename = w;
@@ -5894,7 +5895,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
         cmd = getFuncList(p);
         if (cmd < 0) {
             Str e = Sprintf("Unknown command: %s", p);
-            disp_err_message(e->ptr, FALSE);
+            disp_err_message(e->ptr, false);
             break;
         }
         p = getQWord(&data);
@@ -5974,7 +5975,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
         disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
                               data)
                               ->ptr,
-            FALSE, 1, FALSE, TRUE);
+            false, 1, false, true);
     } else {
         setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
     }
@@ -6023,7 +6024,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
 #endif
 
     if (!strcasecmp(resource, "KEYMAP")) {
-        initKeymap(TRUE);
+        initKeymap(true);
         return;
     }
 
@@ -6059,7 +6060,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     }
 #endif
 
-    disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
+    disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, false);
 }
 
 DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")
@@ -6074,7 +6075,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
             return;
         }
     }
-    setKeymap(allocStr(data, -1), -1, TRUE);
+    setKeymap(allocStr(data, -1), -1, true);
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -6236,16 +6237,16 @@ followTab(TabBuffer* tab)
         return;
 
     if (tab == CurrentTab) {
-        check_target = FALSE;
+        check_target = false;
         followA();
-        check_target = TRUE;
+        check_target = true;
         return;
     }
     _newT();
     buf = Currentbuf;
-    check_target = FALSE;
+    check_target = false;
     followA();
-    check_target = TRUE;
+    check_target = true;
     if (tab == NULL) {
         if (buf != Currentbuf)
             delBuffer(buf);
@@ -6312,13 +6313,13 @@ tabURL0(TabBuffer* tab, const char* prompt, int relative)
 DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab")
 {
     tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
-        "Goto URL on new tab: ", FALSE);
+        "Goto URL on new tab: ", false);
 }
 
 DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab")
 {
     tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
-        "Goto relative URL on new tab: ", TRUE);
+        "Goto relative URL on new tab: ", true);
 }
 
 static void
@@ -6366,7 +6367,7 @@ DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar")
     for (tab = CurrentTab, i = 0; tab && i < PREC_NUM;
         tab = tab->nextTab, i++)
         ;
-    moveTab(CurrentTab, tab ? tab : LastTab, TRUE);
+    moveTab(CurrentTab, tab ? tab : LastTab, true);
 }
 
 DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
@@ -6377,7 +6378,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
     for (tab = CurrentTab, i = 0; tab && i < PREC_NUM;
         tab = tab->prevTab, i++)
         ;
-    moveTab(CurrentTab, tab ? tab : FirstTab, FALSE);
+    moveTab(CurrentTab, tab ? tab : FirstTab, false);
 }
 
 void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)
@@ -6393,7 +6394,7 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)
     d->lock = lock;
     d->size = size;
     d->time = time(0);
-    d->running = TRUE;
+    d->running = true;
     d->err = 0;
     d->next = NULL;
     d->prev = LastDL;
@@ -6402,7 +6403,7 @@ void addDownloadList(pid_t pid, char* url, char* save, char* lock, size_t size)
     else
         FirstDL = d;
     LastDL = d;
-    add_download_list = TRUE;
+    add_download_list = true;
 }
 
 int checkDownloadList(void)
@@ -6411,12 +6412,12 @@ int checkDownloadList(void)
     struct stat st;
 
     if (!FirstDL)
-        return FALSE;
+        return false;
     for (d = FirstDL; d != NULL; d = d->next) {
         if (d->running && !lstat(d->lock, &st))
-            return TRUE;
+            return true;
     }
-    return FALSE;
+    return false;
 }
 
 static char*
@@ -6452,7 +6453,7 @@ DownloadListBuffer(void)
                        "<form method=internal action=download><hr>\n");
     for (d = LastDL; d != NULL; d = d->prev) {
         if (lstat(d->lock, &st))
-            d->running = FALSE;
+            d->running = false;
         Strcat_charp(src, "<pre>\n");
         Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url), html_quote(conv_from_system(d->save))));
         duration = cur_time - d->time;
@@ -6570,13 +6571,13 @@ void stopDownload(void)
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
     Buffer* buf;
-    int replace = FALSE, new_tab = FALSE;
+    int replace = false, new_tab = false;
 #ifdef USE_ALARM
     int reload;
 #endif
 
     if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
-        replace = TRUE;
+        replace = true;
     if (!FirstDL) {
         if (replace) {
             if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == NULL) {
@@ -6603,7 +6604,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     }
     if (!replace && open_tab_dl_list) {
         _newT();
-        new_tab = TRUE;
+        new_tab = true;
     }
     pushBuffer(buf);
     if (replace || new_tab)
@@ -6689,7 +6690,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen")
     if (Currentbuf->firstLine == NULL)
         return;
     Currentbuf->currentLine = lineSkip(Currentbuf, Currentbuf->topLine,
-        0, FALSE);
+        0, false);
     arrangeLine(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -6701,7 +6702,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
         return;
     offsety = (Currentbuf->LINES - 1) / 2;
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
-        offsety, FALSE);
+        offsety, false);
     arrangeLine(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -6713,7 +6714,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
         return;
     offsety = Currentbuf->LINES - 1;
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
-        offsety, FALSE);
+        offsety, false);
     arrangeLine(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -6728,7 +6729,7 @@ DEFUN(userMessage, MESSAGE, "Display a message")
         return;
     }
 
-    disp_message_nsec(msg, FALSE, MessageDelay, FALSE, TRUE);
+    disp_message_nsec(msg, false, MessageDelay, false, true);
 }
 
 DEFUN(lineTop, LINE_TOP, "Redraw screen with current line at top")
@@ -6738,7 +6739,7 @@ DEFUN(lineTop, LINE_TOP, "Redraw screen with current line at top")
         return;
     offsety = Currentbuf->cursorY;
     Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
-        offsety, FALSE);
+        offsety, false);
     arrangeLine(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -6751,7 +6752,7 @@ DEFUN(lineBottom, LINE_BOTTOM, "Redraw screen with current line at bottom")
     /* subtract 1 to exclude current line */
     offsety = (Currentbuf->LINES - 1) - Currentbuf->cursorY;
     Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
-        -offsety, FALSE);
+        -offsety, false);
     arrangeLine(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
 }

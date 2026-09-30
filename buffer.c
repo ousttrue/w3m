@@ -1,5 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "buffer.h"
+#include "input_stream.h"
 #include "str_gc.h"
 #include "Str.h"
 #include "alloc.h"

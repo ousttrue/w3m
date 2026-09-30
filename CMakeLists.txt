@@ -88,7 +88,7 @@ add_executable(
   anchor.c
   parsetagx.c
   tagtable.c
-  istream.c)
+  input_stream.c)
 target_link_libraries(${TARGET_NAME} PRIVATE indep wc gc ssl crypto tinfo m)
 
 target_compile_definitions(${TARGET_NAME} PRIVATE _GNU_SOURCE)

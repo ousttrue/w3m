@@ -1,6 +1,7 @@
 #pragma once
 #include "url.h"
-#include "istream.h"
+#include <time.h>
+#include "input_stream.h"
 
 enum StreamEncoding {
     ENC_7BIT,
@@ -33,9 +34,17 @@ struct UrlStream {
 };
 typedef struct UrlStream URLFile;
 
+#define StrUFgets(f) StrISgets((f)->stream)
+#define StrmyUFgets(f) StrmyISgets((f)->stream)
+#define UFgetc(f) ISgetc((f)->stream)
+#define UFundogetc(f) ISundogetc((f)->stream)
+#define UFclose(f) if (ISclose((f)->stream) == 0) {(f)->stream = NULL ;}
+#define UFfileno(f) ISfileno((f)->stream)
+
 typedef struct {
     char* referer;
     int flag;
 } URLOption;
 
-struct UrlStream init_stream(enum UrlScheme scheme, InputStream stream);
+struct UrlStream init_stream(enum UrlScheme scheme, union input_stream* stream);
+

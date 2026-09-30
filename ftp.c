@@ -47,7 +47,7 @@ typedef struct _FTP {
     int port;
     char* user;
     char* pass;
-    InputStream rf;
+    union input_stream* rf;
     FILE* wf;
     FILE* data;
 }* FTP;
@@ -365,7 +365,7 @@ void closeFTP(void)
     ftp_close(&current_ftp);
 }
 
-InputStream
+union input_stream*
 openFTPStream(ParsedURL* pu, URLFile* uf)
 {
     Str tmp;
