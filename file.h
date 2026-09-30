@@ -151,6 +151,6 @@ extern int w3m_dump;
 extern int w3m_halfload;
 
 extern char SearchHeader;
-extern char *DefaultType;
+extern const char *DefaultType;
 extern char PermitSaveToPipe;
 #endif

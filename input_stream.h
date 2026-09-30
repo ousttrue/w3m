@@ -1,6 +1,4 @@
 #pragma once
-#include "config.h"
-#include "indep.h"
 #include "growbuf.h"
 #include <fcntl.h>
 #include <stdio.h>
@@ -10,8 +8,6 @@ struct stream_buffer {
     unsigned char* buf;
     int size, cur, next;
 };
-
-typedef struct stream_buffer* StreamBuffer;
 
 struct ssl_handle {
     SSL* ssl;
@@ -89,8 +85,8 @@ extern int ISclose(union input_stream* stream);
 extern int ISgetc(union input_stream* stream);
 extern int ISundogetc(union input_stream* stream);
 extern Str StrISgets2(union input_stream* stream, char crnl);
-#define StrISgets(stream) StrISgets2(stream, FALSE)
-#define StrmyISgets(stream) StrISgets2(stream, TRUE)
+#define StrISgets(stream) StrISgets2(stream, false)
+#define StrmyISgets(stream) StrISgets2(stream, true)
 void ISgets_to_growbuf(union input_stream* stream, struct growbuf* gb, char crnl);
 #ifdef unused
 extern int ISread(union input_stream* stream, Str buf, int count);

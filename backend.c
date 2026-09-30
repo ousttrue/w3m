@@ -2,6 +2,7 @@
 #include "backend.h"
 
 #include "charset.h"
+#include "indep.h"
 #include "config.h"
 #include "cookie.h"
 #include "download.h"
@@ -16,7 +17,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-int w3m_backend = FALSE;
+int w3m_backend = false;
 TextLineList *backend_halfdump_buf;
 TextList *backend_batch_commands = NULL;
 
@@ -106,7 +107,7 @@ internal_get(char *url, int flag, FormList *request)
     backend_halfdump_buf = NULL;
     do_download = flag;
     buf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
-    do_download = FALSE;
+    do_download = false;
     if (buf != NULL && buf != NO_BUFFER) {
 	if (is_html_type(buf->type) && backend_halfdump_buf) {
 	    TextLineListItem *p;
@@ -137,7 +138,7 @@ internal_get(char *url, int flag, FormList *request)
 		}
 		print_headers(buf, len);
 		printf("\n");
-		saveBuffer(buf, stdout, TRUE);
+		saveBuffer(buf, stdout, true);
 	    }
 	    else {
 		print_headers(buf, 0);
@@ -152,11 +153,11 @@ static void
 get(TextList *argv)
 {
     char *p, *url = NULL;
-    int flag = FALSE;
+    int flag = false;
 
     while ((p = popText(argv))) {
 	if (!strcasecmp(p, "-download_only"))
-	    flag = TRUE;
+	    flag = true;
 	else
 	    url = p;
     }
@@ -173,11 +174,11 @@ post(TextList *argv)
     FormList *request;
     char *p, *target = NULL, *charset = NULL,
 	*enctype = NULL, *body = NULL, *boundary = NULL, *url = NULL;
-    int flag = FALSE, length = 0;
+    int flag = false, length = 0;
 
     while ((p = popText(argv))) {
 	if (!strcasecmp(p, "-download_only"))
-	    flag = TRUE;
+	    flag = true;
 	else if (!strcasecmp(p, "-target"))
 	    target = popText(argv);
 	else if (!strcasecmp(p, "-charset"))
@@ -309,7 +310,7 @@ backend(void)
     if (COLS == 0)
 	COLS = DEFAULT_COLS;
 #ifdef USE_MOUSE
-    use_mouse = FALSE;
+    use_mouse = false;
 #endif				/* USE_MOUSE */
 
     if (backend_batch_commands) {
@@ -346,7 +347,7 @@ readline(char *prompt)
 static TextList *
 split(const char *p)
 {
-    int in_double_quote = FALSE, in_single_quote = FALSE;
+    int in_double_quote = false, in_single_quote = false;
     Str s = Strnew();
     TextList *tp = newTextList();
 

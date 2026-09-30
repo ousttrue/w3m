@@ -1,6 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "anchor.h"
-
+#include "indep.h"
 #include "alloc.h"
 #include "config.h"
 #include "display.h"
@@ -58,7 +57,7 @@ putAnchor(AnchorList *al, char *url, char *target, Anchor **anchor_return,
     a->referer = referer;
     a->title = title;
     a->accesskey = key;
-    a->slave = FALSE;
+    a->slave = false;
     a->start = bp;
     a->end = bp;
     al->nanchor++;
@@ -179,7 +178,7 @@ retrieveCurrentForm(Buffer *buf)
 }
 
 Anchor *
-searchAnchor(AnchorList *al, char *str)
+searchAnchor(AnchorList *al, const char *str)
 {
     int i;
     Anchor *a;
@@ -417,7 +416,7 @@ reAnchorNewsheader(Buffer *buf)
 	"Newsgroups:", NULL
     };
     char **header, **q;
-    int i, search = FALSE;
+    int i, search = false;
 
     if (!buf || !buf->firstLine)
 	return NULL;
@@ -436,10 +435,10 @@ reAnchorNewsheader(Buffer *buf)
 		continue;
 	    p = l->lineBuf;
 	    if (!IS_SPACE(*p)) {
-		search = FALSE;
+		search = false;
 		for (q = header; *q; q++) {
 		    if (!strncasecmp(p, *q, strlen(*q))) {
-			search = TRUE;
+			search = true;
 			p = strchr(p, ':') + 1;
 			break;
 		    }
@@ -623,7 +622,7 @@ addMultirowsImg(Buffer *buf, AnchorList *al)
 	    pos = columnPos(l, col);
 	    a = registerImg(buf, a_img.url, a_img.title, l->linenumber, pos);
 	    a->hseq = -a_img.hseq;
-	    a->slave = TRUE;
+	    a->slave = true;
 	    a->image = img;
 	    a->end.pos = pos + ecol - col;
 	    /* TODO:
@@ -640,7 +639,7 @@ addMultirowsImg(Buffer *buf, AnchorList *al)
 				 a_href.referer, a_href.title,
 				 a_href.accesskey, l->linenumber, pos);
 		a->hseq = a_href.hseq;
-		a->slave = TRUE;
+		a->slave = true;
 		a->end.pos = pos + ecol - col;
 		for (k = pos; k < a->end.pos; k++)
 		    l->propBuf[k] |= PE_ANCHOR;

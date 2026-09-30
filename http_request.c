@@ -34,11 +34,11 @@ int ai_family_order_table[7][3] = {
 };
 
 Str header_string = NULL;
-int override_content_type = FALSE;
-int override_user_agent = FALSE;
+int override_content_type = false;
+int override_user_agent = false;
 char* w3m_reqlog;
 
-char use_proxy = TRUE;
+char use_proxy = true;
 char* HTTP_proxy = NULL;
 ParsedURL HTTP_proxy_parsed;
 #ifdef USE_SSL
@@ -53,11 +53,11 @@ ParsedURL GOPHER_proxy_parsed;
 #endif /* USE_GOPHER */
 char* NO_proxy = NULL;
 TextList* NO_proxy_domains;
-int NOproxy_netaddr = TRUE;
-char NoCache = FALSE;
+int NOproxy_netaddr = true;
+char NoCache = false;
 
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-int ssl_path_modified = FALSE;
+int ssl_path_modified = false;
 #endif
 
 static JMP_BUF AbortLoading;
@@ -394,7 +394,7 @@ eend:
     disp_err_message(Sprintf(_("SSL error: %s, a workaround might be: w3m -insecure"),
                          ERR_error_string(ERR_get_error(), NULL))
                          ->ptr,
-        FALSE);
+        false);
     return NULL;
 }
 
@@ -734,7 +734,7 @@ _parsedURL2Str(const ParsedURL* pu, int pass, int user, int label)
 
 Str parsedURL2Str(const ParsedURL* pu)
 {
-    return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
+    return _parsedURL2Str(pu, false, true, true);
 }
 
 static Str
@@ -745,7 +745,7 @@ parsedURL2RefererOriginStr(ParsedURL* pu)
 
     pu->file = NULL;
     pu->query = NULL;
-    s = _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+    s = _parsedURL2Str(pu, false, false, false);
     pu->file = f;
     pu->query = q;
 
@@ -754,7 +754,7 @@ parsedURL2RefererOriginStr(ParsedURL* pu)
 
 Str parsedURL2RefererStr(ParsedURL* pu)
 {
-    return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+    return _parsedURL2Str(pu, false, false, false);
 }
 
 static char*
@@ -797,9 +797,9 @@ otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
     no_referer_ptr = query_SCONF_NO_REFERER_TO(target);
     no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
     if (!no_referer) {
-        int cross_origin = FALSE;
+        int cross_origin = false;
         if (CrossOriginReferer && current && current->host && (!target || !target->host || strcasecmp(current->host, target->host) != 0 || current->port != target->port || current->scheme != target->scheme))
-            cross_origin = TRUE;
+            cross_origin = true;
 #ifdef USE_SSL
         if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
             /* Don't send Referer: if https:// -> http:// */
@@ -855,7 +855,7 @@ Str HTTPrequestURI(ParsedURL* pu, HRequest* hr)
             Strcat_charp(tmp, pu->query);
         }
     } else
-        Strcat(tmp, _parsedURL2Str(pu, TRUE, TRUE, FALSE));
+        Strcat(tmp, _parsedURL2Str(pu, true, true, false));
     return tmp;
 }
 
@@ -1015,7 +1015,7 @@ retry:
                                           option->referer),
                 fclose);
         if (uf.stream) {
-            uf.is_cgi = TRUE;
+            uf.is_cgi = true;
             uf.scheme = pu->scheme = SCM_LOCAL_CGI;
             return uf;
         }
@@ -1308,7 +1308,7 @@ retry:
             *q = '\0';
             uf.encoding = ENC_BASE64;
         } else
-            tmp = Str_url_unquote(tmp, FALSE, FALSE);
+            tmp = Str_url_unquote(tmp, false, false);
         uf.stream = newStrStream(tmp);
         uf.guess_type = (*p != '\0') ? p : "text/plain";
         return uf;

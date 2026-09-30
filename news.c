@@ -1,6 +1,6 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "buffer.h"
 #include "mymktime.h"
+#include "indep.h"
 #include "charset.h"
 #include "config.h"
 #include "display.h"
@@ -104,10 +104,10 @@ news_open(News* news)
         if (status != 200 && status != 201)
             goto open_err;
     }
-    return TRUE;
+    return true;
 open_err:
     news_close(news);
-    return FALSE;
+    return false;
 }
 
 static void
@@ -121,7 +121,7 @@ static char*
 name_from_address(char* str, int n)
 {
     char *s, *p;
-    int l, space = TRUE;
+    int l, space = true;
 
     if (!(s = allocStr(str, -1)))
         return NULL;
@@ -148,9 +148,9 @@ name_from_address(char* str, int n)
         if (IS_SPACE(*p)) {
             if (space)
                 continue;
-            space = TRUE;
+            space = true;
         } else
-            space = FALSE;
+            space = false;
         l += get_mcwidth(p);
         if (l > n)
             break;
@@ -164,7 +164,7 @@ html_quote_s(char* str)
 {
     Str tmp = NULL;
     const char *p, *q;
-    int space = TRUE;
+    int space = true;
 
     if (!str)
         return NULL;
@@ -174,10 +174,10 @@ html_quote_s(char* str)
             if (space)
                 continue;
             q = "&nbsp;";
-            space = TRUE;
+            space = true;
         } else {
             q = html_quote_char(*p);
-            space = FALSE;
+            space = false;
         }
         if (q) {
             if (tmp == NULL)
@@ -441,7 +441,7 @@ Str loadNewsgroup0(ParsedURL* pu)
                 &status);
             if (status != 221)
                 continue;
-            readHeader(&f, buf, FALSE, NULL);
+            readHeader(&f, buf, false, NULL);
             if (!(p = checkHeader(buf, "Message-ID:")))
                 continue;
             if (*p == '<')

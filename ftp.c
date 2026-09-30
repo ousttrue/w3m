@@ -1,5 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "Str.h"
+#include "indep.h"
 #include "str_gc.h"
 #include "alloc.h"
 #include "str_const.h"
@@ -215,10 +215,10 @@ ftp_login(FTP ftp)
     if (status != 230)
         goto open_err;
 succeed:
-    return TRUE;
+    return true;
 open_err:
     ftp_close(ftp);
-    return FALSE;
+    return false;
 }
 
 static int
@@ -374,7 +374,7 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
     const char* pass = NULL;
     Str uname = NULL;
     Str pwd = NULL;
-    int add_auth_cookie_flag = FALSE;
+    int add_auth_cookie_flag = false;
     char* realpathname = NULL;
 
     if (!pu->host)
@@ -429,7 +429,7 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
                 term_cbreak();
 #endif /* __MINGW32_VERSION */
             }
-            add_auth_cookie_flag = TRUE;
+            add_auth_cookie_flag = true;
         }
         pass = pwd->ptr;
     } else if (ftppasswd != NULL && *ftppasswd != '\0')

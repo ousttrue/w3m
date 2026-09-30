@@ -30,7 +30,7 @@
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv *keyData = NULL;
-static char keymap_initialized = FALSE;
+static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
@@ -50,7 +50,7 @@ setKeymap(char *p, int lineno, int verbose)
 	    emsg = Sprintf(_("defkey: unknown key '%s'"), s)->ptr;
 	record_err_message(emsg);
 	if (verbose)
-	    disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+	    disp_message_nsec(emsg, false, 1, true, false);
 	return;
     }
     s = getWord(&p);
@@ -62,7 +62,7 @@ setKeymap(char *p, int lineno, int verbose)
 	    emsg = Sprintf(_("defkey: invalid command '%s'"), s)->ptr;
 	record_err_message(emsg);
 	if (verbose)
-	    disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+	    disp_message_nsec(emsg, false, 1, true, false);
 	return;
     }
     if (c & K_MULTI) {
@@ -180,7 +180,7 @@ interpret_keymap(FILE * kf, struct stat *current, int force)
 	    emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
 	    record_err_message(emsg);
 	    if (verbose)
-		disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+		disp_message_nsec(emsg, false, 1, true, false);
 	    continue;
 	}
 	setKeymap(p, lineno, verbose);
@@ -202,7 +202,7 @@ initKeymap(int force)
 			 force || !keymap_initialized);
 	fclose(kf);
     }
-    keymap_initialized = TRUE;
+    keymap_initialized = true;
 }
 
 int
@@ -536,7 +536,7 @@ last:
 static MouseAction default_mouse_action = {
     NULL,
     "<=UpDn",
-    0, 6, FALSE, 0, 0,
+    0, 6, false, 0, 0,
     {{movMs, NULL}, {backBf, NULL}, {menuMs, NULL}},	/* default */
     {{NULL, NULL}, {NULL, NULL}, {NULL, NULL}},	/* anchor */
     {{followA, NULL}, {NULL, NULL}, {NULL, NULL}},	/* active */

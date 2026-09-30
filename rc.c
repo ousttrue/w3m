@@ -1,9 +1,9 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 /*
  * Initialization file etc.
  */
 #include "rc.h"
 #include "alloc.h"
+#include "indep.h"
 #include "str_const.h"
 #include "str_gc.h"
 #include "charset.h"

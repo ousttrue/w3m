@@ -1,6 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "history.h"
-
+#include "indep.h"
 #include "str_gc.h"
 #include "subprocess.h"
 #include "alloc.h"

@@ -42,13 +42,13 @@ do_update(BaseStream base)
     base->stream.cur = base->stream.next = 0;
     len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
     if (len <= 0)
-        base->iseos = TRUE;
+        base->iseos = true;
     else
         base->stream.next += len;
 }
 
 static int
-buffer_read(StreamBuffer sb, unsigned char* obuf, int count)
+buffer_read(struct stream_buffer* sb, unsigned char* obuf, int count)
 {
     int len = sb->next - sb->cur;
     if (len > 0) {
@@ -63,7 +63,7 @@ buffer_read(StreamBuffer sb, unsigned char* obuf, int count)
 static void
 init_buffer(BaseStream base, const char* buf, int bufsize)
 {
-    StreamBuffer sb = &base->stream;
+    struct stream_buffer* sb = &base->stream;
     sb->size = bufsize;
     sb->cur = 0;
     sb->buf = NewWithoutGC_N(uchar, bufsize);
@@ -73,7 +73,7 @@ init_buffer(BaseStream base, const char* buf, int bufsize)
     } else {
         sb->next = 0;
     }
-    base->iseos = FALSE;
+    base->iseos = false;
 }
 
 static void
@@ -202,7 +202,7 @@ int ISgetc(union input_stream* stream)
 
 int ISundogetc(union input_stream* stream)
 {
-    StreamBuffer sb;
+    struct stream_buffer* sb;
     if (stream == NULL)
         return -1;
     sb = &stream->base.stream;
@@ -227,7 +227,7 @@ Str StrISgets2(union input_stream* stream, char crnl)
 void ISgets_to_growbuf(union input_stream* stream, struct growbuf* gb, char crnl)
 {
     BaseStream base = &stream->base;
-    StreamBuffer sb = &base->stream;
+    struct stream_buffer* sb = &base->stream;
     int i;
 
     gb->length = 0;
@@ -275,7 +275,7 @@ int ISread_n(union input_stream* stream, unsigned char* dst, int count)
     if (MUST_BE_UPDATED(base)) {
         l = (*base->read)(base->handle, &dst[len], count - len);
         if (l <= 0) {
-            base->iseos = TRUE;
+            base->iseos = true;
         } else {
             len += l;
         }
@@ -325,7 +325,7 @@ ssl_match_cert_ident(const char* ident, int ilen, char* hostname)
 
     /* Is this an exact match? */
     if ((ilen == hlen) && strncasecmp(ident, hostname, hlen) == 0)
-        return TRUE;
+        return true;
 
     for (i = 0; i < ilen; i++) {
         if (ident[i] == '*' && ident[i + 1] == '.') {
@@ -335,7 +335,7 @@ ssl_match_cert_ident(const char* ident, int ilen, char* hostname)
             i++;
         } else {
             if (ident[i] != *hostname++)
-                return FALSE;
+                return false;
         }
     }
     return *hostname == '\0';
@@ -346,7 +346,7 @@ ssl_check_cert_ident(X509* x, char* hostname)
 {
     int i;
     Str ret = NULL;
-    int match_ident = FALSE;
+    int match_ident = false;
     /*
      * All we need to do here is check that the CN matches.
      *
@@ -410,14 +410,14 @@ ssl_check_cert_ident(X509* x, char* hostname)
             X509V3_EXT_get(ex);
             sk_GENERAL_NAME_free(alt);
             if (i < n) /* Found a match */
-                match_ident = TRUE;
+                match_ident = true;
             else if (seen_dnsname)
                 ret = Sprintf(_("Bad cert ident from %s: dNSName=%s"), hostname,
                     seen_dnsname->ptr);
         }
     }
 
-    if (match_ident == FALSE && ret == NULL) {
+    if (match_ident == false && ret == NULL) {
         X509_NAME* xn;
         char buf[2048];
         int slen;
@@ -471,12 +471,12 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
             /* FIXME: gettextize? */
             const char* e = "This SSL session was rejected "
                             "to prevent security violation: no peer certificate";
-            disp_err_message(e, FALSE);
+            disp_err_message(e, false);
             free_ssl_ctx();
             return NULL;
         }
         if (amsg)
-            disp_err_message(amsg->ptr, FALSE);
+            disp_err_message(amsg->ptr, false);
         ssl_accept_this_site(hostname);
         s = amsg ? amsg : Strnew_charp(_("valid certificate"));
         return s;
@@ -504,7 +504,7 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
                     em);
             } else {
                 char* e = Sprintf(_("This SSL session was rejected: %s"), em)->ptr;
-                disp_err_message(e, FALSE);
+                disp_err_message(e, false);
                 free_ssl_ctx();
                 return NULL;
             }
@@ -529,13 +529,13 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
             /* FIXME: gettextize? */
             const char* e = "This SSL session was rejected "
                             "to prevent security violation";
-            disp_err_message(e, FALSE);
+            disp_err_message(e, false);
             free_ssl_ctx();
             return NULL;
         }
     }
     if (amsg)
-        disp_err_message(amsg->ptr, FALSE);
+        disp_err_message(amsg->ptr, false);
     ssl_accept_this_site(hostname);
     s = amsg ? amsg : Strnew_charp(_("valid certificate"));
     Strcat_charp(s, "\n");
@@ -637,14 +637,14 @@ ens_read(struct ens_handle* handle, char* buf, int len)
         char* p;
         struct growbuf gbtmp;
 
-        ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+        ISgets_to_growbuf(handle->is, &handle->gb, true);
         if (handle->gb.length == 0)
             return 0;
         if (handle->encoding == ENC_BASE64)
             memchop(handle->gb.ptr, &handle->gb.length);
         else if (handle->encoding == ENC_UUENCODE) {
             if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-                ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+                ISgets_to_growbuf(handle->is, &handle->gb, true);
             memchop(handle->gb.ptr, &handle->gb.length);
         }
         growbuf_init_without_GC(&gbtmp);

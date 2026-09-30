@@ -2,6 +2,7 @@
 #include "alloc.h"
 #define MAINPROGRAM
 #include "backend.h"
+#include "indep.h"
 #include "input_stream.h"
 #include "entity.h"
 #include "str_gc.h"
@@ -2905,7 +2906,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
     rFrame();
     {
         Anchor* al = NULL;
-        char* label = pu.label;
+        const char* label = pu.label;
 
         if (label && f_element->element->attr == F_BODY) {
             al = searchAnchor(f_element->body->nameList, label);
@@ -2929,7 +2930,7 @@ loadLink(char* url, char* target, char* referer, FormList* request)
 }
 
 static void
-gotoLabel(char* label)
+gotoLabel(const char* label)
 {
     Buffer* buf;
     Anchor* al;

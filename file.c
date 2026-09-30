@@ -1,6 +1,7 @@
 #include "file.h"
 #include "mymktime.h"
 #include "entity.h"
+#include "indep.h"
 #include "str_gc.h"
 #include "auth.h"
 #include "str_const.h"
@@ -46,7 +47,7 @@ int w3m_dump = 0;
 int w3m_halfload = false;
 
 char SearchHeader = false;
-char* DefaultType = NULL;
+const char* DefaultType = NULL;
 char PermitSaveToPipe = false;
 
 extern int fold_pre;

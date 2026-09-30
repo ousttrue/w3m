@@ -436,7 +436,7 @@ extern Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
 extern Anchor* retrieveCurrentAnchor(Buffer* buf);
 extern Anchor* retrieveCurrentImg(Buffer* buf);
 extern Anchor* retrieveCurrentForm(Buffer* buf);
-extern Anchor* searchAnchor(AnchorList* al, char* str);
+extern Anchor* searchAnchor(AnchorList* al, const char* str);
 extern Anchor* searchURLLabel(Buffer* buf, const char* url);
 extern void reAnchorWord(Buffer* buf, Line* l, int spos, int epos);
 extern const char* reAnchor(Buffer* buf, char* re);
