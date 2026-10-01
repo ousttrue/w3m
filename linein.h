@@ -1,7 +1,6 @@
 #pragma once
 #include "Str.h"
 #include "history.h"
-#include <stddef.h>
 
 enum InputLineFlag {
     IN_STRING = 0x10,
@@ -12,15 +11,42 @@ enum InputLineFlag {
     IN_CHAR = 0x200,
 };
 
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
-#define inputLine(p, d, f) inputLineHist(p, d, f, NULL)
-#define inputStr(p, d) inputLine(p, d, IN_STRING)
-#define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
-#define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
-#define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
-#define inputChar(p) inputLine(p, "", IN_CHAR)
-
 typedef int (*IncrFunc)(int ch, Str buf, Lineprop* prop);
 
-extern char* inputLineHistSearch(const char* prompt, const char* def_str,
+char* inputLineHistSearch(const char* prompt, const char* def_str,
     enum InputLineFlag flag, Hist* hist, IncrFunc incfunc);
+
+static inline char* inputLineHist(const char* p, const char* d, enum InputLineFlag f, Hist* h)
+{
+    return inputLineHistSearch(p, d, f, h, NULL);
+}
+
+static inline char* inputLine(const char* p, const char* d, enum InputLineFlag f)
+{
+    return inputLineHist(p, d, f, NULL);
+}
+
+static inline char* inputStr(const char* p, const char* d)
+{
+    return inputLine(p, d, IN_STRING);
+}
+
+static inline char* inputStrHist(const char* p, const char* d, Hist* h)
+{
+    return inputLineHist(p, d, IN_STRING, h);
+}
+
+static inline char* inputFilename(const char* p, const char* d)
+{
+    return inputLine(p, d, IN_FILENAME);
+}
+
+static inline char* inputFilenameHist(const char* p, const char* d, Hist* h)
+{
+    return inputLineHist(p, d, IN_FILENAME, h);
+}
+
+static inline char* inputChar(const char* p)
+{
+    return inputLine(p, "", IN_CHAR);
+}

@@ -1034,7 +1034,7 @@ static Str to_str(struct param_ptr* p);
 static Str etcFile(const char* base);
 static int compare_table(struct rc_search_table* a, struct rc_search_table* b);
 static int do_recursive_mkdir(const char* dir);
-static int set_param(const char* name, char* value);
+static int set_param(const char* name, const char* value);
 static struct param_ptr* search_param(const char* name);
 static struct siteconf_rec* newSiteconfRec(void);
 static void create_option_search_table(void);
@@ -1276,7 +1276,7 @@ str_to_color(const char* value)
 #endif
 
 static int
-set_param(const char* name, char* value)
+set_param(const char* name, const char* value)
 {
     struct param_ptr* p;
     double ppc;
@@ -1346,11 +1346,10 @@ set_param(const char* name, char* value)
     return 1;
 }
 
-int set_param_option(char* option)
+int set_param_option(const char* option)
 {
     Str tmp = Strnew();
-    char *p = option, *q;
-
+    const char* p = option;
     while (*p && !IS_SPACE(*p) && *p != '=')
         Strcat_char(tmp, *p++);
     while (*p && IS_SPACE(*p))
@@ -1363,7 +1362,7 @@ int set_param_option(char* option)
     Strlower(tmp);
     if (set_param(tmp->ptr, p))
         goto option_assigned;
-    q = tmp->ptr;
+    const char* q = tmp->ptr;
     if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
         q += 2;
         if (*q == '-' || *q == '_')
