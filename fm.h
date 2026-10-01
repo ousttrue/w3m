@@ -143,9 +143,7 @@ global char *MyProgramName init("w3m");
 #ifdef USE_IMAGE
 global int activeImage init(false);
 #endif
-#ifdef USE_IMAGE
-global const char *image_source init(NULL);
-#endif
+
 
 global int is_redisplay init(false);
 #ifdef USE_ALARM

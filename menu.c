@@ -668,10 +668,10 @@ guess_menu_xy(Menu *parent, int width, int *x, int *y)
 }
 
 void
-new_option_menu(Menu *menu, char **label, int *variable, void (*func) (void))
+new_option_menu(Menu *menu, const char **label, int *variable, void (*func) (void))
 {
     int i, nitem;
-    char **p;
+    const char **p;
     MenuItem *item;
 
     if (label == NULL || *label == NULL)
@@ -1389,8 +1389,8 @@ initSelectMenu(void)
     int i, nitem, len = 0, l;
     Buffer *buf;
     Str str;
-    char **label;
-    char *p;
+    const char **label;
+    const char *p;
     static const char *comment =
 	    " SPC: select | D: delete | </>: move down/up ";
 
@@ -1610,8 +1610,8 @@ initSelTabMenu(void)
     TabBuffer *tab;
     Buffer *buf;
     Str str;
-    char **label;
-    char *p;
+    const char **label;
+    const char *p;
     static char *comment = "char  SPC for select / D for delete tab ";
 
     SelTabV = -1;
@@ -1828,7 +1828,7 @@ smDnTab(char c)
 /* --- OptionMenu --- */
 
 void
-optionMenu(int x, int y, char **label, int *variable, int initial,
+optionMenu(int x, int y, const char **label, int *variable, int initial,
 	   void (*func) (void))
 {
     Menu menu;
@@ -2044,9 +2044,9 @@ link_menu(Buffer *buf)
     Menu menu;
     LinkList *l;
     int i, nitem, len = 0, linkV = -1;
-    char **label;
+    const char **label;
     Str str;
-    char *p;
+    const char *p;
 
     if (!buf->linklist)
 	return NULL;
@@ -2104,8 +2104,8 @@ accesskey_menu(Buffer *buf)
     Anchor *a;
     Anchor **ap;
     int i, n, nitem = 0, key = -1;
-    char **label;
-    char *t;
+    const char **label;
+    const char *t;
     unsigned char c;
 
     if (!al)
@@ -2206,8 +2206,8 @@ list_menu(Buffer *buf)
     Anchor *a;
     Anchor **ap;
     int i, n, nitem = 0, key = -1, two = false;
-    char **label;
-    char *t;
+    const char **label;
+    const char *t;
     unsigned char c;
 
     if (!al)

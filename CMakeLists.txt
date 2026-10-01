@@ -53,6 +53,7 @@ add_executable(
   growbuf.c
   alloc.c
   file.c
+  compression.c
   line.c
   buffer.c
   display.c

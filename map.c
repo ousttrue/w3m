@@ -218,7 +218,7 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
     int initial = 0;
 #ifdef USE_MENU
     MapArea *a;
-    char **label;
+    const char **label;
 #endif
 
     ml = searchMapList(buf, name);
@@ -313,7 +313,7 @@ MapArea *
 newMapArea(const char *url, const char *target, const char *alt, const char *shape, const char *coords)
 {
     MapArea *a = New(MapArea);
-    char *p;
+    const char *p;
     int i, max;
 
     a->url = url;

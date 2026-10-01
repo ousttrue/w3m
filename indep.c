@@ -6,7 +6,6 @@ char* html_quote(const char* str)
 {
     Str tmp = NULL;
     const char *p, *q;
-
     for (p = str; *p; p++) {
         q = html_quote_char(*p);
         if (q) {
@@ -20,5 +19,5 @@ char* html_quote(const char* str)
     }
     if (tmp)
         return tmp->ptr;
-    return str;
+    return allocStr(str, -1);
 }

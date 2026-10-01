@@ -1345,7 +1345,7 @@ add_index_file(ParsedURL* pu, URLFile* uf)
     }
 }
 
-static char*
+static const char*
 guessContentTypeFromTable(struct table2* table, const char* filename)
 {
     struct table2* t;
@@ -1369,22 +1369,21 @@ guessContentTypeFromTable(struct table2* table, const char* filename)
     return NULL;
 }
 
-char* guessContentType(const char* filename)
+const char* guessContentType(const char* filename)
 {
-    char* ret;
-    int i;
 
     if (filename == NULL)
         return NULL;
-    if (mimetypes_list == NULL)
-        goto no_user_mimetypes;
+    if (mimetypes_list == NULL) {
+        return guessContentTypeFromTable(DefaultGuess, filename);
+    }
 
-    for (i = 0; i < mimetypes_list->nitem; i++) {
+    for (int i = 0; i < mimetypes_list->nitem; i++) {
+        const char* ret;
         if ((ret = guessContentTypeFromTable(UserMimeTypes[i], filename)) != NULL)
             return ret;
     }
 
-no_user_mimetypes:
     return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
@@ -1736,7 +1735,7 @@ char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset)
         ->ptr;
 }
 
-char* url_decode2(char* url, Buffer* buf)
+char* url_decode2(const char* url, Buffer* buf)
 {
     wc_ces url_charset;
 

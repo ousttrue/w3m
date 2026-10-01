@@ -18,7 +18,7 @@
 
 typedef struct _MenuItem {
     int type;
-    char *label;
+    const char *label;
     int *variable;
     int value;
     void (*func) (void);
@@ -62,7 +62,7 @@ extern void down_menu(Menu *menu, int n);
 extern int action_menu(Menu *menu);
 extern void popup_menu(Menu *parent, Menu *menu);
 extern void guess_menu_xy(Menu *menu, int width, int *x, int *y);
-extern void new_option_menu(Menu *menu, char **label, int *variable,
+extern void new_option_menu(Menu *menu, const char **label, int *variable,
 			    void (*func) (void));
 
 extern int setMenuItem(MenuItem *item, char *type, char *line);
@@ -73,7 +73,7 @@ extern void popupMenu(int x, int y, Menu *menu);
 extern void mainMn(void);
 extern void selMn(void);
 extern void tabMn(void);
-extern void optionMenu(int x, int y, char **label, int *variable, int initial,
+extern void optionMenu(int x, int y, const char **label, int *variable, int initial,
 		       void (*func) (void));
 extern void initMenu(void);
 

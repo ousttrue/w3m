@@ -8,3 +8,4 @@ const char* w3m_lib_dir(void);
 const char* w3m_etc_dir(void);
 const char* w3m_conf_dir(void);
 const char* w3m_help_dir(void);
+const char* guessContentType(const char* filename);

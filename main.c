@@ -162,8 +162,7 @@ static void _newT(void);
 static void _nextA(int);
 static void _prevA(int);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
-static void cmd_loadURL(char* url, ParsedURL* current, char* referer,
-    FormList* request);
+static void cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* request);
 static void cmd_loadfile(char* path);
 static void delBuffer(Buffer* buf);
 static void deleteFiles(void);
@@ -4151,7 +4150,7 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 }
 
 static void
-cmd_loadURL(char* url, ParsedURL* current, char* referer, FormList* request)
+cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* request)
 {
     Buffer* buf;
 

@@ -733,7 +733,7 @@ formChooseOptionByMenu(struct form_item_list *fi, int x, int y)
 {
     int i, n, selected = -1, init_select = fi->selected;
     FormSelectOptionItem *opt;
-    char **label;
+    const char **label;
 
     for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next) ;
     label = New_N(char *, n + 1);

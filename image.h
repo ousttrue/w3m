@@ -7,6 +7,8 @@
 
 #include <sys/types.h>
 
+extern const char *image_source;
+
 #define IMG_FLAG_SKIP	1
 #define IMG_FLAG_AUTO	2
 

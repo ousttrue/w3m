@@ -173,7 +173,7 @@ extern void chkExternalURIBuffer(Buffer* buf);
 #endif
 extern ParsedURL* schemeToProxy(int scheme);
 
-extern char* url_decode2(char* url, Buffer* buf);
+extern char* url_decode2(const char* url, Buffer* buf);
 
 extern void examineFile(const char* path, URLFile* uf);
 extern char* acceptableEncoding(void);
@@ -395,7 +395,6 @@ extern struct mailcap* searchMailcap(struct mailcap* table, const char* type);
 extern void initMailcap(void);
 extern char* acceptableMimeTypes(void);
 extern struct mailcap* searchExtViewer(const char* type);
-extern char* guessContentType(const char* filename);
 extern TextList* make_domain_list(char* domain_list);
 extern struct input_stream* openFTPStream(ParsedURL* pu, URLFile* uf);
 #ifdef USE_M17N

@@ -3,8 +3,6 @@
 #include "Str.h"
 #include "entity.h"
 #include "alloc.h"
-#include "fm.h"
-#include "proto.h"
 #include "hash.h"
 #include "html.c"
 #include "indep.h"
@@ -14,43 +12,16 @@
 
 /* parse HTML tag */
 
-static int noConv(char*, void*);
-static int toNumber(char*, void*);
-static int toLength(char*, void*);
-static int toAlign(char*, void*);
-static int toVAlign(char*, void*);
-
-/* *INDENT-OFF* */
-static int (*toValFunc[])(char*, void*) = {
-    noConv, /* VTYPE_NONE    */
-    noConv, /* VTYPE_STR     */
-    toNumber, /* VTYPE_NUMBER  */
-    toLength, /* VTYPE_LENGTH  */
-    toAlign, /* VTYPE_ALIGN   */
-    toVAlign, /* VTYPE_VALIGN  */
-    noConv, /* VTYPE_ACTION  */
-    noConv, /* VTYPE_ENCTYPE */
-    noConv, /* VTYPE_METHOD  */
-    noConv, /* VTYPE_MLENGTH */
-    noConv, /* VTYPE_TYPE    */
-};
-/* *INDENT-ON* */
-
-static int
-noConv(char* oval, void* str)
+static int noConv(const char* oval, void* str)
 {
     if (str)
-        *(char**)str = oval;
+        *(const char**)str = oval;
     return 1;
 }
-
-static int
-toNumber(char* oval, void* num)
+static int toNumber(const char* oval, void* num)
 {
     char* ep;
-    int x;
-
-    x = strtol(oval, &ep, 10);
+    int x = strtol(oval, &ep, 10);
 
     if (ep > oval) {
         *(int*)num = x;
@@ -58,9 +29,7 @@ toNumber(char* oval, void* num)
     } else
         return 0;
 }
-
-static int
-toLength(char* oval, void* len)
+static int toLength(const char* oval, void* len)
 {
     int w;
     if (!IS_DIGIT(oval[0]))
@@ -76,9 +45,7 @@ toLength(char* oval, void* len)
         *(int*)len = w;
     return 1;
 }
-
-static int
-toAlign(char* oval, void* align)
+static int toAlign(const char* oval, void* align)
 {
     if (strcasecmp(oval, "left") == 0)
         *(int*)align = ALIGN_LEFT;
@@ -96,9 +63,7 @@ toAlign(char* oval, void* align)
         return 0;
     return 1;
 }
-
-static int
-toVAlign(char* oval, void* valign)
+static int toVAlign(const char* oval, void* valign)
 {
     if (strcasecmp(oval, "top") == 0 || strcasecmp(oval, "baseline") == 0)
         *(int*)valign = VALIGN_TOP;
@@ -110,6 +75,20 @@ toVAlign(char* oval, void* valign)
         return 0;
     return 1;
 }
+typedef int (*ToValFunc)(const char*, void*);
+static ToValFunc toValFunc[] = {
+    noConv, /* VTYPE_NONE    */
+    noConv, /* VTYPE_STR     */
+    toNumber, /* VTYPE_NUMBER  */
+    toLength, /* VTYPE_LENGTH  */
+    toAlign, /* VTYPE_ALIGN   */
+    toVAlign, /* VTYPE_VALIGN  */
+    noConv, /* VTYPE_ACTION  */
+    noConv, /* VTYPE_ENCTYPE */
+    noConv, /* VTYPE_METHOD  */
+    noConv, /* VTYPE_MLENGTH */
+    noConv, /* VTYPE_TYPE    */
+};
 
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
