@@ -256,7 +256,7 @@ int main(int argc, char** argv)
             /* Don't use hostname if it is truncated.  */
             hostname[HOST_NAME_MAX + 1] = '\0';
             hostname_len = strlen(hostname);
-            if (hostname_len <= HOST_NAME_MAX && hostname_len <= STR_LEN_MAX)
+            if (hostname_len <= HOST_NAME_MAX)
                 HostName = allocStr(hostname, hostname_len);
         }
     }
@@ -2043,7 +2043,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
 
 DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and display output")
 {
-    const char *cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist(_("Pipe buffer to: "), "", IN_COMMAND, ShellHist);
     }
@@ -2053,7 +2053,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    char *tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
+    char* tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
     FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         disp_message(Sprintf(_("Can't save buffer to %s"), cmd)->ptr, true);
@@ -4586,7 +4586,7 @@ DEFUN(svI, SAVE_IMAGE, "Save inline image")
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 {
-    char *qfile = NULL;
+    char* qfile = NULL;
     FILE* f;
     int is_pipe;
 

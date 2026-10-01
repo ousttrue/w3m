@@ -67,16 +67,38 @@ Str Strfgetall(FILE*);
 
 Str Strgrow(Str s);
 
-#define STR_LEN_MAX (INT_MAX / 32 - 1)
-#define Strcat_char(x, y) Strinsert_char(x, (x)->length, y)
-#define Strcmp(x, y) strcmp((x)->ptr, (y)->ptr)
-#define Strcmp_charp(x, y) strcmp((x)->ptr, (y))
-#define Strcasecmp(x, y) strcasecmp((x)->ptr, (y)->ptr)
-#define Strcasecmp_charp(x, y) strcasecmp((x)->ptr, (y))
-#define Strncasecmp_charp(x, y, n) strncasecmp((x)->ptr, (y), (n))
-
-#define Strlastchar(s) ((s)->length > 0 ? (s)->ptr[(s)->length - 1] : '\0')
-#define Strshrinkfirst(s, n) Strdelete((s), 0, (n))
-#define Strfputs(s, f) fwrite((s)->ptr, 1, (s)->length, (f))
+inline static Str Strcat_char(Str x, char y) { return Strinsert_char(x, (x)->length, y); }
+inline static int Strcmp(Str x, Str y)
+{
+    return strcmp((x)->ptr, (y)->ptr);
+}
+inline static int Strcmp_charp(Str x, const char* y)
+{
+    return strcmp((x)->ptr, (y));
+}
+inline static int Strcasecmp(Str x, Str y)
+{
+    return strcasecmp((x)->ptr, (y)->ptr);
+}
+inline static int Strcasecmp_charp(Str x, const char* y)
+{
+    return strcasecmp((x)->ptr, (y));
+}
+inline static int Strncasecmp_charp(Str x, const char* y, int n)
+{
+    return strncasecmp((x)->ptr, (y), (n));
+}
+inline static char Strlastchar(Str s)
+{
+    return ((s)->length > 0 ? (s)->ptr[(s)->length - 1] : '\0');
+}
+inline static void Strshrinkfirst(Str s, int n)
+{
+    Strdelete((s), 0, (n));
+}
+inline static void Strfputs(Str s, FILE* f)
+{
+    fwrite((s)->ptr, 1, (s)->length, (f));
+}
 
 char* allocStr(const char* s, int len);
