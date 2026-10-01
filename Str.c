@@ -49,7 +49,7 @@ Strnew_size(int n)
     else
 	n++;
 
-    if (!(x = GC_MALLOC(sizeof(struct _Str)))
+    if (!(x = GC_MALLOC(sizeof(struct Str)))
 	|| !(x->ptr = GC_MALLOC_ATOMIC(n)))
 	exit(3);
     x->area_size = n;
