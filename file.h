@@ -23,7 +23,7 @@ struct input_alt_attr {
   int hseq;
   int fid;
   int in;
-  Str type, name, value;
+  pStr type, name, value;
 };
 
 typedef struct {
@@ -32,7 +32,7 @@ typedef struct {
     int tlen;
     long flag;
     Anchor anchor;
-    Str img_alt;
+    pStr img_alt;
     struct input_alt_attr input_alt;
     char fontstat[FONTSTAT_SIZE];
     short nobr_level;
@@ -48,10 +48,10 @@ struct cmdtable {
 };
 
 struct readbuffer {
-    Str line;
+    pStr line;
     Lineprop cprop;
     short pos;
-    Str prevchar;
+    pStr prevchar;
     long flag;
     long flag_stack[RB_STACK_SIZE];
     int flag_sp;
@@ -61,7 +61,7 @@ struct readbuffer {
     short table_level;
     short nobr_level;
     Anchor anchor;
-    Str img_alt;
+    pStr img_alt;
     struct input_alt_attr input_alt;
     char fontstat[FONTSTAT_SIZE];
     char fontstat_stack[FONT_STACK_SIZE][FONTSTAT_SIZE];
@@ -128,7 +128,7 @@ struct html_feed_environ {
     struct readbuffer *obuf;
     TextLineList *buf;
     FILE *f;
-    Str tagbuf;
+    pStr tagbuf;
     int limit;
     int maxlimit;
     struct environment *envs;

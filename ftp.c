@@ -64,10 +64,10 @@ KeyAbort(SIGNAL_ARG)
     LONGJMP(AbortLoading, 1);
 }
 
-static Str
+static pStr
 ftp_command(FTP ftp, char* cmd, char* arg, int* status)
 {
-    Str tmp;
+    pStr tmp;
 
     if (!ftp->host)
         return NULL;
@@ -152,7 +152,7 @@ ftp_login(FTP ftp)
             socklen_t socknamelen = sizeof(sockname);
 
             if (!getsockname(sock, (struct sockaddr*)&sockname, &socknamelen)) {
-                Str tmp = Strnew_charp(ftp->pass);
+                pStr tmp = Strnew_charp(ftp->pass);
 #ifdef INET6
                 char hostbuf[NI_MAXHOST];
 
@@ -228,7 +228,7 @@ ftp_pasv(FTP ftp)
     int n1, n2, n3, n4, p1, p2;
     int data;
     char* p;
-    Str tmp;
+    pStr tmp;
     int family;
 #ifdef INET6
     struct sockaddr_storage sockaddr;
@@ -293,7 +293,7 @@ static time_t
 ftp_modtime(FTP ftp, char* path)
 {
     int status;
-    Str tmp;
+    pStr tmp;
     char* p;
     struct tm tm;
     time_t t, lt, gt;
@@ -368,12 +368,12 @@ void closeFTP(void)
 struct input_stream*
 openFTPStream(ParsedURL* pu, URLFile* uf)
 {
-    Str tmp;
+    pStr tmp;
     int status;
     const char* user = NULL;
     const char* pass = NULL;
-    Str uname = NULL;
-    Str pwd = NULL;
+    pStr uname = NULL;
+    pStr pwd = NULL;
     int add_auth_cookie_flag = false;
     char* realpathname = NULL;
 
@@ -480,13 +480,13 @@ ftp_dir:
 }
 
 #ifdef USE_M17N
-Str loadFTPDir(ParsedURL* pu, wc_ces* charset)
+pStr loadFTPDir(ParsedURL* pu, wc_ces* charset)
 #else
-Str loadFTPDir0(ParsedURL* pu)
+pStr loadFTPDir0(ParsedURL* pu)
 #endif
 {
-    Str FTPDIRtmp;
-    Str tmp;
+    pStr FTPDIRtmp;
+    pStr tmp;
     int status;
     volatile int sv_type;
     char* realpathname;
@@ -686,7 +686,7 @@ void disconnectFTP(void)
             goto done;                        \
     }
 
-static Str size_int2str(size_t);
+static pStr size_int2str(size_t);
 
 static int
 ex_ftpdir_name_size_date(const char* line,
@@ -776,10 +776,10 @@ done:
     return (ftype);
 }
 
-static Str
+static pStr
 size_int2str(size_t size)
 {
-    Str size_str;
+    pStr size_str;
     int unit;
     double dtmp;
     char *size_format, *unit_str;

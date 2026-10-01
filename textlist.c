@@ -124,7 +124,7 @@ appendGeneralList(GeneralList *tl, GeneralList *tl2)
 /* Line text list */
 
 TextLine *
-newTextLine(Str line, int pos)
+newTextLine(pStr line, int pos)
 {
     TextLine *lbuf = New(TextLine);
     if (line)
@@ -136,7 +136,7 @@ newTextLine(Str line, int pos)
 }
 
 void
-appendTextLine(TextLineList *tl, Str line, int pos)
+appendTextLine(TextLineList *tl, pStr line, int pos)
 {
     TextLine *lbuf;
 

@@ -54,9 +54,9 @@ typedef struct {
     char     *desc;
     wc_gset  *gset;
     wc_uchar *gset_ext;
-    Str     (*conv_from)(Str, wc_ces);
-    void    (*push_to)(Str, wc_wchar_t, wc_status *);
-    Str     (*char_conv)(wc_uchar, wc_status *);
+    pStr     (*conv_from)(pStr, wc_ces);
+    void    (*push_to)(pStr, wc_wchar_t, wc_status *);
+    pStr     (*char_conv)(wc_uchar, wc_status *);
 } wc_ces_info;
 
 typedef struct {
@@ -101,7 +101,7 @@ typedef struct wc_status {
 #endif
     int          state;
 #ifdef USE_UNICODE
-    Str          tag;
+    pStr          tag;
     int          ntag;
     wc_uint32    base;
     int          shift;

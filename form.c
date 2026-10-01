@@ -25,7 +25,7 @@ extern FormSelectOption* select_option;
 extern int max_select;
 #endif /* USE_MENU */
 
-extern Str* textarea_str;
+extern pStr* textarea_str;
 extern int max_textarea;
 
 /* *INDENT-OFF* */
@@ -52,7 +52,7 @@ newFormList(char* action, char* method, char* charset, char* enctype,
     char* target, char* name, struct form_list* _next)
 {
     struct form_list* l;
-    Str a = Strnew_charp(action);
+    pStr a = Strnew_charp(action);
     int m = FORM_METHOD_GET;
     int e = FORM_ENCTYPE_URLENCODED;
 #ifdef USE_M17N
@@ -181,7 +181,7 @@ static char* _formmethodtbl[] = {
 
 char* form2str(FormItemList* fi)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
 
     if (fi->type != FORM_SELECT && fi->type != FORM_TEXTAREA)
         Strcat_charp(tmp, "input type=");
@@ -503,10 +503,10 @@ void formUpdateBuffer(Anchor* a, Buffer* buf, FormItemList* form)
     arrangeLine(buf);
 }
 
-Str textfieldrep(Str s, int width)
+pStr textfieldrep(pStr s, int width)
 {
     Lineprop c_type;
-    Str n = Strnew_size(width + 2);
+    pStr n = Strnew_size(width + 2);
     int i, j, k, c_len;
 
     j = 0;
@@ -540,10 +540,10 @@ Str textfieldrep(Str s, int width)
 }
 
 static void
-form_fputs_decode(Str s, FILE* f)
+form_fputs_decode(pStr s, FILE* f)
 {
     char* p;
-    Str z = Strnew();
+    pStr z = Strnew();
 
     for (p = s->ptr; *p;) {
         switch (*p) {
@@ -569,7 +569,7 @@ form_fputs_decode(Str s, FILE* f)
 void input_textarea(FormItemList* fi)
 {
     char* tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
-    Str tmp;
+    pStr tmp;
     FILE* f;
 #ifdef USE_M17N
     wc_ces charset = DisplayCharset;
@@ -633,7 +633,7 @@ void do_internal(char* action, char* data)
 }
 
 #ifdef USE_MENU
-void addSelectOption(FormSelectOption* fso, Str value, Str label, int chk)
+void addSelectOption(FormSelectOption* fso, pStr value, pStr label, int chk)
 {
     FormSelectOptionItem* o;
     o = New(FormSelectOptionItem);
@@ -842,7 +842,7 @@ add_pre_form_item(struct pre_form* pf, struct pre_form_item* prev, int type,
 void loadPreForm(void)
 {
     FILE* fp;
-    Str line = NULL, textarea = NULL;
+    pStr line = NULL, textarea = NULL;
     struct pre_form* pf = NULL;
     struct pre_form_item* pi = NULL;
     int type = -1;
@@ -957,7 +957,7 @@ void preFormUpdateBuffer(Buffer* buf)
 
     for (pf = PreForm; pf; pf = pf->next) {
         if (pf->re_url) {
-            Str url = parsedURL2Str(&buf->currentURL);
+            pStr url = parsedURL2Str(&buf->currentURL);
             if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
                 continue;
         } else if (pf->url) {

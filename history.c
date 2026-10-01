@@ -14,7 +14,7 @@
 Buffer *
 historyBuffer(Hist *hist)
 {
-    Str src = Strnew();
+    pStr src = Strnew();
     HistItem *item;
     char n[sizeof("0")];
     char *p, *q;
@@ -85,7 +85,7 @@ int
 loadUrlHistory(void)
 {
     FILE *f;
-    Str line;
+    pStr line;
     struct stat st;
 
     if (URLHist == NULL)

@@ -58,7 +58,7 @@ static void
 print_bookmark_panel(char *bmark, char *url, char *title,
 		     const char *charset)
 {
-    Str tmp, tmp2;
+    pStr tmp, tmp2;
     FILE *f;
     char *p;
 
@@ -120,7 +120,7 @@ insert_bookmark(char *bmark, struct parsed_tagarg *data)
     TextList *tl = newTextList();
     int section_found = 0;
     int bmark_added = 0;
-    Str tmp, section_tmp;
+    pStr tmp, section_tmp;
 
     url = tag_get_value(data, "url");
     title = tag_get_value(data, "title");
@@ -190,7 +190,7 @@ main(void)
 {
     char *p;
     int length;
-    Str qs = NULL;
+    pStr qs = NULL;
     struct parsed_tagarg *cgiarg;
     char *mode;
     char *bmark;

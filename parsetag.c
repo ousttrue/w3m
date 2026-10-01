@@ -1,7 +1,6 @@
 #include "parsetag.h"
 #include "Str.h"
 #include "alloc.h"
-#include "indep.h"
 #include "url.h"
 #include <strings.h>
 
@@ -18,8 +17,8 @@ tag_get_value(struct parsed_tagarg *t, const char *arg)
 struct parsed_tagarg *
 cgistr2tagarg(char *cgistr)
 {
-    Str tag;
-    Str value;
+    pStr tag;
+    pStr value;
     struct parsed_tagarg *t0, *t;
 
     t = t0 = NULL;

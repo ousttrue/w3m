@@ -53,10 +53,10 @@ enum {
 #endif
 
 Buffer* load_option_panel(void);
-Str auxbinFile(const char* base);
-Str confFile(const char* base);
+pStr auxbinFile(const char* base);
+pStr confFile(const char* base);
 const char* get_param_option(const char* name);
-Str rcFile(const char* base);
+pStr rcFile(const char* base);
 int set_param_option(const char* option);
 int str_to_bool(const char* value, int old);
 void* querySiteconf(ParsedURL* query_pu, int field);

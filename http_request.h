@@ -27,14 +27,14 @@ typedef struct http_request {
 #define HTST_NORMAL 0
 #define HTST_CONNECT 1
 
-Str HTTPrequestMethod(HRequest* hr);
-Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
+pStr HTTPrequestMethod(HRequest* hr);
+pStr HTTPrequestURI(ParsedURL* pu, HRequest* hr);
 URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request,
     TextList* extra_header, URLFile* ouf,
     HRequest* hr, unsigned char* status);
 
-extern Str header_string;
+extern pStr header_string;
 extern int override_content_type;
 extern int override_user_agent;
 extern char* w3m_reqlog;
@@ -83,4 +83,4 @@ int openSocket(const char* hostname,
     const char* remoteport_name, unsigned short remoteport_num);
 wc_ces url_to_charset(const char* url, ParsedURL* base, wc_ces doc_charset);
 struct _Buffer;
-Str url_decode2(const char* url, struct _Buffer* buf);
+pStr url_decode2(const char* url, struct _Buffer* buf);

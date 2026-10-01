@@ -277,10 +277,10 @@ static void do_effects(Lineprop m);
 static void do_color(Linecolor c);
 #endif
 
-static Str
+static pStr
 make_lastline_link(Buffer *buf, const char *title, const char *url)
 {
-    Str s = NULL, u;
+    pStr s = NULL, u;
 #ifdef USE_M17N
     Lineprop *pr;
 #endif
@@ -333,10 +333,10 @@ make_lastline_link(Buffer *buf, const char *title, const char *url)
     return s;
 }
 
-static Str
+static pStr
 make_lastline_message(Buffer *buf)
 {
-    Str msg, s = NULL;
+    pStr msg, s = NULL;
     int sl = 0;
 
     if (displayLink) {
@@ -420,7 +420,7 @@ make_lastline_message(Buffer *buf)
 void
 displayBuffer(Buffer *buf, int mode)
 {
-    Str msg;
+    pStr msg;
     int ny = 0;
 
     if (!buf)
@@ -1240,7 +1240,7 @@ record_err_message(const char *s)
 Buffer *
 message_list_panel(void)
 {
-    Str tmp = Strnew_size(LINES * COLS);
+    pStr tmp = Strnew_size(LINES * COLS);
     ListItem *p;
 
     /* FIXME: gettextize? */

@@ -47,16 +47,16 @@ enum UrlScheme getURLScheme(const char** url);
 int getDefaultPort(enum UrlScheme scheme);
 bool is_localhost(const char* host);
 struct Url copyParsedURL(const struct Url* q);
-Str url_quote(const char* str);
-Str url_quote_conv(const char* x, wc_ces c);
+pStr url_quote(const char* str);
+pStr url_quote_conv(const char* x, wc_ces c);
 struct Url parseURL(const char* src, const struct Url* current);
 struct Url parseURL2(const char* src, const struct Url* current);
-Str file_quote(const char* str);
-Str file_unquote(const char* str);
-Str Str_url_unquote(Str x, bool is_form, bool safe);
-static inline Str Str_form_unquote(Str x)
+pStr file_quote(const char* str);
+pStr file_unquote(const char* str);
+pStr Str_url_unquote(pStr x, bool is_form, bool safe);
+static inline pStr Str_form_unquote(pStr x)
 {
     return Str_url_unquote(x, true, false);
 }
-Str file_to_url(const char* file, const char* CurrentDir);
-Str url_unquote_conv(const char *url, wc_ces charset);
+pStr file_to_url(const char* file, const char* CurrentDir);
+pStr url_unquote_conv(const char *url, wc_ces charset);

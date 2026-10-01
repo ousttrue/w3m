@@ -213,12 +213,12 @@ struct CgiInfo {
     const char* path_info;
 };
 
-static Str
+static pStr
 checkPath(const char* fn, const char* path)
 {
     while (*path) {
         const char* p = strchr(path, ':');
-        Str tmp = expandPath(p ? allocStr(path, p - path) : path);
+        pStr tmp = expandPath(p ? allocStr(path, p - path) : path);
         if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');
         Strcat_charp(tmp, fn);
@@ -249,7 +249,7 @@ cgi_filename(const char* uri)
         offset = 9;
         if ((info.path_info = strchr(uri + offset, '/')))
             info.name = allocStr(uri, info.path_info - uri);
-        Str tmp = checkPath(info.name + offset, cgi_bin);
+        pStr tmp = checkPath(info.name + offset, cgi_bin);
         if (!tmp) {
             info.type = CGIFN_NORMAL;
             return info;
@@ -259,7 +259,7 @@ cgi_filename(const char* uri)
         return info;
     }
 
-    Str tmp = Strnew_charp(w3m_lib_dir());
+    pStr tmp = Strnew_charp(w3m_lib_dir());
     if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
     if (strncmp(uri, "/$LIB/", 6) == 0)
@@ -267,7 +267,7 @@ cgi_filename(const char* uri)
     else if (strncmp(uri, tmp->ptr, tmp->length) == 0)
         offset = tmp->length;
     else if (*uri == '/' && document_root) {
-        Str tmp2 = Strnew_charp(document_root);
+        pStr tmp2 = Strnew_charp(document_root);
         if (Strlastchar(tmp2) != '/')
             Strcat_char(tmp2, '/');
         Strcat_charp(tmp2, uri + 1);
@@ -308,10 +308,10 @@ check_local_cgi(const char* file, enum CGIFN_TYPE status)
 }
 
 static char* Local_cookie_file = NULL;
-static Str Local_cookie = NULL;
+static pStr Local_cookie = NULL;
 
 /* setup cookie for local CGI */
-Str localCookie(void)
+pStr localCookie(void)
 {
     if (Local_cookie)
         return Local_cookie;

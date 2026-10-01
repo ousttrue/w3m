@@ -62,7 +62,7 @@ searchMailcap(struct mailcap* table, const char* type)
         i = mailcapMatch(table, type);
         if (i > level) {
             if (table->test) {
-                Str command = unquote_mailcap(table->test, type, NULL, NULL, NULL);
+                pStr command = unquote_mailcap(table->test, type, NULL, NULL, NULL);
                 if (system(command->ptr) != 0)
                     continue;
             }
@@ -74,7 +74,7 @@ searchMailcap(struct mailcap* table, const char* type)
 }
 
 static int
-matchMailcapAttr(char* p, char* attr, Str* value)
+matchMailcapAttr(char* p, char* attr, pStr* value)
 {
     int quoted;
     char* q = NULL;
@@ -117,7 +117,7 @@ extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
     int j, k, slash;
     char* p;
     int quoted;
-    Str tmp;
+    pStr tmp;
 
     bzero(mcap, sizeof(struct mailcap));
     p = mcap_entry;
@@ -184,7 +184,7 @@ loadMailcap(char* filename)
 {
     FILE* f;
     int i, n;
-    Str tmp;
+    pStr tmp;
     struct mailcap* mcap;
 
     f = fopen(expandPath(filename)->ptr, "r");
@@ -237,7 +237,7 @@ void initMailcap(void)
 
 char* acceptableMimeTypes(void)
 {
-    static Str types = NULL;
+    static pStr types = NULL;
     TextList* l;
     Hash_si* mhash;
     char* p;
@@ -305,10 +305,10 @@ no_user_mailcap:
 #define MCF_SQUOTED (1 << 0)
 #define MCF_DQUOTED (1 << 1)
 
-static Str
+static pStr
 quote_mailcap(const char* s, int flag)
 {
-    Str d;
+    pStr d;
 
     d = Strnew();
 
@@ -344,11 +344,11 @@ end:
     return d;
 }
 
-static Str
+static pStr
 unquote_mailcap_loop(const char* qstr, const char* type, const char* name, const char* attr,
     int* mc_stat, int flag0)
 {
-    Str tmp, test, then;
+    pStr tmp, test, then;
     int status = MC_NORMAL, prev_status = MC_NORMAL, sp = 0, flag;
 
     if (mc_stat)
@@ -357,7 +357,7 @@ unquote_mailcap_loop(const char* qstr, const char* type, const char* name, const
     if (qstr == NULL)
         return NULL;
 
-    Str str = Strnew();
+    pStr str = Strnew();
     tmp = test = then = NULL;
 
     const char* p;
@@ -451,7 +451,7 @@ unquote_mailcap_loop(const char* qstr, const char* type, const char* name, const
     return str;
 }
 
-Str unquote_mailcap(const char* qstr,
+pStr unquote_mailcap(const char* qstr,
     const char* type, const char* name, const char* attr, int* mc_stat)
 {
     return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, 0);

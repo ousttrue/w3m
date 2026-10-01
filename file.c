@@ -72,15 +72,15 @@ static ParsedURL* cur_baseURL = NULL;
 #endif
 static wc_ces cur_document_charset = 0;
 
-static Str cur_title;
-static Str pre_title;
-static Str cur_select;
-static Str select_str;
+static pStr cur_title;
+static pStr pre_title;
+static pStr cur_select;
+static pStr select_str;
 static int select_is_multiple;
 static int n_selectitem;
-static Str cur_option;
-static Str cur_option_value;
-static Str cur_option_label;
+static pStr cur_option;
+static pStr cur_option_value;
+static pStr cur_option_label;
 static int cur_option_selected;
 static int cur_status;
 /* menu based <select>  */
@@ -89,8 +89,8 @@ int max_select = MAX_SELECT;
 static int n_select;
 static int cur_option_maxwidth;
 
-static Str cur_textarea;
-Str* textarea_str;
+static pStr cur_textarea;
+pStr* textarea_str;
 static int cur_textarea_size;
 static int cur_textarea_rows;
 static int cur_textarea_readonly;
@@ -274,7 +274,7 @@ void examineFile(const char* path, URLFile* uf)
     }
 }
 
-int matchattr(const char* p, const char* attr, int len, Str* value)
+int matchattr(const char* p, const char* attr, int len, pStr* value)
 {
     int quoted;
     const char* q = NULL;
@@ -315,8 +315,8 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
     char *p, *q;
     const char* emsg;
     char c;
-    Str lineBuf2 = NULL;
-    Str tmp;
+    pStr lineBuf2 = NULL;
+    pStr tmp;
     TextList* headerlist;
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
     char* tmpf;
@@ -387,7 +387,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                     ;
             }
             if (thru && activeImage && displayImage) {
-                Str src = NULL;
+                pStr src = NULL;
                 if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
                     tmpf = &tmp->ptr[12];
                     SKIP_BLANKS(tmpf);
@@ -459,7 +459,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             }
             uf->content_encoding = uf->compression;
         } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
-            Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
+            pStr name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
             int version, quoted, flag = 0;
             time_t expires = (time_t)-1;
@@ -546,7 +546,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 if (err) {
                     int ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT);
                     if (fmInitialized && (err & COO_OVERRIDE_OK) && accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
-                        Str msg = Sprintf("Accept bad cookie from %s for %s?",
+                        pStr msg = Sprintf("Accept bad cookie from %s for %s?",
                             pu->host,
                             ((domain && domain->ptr)
                                     ? domain->ptr
@@ -576,7 +576,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
                 }
             }
         } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
-            Str funcname = Strnew();
+            pStr funcname = Strnew();
             int f;
 
             p = lineBuf2->ptr + 12;
@@ -622,7 +622,7 @@ static char*
 checkContentType(Buffer* buf)
 {
     char* p;
-    Str r;
+    pStr r;
     p = checkHeader(buf, "Content-Type:");
     if (p == NULL)
         return NULL;
@@ -645,14 +645,14 @@ checkContentType(Buffer* buf)
 
 struct auth_param {
     char* name;
-    Str val;
+    pStr val;
 };
 
 struct http_auth {
     int pri;
     char* scheme;
     struct auth_param* param;
-    Str (*cred)(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+    pStr (*cred)(struct http_auth* ha, pStr uname, pStr pw, ParsedURL* pu,
         HRequest* hr, FormList* request);
 };
 
@@ -710,12 +710,12 @@ endoftoken:
     return first;
 }
 
-static Str
+static pStr
 extract_auth_val(char** q)
 {
     unsigned char* qq = *(unsigned char**)q;
     int quoted = 0;
-    Str val = Strnew();
+    pStr val = Strnew();
 
     SKIP_BLANKS(qq);
     if (*qq == '"') {
@@ -763,8 +763,8 @@ end_token:
     return val;
 }
 
-static Str
-qstr_unquote(Str s)
+static pStr
+qstr_unquote(pStr s)
 {
     char* p;
 
@@ -772,7 +772,7 @@ qstr_unquote(Str s)
         return NULL;
     p = s->ptr;
     if (*p == '"') {
-        Str tmp = Strnew();
+        pStr tmp = Strnew();
         for (p++; *p != '\0'; p++) {
             if (*p == '\\')
                 p++;
@@ -834,7 +834,7 @@ extract_auth_param(char* q, struct auth_param* auth)
     return q;
 }
 
-static Str
+static pStr
 get_auth_param(struct auth_param* auth, const char* name)
 {
     struct auth_param* ap;
@@ -845,11 +845,11 @@ get_auth_param(struct auth_param* auth, const char* name)
     return NULL;
 }
 
-static Str
-AuthBasicCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+static pStr
+AuthBasicCred(struct http_auth* ha, pStr uname, pStr pw, ParsedURL* pu,
     HRequest* hr, FormList* request)
 {
-    Str s = Strdup(uname);
+    pStr s = Strdup(uname);
     Strcat_char(s, ':');
     Strcat(s, pw);
     return Strnew_m_charp("Basic ", base64_encode(s->ptr, s->length)->ptr, NULL);
@@ -899,11 +899,11 @@ MD5(const unsigned char* d, unsigned long n, unsigned char* md)
 #include <openssl/md5.h>
 #endif
 
-static Str
+static pStr
 digest_hex(const unsigned char* p)
 {
     const char* h = "0123456789abcdef";
-    Str tmp = Strnew_size(MD5_DIGEST_LENGTH * 2 + 1);
+    pStr tmp = Strnew_size(MD5_DIGEST_LENGTH * 2 + 1);
     int i;
     for (i = 0; i < MD5_DIGEST_LENGTH; i++, p++) {
         Strcat_char(tmp, h[(*p >> 4) & 0x0f]);
@@ -918,21 +918,21 @@ enum {
     QOP_AUTH_INT,
 };
 
-static Str
-AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
+static pStr
+AuthDigestCred(struct http_auth* ha, pStr uname, pStr pw, ParsedURL* pu,
     HRequest* hr, FormList* request)
 {
-    Str tmp, a1buf, a2buf, rd, s;
+    pStr tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];
-    Str uri = HTTPrequestURI(pu, hr);
+    pStr uri = HTTPrequestURI(pu, hr);
     char nc[] = "00000001";
     FILE* fp;
 
-    Str algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
-    Str nonce = qstr_unquote(get_auth_param(ha->param, "nonce"));
-    Str cnonce /* = qstr_unquote(get_auth_param(ha->param, "cnonce")) */;
+    pStr algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
+    pStr nonce = qstr_unquote(get_auth_param(ha->param, "nonce"));
+    pStr cnonce /* = qstr_unquote(get_auth_param(ha->param, "cnonce")) */;
     /* cnonce is what client should generate. */
-    Str qop = qstr_unquote(get_auth_param(ha->param, "qop"));
+    pStr qop = qstr_unquote(get_auth_param(ha->param, "qop"));
 
     static union {
         int r[4];
@@ -1008,7 +1008,7 @@ AuthDigestCred(struct http_auth* ha, Str uname, Str pw, ParsedURL* pu,
             if (request->method == FORM_METHOD_POST && request->enctype == FORM_ENCTYPE_MULTIPART) {
                 fp = fopen(request->body, "r");
                 if (fp != NULL) {
-                    Str ebody;
+                    pStr ebody;
                     ebody = Strfgetall(fp);
                     fclose(fp);
                     MD5((unsigned char*)ebody->ptr, strlen(ebody->ptr), md5);
@@ -1189,10 +1189,10 @@ static void
 getAuthCookie(struct http_auth* hauth, char* auth_header,
     TextList* extra_header, ParsedURL* pu, HRequest* hr,
     FormList* request,
-    Str* uname, Str* pwd)
+    pStr* uname, pStr* pwd)
 {
-    Str ss = NULL;
-    Str tmp;
+    pStr ss = NULL;
+    pStr tmp;
     TextListItem* i;
     int a_found;
     int auth_header_len = strlen(auth_header);
@@ -1299,7 +1299,7 @@ static int
 checkRedirection(ParsedURL* pu)
 {
     static int nredir = 0;
-    Str tmp;
+    pStr tmp;
 
     if (pu == NULL) {
         nredir = 0;
@@ -1316,25 +1316,25 @@ checkRedirection(ParsedURL* pu)
     return true;
 }
 
-Str getLinkNumberStr(int correction)
+pStr getLinkNumberStr(int correction)
 {
     return Sprintf("[%d]", cur_hseq + correction - !!zeroBasedLinkNo);
 }
 
-static Str loadLocalDir(const char* dname)
+static pStr loadLocalDir(const char* dname)
 {
-    Str tmp;
+    pStr tmp;
     DIR* d;
     struct dirent* dir;
     struct stat st;
     char** flist;
     char *p, *qdir;
-    Str fbuf = Strnew();
+    pStr fbuf = Strnew();
     struct stat lst;
     char lbuf[1024];
     int i, l, nrow = 0, n = 0, maxlen = 0;
     int nfile, nfile_max = 100;
-    Str dirname;
+    pStr dirname;
 
     d = opendir(dname);
     if (d == NULL)
@@ -1449,14 +1449,14 @@ loadGeneralFile(const char* path, ParsedURL* volatile current, const char* refer
     int volatile searchHeader_through = true;
     SigActionFunc volatile prevtrap = NULL;
     TextList* extra_header = newTextList();
-    Str uname = NULL;
-    Str pwd = NULL;
-    Str realm = NULL;
+    pStr uname = NULL;
+    pStr pwd = NULL;
+    pStr realm = NULL;
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
     struct URLOption url_option;
-    Str tmp;
-    Str volatile page = NULL;
+    pStr tmp;
+    pStr volatile page = NULL;
     int gopher_download = false;
     wc_ces charset = WC_CES_US_ASCII;
     HRequest hr;
@@ -1497,7 +1497,7 @@ load_doc:
                 return NULL;
             if (S_ISDIR(st.st_mode)) {
                 if (UseExternalDirBuffer) {
-                    Str cmd = Sprintf("%s?dir=%s#current",
+                    pStr cmd = Sprintf("%s?dir=%s#current",
                         DirBufferCommand, pu.file);
                     b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0,
                         NULL);
@@ -1791,7 +1791,7 @@ page_loaded:
         tmp = tmpfname(CurrentPid, TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
         if (src) {
-            Str s;
+            pStr s;
             s = wc_Str_conv_strict(page, InnerCharset, charset);
             Strfputs(s, src);
             fclose(src);
@@ -1963,7 +1963,7 @@ page_loaded:
 static char*
 has_hidden_link(struct readbuffer* obuf, int cmd)
 {
-    Str line = obuf->line;
+    pStr line = obuf->line;
     struct link_stack* p;
 
     if (Strlastchar(line) != '>')
@@ -2270,7 +2270,7 @@ proc_mchar(struct readbuffer* obuf, int pre_mode,
     obuf->flag |= RB_NFLUSHED;
 }
 
-void push_render_image(Str str, int width, int limit,
+void push_render_image(pStr str, int width, int limit,
     struct html_feed_environ* h_env)
 {
     struct readbuffer* obuf = h_env->obuf;
@@ -2303,11 +2303,11 @@ static void
 passthrough(struct readbuffer* obuf, char* str, int back)
 {
     int cmd;
-    Str tok = Strnew();
+    pStr tok = Strnew();
     char* str_bak;
 
     if (back) {
-        Str str_save = Strnew_charp(str);
+        pStr str_save = Strnew_charp(str);
         Strshrink(obuf->line, obuf->line->ptr + obuf->line->length - str);
         str = str_save->ptr;
     }
@@ -2348,7 +2348,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
 {
     TextLineList* buf = h_env->buf;
     FILE* f = h_env->f;
-    Str line = obuf->line, pass = NULL;
+    pStr line = obuf->line, pass = NULL;
     char *hidden_anchor = NULL, *hidden_img = NULL, *hidden_bold = NULL,
          *hidden_under = NULL, *hidden_italic = NULL, *hidden_strike = NULL,
          *hidden_ins = NULL, *hidden_input = NULL, *hidden = NULL;
@@ -2504,7 +2504,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
             h_env->blank_lines++;
     } else {
         char *p = line->ptr, *q;
-        Str tmp = Strnew(), tmp2 = Strnew();
+        pStr tmp = Strnew(), tmp2 = Strnew();
 
 #define APPEND(str)                    \
     if (buf)                           \
@@ -2571,7 +2571,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
     if (pass)
         passthrough(obuf, pass->ptr, 0);
     if (!hidden_anchor && obuf->anchor.url) {
-        Str tmp;
+        pStr tmp;
         if (obuf->anchor.hseq > 0)
             obuf->anchor.hseq = -obuf->anchor.hseq;
         tmp = Sprintf("<A HSEQ=\"%d\" HREF=\"", obuf->anchor.hseq);
@@ -2600,13 +2600,13 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         push_tag(obuf, tmp->ptr, HTML_A);
     }
     if (!hidden_img && obuf->img_alt) {
-        Str tmp = Strnew_charp("<IMG_ALT SRC=\"");
+        pStr tmp = Strnew_charp("<IMG_ALT SRC=\"");
         Strcat_charp(tmp, html_quote(obuf->img_alt->ptr));
         Strcat_charp(tmp, "\">");
         push_tag(obuf, tmp->ptr, HTML_IMG_ALT);
     }
     if (!hidden_input && obuf->input_alt.in) {
-        Str tmp;
+        pStr tmp;
         if (obuf->input_alt.hseq > 0)
             obuf->input_alt.hseq = -obuf->input_alt.hseq;
         tmp = Sprintf("<INPUT_ALT hseq=\"%d\" fid=\"%d\" name=\"%s\" type=\"%s\" value=\"%s\">",
@@ -2639,7 +2639,7 @@ void do_blankline(struct html_feed_environ* h_env, struct readbuffer* obuf,
 void purgeline(struct html_feed_environ* h_env)
 {
     char *p, *q;
-    Str tmp;
+    pStr tmp;
     TextLine* tl;
 
     if (h_env->buf == NULL || h_env->blank_lines == 0)
@@ -2765,7 +2765,7 @@ void restore_fonteffect(struct html_feed_environ* h_env, struct readbuffer* obuf
         push_tag(obuf, "<ins>", HTML_INS);
 }
 
-static Str
+static pStr
 process_title(struct parsed_tag* tag)
 {
     if (pre_title)
@@ -2774,10 +2774,10 @@ process_title(struct parsed_tag* tag)
     return NULL;
 }
 
-static Str
+static pStr
 process_n_title(void)
 {
-    Str tmp;
+    pStr tmp;
 
     if (pre_title)
         return NULL;
@@ -2810,14 +2810,14 @@ feed_title(const char* str)
     }
 }
 
-Str process_img(struct parsed_tag* tag, int width)
+pStr process_img(struct parsed_tag* tag, int width)
 {
     const char *p, *q, *r, *r2 = NULL, *s, *t;
     int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
     int align, xoffset, yoffset, top, bottom, ismap = 0;
     int use_image = activeImage && displayImage;
     int pre_int = false, ext_pre_int = false;
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
 
     if (!parsedtag_get_value(tag, ATTR_SRC, &p))
         return tmp;
@@ -2886,7 +2886,7 @@ Str process_img(struct parsed_tag* tag, int width)
         }
     }
     if (r) {
-        Str tmp2;
+        pStr tmp2;
         r2 = strchr(r, '#');
         s = "<form_int method=internal action=map>";
         tmp2 = process_form(parse_tag(&s, true));
@@ -3112,23 +3112,23 @@ img_end:
     return tmp;
 }
 
-Str process_anchor(struct parsed_tag* tag, const char* tagbuf)
+pStr process_anchor(struct parsed_tag* tag, const char* tagbuf)
 {
     if (parsedtag_need_reconstruct(tag)) {
         parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", cur_hseq++)->ptr);
         return parsedtag2str(tag);
     } else {
-        Str tmp = Sprintf("<a hseq=\"%d\"", cur_hseq++);
+        pStr tmp = Sprintf("<a hseq=\"%d\"", cur_hseq++);
         Strcat_charp(tmp, tagbuf + 2);
         return tmp;
     }
 }
 
-Str process_input(struct parsed_tag* tag)
+pStr process_input(struct parsed_tag* tag)
 {
     int i = 20, v, x, y, z, iw, ih, size = 20;
     char *q, *p, *r, *p2, *s;
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char* qq = "";
     int qlen = 0;
 
@@ -3309,9 +3309,9 @@ Str process_input(struct parsed_tag* tag)
     return tmp;
 }
 
-Str process_button(struct parsed_tag* tag)
+pStr process_button(struct parsed_tag* tag)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char *l, *p, *q, *r, *qq = "";
     int v;
 
@@ -3370,17 +3370,17 @@ Str process_button(struct parsed_tag* tag)
     return tmp;
 }
 
-Str process_n_button(void)
+pStr process_n_button(void)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     Strcat_charp(tmp, "</input_alt>");
     /*    Strcat_charp(tmp, "</pre_int>"); */
     return tmp;
 }
 
-Str process_select(struct parsed_tag* tag)
+pStr process_select(struct parsed_tag* tag)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char* p;
 
     if (cur_form_id < 0) {
@@ -3416,7 +3416,7 @@ Str process_select(struct parsed_tag* tag)
     return tmp;
 }
 
-Str process_n_select(void)
+pStr process_n_select(void)
 {
     if (cur_select == NULL)
         return NULL;
@@ -3438,7 +3438,7 @@ Str process_n_select(void)
 
 void feed_select(const char* str)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     int prev_status = cur_status;
     static int prev_spaces = -1;
     const char* p;
@@ -3536,9 +3536,9 @@ void process_option(void)
     n_selectitem++;
 }
 
-Str process_textarea(struct parsed_tag* tag, int width)
+pStr process_textarea(struct parsed_tag* tag, int width)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char* p;
 #define TEXTAREA_ATTR_COL_MAX 4096
 #define TEXTAREA_ATTR_ROWS_MAX 4096
@@ -3574,7 +3574,7 @@ Str process_textarea(struct parsed_tag* tag, int width)
     cur_textarea_readonly = parsedtag_exists(tag, ATTR_READONLY);
     if (n_textarea >= max_textarea) {
         max_textarea *= 2;
-        textarea_str = New_Reuse(Str, textarea_str, max_textarea);
+        textarea_str = New_Reuse(pStr, textarea_str, max_textarea);
     }
     textarea_str[n_textarea] = Strnew();
     ignore_nl_textarea = true;
@@ -3582,9 +3582,9 @@ Str process_textarea(struct parsed_tag* tag, int width)
     return tmp;
 }
 
-Str process_n_textarea(void)
+pStr process_n_textarea(void)
 {
-    Str tmp;
+    pStr tmp;
     int i;
 
     if (cur_textarea == NULL)
@@ -3634,10 +3634,10 @@ void feed_textarea(const char* str)
     }
 }
 
-static Str
+static pStr
 process_hr(struct parsed_tag* tag, int width, int indent_width)
 {
-    Str tmp = Strnew_charp("<nobr>");
+    pStr tmp = Strnew_charp("<nobr>");
     int w = 0;
     int x = ALIGN_CENTER;
 #define HR_ATTR_WIDTH_MAX 65535
@@ -3699,7 +3699,7 @@ check_accept_charset(char* ac)
     return NULL;
 }
 
-static Str
+static pStr
 process_form_int(struct parsed_tag* tag, int fid)
 {
     char *p, *q, *r, *s, *tg, *n;
@@ -3743,7 +3743,7 @@ process_form_int(struct parsed_tag* tag, int fid)
     form_stack[form_sp] = fid;
 
     if (w3m_halfdump) {
-        Str tmp = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"",
+        pStr tmp = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"",
             fid, html_quote(q), html_quote(p));
         if (s)
             Strcat(tmp, Sprintf(" enctype=\"%s\"", html_quote(s)));
@@ -3761,12 +3761,12 @@ process_form_int(struct parsed_tag* tag, int fid)
     return NULL;
 }
 
-Str process_form(struct parsed_tag* tag)
+pStr process_form(struct parsed_tag* tag)
 {
     return process_form_int(tag, -1);
 }
 
-Str process_n_form(void)
+pStr process_n_form(void)
 {
     if (form_sp >= 0)
         form_sp--;
@@ -3820,7 +3820,7 @@ static void
 process_idattr(struct readbuffer* obuf, int cmd, struct parsed_tag* tag)
 {
     char *id = NULL, *framename = NULL;
-    Str idtag = NULL;
+    pStr idtag = NULL;
 
     /*
      * HTML_TABLE is handled by the other process.
@@ -3915,11 +3915,11 @@ ul_type(struct parsed_tag* tag, int default_type)
     return default_type;
 }
 
-int getMetaRefreshParam(const char* q, Str* refresh_uri)
+int getMetaRefreshParam(const char* q, pStr* refresh_uri)
 {
     int refresh_interval;
     const char* r;
-    Str s_tmp = NULL;
+    pStr s_tmp = NULL;
 
     if (q == NULL || refresh_uri == NULL)
         return 0;
@@ -3961,7 +3961,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
     int i, w, x, y, z, count, width;
     struct readbuffer* obuf = h_env->obuf;
     struct environment* envs = h_env->envs;
-    Str tmp;
+    pStr tmp;
     int hseq;
     int cmd;
     char* id = NULL;
@@ -4154,7 +4154,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         CLOSE_A;
         CLOSE_DT;
         if (h_env->envc > 0) {
-            Str num;
+            pStr num;
             flushline(h_env, obuf,
                 envs[h_env->envc - 1].indent, 0, h_env->limit);
             envs[h_env->envc].count++;
@@ -4916,7 +4916,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
     case HTML_BGSOUND:
         if (view_unseenobject) {
             if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
-                Str s;
+                pStr s;
                 q = html_quote(p);
                 s = Sprintf("<A HREF=\"%s\">bgsound(%s)</A>", q, q);
                 HTMLlineproc1(s->ptr, h_env);
@@ -4927,7 +4927,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         HTML5_CLOSE_A;
         if (view_unseenobject) {
             if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
-                Str s;
+                pStr s;
                 q = html_quote(p);
                 s = Sprintf("<A HREF=\"%s\">embed(%s)</A>", q, q);
                 HTMLlineproc1(s->ptr, h_env);
@@ -4937,7 +4937,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
     case HTML_APPLET:
         if (view_unseenobject) {
             if (parsedtag_get_value(tag, ATTR_ARCHIVE, &p)) {
-                Str s;
+                pStr s;
                 q = html_quote(p);
                 s = Sprintf("<A HREF=\"%s\">applet archive(%s)</A>", q, q);
                 HTMLlineproc1(s->ptr, h_env);
@@ -4947,7 +4947,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
     case HTML_BODY:
         if (view_unseenobject) {
             if (parsedtag_get_value(tag, ATTR_BACKGROUND, &p)) {
-                Str s;
+                pStr s;
                 q = html_quote(p);
                 s = Sprintf("<IMG SRC=\"%s\" ALT=\"bg image(%s)\"><BR>", q, q);
                 HTMLlineproc1(s->ptr, h_env);
@@ -4986,7 +4986,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
 
 static TextLineListItem* _tl_lp2;
 
-static Str
+static pStr
 textlist_feed(void)
 {
     TextLine* p;
@@ -5019,7 +5019,7 @@ ex_efct(int ex)
 }
 
 static void
-HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
+HTMLlineproc2body(Buffer* buf, pStr (*feed)(void), int llimit)
 {
     static char* outc = NULL;
     static Lineprop* outp = NULL;
@@ -5037,7 +5037,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
     union frameset_element* idFrame = NULL;
     char* id = NULL;
     int hseq, form_id;
-    Str line;
+    pStr line;
     const char* endp;
     char symbol = '\0';
     int internal = 0;
@@ -5058,7 +5058,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
     n_textarea = -1;
     if (!max_textarea) { /* halfload */
         max_textarea = MAX_TEXTAREA;
-        textarea_str = New_N(Str, max_textarea);
+        textarea_str = New_N(pStr, max_textarea);
         a_textarea = New_N(Anchor*, max_textarea);
     }
     n_select = -1;
@@ -5373,7 +5373,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     if (a_textarea && parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &textareanumber)) {
                         if (textareanumber >= max_textarea) {
                             max_textarea = 2 * textareanumber;
-                            textarea_str = New_Reuse(Str, textarea_str,
+                            textarea_str = New_Reuse(pStr, textarea_str,
                                 max_textarea);
                             a_textarea = New_Reuse(Anchor*, a_textarea,
                                 max_textarea);
@@ -5492,7 +5492,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
                     parsedtag_get_value(tag, ATTR_CONTENT, &q);
                     if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
-                        Str tmp = NULL;
+                        pStr tmp = NULL;
                         int refresh_interval = getMetaRefreshParam(q, &tmp);
                         if (tmp) {
                             p = url_encode(remove_space(tmp->ptr)->ptr, base,
@@ -5672,10 +5672,10 @@ void HTMLlineproc2(Buffer* buf, TextLineList* tl)
 
 static struct input_stream* _file_lp2;
 
-static Str
+static pStr
 file_feed(void)
 {
-    Str s;
+    pStr s;
     s = StrISgets(_file_lp2);
     if (s && s->length == 0) {
         ISclose(_file_lp2);
@@ -5757,7 +5757,7 @@ void HTMLlineproc0(const char* line, struct html_feed_environ* h_env, int intern
     struct readbuffer* obuf = h_env->obuf;
     int indent, delta;
     struct parsed_tag* tag;
-    Str tokbuf;
+    pStr tokbuf;
     struct table* tbl = NULL;
     struct table_mode* tbl_mode = NULL;
     int tbl_width = 0;
@@ -6050,7 +6050,7 @@ table_start:
 
                 indent = h_env->envs[h_env->envc].indent;
                 if (obuf->bp.pos - i > indent) {
-                    Str line;
+                    pStr line;
                     append_tags(obuf); /* may reallocate the buffer */
                     bp = obuf->line->ptr + obuf->bp.len;
                     line = Strnew_charp(bp);
@@ -6181,7 +6181,7 @@ Buffer*
 loadHTMLBuffer(URLFile* f, Buffer* newBuf)
 {
     FILE* src = NULL;
-    Str tmp;
+    pStr tmp;
 
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
@@ -6248,7 +6248,7 @@ void showProgress(size_t* linelen, size_t* trbyte)
     int i, j, rate, duration, eta, pos;
     static time_t last_time, start_time;
     time_t cur_time;
-    Str messages;
+    pStr messages;
     char *fmtrbyte, *fmrate;
 
     if (!fmInitialized)
@@ -6439,7 +6439,7 @@ static void
 print_internal_information(struct html_feed_environ* henv)
 {
     int i;
-    Str s;
+    pStr s;
     TextLineList* tl = newTextLineList();
 
     s = Strnew_charp("<internal>");
@@ -6491,7 +6491,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     struct environment envs[MAX_ENV_LEVEL];
     size_t linelen = 0;
     size_t trbyte = 0;
-    Str lineBuf2;
+    pStr lineBuf2;
     wc_ces charset = WC_CES_US_ASCII;
     wc_ces volatile doc_charset = DocumentCharset;
     struct html_feed_environ htmlenv1;
@@ -6512,7 +6512,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     n_textarea = 0;
     cur_textarea = NULL;
     max_textarea = MAX_TEXTAREA;
-    textarea_str = New_N(Str, max_textarea);
+    textarea_str = New_N(pStr, max_textarea);
     n_select = 0;
     max_select = MAX_SELECT;
     select_option = New_N(FormSelectOption, max_select);
@@ -6631,7 +6631,7 @@ phase2:
  * loadHTMLString: read string and make new buffer
  */
 Buffer*
-loadHTMLString(Str page)
+loadHTMLString(pStr page)
 {
     volatile SigActionFunc prevtrap = NULL;
     URLFile f = init_stream(SCM_LOCAL, newStrStream(page));
@@ -6663,10 +6663,10 @@ loadHTMLString(Str page)
 /*
  * loadGopherDir: get gopher directory
  */
-Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
+pStr loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
 {
-    Str volatile tmp;
-    Str lbuf, name, file, host, port, type;
+    pStr volatile tmp;
+    pStr lbuf, name, file, host, port, type;
     char* volatile p, * volatile q;
     int link, pre;
     volatile SigActionFunc prevtrap = NULL;
@@ -6783,9 +6783,9 @@ gopher_end:
     return tmp;
 }
 
-Str loadGopherSearch(ParsedURL* pu, wc_ces* charset)
+pStr loadGopherSearch(ParsedURL* pu, wc_ces* charset)
 {
-    Str tmp;
+    pStr tmp;
     char* volatile p, * volatile q;
     wc_ces doc_charset = DocumentCharset;
 
@@ -6813,10 +6813,10 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     FILE* volatile src = NULL;
     wc_ces charset = WC_CES_US_ASCII;
     wc_ces volatile doc_charset = DocumentCharset;
-    Str lineBuf2;
+    pStr lineBuf2;
     volatile char pre_lbuf = '\0';
     int nlines;
-    Str tmpf;
+    pStr tmpf;
     size_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
@@ -6896,7 +6896,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
 {
     Image image;
     ImageCache* cache;
-    Str tmp, tmpf;
+    pStr tmp, tmpf;
     FILE* src = NULL;
     URLFile f;
     volatile SigActionFunc prevtrap = NULL;
@@ -6951,10 +6951,10 @@ image_buffer:
     return newBuf;
 }
 
-static Str
+static pStr
 conv_symbol(Line* l)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char *p = l->lineBuf, *ep = p + l->len;
     Lineprop* pr = l->propBuf;
     int w;
@@ -6988,7 +6988,7 @@ conv_symbol(Line* l)
 static void
 _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
 {
-    Str tmp;
+    pStr tmp;
     int is_html = false;
     int set_charset = !DisplayCharset;
     wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
@@ -7172,7 +7172,7 @@ Line* getNextPage(Buffer* buf, int plen)
     int i;
     int volatile nlines = 0;
     size_t linelen = 0, trbyte = buf->trbyte;
-    Str lineBuf2;
+    pStr lineBuf2;
     char volatile pre_lbuf = '\0';
     URLFile uf;
     wc_ces charset;
@@ -7346,7 +7346,7 @@ _end:
 Buffer*
 doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
 {
-    Str tmpf, command;
+    pStr tmpf, command;
     struct mailcap* mcap;
     int err, mc_stat;
     Buffer* buf = NULL;
@@ -7369,7 +7369,7 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
         header = conv_to_system(header);
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
     if (!(mc_stat & MCSTAT_REPNAME)) {
-        Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr)->ptr);
+        pStr tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr)->ptr);
         command = tmp;
     }
 
@@ -7478,8 +7478,8 @@ _MoveFile(const char* path1, const char* path2)
 
 int _doFileCopy(const char* tmpf, const char* defstr, int download)
 {
-    Str msg;
-    Str filen;
+    pStr msg;
+    pStr filen;
     char *p, *q = NULL;
     pid_t pid;
     char* lock;
@@ -7580,8 +7580,8 @@ int doFileMove(char* tmpf, char* defstr)
 
 int doFileSave(URLFile uf, const char* defstr)
 {
-    Str msg;
-    Str filen;
+    pStr msg;
+    pStr filen;
     char *p, *q;
     pid_t pid;
     char* lock;
@@ -7723,7 +7723,7 @@ char confirm_multi(const char* prompt)
     return *ans;
 }
 
-int confirm(Str prompt)
+int confirm(pStr prompt)
 {
     char ans;
 

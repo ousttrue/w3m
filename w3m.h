@@ -20,7 +20,7 @@ pid_t open_pipe_rw(FILE** fr, FILE** fw);
 void myExec(const char* command);
 int mySystem(const char* command, bool background);
 
-Str localCookie(void);
+pStr localCookie(void);
 struct form_list;
 FILE* localcgi_post(const char* uri,
     const char* query, struct form_list* post, const char* referer);

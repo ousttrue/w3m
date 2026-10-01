@@ -1,5 +1,3 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
 #ifndef _WC_SJIS_H
 #define _WC_SJIS_H
 
@@ -30,12 +28,12 @@ extern wc_wchar_t wc_sjis_ext_to_cs94w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs94w_to_sjis_ext(wc_wchar_t cc);
 extern wc_uint32  wc_sjis_ext1_to_N(wc_uint32 cc);
 extern wc_uint32  wc_sjis_ext2_to_N(wc_uint32 cc);
-extern Str        wc_conv_from_sjis(Str is, wc_ces ces);
-extern Str        wc_conv_from_sjisx0213(Str is, wc_ces ces);
-extern void       wc_push_to_sjis(Str os, wc_wchar_t cc, wc_status *st);
-extern void       wc_push_to_sjisx0213(Str os, wc_wchar_t cc, wc_status *st);
-extern Str        wc_char_conv_from_sjis(wc_uchar c, wc_status *st);
-extern Str        wc_char_conv_from_sjisx0213(wc_uchar c, wc_status *st);
+extern pStr        wc_conv_from_sjis(pStr is, wc_ces ces);
+extern pStr        wc_conv_from_sjisx0213(pStr is, wc_ces ces);
+extern void       wc_push_to_sjis(pStr os, wc_wchar_t cc, wc_status *st);
+extern void       wc_push_to_sjisx0213(pStr os, wc_wchar_t cc, wc_status *st);
+extern pStr        wc_char_conv_from_sjis(wc_uchar c, wc_status *st);
+extern pStr        wc_char_conv_from_sjisx0213(wc_uchar c, wc_status *st);
 
 
 #endif

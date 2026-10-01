@@ -40,10 +40,10 @@ KeyAbort(SIGNAL_ARG)
     LONGJMP(AbortLoading, 1);
 }
 
-static Str
+static pStr
 news_command(News* news, const char* cmd, const char* arg, int* status)
 {
-    Str tmp;
+    pStr tmp;
 
     if (!news->host)
         return NULL;
@@ -162,7 +162,7 @@ name_from_address(char* str, int n)
 static char*
 html_quote_s(char* str)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     const char *p, *q;
     int space = true;
 
@@ -194,7 +194,7 @@ html_quote_s(char* str)
 }
 
 static void
-add_news_message(Str str, int index, char* date, char* name, char* subject,
+add_news_message(pStr str, int index, char* date, char* name, char* subject,
     char* mid, char* scheme, char* group)
 {
     time_t t;
@@ -307,13 +307,13 @@ openNewsStream(ParsedURL* pu)
 }
 
 #ifdef USE_M17N
-Str loadNewsgroup(ParsedURL* pu, wc_ces* charset)
+pStr loadNewsgroup(ParsedURL* pu, wc_ces* charset)
 #else
-Str loadNewsgroup0(ParsedURL* pu)
+pStr loadNewsgroup0(ParsedURL* pu)
 #endif
 {
-    volatile Str page;
-    Str tmp;
+    volatile pStr page;
+    pStr tmp;
     URLFile f;
     Buffer* buf;
     char *qgroup, *p, *q, *s, *t, *n;

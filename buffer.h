@@ -150,4 +150,4 @@ int columnSkip(Buffer* buf, int offset);
 
 Line* lineSkip(Buffer* buf, Line* line, int offset, int last);
 Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last);
-Str guess_save_name(Buffer* buf, const char* file);
+pStr guess_save_name(Buffer* buf, const char* file);

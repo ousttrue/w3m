@@ -122,9 +122,9 @@ struct Url copyParsedURL(const struct Url* q)
     return url;
 }
 
-Str url_quote(const char* str)
+pStr url_quote(const char* str)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     for (const char* p = str; *p; p++) {
         if (is_url_quote(*p)) {
             if (tmp == NULL)
@@ -142,7 +142,7 @@ Str url_quote(const char* str)
     return Strnew_charp(str);
 }
 
-Str url_quote_conv(const char* x, wc_ces c)
+pStr url_quote_conv(const char* x, wc_ces c)
 {
     return url_quote(wc_conv_strict(x, InnerCharset, c)->ptr);
 }
@@ -155,10 +155,10 @@ enum CopyPathOption {
     COPYPATH_LOWERCASE,
 };
 
-static Str copyPath(const char* orgpath, int length,
+static pStr copyPath(const char* orgpath, int length,
     enum CopyPathOption option)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     char ch;
     while ((ch = *orgpath) != 0 && length != 0) {
         if (option & COPYPATH_LOWERCASE)
@@ -184,7 +184,7 @@ static Str copyPath(const char* orgpath, int length,
     return tmp;
 }
 
-static Str DefaultFile(enum UrlScheme scheme)
+static pStr DefaultFile(enum UrlScheme scheme)
 {
     switch (scheme) {
     case SCM_HTTP:
@@ -319,7 +319,7 @@ analyze_url:
         url.host = copyPath(qq, q - 1 - qq,
             COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE)
                        ->ptr;
-        Str tmp = Strnew_charp_n(q, p - q);
+        pStr tmp = Strnew_charp_n(q, p - q);
         url.port = atoi(tmp->ptr);
         /* *p is one of ['\0', '/', '?', '#'] */
         break;
@@ -383,7 +383,7 @@ analyze_file:
             url.file = "";
             goto do_query;
         }
-        Str tmp = Strnew();
+        pStr tmp = Strnew();
         Strcat_char(tmp, *(p++));
         while (*p && *p != '/')
             p++;
@@ -446,9 +446,9 @@ do_label:
     return url;
 }
 
-Str file_quote(const char* str)
+pStr file_quote(const char* str)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char buf[4];
     for (const char* p = str; *p; p++) {
         if (is_file_quote(*p)) {
@@ -469,9 +469,9 @@ Str file_quote(const char* str)
 #define url_unquote_char(pstr) \
     ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2])) ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1])) : -1)
 
-Str file_unquote(const char* str)
+pStr file_unquote(const char* str)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     const char *p, *q;
 
     for (p = str; *p;) {
@@ -496,9 +496,9 @@ Str file_unquote(const char* str)
     return Strnew_charp(str);
 }
 
-Str Str_url_unquote(Str x, bool is_form, bool safe)
+pStr Str_url_unquote(pStr x, bool is_form, bool safe)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char *p = x->ptr, *ep = x->ptr + x->length, *q;
     int c;
 
@@ -530,7 +530,7 @@ Str Str_url_unquote(Str x, bool is_form, bool safe)
 }
 struct Url parseURL2(const char* src, const struct Url* current)
 {
-    // Str tmp;
+    // pStr tmp;
 
     struct Url url = parseURL(src, current);
     if (url.scheme == SCM_MAILTO)
@@ -582,7 +582,7 @@ struct Url parseURL2(const char* src, const struct Url* current)
                 /* file is relative [process 1] */
                 p = url.file;
                 if (current->file) {
-                    Str tmp = Strnew_charp(current->file);
+                    pStr tmp = Strnew_charp(current->file);
                     while (tmp->length > 0) {
                         if (Strlastchar(tmp) == '/')
                             break;
@@ -609,7 +609,7 @@ struct Url parseURL2(const char* src, const struct Url* current)
     if (url.file) {
         if (url.scheme == SCM_LOCAL && url.file[0] != '/' && strcmp(url.file, "-")) {
             /* local file, relative path */
-            Str tmp = Strnew_charp(CurrentDir);
+            pStr tmp = Strnew_charp(CurrentDir);
             if (Strlastchar(tmp) != '/')
                 Strcat_char(tmp, '/');
             Strcat(tmp, file_unquote(url.file));
@@ -646,9 +646,9 @@ struct Url parseURL2(const char* src, const struct Url* current)
     return url;
 }
 
-Str file_to_url(const char* file, const char* CurrentDir)
+pStr file_to_url(const char* file, const char* CurrentDir)
 {
-    Str tmp;
+    pStr tmp;
     char* drive = NULL;
 
     if (!(file = expandPath(file)->ptr))
@@ -671,10 +671,10 @@ Str file_to_url(const char* file, const char* CurrentDir)
     return tmp;
 }
 
-Str url_unquote_conv(const char* url, wc_ces charset)
+pStr url_unquote_conv(const char* url, wc_ces charset)
 {
     wc_uint8 old_auto_detect = WcOption.auto_detect;
-    Str tmp = Str_url_unquote(Strnew_charp(url), false, true);
+    pStr tmp = Str_url_unquote(Strnew_charp(url), false, true);
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;

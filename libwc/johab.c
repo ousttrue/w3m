@@ -248,10 +248,10 @@ wc_cs128w_to_johab(wc_wchar_t cc)
     return cc;
 }
 
-Str
-wc_conv_from_johab(Str is, wc_ces ces)
+pStr
+wc_conv_from_johab(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
     wc_uchar *ep = sp + is->length;
     wc_uchar *p;
@@ -309,7 +309,7 @@ wc_conv_from_johab(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_johab(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_johab(pStr os, wc_wchar_t cc, wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -347,10 +347,10 @@ wc_push_to_johab(Str os, wc_wchar_t cc, wc_status *st)
   }
 }
 
-Str
+pStr
 wc_char_conv_from_johab(wc_uchar c, wc_status *st)
 {
-    static Str os;
+    static pStr os;
     static wc_uchar johabu;
 
     if (st->state == -1) {

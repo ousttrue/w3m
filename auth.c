@@ -10,12 +10,12 @@
 struct auth_pass {
     int bad;
     int is_proxy;
-    Str host;
+    pStr host;
     int port;
-    /*    Str file; */
-    Str realm;
-    Str uname;
-    Str pwd;
+    /*    pStr file; */
+    pStr realm;
+    pStr uname;
+    pStr pwd;
     struct auth_pass* next;
 };
 
@@ -77,7 +77,7 @@ find_auth_pass_entry(const char* host, int port, const char* realm, const char* 
 }
 
 int find_auth_user_passwd(ParsedURL* pu, char* realm,
-    Str* uname, Str* pwd, int is_proxy)
+    pStr* uname, pStr* pwd, int is_proxy)
 {
     struct auth_pass* ent;
 
@@ -95,7 +95,7 @@ int find_auth_user_passwd(ParsedURL* pu, char* realm,
     return 0;
 }
 
-void add_auth_user_passwd(ParsedURL* pu, char* realm, Str uname, Str pwd,
+void add_auth_user_passwd(ParsedURL* pu, char* realm, pStr uname, pStr pwd,
     int is_proxy)
 {
     struct auth_pass ent;
@@ -110,7 +110,7 @@ void add_auth_user_passwd(ParsedURL* pu, char* realm, Str uname, Str pwd,
     add_auth_pass_entry(&ent, 0, 1);
 }
 
-void invalidate_auth_user_passwd(ParsedURL* pu, char* realm, Str uname, Str pwd,
+void invalidate_auth_user_passwd(ParsedURL* pu, char* realm, pStr uname, pStr pwd,
     int is_proxy)
 {
     struct auth_pass* ent;
@@ -134,10 +134,10 @@ void invalidate_auth_user_passwd(ParsedURL* pu, char* realm, Str uname, Str pwd,
  * password <passwd>
  */
 
-static Str
-next_token(Str arg)
+static pStr
+next_token(pStr arg)
 {
-    Str narg = NULL;
+    pStr narg = NULL;
     char *p, *q;
     if (arg == NULL || arg->length == 0)
         return NULL;
@@ -158,11 +158,11 @@ static void
 parsePasswd(FILE* fp, int netrc)
 {
     struct auth_pass ent;
-    Str line = NULL;
+    pStr line = NULL;
 
     bzero(&ent, sizeof(struct auth_pass));
     while (1) {
-        Str arg = NULL;
+        pStr arg = NULL;
         char* p;
 
         if (line == NULL || line->length == 0)

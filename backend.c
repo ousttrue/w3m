@@ -111,7 +111,7 @@ internal_get(char *url, int flag, FormList *request)
     if (buf != NULL && buf != NO_BUFFER) {
 	if (is_html_type(buf->type) && backend_halfdump_buf) {
 	    TextLineListItem *p;
-	    Str first, last;
+	    pStr first, last;
 	    int len = 0;
 	    for (p = backend_halfdump_buf->first; p; p = p->next) {
 		p->ptr->line = Str_conv_to_halfdump(p->ptr->line);
@@ -331,7 +331,7 @@ backend(void)
 static char *
 readline(char *prompt)
 {
-    Str s;
+    pStr s;
     fputs(prompt, stdout);
     fflush(stdout);
     s = Strfgets(stdin);
@@ -348,7 +348,7 @@ static TextList *
 split(const char *p)
 {
     int in_double_quote = false, in_single_quote = false;
-    Str s = Strnew();
+    pStr s = Strnew();
     TextList *tp = newTextList();
 
     for (; *p; p++) {

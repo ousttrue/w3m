@@ -131,7 +131,7 @@ set_symbol(int width)
     static int save_width = -1;
     symbol_set *s = &alt_symbol_set;
     int i;
-    Str tmp;
+    pStr tmp;
 
     if (width == save_width)
 	return symbol_buf;
@@ -176,7 +176,7 @@ get_symbol(void)
 #endif
 
 void
-push_symbol(Str str, char symbol, int width, int n)
+push_symbol(pStr str, char symbol, int width, int n)
 {
     char buf[2], *p;
     int i;

@@ -14,15 +14,15 @@ extern char UseContentCharset;
 extern char SearchConv;
 extern char SimplePreserveSpace;
 
-static inline Str Str_conv_from_system(Str x)
+static inline pStr Str_conv_from_system(pStr x)
 {
     return wc_Str_conv(x, SystemCharset, InnerCharset);
 }
-static inline Str Str_conv_to_system(Str x)
+static inline pStr Str_conv_to_system(pStr x)
 {
     return wc_Str_conv_strict(x, InnerCharset, SystemCharset);
 }
-static inline Str Str_conv_to_halfdump(Str x)
+static inline pStr Str_conv_to_halfdump(pStr x)
 {
     return (ExtHalfdump ? wc_Str_conv(x, InnerCharset, DisplayCharset) : x);
 }

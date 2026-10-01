@@ -168,7 +168,7 @@ extern void cursorBottom(void);
 extern int currentLn(Buffer* buf);
 #ifdef USE_EXTERNAL_URI_LOADER
 extern void initURIMethods(void);
-extern Str searchURIMethods(ParsedURL* pu);
+extern pStr searchURIMethods(ParsedURL* pu);
 extern void chkExternalURIBuffer(Buffer* buf);
 #endif
 extern ParsedURL* schemeToProxy(int scheme);
@@ -180,7 +180,7 @@ extern int is_html_type(const char* type);
 extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, const char* referer,
     int flag, FormList* request);
 extern int is_boundary(const unsigned char*, const unsigned char*);
-extern void push_render_image(Str str, int width, int limit,
+extern void push_render_image(pStr str, int width, int limit,
     struct html_feed_environ* h_env);
 extern void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf,
     int indent, int force, int width);
@@ -198,21 +198,21 @@ extern void loadImage(Buffer* buf, int flag);
 extern ImageCache* getImage(Image* image, ParsedURL* current, int flag);
 extern int getImageSize(ImageCache* cache);
 #endif
-extern Str process_img(struct parsed_tag* tag, int width);
-extern Str process_anchor(struct parsed_tag* tag, const char* tagbuf);
-extern Str process_input(struct parsed_tag* tag);
-extern Str process_button(struct parsed_tag* tag);
-extern Str process_n_button(void);
-extern Str process_select(struct parsed_tag* tag);
-extern Str process_n_select(void);
+extern pStr process_img(struct parsed_tag* tag, int width);
+extern pStr process_anchor(struct parsed_tag* tag, const char* tagbuf);
+extern pStr process_input(struct parsed_tag* tag);
+extern pStr process_button(struct parsed_tag* tag);
+extern pStr process_n_button(void);
+extern pStr process_select(struct parsed_tag* tag);
+extern pStr process_n_select(void);
 extern void feed_select(const char* str);
 extern void process_option(void);
-extern Str process_textarea(struct parsed_tag* tag, int width);
-extern Str process_n_textarea(void);
+extern pStr process_textarea(struct parsed_tag* tag, int width);
+extern pStr process_n_textarea(void);
 extern void feed_textarea(const char* str);
-extern Str process_form(struct parsed_tag* tag);
-extern Str process_n_form(void);
-extern int getMetaRefreshParam(const char* q, Str* refresh_uri);
+extern pStr process_form(struct parsed_tag* tag);
+extern pStr process_n_form(void);
+extern int getMetaRefreshParam(const char* q, pStr* refresh_uri);
 extern int HTMLtagproc1(struct parsed_tag* tag,
     struct html_feed_environ* h_env);
 extern void HTMLlineproc2(Buffer* buf, TextLineList* tl);
@@ -229,14 +229,14 @@ extern void completeHTMLstream(struct html_feed_environ*,
     struct readbuffer*);
 extern void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src,
     int internal);
-extern Buffer* loadHTMLString(Str page);
+extern Buffer* loadHTMLString(pStr page);
 #ifdef USE_GOPHER
 #ifdef USE_M17N
-extern Str loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset);
-extern Str loadGopherSearch(ParsedURL* pu, wc_ces* charset);
+extern pStr loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset);
+extern pStr loadGopherSearch(ParsedURL* pu, wc_ces* charset);
 #else
-extern Str loadGopherDir0(URLFile* uf, ParsedURL* pu);
-extern Str loadGopherSearch0(ParsedURL* pu);
+extern pStr loadGopherDir0(URLFile* uf, ParsedURL* pu);
+extern pStr loadGopherSearch0(ParsedURL* pu);
 #define loadGopherDir(uf, pu, charset) loadGopherDir0(uf, pu)
 #define loadGopherSearch(pu, charset) loadGopherSearch0(pu)
 #endif
@@ -264,9 +264,9 @@ extern int doFileSave(URLFile uf, const char* defstr);
 extern int checkCopyFile(const char* path1, const char* path2);
 extern int checkSaveFile(struct input_stream* stream, const char* path);
 extern int checkOverWrite(const char* path);
-extern int confirm(Str prompt);
+extern int confirm(pStr prompt);
 extern char confirm_multi(const char* prompt);
-extern int matchattr(const char* p, const char* attr, int len, Str* value);
+extern int matchattr(const char* p, const char* attr, int len, pStr* value);
 extern void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, const char* field);
 extern void displayBuffer(Buffer* buf, int mode);
@@ -305,7 +305,7 @@ extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
 extern void multimap(void);
-extern Str unescape_spaces(Str s);
+extern pStr unescape_spaces(pStr s);
 
 /* XXX: Should be form.h, can't be due to circular deps */
 extern struct form_list* newFormList(char* action, char* method, char* charset,
@@ -319,7 +319,7 @@ extern void formRecheckRadio(Anchor* a, Buffer* buf, FormItemList* form);
 extern void formResetBuffer(Buffer* buf, AnchorList* formitem);
 extern void formUpdateBuffer(Anchor* a, Buffer* buf, FormItemList* form);
 extern void preFormUpdateBuffer(Buffer* buf);
-extern Str textfieldrep(Str s, int width);
+extern pStr textfieldrep(pStr s, int width);
 extern void input_textarea(FormItemList* fi);
 extern void do_internal(char* action, char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
@@ -373,8 +373,8 @@ extern void touch_cursor(void);
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 extern ParsedURL* baseURL(Buffer* buf);
-extern Str parsedURL2Str(const ParsedURL* pu);
-extern Str parsedURL2RefererStr(ParsedURL* pu);
+extern pStr parsedURL2Str(const ParsedURL* pu);
+extern pStr parsedURL2RefererStr(ParsedURL* pu);
 extern int mailcapMatch(struct mailcap* mcap, const char* type);
 extern struct mailcap* searchMailcap(struct mailcap* table, const char* type);
 extern void initMailcap(void);
@@ -383,9 +383,9 @@ extern struct mailcap* searchExtViewer(const char* type);
 extern TextList* make_domain_list(char* domain_list);
 extern struct input_stream* openFTPStream(ParsedURL* pu, URLFile* uf);
 #ifdef USE_M17N
-extern Str loadFTPDir(ParsedURL* pu, wc_ces* charset);
+extern pStr loadFTPDir(ParsedURL* pu, wc_ces* charset);
 #else
-extern Str loadFTPDir0(ParsedURL* pu);
+extern pStr loadFTPDir0(ParsedURL* pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 #endif
 extern void closeFTP(void);
@@ -393,9 +393,9 @@ extern void disconnectFTP(void);
 #ifdef USE_NNTP
 extern struct input_stream* openNewsStream(ParsedURL* pu);
 #ifdef USE_M17N
-extern Str loadNewsgroup(ParsedURL* pu, wc_ces* charset);
+extern pStr loadNewsgroup(ParsedURL* pu, wc_ces* charset);
 #else
-extern Str loadNewsgroup0(ParsedURL* pu);
+extern pStr loadNewsgroup0(ParsedURL* pu);
 #define loadNewsgroup(pu, charset) loadNewsgroup0(pu)
 #endif
 extern void closeNews(void);
@@ -414,18 +414,18 @@ extern void shiftAnchorPosition(AnchorList* a, HmarkerList* hl, int line,
 extern char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a);
 extern Buffer* link_list_panel(Buffer* buf);
 
-extern Str decodeB(char** ww);
+extern pStr decodeB(char** ww);
 struct growbuf;
 extern void decodeB_to_growbuf(struct growbuf* gb, char** ww);
-extern Str decodeQ(char** ww);
+extern pStr decodeQ(char** ww);
 extern void decodeQP_to_growbuf(struct growbuf* gb, char** ww);
 extern void decodeU_to_growbuf(struct growbuf* gb, char** ww);
 #ifdef USE_M17N
-extern Str decodeWord(char** ow, wc_ces* charset);
-extern Str decodeMIME(Str orgstr, wc_ces* charset);
+extern pStr decodeWord(char** ow, wc_ces* charset);
+extern pStr decodeMIME(pStr orgstr, wc_ces* charset);
 #else
-extern Str decodeWord0(char** ow);
-extern Str decodeMIME0(Str orgstr);
+extern pStr decodeWord0(char** ow);
+extern pStr decodeMIME0(pStr orgstr);
 #define decodeWord(ow, charset) decodeWord0(ow)
 #define decodeMIME(orgstr, charset) decodeMIME0(orgstr)
 #endif
@@ -512,9 +512,9 @@ extern void dictwordat(void);
 
 extern void wrapToggle(void);
 
-extern Str getLinkNumberStr(int correction);
+extern pStr getLinkNumberStr(int correction);
 
 extern void dispVer(void);
 
 extern void userMessage(void);
-extern Str unquote_mailcap(const char* qstr, const char* type, const char* name, const char* attr, int* mc_stat);
+extern pStr unquote_mailcap(const char* qstr, const char* type, const char* name, const char* attr, int* mc_stat);

@@ -1,4 +1,3 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 /*
  * String manipulation library for Boehm GC
  *
@@ -30,16 +29,16 @@
 #define STR_SIZE_MAX (STR_LEN_MAX + 1)
 #define STR_LEN_MAX (INT_MAX / 32 - 1)
 
-static Str Strgrow_n(Str s, int n);
+static pStr Strgrow_n(pStr s, int n);
 
-Str Strnew(void)
+pStr Strnew(void)
 {
     return Strnew_size(INITIAL_STR_SIZE - 1);
 }
 
-Str Strnew_size(int n)
+pStr Strnew_size(int n)
 {
-    Str x;
+    pStr x;
 
     if (n < 0 || n > STR_LEN_MAX)
         n = STR_SIZE_MAX;
@@ -57,15 +56,15 @@ Str Strnew_size(int n)
     return x;
 }
 
-Str Strnew_charp(const char* p)
+pStr Strnew_charp(const char* p)
 {
     return p ? Strnew_charp_n(p, strlen(p)) : Strnew();
 }
 
-Str Strnew_m_charp(const char* p, ...)
+pStr Strnew_m_charp(const char* p, ...)
 {
     va_list ap;
-    Str r = Strnew();
+    pStr r = Strnew();
 
     va_start(ap, p);
     while (p != NULL) {
@@ -76,9 +75,9 @@ Str Strnew_m_charp(const char* p, ...)
     return r;
 }
 
-Str Strnew_charp_n(const char* p, int n)
+pStr Strnew_charp_n(const char* p, int n)
 {
-    Str x;
+    pStr x;
 
     x = Strnew_size(n);
     if (p)
@@ -86,21 +85,21 @@ Str Strnew_charp_n(const char* p, int n)
     return x;
 }
 
-Str Strdup(Str s)
+pStr Strdup(pStr s)
 {
-    Str n = Strnew_size(s->length);
+    pStr n = Strnew_size(s->length);
     Strcopy(n, s);
     return n;
 }
 
-Str Strclear(Str s)
+pStr Strclear(pStr s)
 {
     s->length = 0;
     s->ptr[s->length] = '\0';
     return s;
 }
 
-void Strfree(Str x)
+void Strfree(pStr x)
 {
     if (!x)
         return;
@@ -108,12 +107,12 @@ void Strfree(Str x)
     GC_free(x);
 }
 
-Str Strcopy(Str dst, Str src)
+pStr Strcopy(pStr dst, pStr src)
 {
     return Strcopy_charp_n(dst, src->ptr, src->length);
 }
 
-Str Strcopy_charp(Str x, const char* y)
+pStr Strcopy_charp(pStr x, const char* y)
 {
     int len;
 
@@ -124,7 +123,7 @@ Str Strcopy_charp(Str x, const char* y)
     return Strcopy_charp_n(x, y, len);
 }
 
-Str Strcopy_charp_n(Str x, const char* y, int n)
+pStr Strcopy_charp_n(pStr x, const char* y, int n)
 {
     if (!x)
         x = Strnew();
@@ -141,7 +140,7 @@ Str Strcopy_charp_n(Str x, const char* y, int n)
     return x;
 }
 
-Str Strcat_charp_n(Str x, const char* y, int n)
+pStr Strcat_charp_n(pStr x, const char* y, int n)
 {
     int newlen;
 
@@ -166,19 +165,19 @@ Str Strcat_charp_n(Str x, const char* y, int n)
     return x;
 }
 
-Str Strcat(Str x, Str y)
+pStr Strcat(pStr x, pStr y)
 {
     return Strcat_charp_n(x, y->ptr, y->length);
 }
 
-Str Strcat_charp(Str x, const char* y)
+pStr Strcat_charp(pStr x, const char* y)
 {
     if (!y)
         return x;
     return Strcat_charp_n(x, y, strlen(y));
 }
 
-Str Strcat_m_charp(Str x, ...)
+pStr Strcat_m_charp(pStr x, ...)
 {
     va_list ap;
     char* p;
@@ -192,7 +191,7 @@ Str Strcat_m_charp(Str x, ...)
     return x;
 }
 
-Str Strgrow_n(Str x, int n)
+pStr Strgrow_n(pStr x, int n)
 {
     if (n < 0)
         n = STR_SIZE_MAX;
@@ -208,7 +207,7 @@ Str Strgrow_n(Str x, int n)
     return x;
 }
 
-Str Strgrow(Str x)
+pStr Strgrow(pStr x)
 {
     int newlen, addlen;
 
@@ -227,9 +226,9 @@ Str Strgrow(Str x)
     return Strgrow_n(x, newlen - 1);
 }
 
-Str Strsubstr(Str s, int beg, int len)
+pStr Strsubstr(pStr s, int beg, int len)
 {
-    Str new_s;
+    pStr new_s;
     int i;
 
     new_s = Strnew();
@@ -240,7 +239,7 @@ Str Strsubstr(Str s, int beg, int len)
     return new_s;
 }
 
-Str Strlower(Str s)
+pStr Strlower(pStr s)
 {
     int i;
     for (i = 0; i < s->length; i++)
@@ -248,7 +247,7 @@ Str Strlower(Str s)
     return s;
 }
 
-Str Strupper(Str s)
+pStr Strupper(pStr s)
 {
     int i;
     for (i = 0; i < s->length; i++)
@@ -256,7 +255,7 @@ Str Strupper(Str s)
     return s;
 }
 
-Str Strchop(Str s)
+pStr Strchop(pStr s)
 {
     while (s->length > 0 && (s->ptr[s->length - 1] == '\n' || s->ptr[s->length - 1] == '\r')) {
         s->length--;
@@ -265,7 +264,7 @@ Str Strchop(Str s)
     return s;
 }
 
-Str Strinsert_char(Str s, int pos, char c)
+pStr Strinsert_char(pStr s, int pos, char c)
 {
     int i;
     if (pos < 0 || s->length < pos || s->length == STR_LEN_MAX)
@@ -280,21 +279,21 @@ Str Strinsert_char(Str s, int pos, char c)
     return s;
 }
 
-Str Strinsert_charp_n(Str s, int pos, const char* p, int n)
+pStr Strinsert_charp_n(pStr s, int pos, const char* p, int n)
 {
     while (n--)
         Strinsert_char(s, pos++, *(p++));
     return s;
 }
 
-Str Strinsert_charp(Str s, int pos, const char* p)
+pStr Strinsert_charp(pStr s, int pos, const char* p)
 {
     while (*p)
         Strinsert_char(s, pos++, *(p++));
     return s;
 }
 
-Str Strdelete(Str s, int pos, int n)
+pStr Strdelete(pStr s, int pos, int n)
 {
     int i;
     if (pos < 0 || s->length < pos)
@@ -313,7 +312,7 @@ Str Strdelete(Str s, int pos, int n)
     return s;
 }
 
-Str Strtruncate(Str s, int pos)
+pStr Strtruncate(pStr s, int pos)
 {
     if (pos < 0 || s->length < pos)
         return s;
@@ -322,14 +321,14 @@ Str Strtruncate(Str s, int pos)
     return s;
 }
 
-Str Strshrink(Str s, int n)
+pStr Strshrink(pStr s, int n)
 {
     s->length = (n >= s->length) ? 0 : (s->length - n);
     s->ptr[s->length] = '\0';
     return s;
 }
 
-Str Strremovefirstspaces(Str s)
+pStr Strremovefirstspaces(pStr s)
 {
     int i;
 
@@ -340,7 +339,7 @@ Str Strremovefirstspaces(Str s)
     return Strdelete(s, 0, i);
 }
 
-Str Strremovetrailingspaces(Str s)
+pStr Strremovetrailingspaces(pStr s)
 {
     int i;
 
@@ -351,9 +350,9 @@ Str Strremovetrailingspaces(Str s)
     return s;
 }
 
-Str Stralign_left(Str s, int width)
+pStr Stralign_left(pStr s, int width)
 {
-    Str n;
+    pStr n;
     int i;
 
     if (s->length >= width)
@@ -365,9 +364,9 @@ Str Stralign_left(Str s, int width)
     return n;
 }
 
-Str Stralign_right(Str s, int width)
+pStr Stralign_right(pStr s, int width)
 {
-    Str n;
+    pStr n;
     int i;
 
     if (s->length >= width)
@@ -379,9 +378,9 @@ Str Stralign_right(Str s, int width)
     return n;
 }
 
-Str Stralign_center(Str s, int width)
+pStr Stralign_center(pStr s, int width)
 {
-    Str n;
+    pStr n;
     int i, w;
 
     if (s->length >= width)
@@ -396,11 +395,11 @@ Str Stralign_center(Str s, int width)
     return n;
 }
 
-Str Sprintf(const char* fmt, ...)
+pStr Sprintf(const char* fmt, ...)
 {
     va_list ap, args;
     int len;
-    Str s;
+    pStr s;
 
     va_start(ap, fmt);
     va_copy(args, ap);
@@ -418,9 +417,9 @@ Str Sprintf(const char* fmt, ...)
     return s;
 }
 
-Str Strfgets(FILE* f)
+pStr Strfgets(FILE* f)
 {
-    Str s = Strnew();
+    pStr s = Strnew();
     int c;
     while ((c = fgetc(f)) != EOF) {
         Strcat_char(s, c);
@@ -430,9 +429,9 @@ Str Strfgets(FILE* f)
     return s;
 }
 
-Str Strfgetall(FILE* f)
+pStr Strfgetall(FILE* f)
 {
-    Str s = Strnew();
+    pStr s = Strnew();
     int c;
     while ((c = fgetc(f)) != EOF) {
         Strcat_char(s, c);

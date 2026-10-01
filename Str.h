@@ -22,81 +22,81 @@ typedef struct Str {
     char* ptr;
     int length;
     int area_size;
-}* Str;
+}* pStr;
 
-Str Strnew(void);
-Str Strnew_size(int);
-Str Strnew_charp(const char*);
-Str Strnew_charp_n(const char*, int);
-Str Strnew_m_charp(const char*, ...);
-Str Strdup(Str);
-Str Strclear(Str);
-void Strfree(Str);
-Str Strcopy(Str dst, Str src);
-Str Strcopy_charp(Str, const char*);
-Str Strcopy_charp_n(Str, const char*, int);
-Str Strcat_charp_n(Str, const char*, int);
-Str Strcat(Str, Str);
-Str Strcat_charp(Str, const char*);
-Str Strcat_m_charp(Str, ...);
-Str Strsubstr(Str, int, int);
-Str Strinsert_char(Str, int, char);
-Str Strinsert_charp(Str, int, const char*);
-Str Strinsert_charp_n(Str s, int pos, const char* p, int n);
-Str Strdelete(Str, int, int);
-Str Strtruncate(Str, int);
-Str Strlower(Str);
-Str Strupper(Str);
-Str Strchop(Str);
-Str Strshrink(Str, int);
-Str Strremovefirstspaces(Str);
-Str Strremovetrailingspaces(Str);
-Str Stralign_left(Str, int);
-Str Stralign_right(Str, int);
-Str Stralign_center(Str, int);
+pStr Strnew(void);
+pStr Strnew_size(int);
+pStr Strnew_charp(const char*);
+pStr Strnew_charp_n(const char*, int);
+pStr Strnew_m_charp(const char*, ...);
+pStr Strdup(pStr);
+pStr Strclear(pStr);
+void Strfree(pStr);
+pStr Strcopy(pStr dst, pStr src);
+pStr Strcopy_charp(pStr, const char*);
+pStr Strcopy_charp_n(pStr, const char*, int);
+pStr Strcat_charp_n(pStr, const char*, int);
+pStr Strcat(pStr, pStr);
+pStr Strcat_charp(pStr, const char*);
+pStr Strcat_m_charp(pStr, ...);
+pStr Strsubstr(pStr, int, int);
+pStr Strinsert_char(pStr, int, char);
+pStr Strinsert_charp(pStr, int, const char*);
+pStr Strinsert_charp_n(pStr s, int pos, const char* p, int n);
+pStr Strdelete(pStr, int, int);
+pStr Strtruncate(pStr, int);
+pStr Strlower(pStr);
+pStr Strupper(pStr);
+pStr Strchop(pStr);
+pStr Strshrink(pStr, int);
+pStr Strremovefirstspaces(pStr);
+pStr Strremovetrailingspaces(pStr);
+pStr Stralign_left(pStr, int);
+pStr Stralign_right(pStr, int);
+pStr Stralign_center(pStr, int);
 
 #ifdef GNUC
 #define FORMAT_PRINTF(fmt, arg) attribute((format(printf, fmt, arg)))
 #else
 #define FORMAT_PRINTF(fmt, arg)
 #endif
-Str Sprintf(const char* fmt, ...) FORMAT_PRINTF(1, 2);
+pStr Sprintf(const char* fmt, ...) FORMAT_PRINTF(1, 2);
 
-Str Strfgets(FILE*);
-Str Strfgetall(FILE*);
+pStr Strfgets(FILE*);
+pStr Strfgetall(FILE*);
 
-Str Strgrow(Str s);
+pStr Strgrow(pStr s);
 
-inline static Str Strcat_char(Str x, char y) { return Strinsert_char(x, (x)->length, y); }
-inline static int Strcmp(Str x, Str y)
+inline static pStr Strcat_char(pStr x, char y) { return Strinsert_char(x, (x)->length, y); }
+inline static int Strcmp(pStr x, pStr y)
 {
     return strcmp((x)->ptr, (y)->ptr);
 }
-inline static int Strcmp_charp(Str x, const char* y)
+inline static int Strcmp_charp(pStr x, const char* y)
 {
     return strcmp((x)->ptr, (y));
 }
-inline static int Strcasecmp(Str x, Str y)
+inline static int Strcasecmp(pStr x, pStr y)
 {
     return strcasecmp((x)->ptr, (y)->ptr);
 }
-inline static int Strcasecmp_charp(Str x, const char* y)
+inline static int Strcasecmp_charp(pStr x, const char* y)
 {
     return strcasecmp((x)->ptr, (y));
 }
-inline static int Strncasecmp_charp(Str x, const char* y, int n)
+inline static int Strncasecmp_charp(pStr x, const char* y, int n)
 {
     return strncasecmp((x)->ptr, (y), (n));
 }
-inline static char Strlastchar(Str s)
+inline static char Strlastchar(pStr s)
 {
     return ((s)->length > 0 ? (s)->ptr[(s)->length - 1] : '\0');
 }
-inline static void Strshrinkfirst(Str s, int n)
+inline static void Strshrinkfirst(pStr s, int n)
 {
     Strdelete((s), 0, (n));
 }
-inline static void Strfputs(Str s, FILE* f)
+inline static void Strfputs(pStr s, FILE* f)
 {
     fwrite((s)->ptr, 1, (s)->length, (f));
 }

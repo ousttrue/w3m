@@ -55,7 +55,7 @@ static int
 getCharSize(void)
 {
     FILE* f;
-    Str tmp;
+    pStr tmp;
     int w = 0, h = 0;
 
     set_environ("W3M_TTY", ttyname_tty());
@@ -523,7 +523,7 @@ void loadImage(Buffer* buf, int flag)
 ImageCache*
 getImage(Image* image, ParsedURL* current, int flag)
 {
-    Str key = NULL;
+    pStr key = NULL;
     ImageCache* cache;
 
     if (!activeImage)
@@ -670,7 +670,7 @@ success:
 
 int getImageSize(ImageCache* cache)
 {
-    Str tmp;
+    pStr tmp;
     FILE* f;
     unsigned int w = 0, h = 0;
 

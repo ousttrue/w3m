@@ -130,7 +130,7 @@ interpret_keymap(FILE * kf, struct stat *current, int force)
 {
     int fd;
     struct stat kstat;
-    Str line;
+    pStr line;
     char *p, *s, *emsg;
     int lineno;
 #ifdef USE_M17N
@@ -389,7 +389,7 @@ getWord(char **str)
 char *
 getQWord(char **str)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     char *p;
     int in_q = 0, in_dq = 0, esc = 0;
 
@@ -635,7 +635,7 @@ setMouseAction2(MouseActionMap * map, char *p)
 static void
 interpret_mouse_action(FILE * mf)
 {
-    Str line;
+    pStr line;
     char *p, *s;
     int b;
 

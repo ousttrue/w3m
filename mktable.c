@@ -32,7 +32,7 @@ main(int argc, char *argv[])
     Hash_ss *hash;
     HashItem_ss **hashitems, *hi;
     int size, n, i, j;
-    Str s, name, fbase;
+    pStr s, name, fbase;
     char *p;
     Hash_hss_i *rhash;
 

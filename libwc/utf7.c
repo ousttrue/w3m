@@ -59,10 +59,10 @@ static char base64_c_map[] =
 #define BASE64_C(x) base64_c_map[(x)]
 #define C_BASE64(x) c_base64_map[(x) - 0x20]
 
-Str
-wc_conv_from_utf7(Str is, wc_ces ces)
+pStr
+wc_conv_from_utf7(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
     wc_uchar *ep = sp + is->length;
     wc_uchar *p;
@@ -144,7 +144,7 @@ wc_conv_from_utf7(Str is, wc_ces ces)
 }
 
 static void
-wc_push_ucs_to_utf7(Str os, wc_uint32 ucs, wc_status *st)
+wc_push_ucs_to_utf7(pStr os, wc_uint32 ucs, wc_status *st)
 {
     if (ucs > WC_C_UNICODE_END)
 	return;
@@ -202,7 +202,7 @@ wc_push_ucs_to_utf7(Str os, wc_uint32 ucs, wc_status *st)
 }
 
 static int
-wc_push_tag_to_utf7(Str os, int ntag, wc_status *st)
+wc_push_tag_to_utf7(pStr os, int ntag, wc_status *st)
 {
     char *p;
 
@@ -221,7 +221,7 @@ wc_push_tag_to_utf7(Str os, int ntag, wc_status *st)
 }
 
 void
-wc_push_to_utf7(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_utf7(pStr os, wc_wchar_t cc, wc_status *st)
 {
     char *p;
 
@@ -276,7 +276,7 @@ wc_push_to_utf7(Str os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_utf7_end(Str os, wc_status *st)
+wc_push_to_utf7_end(pStr os, wc_status *st)
 {
     if (st->ntag)
 	st->ntag = wc_push_tag_to_utf7(os, 0, st);
@@ -288,10 +288,10 @@ wc_push_to_utf7_end(Str os, wc_status *st)
     return;
 }
 
-Str
+pStr
 wc_char_conv_from_utf7(wc_uchar c, wc_status *st)
 {
-    static Str os;
+    static pStr os;
     static wc_uint32 high;
     wc_uint32 b;
 

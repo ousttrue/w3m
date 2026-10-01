@@ -51,13 +51,13 @@ struct portlist {
 
 struct cookie {
     ParsedURL url;
-    Str name;
-    Str value;
+    pStr name;
+    pStr value;
     time_t expires;
-    Str path;
-    Str domain;
-    Str comment;
-    Str commentURL;
+    pStr path;
+    pStr domain;
+    pStr comment;
+    pStr commentURL;
     struct portlist* portl;
     char version;
     char flag;
@@ -73,22 +73,22 @@ static TextList* Cookie_avoid_wrong_number_of_dots_domains;
 static long long cf_mtime;
 static int is_saved = 1;
 
-static Str make_cookie(struct cookie* cookie);
-static Str portlist2str(struct portlist* first);
-static Str readcol(char** p);
-static int check_avoid_wrong_number_of_dots_domain(Str domain);
+static pStr make_cookie(struct cookie* cookie);
+static pStr portlist2str(struct portlist* first);
+static pStr readcol(char** p);
+static int check_avoid_wrong_number_of_dots_domain(pStr domain);
 static int load_cookies(struct cookie** cookie);
 static int port_match(struct portlist* first, int port);
 static int sync_cookies(void);
-static struct cookie* get_cookie(struct cookie* first_node, Str domain, Str path, Str name);
+static struct cookie* get_cookie(struct cookie* first_node, pStr domain, pStr path, pStr name);
 static struct cookie* nth_cookie(int n);
-static struct portlist* make_portlist(Str port);
+static struct portlist* make_portlist(pStr port);
 static void check_expired_cookies(void);
 static void unlink_cookie(struct cookie** list, struct cookie* cookie);
 
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
 
-static Str FQDN(const char* host)
+static pStr FQDN(const char* host)
 {
     if (host == NULL)
         return NULL;
@@ -125,7 +125,7 @@ static Str FQDN(const char* host)
         for (res = res0; res != NULL; res = res->ai_next) {
             if (res->ai_canonname) {
                 /* found */
-                Str namebuf = Strnew_charp(res->ai_canonname);
+                pStr namebuf = Strnew_charp(res->ai_canonname);
                 freeaddrinfo(res0);
                 return namebuf;
             }
@@ -207,11 +207,11 @@ const char* domain_match(const char* host, const char* domain)
 }
 
 struct portlist*
-make_portlist(Str port)
+make_portlist(pStr port)
 {
     struct portlist *first = NULL, *pl;
     char* p;
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
 
     p = port->ptr;
     while (*p) {
@@ -231,10 +231,10 @@ make_portlist(Str port)
     return first;
 }
 
-Str portlist2str(struct portlist* first)
+pStr portlist2str(struct portlist* first)
 {
     struct portlist* pl;
-    Str tmp;
+    pStr tmp;
 
     tmp = Sprintf("%d", first->port);
     for (pl = first->next; pl; pl = pl->next)
@@ -278,9 +278,9 @@ void check_expired_cookies(void)
     }
 }
 
-Str make_cookie(struct cookie* cookie)
+pStr make_cookie(struct cookie* cookie)
 {
-    Str tmp = Strdup(cookie->name);
+    pStr tmp = Strdup(cookie->name);
     Strcat_char(tmp, '=');
     Strcat(tmp, cookie->value);
     return tmp;
@@ -310,7 +310,7 @@ int match_cookie(ParsedURL* pu, struct cookie* cookie, const char* domainname)
 }
 
 struct cookie*
-get_cookie(struct cookie* first_node, Str domain, Str path, Str name)
+get_cookie(struct cookie* first_node, pStr domain, pStr path, pStr name)
 {
     struct cookie* p;
 
@@ -321,13 +321,13 @@ get_cookie(struct cookie* first_node, Str domain, Str path, Str name)
     return NULL;
 }
 
-Str find_cookie(ParsedURL* pu)
+pStr find_cookie(ParsedURL* pu)
 {
-    Str tmp;
+    pStr tmp;
     struct cookie *p, *p1, *fco = NULL;
     int version = 0;
 
-    Str fq_domainname = FQDN(pu->host);
+    pStr fq_domainname = FQDN(pu->host);
     check_expired_cookies();
     for (p = First_cookie; p; p = p->next) {
         const char* domainname = (p->version == 0) ? fq_domainname->ptr : pu->host;
@@ -370,7 +370,7 @@ Str find_cookie(ParsedURL* pu)
     return tmp;
 }
 
-int check_avoid_wrong_number_of_dots_domain(Str domain)
+int check_avoid_wrong_number_of_dots_domain(pStr domain)
 {
     TextListItem* tl;
     int avoid_wrong_number_of_dots_domain = FALSE;
@@ -392,13 +392,13 @@ int check_avoid_wrong_number_of_dots_domain(Str domain)
     }
 }
 
-int add_cookie(ParsedURL* pu, Str name, Str value,
-    time_t expires, Str domain, Str path,
-    int flag, Str comment, int version, Str port, Str commentURL)
+int add_cookie(ParsedURL* pu, pStr name, pStr value,
+    time_t expires, pStr domain, pStr path,
+    int flag, pStr comment, int version, pStr port, pStr commentURL)
 {
     struct cookie* p;
     const char* domainname = (version == 0) ? FQDN(pu->host)->ptr : pu->host;
-    Str odomain = domain, opath = path;
+    pStr odomain = domain, opath = path;
     struct portlist* portlist = NULL;
     int use_security = !(flag & COO_OVERRIDE);
 
@@ -639,9 +639,9 @@ void save_cookies(void)
 }
 #undef str2charp
 
-Str readcol(char** p)
+pStr readcol(char** p)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     while (**p && **p != '\n' && **p != '\r' && **p != '\t')
         Strcat_char(tmp, *((*p)++));
     if (**p == '\t')
@@ -652,7 +652,7 @@ Str readcol(char** p)
 int load_cookies(struct cookie** cookie)
 {
     FILE* fp;
-    Str line;
+    pStr line;
     char* str;
     struct cookie *ck, *p;
     struct stat st;
@@ -742,7 +742,7 @@ Buffer*
 cookie_list_panel(void)
 {
     /* FIXME: gettextize? */
-    Str src = Strnew_charp("<html><head><title>Cookies</title></head>"
+    pStr src = Strnew_charp("<html><head><title>Cookies</title></head>"
                            "<body><center><b>Cookies</b></center>"
                            "<p><form method=internal action=cookie>");
     struct cookie* p;

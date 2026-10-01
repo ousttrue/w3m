@@ -71,10 +71,10 @@ wc_uhc_to_N(wc_uint32 c)
     return WC_UHC_N(c) - ((c >> 8) - 0xA1) * 0x5E + 2;
 }
 
-Str
-wc_conv_from_uhc(Str is, wc_ces ces)
+pStr
+wc_conv_from_uhc(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
     wc_uchar *ep = sp + is->length;
     wc_uchar *p;
@@ -127,7 +127,7 @@ wc_conv_from_uhc(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_uhc(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_uhc(pStr os, wc_wchar_t cc, wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -165,10 +165,10 @@ wc_push_to_uhc(Str os, wc_wchar_t cc, wc_status *st)
   }
 }
 
-Str
+pStr
 wc_char_conv_from_uhc(wc_uchar c, wc_status *st)
 {
-    static Str os;
+    static pStr os;
     static wc_uchar uhcu;
     wc_uint32 uhc;
 

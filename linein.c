@@ -35,16 +35,16 @@
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
 
-static Str strBuf;
+static pStr strBuf;
 static Lineprop strProp[STR_LEN];
-static Str ynkBuf;
+static pStr ynkBuf;
 static int ynkCon;
 
-static Str CompleteBuf;
-static Str CFileName;
-static Str CBeforeBuf;
-static Str CAfterBuf;
-static Str CDirBuf;
+static pStr CompleteBuf;
+static pStr CFileName;
+static pStr CBeforeBuf;
+static pStr CAfterBuf;
+static pStr CDirBuf;
 static char** CFileBuf = NULL;
 static int NCFileBuf;
 static int NCFileOffset;
@@ -83,7 +83,7 @@ static int terminated(unsigned char c);
 
 static void next_compl(int next);
 static void next_dcompl(int next);
-static Str doComplete(Str ifn, int* status, int next);
+static pStr doComplete(pStr ifn, int* status, int next);
 
 // clang-format off
 void (*InputKeymap[32]) (void) = {
@@ -98,8 +98,8 @@ void (*InputKeymap[32]) (void) = {
 };
 // clang-format on
 
-static Str escape_spaces(Str s);
-static int setStrType(Str str, Lineprop* prop);
+static pStr escape_spaces(pStr s);
+static int setStrType(pStr str, Lineprop* prop);
 static void addPasswd(char* p, Lineprop* pr, int len, int pos, int limit);
 static void addStr(char* p, Lineprop* pr, int len, int pos, int limit);
 
@@ -109,8 +109,8 @@ static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
 static int need_redraw, is_passwd;
 
 static Hist* CurrentHist;
-static Str strCurrentBuf;
-static void ins_char(Str str);
+static pStr strCurrentBuf;
+static void ins_char(pStr str);
 
 char* inputLineHistSearch(const char* prompt, const char* def_str,
     enum InputLineFlag flag, Hist* hist,
@@ -119,7 +119,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str,
     int opos, x, y, lpos, rpos, epos;
     unsigned char c;
     char* p;
-    Str tmp;
+    pStr tmp;
 
     is_passwd = FALSE;
 
@@ -311,7 +311,7 @@ void addStr(char* p, Lineprop* pr, int len, int offset, int limit)
     }
 }
 
-void ins_char(Str str)
+void ins_char(pStr str)
 {
     const char *p = str->ptr, *ep = p + str->length;
     Lineprop ctype;
@@ -598,8 +598,8 @@ void next_compl(int next)
 {
     int status;
     int b, a;
-    Str buf;
-    Str s;
+    pStr buf;
+    pStr s;
 
     if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
         return;
@@ -651,9 +651,9 @@ void next_dcompl(int next)
 {
     static int col, row;
     static unsigned int len;
-    static Str d;
+    static pStr d;
     int i, j, n, y;
-    Str f;
+    pStr f;
     char* p;
     struct stat st;
     int comment, nline;
@@ -772,9 +772,9 @@ disp_next:
     }
 }
 
-Str escape_spaces(Str s)
+pStr escape_spaces(pStr s)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char* p;
 
     if (s == NULL)
@@ -793,9 +793,9 @@ Str escape_spaces(Str s)
     return s;
 }
 
-Str unescape_spaces(Str s)
+pStr unescape_spaces(pStr s)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char* p;
 
     if (s == NULL)
@@ -814,7 +814,7 @@ Str unescape_spaces(Str s)
     return s;
 }
 
-Str doComplete(Str ifn, int* status, int next)
+pStr doComplete(pStr ifn, int* status, int next)
 {
     int fl, i;
     const char *fn, *p;
@@ -970,7 +970,7 @@ void _next(void)
     offset = 0;
 }
 
-int setStrType(Str str, Lineprop* prop)
+int setStrType(pStr str, Lineprop* prop)
 {
     Lineprop ctype;
     char *p = str->ptr, *ep = p + str->length;

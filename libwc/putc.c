@@ -5,7 +5,7 @@
 
 static wc_status putc_st;
 static wc_ces putc_f_ces, putc_t_ces;
-static Str putc_str;
+static pStr putc_str;
 
 void
 wc_putc_init(wc_ces f_ces, wc_ces t_ces)

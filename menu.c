@@ -1387,7 +1387,7 @@ initSelectMenu(void)
 {
     int i, nitem, len = 0, l;
     Buffer *buf;
-    Str str;
+    pStr str;
     const char **label;
     const char *p;
     static const char *comment =
@@ -1608,7 +1608,7 @@ initSelTabMenu(void)
     int i, nitem, len = 0, l;
     TabBuffer *tab;
     Buffer *buf;
-    Str str;
+    pStr str;
     const char **label;
     const char *p;
     static char *comment = "char  SPC for select / D for delete tab ";
@@ -1851,7 +1851,7 @@ optionMenu(int x, int y, const char **label, int *variable, int initial,
 static void
 interpret_menu(FILE * mf)
 {
-    Str line;
+    pStr line;
     char *p, *s;
     int in_menu = 0, nmenu = 0, nitem = 0, type;
     MenuItem *item = NULL;
@@ -2044,7 +2044,7 @@ link_menu(Buffer *buf)
     LinkList *l;
     int i, nitem, len = 0, linkV = -1;
     const char **label;
-    Str str;
+    pStr str;
     const char *p;
 
     if (!buf->linklist)

@@ -61,6 +61,6 @@ extern wc_uint32  wc_ucs_precompose(wc_uint32 ucs1, wc_uint32 ucs2);
 extern wc_uint32  wc_ucs_to_fullwidth(wc_uint32 ucs);
 extern int        wc_ucs_put_tag(char *tag);
 extern char      *wc_ucs_get_tag(int ntag);
-extern void       wtf_push_ucs(Str os, wc_uint32 ucs, wc_status *st);
+extern void       wtf_push_ucs(pStr os, wc_uint32 ucs, wc_status *st);
 
 #endif

@@ -13,10 +13,10 @@
 char *WcReplace = "?";
 char *WcReplaceW = "??";
 
-static Str wc_conv_to_ces(Str is, wc_ces ces);
+static pStr wc_conv_to_ces(pStr is, wc_ces ces);
 
-Str
-wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces)
+pStr
+wc_Str_conv(pStr is, wc_ces f_ces, wc_ces t_ces)
 {
     if (f_ces != WC_CES_WTF)
 	is = (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(is, f_ces);
@@ -26,10 +26,10 @@ wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces)
 	return is;
 }
 
-Str
-wc_Str_conv_strict(Str is, wc_ces f_ces, wc_ces t_ces)
+pStr
+wc_Str_conv_strict(pStr is, wc_ces f_ces, wc_ces t_ces)
 {
-    Str os;
+    pStr os;
     wc_option opt = WcOption;
 
     WcOption.strict_iso2022 = WC_TRUE;
@@ -40,10 +40,10 @@ wc_Str_conv_strict(Str is, wc_ces f_ces, wc_ces t_ces)
     return os;
 }
 
-static Str
-wc_conv_to_ces(Str is, wc_ces ces)
+static pStr
+wc_conv_to_ces(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     const wc_uchar *sp = (const wc_uchar *)is->ptr;
     const wc_uchar *ep = sp + is->length;
     const wc_uchar *p;
@@ -109,8 +109,8 @@ wc_conv_to_ces(Str is, wc_ces ces)
     return os;
 }
 
-Str
-wc_Str_conv_with_detect(Str is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces)
+pStr
+wc_Str_conv_with_detect(pStr is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces)
 {
     wc_ces detect;
 
@@ -137,7 +137,7 @@ wc_Str_conv_with_detect(Str is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces)
 }
 
 void
-wc_push_end(Str os, wc_status *st)
+wc_push_end(pStr os, wc_status *st)
 {
     if (st->ces_info->id & WC_CES_T_ISO_2022)
 	wc_push_to_iso2022_end(os, st);

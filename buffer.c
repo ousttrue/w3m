@@ -209,7 +209,7 @@ nthBuffer(Buffer* firstbuf, int n)
 static void
 writeBufferName(Buffer* buf, int n)
 {
-    Str msg;
+    pStr msg;
     int all;
 
     all = buf->allLine;
@@ -608,7 +608,7 @@ prevBuffer(Buffer* first, const Buffer* buf)
 
 int writeBufferCache(Buffer* buf)
 {
-    Str tmp;
+    pStr tmp;
     FILE* cache = NULL;
     Line* l;
 #ifdef USE_ANSI_COLOR
@@ -888,10 +888,10 @@ Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
     return l;
 }
 
-Str guess_save_name(Buffer* buf, const char* path)
+pStr guess_save_name(Buffer* buf, const char* path)
 {
     if (buf && buf->document_header) {
-        Str name = NULL;
+        pStr name = NULL;
         char *p, *q;
         if ((p = checkHeader(buf, "Content-Disposition:")) != NULL && (q = strcasestr(p, "filename")) != NULL && (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, "filename", 8, &name))
             path = name->ptr;

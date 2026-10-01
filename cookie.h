@@ -46,10 +46,10 @@
 #define ACCEPT_BAD_COOKIE_ASK		2
 
 Buffer *cookie_list_panel(void);
-Str find_cookie(ParsedURL *pu);
-int add_cookie(ParsedURL *pu, Str name, Str value, time_t expires,
-	       Str domain, Str path, int flag, Str comment, int version,
-	       Str port, Str commentURL);
+pStr find_cookie(ParsedURL *pu);
+int add_cookie(ParsedURL *pu, pStr name, pStr value, time_t expires,
+	       pStr domain, pStr path, int flag, pStr comment, int version,
+	       pStr port, pStr commentURL);
 int check_cookie_accept_domain(const char *domain);
 void cooLst(void);
 void initCookie(void);

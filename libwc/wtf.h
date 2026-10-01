@@ -65,8 +65,8 @@ extern size_t     wtf_len(const wc_uchar *p);
 /* extern int     wtf_type(wc_uchar *p); */
 #define wtf_type(p) WTF_TYPE_MAP[(wc_uchar)*(p)]
 
-extern void       wtf_push(Str os, wc_ccs ccs, wc_uint32 code);
-extern void       wtf_push_unknown(Str os, wc_uchar *p, size_t len);
+extern void       wtf_push(pStr os, wc_ccs ccs, wc_uint32 code);
+extern void       wtf_push_unknown(pStr os, wc_uchar *p, size_t len);
 extern wc_wchar_t wtf_parse(const wc_uchar **p);
 extern wc_wchar_t wtf_parse1(const wc_uchar **p);
 

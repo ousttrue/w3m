@@ -135,7 +135,7 @@ int fold_pre;
 
 static Event* CurrentEvent = NULL;
 static Event* LastEvent = NULL;
-static Str err_msg;
+static pStr err_msg;
 static GC_warn_proc orig_GC_warn_proc = NULL;
 static char* session_bak;
 static char* session_file;
@@ -147,8 +147,8 @@ static int on_target = 1;
 static int prec_num = 0;
 static int prev_key = -1;
 
-static Str currentURL(void);
-static Str make_optional_header_string(char* s);
+static pStr currentURL(void);
+static pStr make_optional_header_string(char* s);
 static TabBuffer* newTab(void);
 static char* _nxtarg(char* argv);
 static char* getarg(char** argv, int* i);
@@ -337,7 +337,7 @@ int main(int argc, char** argv)
         } else if (ISOPT("-bookmark")) {
             BookmarkFile = NXTARG();
             if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {
-                Str tmp = Strnew_charp(CurrentDir);
+                pStr tmp = Strnew_charp(CurrentDir);
                 if (Strlastchar(tmp) != '/')
                     Strcat_char(tmp, '/');
                 Strcat_charp(tmp, BookmarkFile);
@@ -366,7 +366,7 @@ int main(int argc, char** argv)
             w3m_halfload = true;
             DefaultType = default_type = "text/html";
         } else if (ISOPT("-header")) {
-            Str hs;
+            pStr hs;
             if ((hs = make_optional_header_string(NXTARG())))
                 header_string = header_string ? Strcat(header_string, hs) : hs;
         } else if (ISOPT("-help"))
@@ -408,7 +408,7 @@ int main(int argc, char** argv)
         else if (ISOPT("-cookie-jar")) {
             CookieFile = NXTARG();
             if (CookieFile[0] != '~' && CookieFile[0] != '/') {
-                Str tmp = Strnew_charp(CurrentDir);
+                pStr tmp = Strnew_charp(CurrentDir);
                 if (Strlastchar(tmp) != '/')
                     Strcat_char(tmp, '/');
                 Strcat_charp(tmp, CookieFile);
@@ -609,14 +609,14 @@ int main(int argc, char** argv)
     /* Restore a previously saved session */
     if (opt_restore) {
         FILE* fp;
-        Str line;
+        pStr line;
         char *sf, **session;
         int max = 16, n = 0;
 
         sf = session_file ? session_file : rcFile(SESSION_FILE)->ptr;
         session = New_N(char*, max);
         if (!(fp = fopen(sf, "r"))) {
-            Str err = Sprintf("Cannot restore session %s - %s", sf,
+            pStr err = Sprintf("Cannot restore session %s - %s", sf,
                 strerror(errno));
             disp_err_message(err->ptr, false);
             fmTerm();
@@ -704,7 +704,7 @@ int main(int argc, char** argv)
             dup2(1, 0);
         } else if (visual_start) {
             /* FIXME: gettextize? */
-            Str s_page;
+            pStr s_page;
             s_page = Strnew_charp("<title>W3M startup page</title><center><b>Welcome to ");
             Strcat_charp(s_page, "<a href='http://w3m.sourceforge.net/'>");
             Strcat_m_charp(s_page,
@@ -752,7 +752,7 @@ int main(int argc, char** argv)
         } else {
             if (post_file && i == 0) {
                 FILE* fp;
-                Str body;
+                pStr body;
                 if (!strcmp(post_file, "-"))
                     fp = stdin;
                 else
@@ -1226,11 +1226,11 @@ sig_chld(int signo)
 }
 #endif /* SIGCHLD */
 
-static Str
+static pStr
 make_optional_header_string(char* s)
 {
     char* p;
-    Str hs;
+    pStr hs;
 
     if (strchr(s, '\n') || strchr(s, '\r'))
         return NULL;
@@ -1338,7 +1338,7 @@ dump_extra(Buffer* buf)
 #endif
 #ifdef USE_SSL
     if (buf->ssl_certificate) {
-        Str tmp = Strnew();
+        pStr tmp = Strnew();
         const char* p;
         for (p = buf->ssl_certificate; *p; p++) {
             Strcat_char(tmp, *p);
@@ -1751,7 +1751,7 @@ disp_srchresult(int result, const char* prompt, const char* str)
 }
 
 static int
-dispincsrch(int ch, Str buf, Lineprop* prop)
+dispincsrch(int ch, pStr buf, Lineprop* prop)
 {
     static Buffer sbuf;
     char* str;
@@ -2178,7 +2178,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
 #ifdef USE_HELP_CGI
     char* lang;
     int n;
-    Str tmp;
+    pStr tmp;
 
     lang = AcceptLang;
     n = strcspn(lang, ";, \t");
@@ -2648,7 +2648,7 @@ cur_real_linenumber(Buffer* buf)
 DEFUN(editBf, EDIT, "Edit local source")
 {
     const char* fn = Currentbuf->filename;
-    Str cmd;
+    pStr cmd;
 
     if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
         (Currentbuf->type == NULL && Currentbuf->edit == NULL) || /* Reading shell */
@@ -2945,7 +2945,7 @@ gotoLabel(const char* label)
 static int
 handleMailto(const char* url)
 {
-    Str to;
+    pStr to;
     char* pos;
 
     if (strncasecmp(url, "mailto:", 7))
@@ -3140,8 +3140,8 @@ save_submit_formlist(FormItemList* src)
 }
 
 #ifdef USE_M17N
-static Str
-conv_form_encoding(Str val, FormItemList* fi, Buffer* buf)
+static pStr
+conv_form_encoding(pStr val, FormItemList* fi, Buffer* buf)
 {
     wc_ces charset = SystemCharset;
 
@@ -3156,7 +3156,7 @@ conv_form_encoding(Str val, FormItemList* fi, Buffer* buf)
 #endif
 
 static void
-query_from_followform(Str* query, FormItemList* fi, int multipart)
+query_from_followform(pStr* query, FormItemList* fi, int multipart)
 {
     FormItemList* f2;
     FILE* body = NULL;
@@ -3279,7 +3279,7 @@ _followForm(int submit)
     Anchor *a, *a2;
     char* p;
     FormItemList *fi, *f2;
-    Str tmp, tmp2;
+    pStr tmp, tmp2;
     int multipart = 0, i;
 
     if (Currentbuf->firstLine == NULL)
@@ -3396,7 +3396,7 @@ _followForm(int submit)
         }
 
         if (fi->parent->method == FORM_METHOD_GET) {
-            Str fragment = NULL;
+            pStr fragment = NULL;
 
             if ((p = strchr(tmp2->ptr, '#'))) {
                 fragment = Strnew_charp(p);
@@ -4263,7 +4263,7 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks")
 /* Add current to bookmark */
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 {
-    Str tmp;
+    pStr tmp;
     FormList* request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
@@ -4302,7 +4302,7 @@ int _strSession(char* sf)
         sf = session_file ? session_file : rcFile(SESSION_FILE)->ptr;
 
     while (stat(sf, &st) == 0) {
-        Str msg = Strnew_charp(_("Session file exists. Overwrite?"));
+        pStr msg = Strnew_charp(_("Session file exists. Overwrite?"));
         if (confirm(msg))
             break;
         sf = inputFilenameHist(_("Session file (empty: Don't store)? "), sf,
@@ -4631,7 +4631,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     else
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file)->ptr;
 
-    Str fn;
+    pStr fn;
     if (param_dl_dir) {
         fn = expandPath(param_dl_dir);
         if (Strlastchar(fn) != '/')
@@ -4651,7 +4651,7 @@ _peekURL(int only_img)
 
     Anchor* a;
     ParsedURL pu;
-    static Str s = NULL;
+    static pStr s = NULL;
 #ifdef USE_M17N
     static Lineprop* p = NULL;
     Lineprop* pp;
@@ -4715,7 +4715,7 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address")
 }
 
 /* show current URL */
-static Str
+static pStr
 currentURL(void)
 {
     if (Currentbuf->bufferprop & BP_INTERNAL)
@@ -4725,7 +4725,7 @@ currentURL(void)
 
 DEFUN(curURL, PEEK, "Show current address")
 {
-    static Str s = NULL;
+    static pStr s = NULL;
 #ifdef USE_M17N
     static Lineprop* p = NULL;
     Lineprop* pp;
@@ -4779,7 +4779,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
             wc_bool old_fix_width_conv;
 #endif
             FILE* f;
-            Str tmpf = tmpfname(CurrentPid, TMPF_SRC, NULL);
+            pStr tmpf = tmpfname(CurrentPid, TMPF_SRC, NULL);
             f = fopen(tmpf->ptr, "w");
             if (f == NULL)
                 return;
@@ -4860,7 +4860,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
 #ifdef USE_M17N
     wc_ces old_charset;
 #endif
-    Str url;
+    pStr url;
     FormList* request;
     int multipart;
 
@@ -4910,7 +4910,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
         request = Currentbuf->form_submit->parent;
         if (request->method == FORM_METHOD_POST
             && request->enctype == FORM_ENCTYPE_MULTIPART) {
-            Str query;
+            pStr query;
             struct stat st;
             multipart = 1;
             query_from_followform(&query, Currentbuf->form_submit, multipart);
@@ -5100,7 +5100,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
 static void
 invoke_browser(const char* url)
 {
-    Str cmd;
+    pStr cmd;
     const char* browser = NULL;
     int bg = 0, len;
 
@@ -5193,7 +5193,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 DEFUN(curlno, LINE_INFO, "Display current position in document")
 {
     Line* l = Currentbuf->currentLine;
-    Str tmp;
+    pStr tmp;
     int cur = 0, all = 0, col = 0, len = 0;
 
     if (l != NULL) {
@@ -5802,7 +5802,7 @@ void deleteFiles(void)
     while ((f = popFileToDelete()) != NULL) {
         unlink(f);
         if (enable_inline_image == INLINE_IMG_SIXEL && strcmp(f + strlen(f) - 4, ".gif") == 0) {
-            Str firstframe = Strnew_charp(f);
+            pStr firstframe = Strnew_charp(f);
             Strcat_charp(firstframe, "-1");
             unlink(firstframe->ptr);
         }
@@ -5863,7 +5863,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
         p = getWord(&data);
         cmd = getFuncList(p);
         if (cmd < 0) {
-            Str e = Sprintf("Unknown command: %s", p);
+            pStr e = Sprintf("Unknown command: %s", p);
             disp_err_message(e->ptr, false);
             break;
         }
@@ -6392,7 +6392,7 @@ int checkDownloadList(void)
 static char*
 convert_size3(size_t size)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     int n;
 
     do {
@@ -6407,7 +6407,7 @@ static Buffer*
 DownloadListBuffer(void)
 {
     DownloadList* d;
-    Str src = NULL;
+    pStr src = NULL;
     struct stat st;
     time_t cur_time;
     int duration, rate, eta;

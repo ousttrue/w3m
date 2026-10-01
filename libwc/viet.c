@@ -108,10 +108,10 @@ wc_cp1258_precompose(wc_uchar c1, wc_uchar c2)
 	return 0;
 }
 
-Str
-wc_conv_from_viet(Str is, wc_ces ces)
+pStr
+wc_conv_from_viet(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
     wc_uchar *ep = sp + is->length;
     wc_uchar *p;
@@ -152,7 +152,7 @@ wc_conv_from_viet(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_viet(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_viet(pStr os, wc_wchar_t cc, wc_status *st)
 {
     wc_ccs ccs1 = st->ces_info->gset[1].ccs;
     wc_ccs ccs2 = 0, ccs3 = 0;
@@ -216,10 +216,10 @@ wc_push_to_viet(Str os, wc_wchar_t cc, wc_status *st)
   }
 }
 
-Str
+pStr
 wc_char_conv_from_viet(wc_uchar c, wc_status *st)
 {
-    Str os = Strnew_size(1);
+    pStr os = Strnew_size(1);
     wc_uint8 *map = NULL;
 
     switch (st->ces_info->id) {

@@ -56,7 +56,7 @@ struct table_in {
 struct table_linfo {
     Lineprop prev_ctype;
     signed char prev_spaces;
-    Str prevchar;
+    pStr prevchar;
     short length;
 };
 
@@ -79,13 +79,13 @@ struct table {
 #ifdef TABLE_EXPAND
     int real_width;
 #endif				/* TABLE_EXPAND */
-    Str caption;
-    Str id;
+    pStr caption;
+    pStr id;
     GeneralList ***tabdata;
     table_attr **tabattr;
     table_attr trattr;
-    Str **tabidvalue;
-    Str *tridvalue;
+    pStr **tabidvalue;
+    pStr *tridvalue;
     short tabwidth[MAXCOL];
     short minimum_width[MAXCOL];
     short fixed_width[MAXCOL];

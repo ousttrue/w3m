@@ -58,10 +58,10 @@ int symbol_width0 = 0;
 
 static struct table* newTable(void);
 static void pushdata(struct table* t, int row, int col, const char* data);
-static void print_item(struct table* t, int row, int col, int width, Str buf);
-static void print_sep(struct table* t, int row, int type, int maxcol, Str buf);
+static void print_item(struct table* t, int row, int col, int width, pStr buf);
+static void print_sep(struct table* t, int row, int type, int maxcol, pStr buf);
 static void do_refill(struct table* tbl, int row, int col, int maxlimit);
-static void feed_table1(struct table* tbl, Str tok, struct table_mode* mode, int width);
+static void feed_table1(struct table* tbl, pStr tok, struct table_mode* mode, int width);
 
 #include "matrix.c"
 
@@ -224,8 +224,8 @@ newTable(void)
     t->tabdata = New_N(GeneralList**, MAXROW);
     t->tabattr = New_N(table_attr*, MAXROW);
     t->tabheight = NewAtom_N(int, MAXROW);
-    t->tabidvalue = New_N(Str*, MAXROW);
-    t->tridvalue = New_N(Str, MAXROW);
+    t->tabidvalue = New_N(pStr*, MAXROW);
+    t->tridvalue = New_N(pStr, MAXROW);
 
     for (i = 0; i < MAXROW; i++) {
         t->tabdata[i] = NULL;
@@ -263,8 +263,8 @@ check_row(struct table* t, int row)
     GeneralList*** tabdata;
     table_attr** tabattr;
     int* tabheight;
-    Str** tabidvalue;
-    Str* tridvalue;
+    pStr** tabidvalue;
+    pStr* tridvalue;
 
     if (row < 0 || row >= MAXROW_LIMIT)
         return;
@@ -275,8 +275,8 @@ check_row(struct table* t, int row)
         tabdata = New_N(GeneralList**, r);
         tabattr = New_N(table_attr*, r);
         tabheight = NewAtom_N(int, r);
-        tabidvalue = New_N(Str*, r);
-        tridvalue = New_N(Str, r);
+        tabidvalue = New_N(pStr*, r);
+        tridvalue = New_N(pStr, r);
         for (i = 0; i < t->max_rowsize; i++) {
             tabdata[i] = t->tabdata[i];
             tabattr[i] = t->tabattr[i];
@@ -302,7 +302,7 @@ check_row(struct table* t, int row)
     if (t->tabdata[row] == NULL) {
         t->tabdata[row] = New_N(GeneralList*, MAXCOL);
         t->tabattr[row] = NewAtom_N(table_attr, MAXCOL);
-        t->tabidvalue[row] = New_N(Str, MAXCOL);
+        t->tabidvalue[row] = New_N(pStr, MAXCOL);
         for (i = 0; i < MAXCOL; i++) {
             t->tabdata[row][i] = NULL;
             t->tabattr[row][i] = 0;
@@ -344,7 +344,7 @@ int visible_length(const char* str)
     int len = 0, n, max_len = 0;
     int status = R_ST_NORMAL;
     int prev_status;
-    Str tagbuf = Strnew();
+    pStr tagbuf = Strnew();
 
     while (*str) {
         prev_status = status;
@@ -457,7 +457,7 @@ maximum_visible_length_plain(const char* str, int offset)
 void align(TextLine* lbuf, int width, int mode)
 {
     int i, l, l1, l2;
-    Str buf, line = lbuf->line;
+    pStr buf, line = lbuf->line;
 
     if (line->length == 0) {
         for (i = 0; i < width; i++)
@@ -495,7 +495,7 @@ void align(TextLine* lbuf, int width, int mode)
         lbuf->pos = width;
 }
 
-void print_item(struct table* t, int row, int col, int width, Str buf)
+void print_item(struct table* t, int row, int col, int width, pStr buf)
 {
     int alignment;
     TextLine* lbuf;
@@ -532,7 +532,7 @@ void print_item(struct table* t, int row, int col, int width, Str buf)
 #define T_MIDDLE 1
 #define T_BOTTOM 2
 
-void print_sep(struct table* t, int row, int type, int maxcol, Str buf)
+void print_sep(struct table* t, int row, int type, int maxcol, pStr buf)
 {
     int forbid;
     int rule_mode;
@@ -1480,7 +1480,7 @@ make_caption(struct table* t, struct html_feed_environ* h_env)
 void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env)
 {
     int i, j, w, r, h;
-    Str renderbuf;
+    pStr renderbuf;
     short new_tabwidth[MAXCOL] = { 0 };
     int itr;
     VEC* newwidth;
@@ -1488,8 +1488,8 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
     PERM* pivot;
     int width;
     int rulewidth;
-    Str vrulea = NULL, vruleb = NULL, vrulec = NULL;
-    Str idtag;
+    pStr vrulea = NULL, vruleb = NULL, vrulec = NULL;
+    pStr idtag;
 
     t->total_height = 0;
     if (t->maxcol < 0) {
@@ -1996,7 +1996,7 @@ skip_space(struct table* t, const char* line, struct table_linfo* linfo,
 {
     int skip = 0, s = linfo->prev_spaces;
     Lineprop ctype, prev_ctype = linfo->prev_ctype;
-    Str prevchar = linfo->prevchar;
+    pStr prevchar = linfo->prevchar;
     int w = linfo->length;
     int min = 1;
 
@@ -2121,7 +2121,7 @@ feed_table_block_tag(struct table* tbl,
 static void
 table_close_select(struct table* tbl, struct table_mode* mode, int width)
 {
-    Str tmp = process_n_select();
+    pStr tmp = process_n_select();
     mode->pre_mode &= ~TBLM_INSELECT;
     mode->end_tag = 0;
     feed_table1(tbl, tmp, mode, width);
@@ -2130,7 +2130,7 @@ table_close_select(struct table* tbl, struct table_mode* mode, int width)
 static void
 table_close_textarea(struct table* tbl, struct table_mode* mode, int width)
 {
-    Str tmp = process_n_textarea();
+    pStr tmp = process_n_textarea();
     mode->pre_mode &= ~TBLM_INTXTA;
     mode->end_tag = 0;
     feed_table1(tbl, tmp, mode, width);
@@ -2189,7 +2189,7 @@ feed_table_tag(struct table* tbl, const char* line, struct table_mode* mode,
     int colspan, rowspan;
     int col, prev_col;
     int i, j, k, v, v0, w, id;
-    Str tok, tmp, anchor;
+    pStr tok, tmp, anchor;
     table_attr align, valign;
 
     cmd = tag->tagid;
@@ -2685,9 +2685,9 @@ feed_table_tag(struct table* tbl, const char* line, struct table_mode* mode,
         if (anchor) {
             check_rowcol(tbl, mode);
             if (i == 0) {
-                Str tmp = process_anchor(tag, line);
+                pStr tmp = process_anchor(tag, line);
                 if (displayLinkNumber) {
-                    Str t = getLinkNumberStr(-1);
+                    pStr t = getLinkNumberStr(-1);
                     feed_table_inline_tag(tbl, NULL, mode, t->length);
                     Strcat(tmp, t);
                 }
@@ -2864,7 +2864,7 @@ int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
 {
     int i;
     const char* p;
-    Str tmp;
+    pStr tmp;
     struct table_linfo* linfo = &tbl->linfo;
 
     if (*line == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
@@ -3011,9 +3011,9 @@ int feed_table(struct table* tbl, const char* line, struct table_mode* mode,
     return -1;
 }
 
-void feed_table1(struct table* tbl, Str tok, struct table_mode* mode, int width)
+void feed_table1(struct table* tbl, pStr tok, struct table_mode* mode, int width)
 {
-    Str tokbuf;
+    pStr tokbuf;
     int status;
     if (!tok)
         return;

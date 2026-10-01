@@ -695,7 +695,7 @@ wc_ucs_get_tag(int ntag)
 }
 
 void
-wtf_push_ucs(Str os, wc_uint32 ucs, wc_status *st)
+wtf_push_ucs(pStr os, wc_uint32 ucs, wc_status *st)
 {
     wc_ccs ccs;
 

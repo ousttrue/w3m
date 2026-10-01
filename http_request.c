@@ -33,7 +33,7 @@ int ai_family_order_table[7][3] = {
     { PF_INET6, PF_UNSPEC, PF_UNSPEC }, /* 6:inet6 */
 };
 
-Str header_string = NULL;
+pStr header_string = NULL;
 int override_content_type = false;
 int override_user_agent = false;
 char* w3m_reqlog;
@@ -114,7 +114,7 @@ loadMimeTypes(char* filename)
     FILE* f;
     char *d, *type;
     int i, n;
-    Str tmp;
+    pStr tmp;
     struct table2* mtypes;
 
     f = fopen(expandPath(filename)->ptr, "r");
@@ -378,7 +378,7 @@ openSSLHandle(int sock, const char* hostname, const char** p_cert)
     SSL_set_tlsext_host_name(handle, hostname);
 #endif /* !defined(OPENSSL_NO_TLSEXT) */
     if (SSL_connect(handle) > 0) {
-        Str serv_cert = ssl_get_certificate(handle, hostname);
+        pStr serv_cert = ssl_get_certificate(handle, hostname);
         if (serv_cert) {
             *p_cert = serv_cert->ptr;
             return handle;
@@ -502,7 +502,7 @@ int openSocket(const char* hostname,
         hints.ai_family = *af;
         hints.ai_socktype = SOCK_STREAM;
         if (remoteport_num != 0) {
-            Str portbuf = Sprintf("%d", remoteport_num);
+            pStr portbuf = Sprintf("%d", remoteport_num);
             error = getaddrinfo(hname, portbuf->ptr, &hints, &res0);
         } else {
             error = -1;
@@ -629,10 +629,10 @@ error:
     return -1;
 }
 
-static Str
+static pStr
 _parsedURL2Str(const ParsedURL* pu, int pass, int user, int label)
 {
-    Str tmp;
+    pStr tmp;
     /* See SCM_* defines in html.h for correct order of entries. */
     static char* scheme_str[] = {
         "http",
@@ -732,15 +732,15 @@ _parsedURL2Str(const ParsedURL* pu, int pass, int user, int label)
     return tmp;
 }
 
-Str parsedURL2Str(const ParsedURL* pu)
+pStr parsedURL2Str(const ParsedURL* pu)
 {
     return _parsedURL2Str(pu, false, true, true);
 }
 
-static Str
+static pStr
 parsedURL2RefererOriginStr(ParsedURL* pu)
 {
-    Str s;
+    pStr s;
     const char *f = pu->file, *q = pu->query;
 
     pu->file = NULL;
@@ -752,7 +752,7 @@ parsedURL2RefererOriginStr(ParsedURL* pu)
     return s;
 }
 
-Str parsedURL2RefererStr(ParsedURL* pu)
+pStr parsedURL2RefererStr(ParsedURL* pu)
 {
     return _parsedURL2Str(pu, false, false, false);
 }
@@ -760,7 +760,7 @@ Str parsedURL2RefererStr(ParsedURL* pu)
 static char*
 otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
 {
-    Str s = Strnew();
+    pStr s = Strnew();
     const int* no_referer_ptr;
     int no_referer;
     const char* url_user_agent = query_SCONF_USER_AGENT(target);
@@ -824,7 +824,7 @@ otherinfo(ParsedURL* target, ParsedURL* current, char* referer)
     return s->ptr;
 }
 
-Str HTTPrequestMethod(HRequest* hr)
+pStr HTTPrequestMethod(HRequest* hr)
 {
     switch (hr->command) {
     case HR_COMMAND_CONNECT:
@@ -842,9 +842,9 @@ Str HTTPrequestMethod(HRequest* hr)
     return NULL;
 }
 
-Str HTTPrequestURI(ParsedURL* pu, HRequest* hr)
+pStr HTTPrequestURI(ParsedURL* pu, HRequest* hr)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     if (hr->command == HR_COMMAND_CONNECT) {
         Strcat_charp(tmp, pu->host);
         Strcat(tmp, Sprintf(":%d", pu->port));
@@ -859,13 +859,13 @@ Str HTTPrequestURI(ParsedURL* pu, HRequest* hr)
     return tmp;
 }
 
-static Str
+static pStr
 HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
 {
-    Str tmp;
+    pStr tmp;
     TextListItem* i;
 #ifdef USE_COOKIE
-    Str cookie;
+    pStr cookie;
 #endif /* USE_COOKIE */
     tmp = HTTPrequestMethod(hr);
     Strcat_charp(tmp, " ");
@@ -944,10 +944,10 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request, TextList* extra_header,
     URLFile* ouf, HRequest* hr, unsigned char* status)
 {
-    Str tmp;
+    pStr tmp;
     int sock, scheme;
     const char* p;
-    Str gophertmp;
+    pStr gophertmp;
     char type;
     int n;
     HRequest hr0;
@@ -974,7 +974,7 @@ retry:
     if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
         if (pu->label != NULL) {
             /* #hogege is not a label but a filename */
-            Str tmp2 = Strnew_charp("#");
+            pStr tmp2 = Strnew_charp("#");
             Strcat_charp(tmp2, pu->label);
             pu->file = tmp2->ptr;
             pu->real_file = cleanupName(file_unquote(pu->file)->ptr)->ptr;
@@ -1391,7 +1391,7 @@ TextList*
 make_domain_list(char* domain_list)
 {
     char* p;
-    Str tmp;
+    pStr tmp;
     TextList* domains = NULL;
 
     p = domain_list;
@@ -1546,7 +1546,7 @@ loadURIMethods(char* filename)
 {
     FILE* f;
     int i, n;
-    Str tmp;
+    pStr tmp;
     struct table2* um;
     char *up, *p;
 
@@ -1606,12 +1606,12 @@ void initURIMethods(void)
     urimethods[i] = NULL;
 }
 
-Str searchURIMethods(ParsedURL* pu)
+pStr searchURIMethods(ParsedURL* pu)
 {
     struct table2* ump;
     int i;
-    Str scheme = NULL;
-    Str url;
+    pStr scheme = NULL;
+    pStr url;
     char* p;
 
     if (pu->scheme != SCM_UNKNOWN)
@@ -1735,7 +1735,7 @@ char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset)
         ->ptr;
 }
 
-Str url_decode2(const char* url, Buffer* buf)
+pStr url_decode2(const char* url, Buffer* buf)
 {
     if (!DecodeURL)
         return Strnew_charp(url);

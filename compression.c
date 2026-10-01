@@ -88,7 +88,7 @@ const char* compress_application_type(enum CompressionType compression)
 const char* uncompressed_file_type(const char* path, const char** ext)
 {
     int len, slen;
-    Str fn;
+    pStr fn;
     struct compression_decoder* d;
 
     if (path == NULL)
@@ -122,9 +122,9 @@ static int
 check_command(const char* cmd, int auxbin_p)
 {
     static char* path = NULL;
-    Str dirs;
+    pStr dirs;
     char *p, *np;
-    Str pathname;
+    pStr pathname;
     struct stat st;
 
     if (path == NULL)
@@ -150,7 +150,7 @@ check_command(const char* cmd, int auxbin_p)
 
 char* acceptableEncoding(void)
 {
-    static Str encodings = NULL;
+    static pStr encodings = NULL;
     struct compression_decoder* d;
 
     if (encodings != NULL)

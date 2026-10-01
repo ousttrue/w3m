@@ -15,7 +15,7 @@ const char* personal_document_root = NULL;
 char* rc_dir = NULL;
 char* tmp_dir;
 
-Str mydirname(const char* s)
+pStr mydirname(const char* s)
 {
     const char* p = s;
     while (*p)
@@ -47,10 +47,10 @@ static char roman_num5[] = {
     '*',
 };
 
-static Str
+static pStr
 romanNum2(int l, int n)
 {
-    Str s = Strnew();
+    pStr s = Strnew();
 
     switch (n) {
     case 1:
@@ -79,9 +79,9 @@ romanNum2(int l, int n)
     return s;
 }
 
-Str romanNumeral(int n)
+pStr romanNumeral(int n)
 {
-    Str r = Strnew();
+    pStr r = Strnew();
 
     if (n <= 0)
         return r;
@@ -97,9 +97,9 @@ Str romanNumeral(int n)
     return r;
 }
 
-Str romanAlphabet(int n)
+pStr romanAlphabet(int n)
 {
-    Str r = Strnew();
+    pStr r = Strnew();
     int l;
     char buf[14];
 
@@ -118,9 +118,9 @@ Str romanAlphabet(int n)
     return r;
 }
 
-Str myExtCommand(const char* cmd, const char* arg, bool redirect)
+pStr myExtCommand(const char* cmd, const char* arg, bool redirect)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     const char* p;
     bool set_arg = false;
 
@@ -145,9 +145,9 @@ Str myExtCommand(const char* cmd, const char* arg, bool redirect)
     return tmp;
 }
 
-Str editor_cmd(const char* file, int line)
+pStr editor_cmd(const char* file, int line)
 {
-    Str tmp;
+    pStr tmp;
     const char* p;
     int n;
     bool file_set = false;
@@ -200,13 +200,13 @@ Str editor_cmd(const char* file, int line)
     return tmp;
 }
 
-Str expandPath(const char* name)
+pStr expandPath(const char* name)
 {
     if (name == NULL)
         return NULL;
 
     struct passwd* passent;
-    Str extpath = NULL;
+    pStr extpath = NULL;
     const char* p = name;
     if (*p == '~') {
         p++;
@@ -237,10 +237,10 @@ Str expandPath(const char* name)
 rest:
     return Strnew_charp(name);
 }
-Str expandName(const char* name)
+pStr expandName(const char* name)
 {
     struct passwd* passent;
-    Str extpath = NULL;
+    pStr extpath = NULL;
 
     if (name == NULL)
         return NULL;
@@ -275,12 +275,12 @@ rest:
     return Strnew_charp(name);
 }
 
-Str cleanupName(const char* name)
+pStr cleanupName(const char* name)
 {
     char* p;
     const char* q;
 
-    Str buf = Strnew_charp(name);
+    pStr buf = Strnew_charp(name);
     p = buf->ptr;
     q = name;
     while (*q != '\0') {
@@ -333,14 +333,14 @@ Str cleanupName(const char* name)
 
 static const char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static void Strcatc(Str x, char y)
+static void Strcatc(pStr x, char y)
 {
     ((x)->ptr[(x)->length++] = (y));
 }
 
-Str base64_encode(const char* src, size_t len)
+pStr base64_encode(const char* src, size_t len)
 {
-    Str dest;
+    pStr dest;
     const unsigned char *in, *endw, *s;
     unsigned long j;
     size_t k;
@@ -425,9 +425,9 @@ static const char* tmpf_base[MAX_TMPF_TYPE] = {
 };
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
-Str tmpfname(int CurrentPid, enum TmpFileType type, const char* ext)
+pStr tmpfname(int CurrentPid, enum TmpFileType type, const char* ext)
 {
-    Str tmpf = Sprintf("%s/w3m%s%d-%d%s",
+    pStr tmpf = Sprintf("%s/w3m%s%d-%d%s",
         type == TMPF_HIST ? rc_dir : tmp_dir,
         tmpf_base[type],
         CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
@@ -435,7 +435,7 @@ Str tmpfname(int CurrentPid, enum TmpFileType type, const char* ext)
     return tmpf;
 }
 
-void cleanup_line(Str s, enum LineMode mode)
+void cleanup_line(pStr s, enum LineMode mode)
 {
     if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
         Strshrink(s, 2);
@@ -456,7 +456,7 @@ void cleanup_line(Str s, enum LineMode mode)
 /*
  * convert line
  */
-Str convertLine(bool do_chop, Str line, int mode, wc_ces* charset, wc_ces doc_charset)
+pStr convertLine(bool do_chop, pStr line, int mode, wc_ces* charset, wc_ces doc_charset)
 {
     line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
     if (mode != RAW_MODE)
@@ -467,7 +467,7 @@ Str convertLine(bool do_chop, Str line, int mode, wc_ces* charset, wc_ces doc_ch
     return line;
 }
 
-Str filename_extension(const char* path, bool is_url)
+pStr filename_extension(const char* path, bool is_url)
 {
     const char* last_dot = "";
     if (path) {
@@ -492,7 +492,7 @@ Str filename_extension(const char* path, bool is_url)
     return Strnew_charp(last_dot);
 }
 
-Str remove_space(const char* str)
+pStr remove_space(const char* str)
 {
     const char *p, *q;
     for (p = str; *p && IS_SPACE(*p); p++)
@@ -506,9 +506,9 @@ Str remove_space(const char* str)
     return Strnew_charp(p);
 }
 
-Str Str_form_quote(Str x)
+pStr Str_form_quote(pStr x)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char *p = x->ptr, *ep = x->ptr + x->length;
     char buf[4];
 
@@ -532,9 +532,9 @@ Str Str_form_quote(Str x)
     return x;
 }
 
-Str shell_quote(const char* str)
+pStr shell_quote(const char* str)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     const char* p;
     for (p = str; *p; p++) {
         if (is_shell_unsafe(*p)) {
@@ -552,9 +552,9 @@ Str shell_quote(const char* str)
     return Strnew_charp(str);
 }
 
-Str guess_filename(const char* file)
+pStr guess_filename(const char* file)
 {
-    Str str = NULL;
+    pStr str = NULL;
     if (file != NULL)
         str = Strnew_charp(mybasename(file));
     if (str == NULL || str->length == 0)

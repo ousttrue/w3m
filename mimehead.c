@@ -62,7 +62,7 @@ ha2d(char x, char y)
 
 }
 
-Str
+pStr
 decodeB(char **ww)
 {
     struct growbuf gb;
@@ -152,11 +152,11 @@ decodeU_to_growbuf(struct growbuf *gb, char **ww)
 }
 
 /* RFC2047 (4.2. The "Q" encoding) */
-Str
+pStr
 decodeQ(char **ww)
 {
     char *w = *ww;
-    Str a = Strnew_size(strlen(w));
+    pStr a = Strnew_size(strlen(w));
 
     for (; *w != '\0' && *w != '?'; w++) {
 	if (*w == '=') {
@@ -205,10 +205,10 @@ decodeQP_to_growbuf(struct growbuf *gb, char **ww)
 }
 
 #ifdef USE_M17N
-Str
+pStr
 decodeWord(char **ow, wc_ces * charset)
 #else
-Str
+pStr
 decodeWord0(char **ow)
 #endif
 {
@@ -217,8 +217,8 @@ decodeWord0(char **ow)
 #endif
     char *p, *w = *ow;
     char method;
-    Str a;
-    Str tmp = Strnew();
+    pStr a;
+    pStr tmp = Strnew();
 
     if (*w != '=' || *(w + 1) != '?')
 	goto convert_fail;
@@ -274,16 +274,16 @@ decodeWord0(char **ow)
  * convert MIME encoded string to the original one
  */
 #ifdef USE_M17N
-Str
-decodeMIME(Str orgstr, wc_ces * charset)
+pStr
+decodeMIME(pStr orgstr, wc_ces * charset)
 #else
-Str
-decodeMIME0(Str orgstr)
+pStr
+decodeMIME0(pStr orgstr)
 #endif
 {
     char *org = orgstr->ptr, *endp = org + orgstr->length;
     char *org0, *p;
-    Str cnv = NULL;
+    pStr cnv = NULL;
 
 #ifdef USE_M17N
     *charset = 0;

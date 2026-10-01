@@ -190,10 +190,10 @@ wc_sjis_ext2_to_N(wc_uint32 c)
     return ub * 0x5e + (c & 0x7f) - 0x21;
 }
 
-Str
-wc_conv_from_sjis(Str is, wc_ces ces)
+pStr
+wc_conv_from_sjis(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
     wc_uchar *ep = sp + is->length;
     wc_uchar *p;
@@ -270,10 +270,10 @@ wc_conv_from_sjis(Str is, wc_ces ces)
     return os;
 }
 
-Str
-wc_conv_from_sjisx0213(Str is, wc_ces ces)
+pStr
+wc_conv_from_sjisx0213(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
     wc_uchar *ep = sp + is->length;
     wc_uchar *p;
@@ -351,7 +351,7 @@ wc_conv_from_sjisx0213(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_sjis(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_sjis(pStr os, wc_wchar_t cc, wc_status *st)
 {
     wc_uchar ub, lb;
 
@@ -404,7 +404,7 @@ wc_push_to_sjis(Str os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_sjisx0213(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_sjisx0213(pStr os, wc_wchar_t cc, wc_status *st)
 {
     wc_uchar ub, lb;
 
@@ -467,10 +467,10 @@ wc_push_to_sjisx0213(Str os, wc_wchar_t cc, wc_status *st)
   }
 }
 
-Str
+pStr
 wc_char_conv_from_sjis(wc_uchar c, wc_status *st)
 {
-    static Str os;
+    static pStr os;
     static wc_uchar jis[2];
     wc_wchar_t cc;
 
@@ -532,10 +532,10 @@ wc_char_conv_from_sjis(wc_uchar c, wc_status *st)
     return os;
 }
 
-Str
+pStr
 wc_char_conv_from_sjisx0213(wc_uchar c, wc_status *st)
 {
-    static Str os;
+    static pStr os;
     static wc_uchar jis[2];
     wc_wchar_t cc;
 

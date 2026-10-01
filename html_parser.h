@@ -1,6 +1,5 @@
 #pragma once
 #include "Str.h"
-#include "html.h"
 
 /* state of token scanning finite state machine */
 #define R_ST_NORMAL 0 /* normal */
@@ -28,4 +27,4 @@
 
 int gethtmlcmd(const char* s);
 int next_status(char c, int* status);
-int read_token(Str buf, const char** instr, int* status, int pre, int append);
+int read_token(pStr buf, const char** instr, int* status, int pre, int append);

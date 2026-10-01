@@ -4,7 +4,7 @@
 
 char* html_quote(const char* str)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     const char *p, *q;
     for (p = str; *p; p++) {
         q = html_quote_char(*p);

@@ -1030,8 +1030,8 @@ struct param_section sections[] = {
     { NULL, NULL }
 };
 
-static Str to_str(struct param_ptr* p);
-static Str etcFile(const char* base);
+static pStr to_str(struct param_ptr* p);
+static pStr etcFile(const char* base);
 static int compare_table(struct rc_search_table* a, struct rc_search_table* b);
 static int do_recursive_mkdir(const char* dir);
 static int set_param(const char* name, const char* value);
@@ -1348,7 +1348,7 @@ set_param(const char* name, const char* value)
 
 int set_param_option(const char* option)
 {
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     const char* p = option;
     while (*p && !IS_SPACE(*p) && *p != '=')
         Strcat_char(tmp, *p++);
@@ -1387,8 +1387,8 @@ const char* get_param_option(const char* name)
 static void
 interpret_rc(FILE* f)
 {
-    Str line;
-    Str tmp;
+    pStr line;
+    pStr tmp;
     char* p;
 
     for (;;) {
@@ -1662,9 +1662,9 @@ static char optionpanel_src1[] = "<html><head><title>Option Setting Panel</title
 </form><br>\
 <form method=internal action=option>";
 
-static Str optionpanel_str = NULL;
+static pStr optionpanel_str = NULL;
 
-static Str
+static pStr
 to_str(struct param_ptr* p)
 {
     switch (p->type) {
@@ -1701,14 +1701,14 @@ to_str(struct param_ptr* p)
 Buffer*
 load_option_panel(void)
 {
-    Str src;
+    pStr src;
     struct param_ptr* p;
     struct sel_c* s;
 #ifdef USE_M17N
     wc_ces_list* c;
 #endif
     int x, i;
-    Str tmp;
+    pStr tmp;
     Buffer* buf;
 
     if (optionpanel_str == NULL)
@@ -1826,7 +1826,7 @@ void panel_set_option(struct parsed_tagarg* arg)
 {
     FILE* f = NULL;
     char* p;
-    Str s = Strnew(), tmp;
+    pStr s = Strnew(), tmp;
 
     if (config_file == NULL) {
         disp_message("There's no config file... config not saved", false);
@@ -1856,7 +1856,7 @@ void panel_set_option(struct parsed_tagarg* arg)
     backBf();
 }
 
-Str rcFile(const char* base)
+pStr rcFile(const char* base)
 {
     if (base && (base[0] == '/' || (base[0] == '.' && (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) || (base[0] == '~' && base[1] == '/')))
         /* /file, ./file, ../file, ~/file */
@@ -1864,17 +1864,17 @@ Str rcFile(const char* base)
     return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
 }
 
-Str auxbinFile(const char* base)
+pStr auxbinFile(const char* base)
 {
     return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
-Str etcFile(const char* base)
+pStr etcFile(const char* base)
 {
     return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
 }
 
-Str confFile(const char* base)
+pStr confFile(const char* base)
 {
     return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
@@ -1944,7 +1944,7 @@ loadSiteconf(void)
 {
     char* efname;
     FILE* fp;
-    Str line;
+    pStr line;
     struct siteconf_rec* ent = NULL;
 
     siteconf_head = NULL;
@@ -2053,7 +2053,7 @@ static int strmatchlen(const char* s1, const char* s2, int maxlen)
 void* querySiteconf(ParsedURL* query_pu, int field)
 {
     struct siteconf_rec* ent;
-    Str u;
+    pStr u;
     const char *firstp, *lastp;
 
     if (field < 0 || field >= SCONF_N_FIELD)
@@ -2095,7 +2095,7 @@ url_found:
     switch (field) {
     case SCONF_SUBSTITUTE_URL:
         if (ent->substitute_url && *ent->substitute_url) {
-            Str tmp = Strnew_charp_n(u->ptr, firstp - u->ptr);
+            pStr tmp = Strnew_charp_n(u->ptr, firstp - u->ptr);
             Strcat_charp(tmp, ent->substitute_url);
             Strcat_charp(tmp, lastp);
             return tmp->ptr;

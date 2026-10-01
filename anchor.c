@@ -200,7 +200,7 @@ searchURLLabel(Buffer* buf, const char* url)
 static Anchor*
 _put_anchor_news(Buffer* buf, const char* p1, const char* p2, int line, int pos)
 {
-    Str tmp;
+    pStr tmp;
 
     if (*p1 == '<') {
         p1++;
@@ -218,7 +218,7 @@ _put_anchor_news(Buffer* buf, const char* p1, const char* p2, int line, int pos)
 static Anchor*
 _put_anchor_all(Buffer* buf, const char* p1, const char* p2, int line, int pos)
 {
-    Str tmp;
+    pStr tmp;
 
     tmp = Strnew_charp_n(p1, p2 - p1);
     return registerHref(buf, url_encode(tmp->ptr, baseURL(buf), buf->document_charset),
@@ -690,7 +690,7 @@ char* getAnchorText(Buffer* buf, AnchorList* al, Anchor* a)
 {
     int hseq, i;
     Line* l;
-    Str tmp = NULL;
+    pStr tmp = NULL;
     char *p, *ep;
 
     if (!a || a->hseq < 0)
@@ -733,7 +733,7 @@ link_list_panel(Buffer* buf)
     char *t, *u, *p;
     ParsedURL pu;
     /* FIXME: gettextize? */
-    Str tmp = Strnew_charp("<title>Link List</title>\
+    pStr tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
     if (buf->bufferprop & BP_INTERNAL || (buf->linklist == NULL && buf->href == NULL && buf->img == NULL)) {

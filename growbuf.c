@@ -39,9 +39,9 @@ void growbuf_clear(struct growbuf* gb)
     gb->area_size = 0;
 }
 
-Str growbuf_to_Str(struct growbuf* gb)
+pStr growbuf_to_Str(struct growbuf* gb)
 {
-    Str s;
+    pStr s;
 
     if (gb->free_proc == &w3m_GC_free) {
         growbuf_reserve(gb, gb->length + 1);

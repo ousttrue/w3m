@@ -14,7 +14,7 @@ static int get_day(const char** s)
     if (!**s)
         return -1;
 
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     while (**s && IS_DIGIT(**s))
         Strcat_char(tmp, *((*s)++));
 
@@ -33,7 +33,7 @@ static int get_month(const char** s)
     if (!**s)
         return -1;
 
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     while (**s && IS_DIGIT(**s))
         Strcat_char(tmp, *((*s)++));
 
@@ -61,7 +61,7 @@ static int get_year(const char** s)
     if (!**s)
         return -1;
 
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     while (**s && IS_DIGIT(**s))
         Strcat_char(tmp, *((*s)++));
     if (tmp->length != 2 && tmp->length != 4) {
@@ -85,7 +85,7 @@ static int get_time(const char** s, int* hour, int* min, int* sec)
     if (!**s)
         return -1;
 
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     while (**s && IS_DIGIT(**s))
         Strcat_char(tmp, *((*s)++));
     if (**s != ':') {
@@ -123,7 +123,7 @@ static int get_zone(const char** s, int* z_hour, int* z_min)
     if (!**s)
         return -1;
 
-    Str tmp = Strnew();
+    pStr tmp = Strnew();
     if (**s == '+' || **s == '-')
         Strcat_char(tmp, *((*s)++));
     while (**s && IS_DIGIT(**s))

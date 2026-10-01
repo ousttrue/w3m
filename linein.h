@@ -11,7 +11,7 @@ enum InputLineFlag {
     IN_CHAR = 0x200,
 };
 
-typedef int (*IncrFunc)(int ch, Str buf, Lineprop* prop);
+typedef int (*IncrFunc)(int ch, pStr buf, Lineprop* prop);
 
 char* inputLineHistSearch(const char* prompt, const char* def_str,
     enum InputLineFlag flag, Hist* hist, IncrFunc incfunc);

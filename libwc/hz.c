@@ -8,10 +8,10 @@
 #include "ucs.h"
 #endif
 
-Str
-wc_conv_from_hz(Str is, wc_ces ces)
+pStr
+wc_conv_from_hz(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
     wc_uchar *ep = sp + is->length;
     wc_uchar *p;
@@ -96,7 +96,7 @@ wc_conv_from_hz(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_hz(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_hz(pStr os, wc_wchar_t cc, wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -152,7 +152,7 @@ wc_push_to_hz(Str os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_hz_end(Str os, wc_status *st)
+wc_push_to_hz_end(pStr os, wc_status *st)
 {
     if (st->gl) {
 	Strcat_char(os, WC_C_HZ_TILDA);

@@ -61,7 +61,7 @@ init_base_stream(struct input_stream* is, int bufsize)
 }
 
 static void
-init_str_stream(struct input_stream* is, Str s)
+init_str_stream(struct input_stream* is, pStr s)
 {
     init_buffer(is, s->ptr, s->length);
 }
@@ -121,7 +121,7 @@ newFileStream(FILE* f, int (*closep)(FILE*))
     return is;
 }
 
-// Str
+// pStr
 static int
 str_read(void*, unsigned char* buf, int len)
 {
@@ -130,7 +130,7 @@ str_read(void*, unsigned char* buf, int len)
 }
 
 struct input_stream*
-newStrStream(Str s)
+newStrStream(pStr s)
 {
     if (s == NULL)
         return NULL;
@@ -321,7 +321,7 @@ int ISundogetc(struct input_stream* is)
     return -1;
 }
 
-Str StrISgets2(struct input_stream* is, char crnl)
+pStr StrISgets2(struct input_stream* is, char crnl)
 {
     struct growbuf gb;
 
@@ -406,7 +406,7 @@ int ISfileno(struct input_stream* is)
     }
 }
 
-static Str accept_this_site;
+static pStr accept_this_site;
 
 void ssl_accept_this_site(const char* hostname)
 {
@@ -446,11 +446,11 @@ ssl_match_cert_ident(const char* ident, int ilen, const char* hostname)
     return *hostname == '\0';
 }
 
-static Str
+static pStr
 ssl_check_cert_ident(X509* x, const char* hostname)
 {
     int i;
-    Str ret = NULL;
+    pStr ret = NULL;
     int match_ident = false;
     /*
      * All we need to do here is check that the CN matches.
@@ -472,7 +472,7 @@ ssl_check_cert_ident(X509* x, const char* hostname)
         if (alt) {
             int n;
             GENERAL_NAME* gn;
-            Str seen_dnsname = NULL;
+            pStr seen_dnsname = NULL;
 
             n = sk_GENERAL_NAME_num(alt);
             for (i = 0; i < n; i++) {
@@ -548,17 +548,17 @@ ssl_check_cert_ident(X509* x, const char* hostname)
     return ret;
 }
 
-Str ssl_get_certificate(SSL* ssl, const char* hostname)
+pStr ssl_get_certificate(SSL* ssl, const char* hostname)
 {
     BIO* bp;
     X509* x;
     X509_NAME* xn;
     char* p;
     int len;
-    Str s;
+    pStr s;
     char buf[2048];
-    Str amsg = NULL;
-    Str emsg;
+    pStr amsg = NULL;
+    pStr emsg;
     int ans;
 
     if (ssl == NULL)
@@ -621,7 +621,7 @@ Str ssl_get_certificate(SSL* ssl, const char* hostname)
             && strcasecmp(accept_this_site->ptr, hostname) == 0)
             ans = 1;
         else {
-            Str ep = Strdup(emsg);
+            pStr ep = Strdup(emsg);
             if (ep->length > COLS - 16)
                 Strshrink(ep, ep->length - (COLS - 16));
             Strcat_charp(ep, ": accept?");

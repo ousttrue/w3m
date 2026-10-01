@@ -180,7 +180,7 @@ wtf_type(wc_uchar *p)
     | ((wc_uint32)((p)[4] & 0x7f)      ))
 
 void
-wtf_push(Str os, wc_ccs ccs, wc_uint32 code)
+wtf_push(pStr os, wc_ccs ccs, wc_uint32 code)
 {
     wc_uchar s[8];
     wc_wchar_t cc, cc2;
@@ -370,7 +370,7 @@ wtf_push(Str os, wc_ccs ccs, wc_uint32 code)
 }
 
 void
-wtf_push_unknown(Str os, wc_uchar *p, size_t len)
+wtf_push_unknown(pStr os, wc_uchar *p, size_t len)
 {
     for (; len--; p++) {
 	if (*p & 0x80)
@@ -587,7 +587,7 @@ const char *
 wtf_conv_fit(const char *s, wc_ces ces)
 {
     const wc_uchar *p;
-    Str os;
+    pStr os;
     wc_wchar_t cc;
     wc_ces major_ces;
     wc_bool pre_conv, ucs_conv;

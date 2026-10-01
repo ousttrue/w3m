@@ -1,4 +1,5 @@
 #include "html_parser.h"
+#include "html.h"
 #include "myctype.h"
 #include "hash.h"
 
@@ -182,7 +183,7 @@ int next_status(const char c, int* status)
     return 0;
 }
 
-int read_token(Str buf, const char** instr, int* status, int pre, int append)
+int read_token(pStr buf, const char** instr, int* status, int pre, int append)
 {
     int prev_status;
 

@@ -241,7 +241,7 @@ char* map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 Buffer*
 follow_map_panel(Buffer* buf, char* name)
 {
-    Str mappage;
+    pStr mappage;
     MapList* ml;
     ListItem* al;
     MapArea* a;
@@ -375,7 +375,7 @@ newMapArea(const char* url, const char* target, const char* alt, const char* sha
 
 /* append image map links */
 static void
-append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
+append_map_info(Buffer* buf, pStr tmp, FormItemList* fi)
 {
     struct MapList* ml;
     ListItem* al;
@@ -407,7 +407,7 @@ append_map_info(Buffer* buf, Str tmp, FormItemList* fi)
 
 /* append links */
 static void
-append_link_info(Buffer* buf, Str html, LinkList* link)
+append_link_info(Buffer* buf, pStr html, LinkList* link)
 {
     LinkList* l;
     ParsedURL pu;
@@ -444,7 +444,7 @@ append_link_info(Buffer* buf, Str html, LinkList* link)
 
 /* append frame URL */
 static void
-append_frame_info(Buffer* buf, Str html, struct frameset* set, int level)
+append_frame_info(Buffer* buf, pStr html, struct frameset* set, int level)
 {
     char *p, *q;
     int i, j;
@@ -519,7 +519,7 @@ static char* last_modified(Buffer* buf)
 Buffer*
 page_info_panel(Buffer* buf)
 {
-    Str tmp = Strnew_size(1024);
+    pStr tmp = Strnew_size(1024);
     Anchor* a;
     ParsedURL pu;
     TextListItem* ti;

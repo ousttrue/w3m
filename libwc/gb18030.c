@@ -157,10 +157,10 @@ wc_ucs_to_gb18030(wc_uint32 ucs)
 }
 #endif
 
-Str
-wc_conv_from_gb18030(Str is, wc_ces ces)
+pStr
+wc_conv_from_gb18030(pStr is, wc_ces ces)
 {
-    Str os;
+    pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
     wc_uchar *ep = sp + is->length;
     wc_uchar *p;
@@ -253,7 +253,7 @@ wc_conv_from_gb18030(Str is, wc_ces ces)
 }
 
 void
-wc_push_to_gb18030(Str os, wc_wchar_t cc, wc_status *st)
+wc_push_to_gb18030(pStr os, wc_wchar_t cc, wc_status *st)
 {
   while (1) {
     switch (WC_CCS_SET(cc.ccs)) {
@@ -304,10 +304,10 @@ wc_push_to_gb18030(Str os, wc_wchar_t cc, wc_status *st)
   }
 }
 
-Str
+pStr
 wc_char_conv_from_gb18030(wc_uchar c, wc_status *st)
 {
-    static Str os;
+    static pStr os;
     static wc_uchar gb[4];
     wc_uint32 gbk;
     wc_wchar_t cc;

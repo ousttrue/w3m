@@ -433,7 +433,7 @@ writestr(char* s)
 
 void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh)
 {
-    Str buf;
+    pStr buf;
     char* size;
 
     if (w > 0 && h > 0)
@@ -449,7 +449,7 @@ void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int 
 
 void put_image_iterm2(const char* url, int x, int y, int w, int h)
 {
-    Str buf;
+    pStr buf;
     char cbuf[IMG_BUF_SZ];
     FILE* fp;
     int n;
@@ -490,7 +490,7 @@ void ttymode_reset(int mode, int imode);
 void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw,
     int sh, int cols, int rows)
 {
-    Str buf, base64;
+    pStr buf, base64;
     char* tmpf;
     char cbuf[IMG_BUF_SZ];
     char* argv[4];
@@ -605,7 +605,7 @@ skip_gif_header(unsigned char* p)
     return p;
 }
 
-static Str
+static pStr
 save_first_animation_frame(const char* path)
 {
     int fd;
@@ -615,7 +615,7 @@ save_first_animation_frame(const char* path)
     unsigned char* body;
     unsigned char* p;
     ssize_t len;
-    Str new_path;
+    pStr new_path;
 
     new_path = Strnew_charp(path);
     Strcat_charp(new_path, "-1");
@@ -690,7 +690,7 @@ void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy
         char* argv[20];
         char digit[2][11 + 1];
         char clip[44 + 3 + 1];
-        Str str_url;
+        pStr str_url;
 
         close(STDERR_FILENO); /* Don't output error message. */
         if (do_anim) {
@@ -1222,7 +1222,7 @@ void addch(const char pc)
     l_prop* pr;
     int dest, i;
 #ifdef USE_M17N
-    static Str tmp = NULL;
+    static pStr tmp = NULL;
     char** p;
     char c = *pc;
     int width = wtf_width((const wc_uchar*)pc);
@@ -1994,7 +1994,7 @@ void term_title(const char* s)
  */
 #ifdef __CYGWIN__
         if (isLocalConsole && title_str == CYGWIN_TITLE) {
-            Str buff;
+            pStr buff;
             buff = Sprintf(title_str, s);
             if (buff->length > 1024) {
                 Strtruncate(buff, 1024);

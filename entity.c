@@ -2355,7 +2355,7 @@ fail:
 static const char* getescapecmd_impl(const char** s, bool is_attr)
 {
     const char* save = *s;
-    Str tmp;
+    pStr tmp;
     const char* value = getescapestr(s, is_attr, NULL);
 
     if (value)
@@ -2377,7 +2377,7 @@ const char* getescapecmd(const char** s)
 static const char*
 html_unquote_impl(const char* str, bool is_attr)
 {
-    Str tmp = NULL;
+    pStr tmp = NULL;
     const char *p, *q;
     for (p = str; *p;) {
         if (*p == '&') {
