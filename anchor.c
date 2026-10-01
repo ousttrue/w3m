@@ -17,8 +17,9 @@
 #define FIRST_ANCHOR_SIZE 30
 
 AnchorList*
-putAnchor(AnchorList* al, char* url, char* target, Anchor** anchor_return,
-    char* referer, char* title, unsigned char key, int line, int pos)
+putAnchor(AnchorList* al, const char* url,
+    const char* target, Anchor** anchor_return,
+    const char* referer, const char* title, unsigned char key, int line, int pos)
 {
     int n, i, j;
     Anchor* a;
@@ -77,7 +78,7 @@ registerHref(Buffer* buf, const char* url, const char* target, const char* refer
 }
 
 Anchor*
-registerName(Buffer* buf, char* url, int line, int pos)
+registerName(Buffer* buf, const char* url, int line, int pos)
 {
     Anchor* a;
     buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line,
@@ -383,14 +384,13 @@ reAnchorAny(Buffer* buf, const char* re,
 }
 
 const char*
-reAnchor(Buffer* buf, char* re)
+reAnchor(Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_all);
 }
 
-#ifdef USE_NNTP
 const char*
-reAnchorNews(Buffer* buf, char* re)
+reAnchorNews(Buffer* buf, const char* re)
 {
     return reAnchorAny(buf, re, _put_anchor_news);
 }
@@ -448,7 +448,6 @@ char* reAnchorNewsheader(Buffer* buf)
     reseq_anchor(buf);
     return NULL;
 }
-#endif /* USE_NNTP */
 
 #define FIRST_MARKER_SIZE 30
 HmarkerList*
@@ -734,7 +733,7 @@ link_list_panel(Buffer* buf)
     LinkList* l;
     AnchorList* al;
     Anchor* a;
-    FormItemList* fi;
+    const FormItemList* fi;
     int i;
     char *t, *u, *p;
     ParsedURL pu;
@@ -818,7 +817,7 @@ link_list_panel(Buffer* buf)
             a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
             if (!a)
                 continue;
-            fi = (FormItemList*)a->url;
+            fi = (const FormItemList*)a->url;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
                 MapList* ml = searchMapList(buf, fi->value->ptr);

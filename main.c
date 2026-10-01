@@ -111,7 +111,7 @@ DownloadList* FirstDL = NULL;
 DownloadList* LastDL = NULL;
 
 int CurrentKey;
-char* CurrentCmdData;
+const char* CurrentCmdData;
 
 #ifdef USE_MOUSE
 MouseAction mouse_action;
@@ -5777,9 +5777,9 @@ void set_buffer_environ(Buffer* buf)
     prev_pos = buf->pos;
 }
 
-char* searchKeyData(void)
+const char* searchKeyData(void)
 {
-    char* data = NULL;
+    const char* data = NULL;
 
     if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
         data = CurrentCmdData;

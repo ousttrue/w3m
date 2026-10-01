@@ -2,7 +2,7 @@
 #define W3M_KEYBIND_H
 
 extern int CurrentKey;
-extern char *CurrentCmdData;
+extern const char *CurrentCmdData;
 
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];

@@ -415,31 +415,7 @@ extern Str loadNewsgroup0(ParsedURL* pu);
 extern void closeNews(void);
 extern void disconnectNews(void);
 #endif
-extern AnchorList* putAnchor(AnchorList* al, char* url, char* target,
-    Anchor** anchor_return, char* referer,
-    char* title, unsigned char key, int line,
-    int pos);
-extern Anchor* registerHref(Buffer* buf, const char* url, const char* target,
-    const char* referer, const char* title, unsigned char key,
-    int line, int pos);
-extern Anchor* registerName(Buffer* buf, char* url, int line, int pos);
-extern Anchor* registerImg(Buffer* buf, const char* url, const char* title, int line,
-    int pos);
-extern Anchor* registerForm(Buffer* buf, FormList* flist,
-    struct parsed_tag* tag, int line, int pos);
-extern int onAnchor(Anchor* a, int line, int pos);
-extern Anchor* retrieveAnchor(AnchorList* al, int line, int pos);
-extern Anchor* retrieveCurrentAnchor(Buffer* buf);
-extern Anchor* retrieveCurrentImg(Buffer* buf);
-extern Anchor* retrieveCurrentForm(Buffer* buf);
-extern Anchor* searchAnchor(AnchorList* al, const char* str);
-extern Anchor* searchURLLabel(Buffer* buf, const char* url);
-extern void reAnchorWord(Buffer* buf, Line* l, int spos, int epos);
-extern const char* reAnchor(Buffer* buf, char* re);
-#ifdef USE_NNTP
-extern const char* reAnchorNews(Buffer* buf, char* re);
-extern char* reAnchorNewsheader(Buffer* buf);
-#endif /* USE_NNTP */
+
 extern void addMultirowsForm(Buffer* buf, AnchorList* al);
 extern Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
 extern Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
@@ -525,7 +501,7 @@ extern void drawImage(void);
 extern void clearImage(void);
 #endif
 
-extern char* searchKeyData(void);
+extern const char* searchKeyData(void);
 
 extern void setKeymap(char* p, int lineno, int verbose);
 extern void initKeymap(int force);

@@ -1343,12 +1343,11 @@ popupMenu(int x, int y, Menu *menu)
 DEFUN(mainMn, MAIN_MENU MENU, "Pop up menu")
 {
     Menu *menu = &MainMenu;
-    char *data;
     int n;
     int x = Currentbuf->cursorX + Currentbuf->rootX,
 	y = Currentbuf->cursorY + Currentbuf->rootY;
 
-    data = searchKeyData();
+    const char *data = searchKeyData();
     if (data != NULL) {
 	n = getMenuN(w3mMenuList, data);
 	if (n < 0)

@@ -348,7 +348,7 @@ make_lastline_message(Buffer *buf)
 #endif
 	{
 	    Anchor *a = retrieveCurrentAnchor(buf);
-	    char *p = NULL;
+	    const char *p = NULL;
 	    if (a && a->title && *a->title)
 		p = a->title;
 	    else {

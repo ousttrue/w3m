@@ -27,6 +27,12 @@
 #define CPL_FAIL 2
 #define CPL_MENU 3
 
+#define CPL_NEVER 0x0
+#define CPL_OFF 0x1
+#define CPL_ON 0x2
+#define CPL_ALWAYS 0x4
+#define CPL_URL 0x8
+
 #ifdef USE_MOUSE
 #ifdef USE_GPM
 #include <gpm.h>

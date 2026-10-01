@@ -158,7 +158,7 @@ typedef struct _AlarmEvent {
     int sec;
     short status;
     int cmd;
-    void *data;
+    const void *data;
 } AlarmEvent;
 #endif
 

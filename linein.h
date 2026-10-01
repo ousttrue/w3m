@@ -1,11 +1,5 @@
 #pragma once
 
-#define CPL_NEVER 0x0
-#define CPL_OFF 0x1
-#define CPL_ON 0x2
-#define CPL_ALWAYS 0x4
-#define CPL_URL 0x8
-
 /* Flags for inputLine() */
 #define IN_STRING 0x10
 #define IN_FILENAME 0x20
