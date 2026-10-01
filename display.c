@@ -305,7 +305,7 @@ make_lastline_link(Buffer *buf, const char *title, const char *url)
     pu = parseURL2(url, baseURL(buf));
     u = parsedURL2Str(&pu);
     if (DecodeURL)
-	u = Strnew_charp(url_decode2(u->ptr, buf));
+	u = url_decode2(u->ptr, buf);
 #ifdef USE_M17N
     u = checkType(u, &pr, NULL);
 #endif

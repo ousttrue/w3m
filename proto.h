@@ -173,13 +173,12 @@ extern void chkExternalURIBuffer(Buffer* buf);
 #endif
 extern ParsedURL* schemeToProxy(int scheme);
 
-extern char* url_decode2(const char* url, Buffer* buf);
 
 extern void examineFile(const char* path, URLFile* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
-extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, char* referer,
+extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, const char* referer,
     int flag, FormList* request);
 extern int is_boundary(const unsigned char*, const unsigned char*);
 extern void push_render_image(Str str, int width, int limit,

@@ -1441,7 +1441,7 @@ static Str loadLocalDir(const char* dname)
  * loadGeneralFile: load file to buffer
  */
 Buffer*
-loadGeneralFile(const char* path, ParsedURL* volatile current, char* referer,
+loadGeneralFile(const char* path, ParsedURL* volatile current, const char* referer,
     int flag, FormList* volatile request)
 {
     URLFile f, *volatile of = NULL;

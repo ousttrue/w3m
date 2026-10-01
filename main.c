@@ -1394,7 +1394,7 @@ do_dump(Buffer* buf)
                 if (in_order[i]->slave)
                     continue;
                 pu = parseURL2(in_order[i]->url, baseURL(buf));
-                url = url_decode2(parsedURL2Str(&pu)->ptr, Currentbuf);
+                url = url_decode2(parsedURL2Str(&pu)->ptr, Currentbuf)->ptr;
                 printf("[%d] %s\n", in_order[i]->hseq + 1 - !!zeroBasedLinkNo, url);
             }
         }
@@ -1672,7 +1672,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
     int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = /*Currentbuf->LINES / 2*/ - Currentbuf->cursorY;
+    offsety = /*Currentbuf->LINES / 2*/ -Currentbuf->cursorY;
     if (offsety != 0) {
         Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine, -offsety, false);
         arrangeLine(Currentbuf);
@@ -2961,7 +2961,7 @@ gotoLabel(const char* label)
 }
 
 static int
-handleMailto(char* url)
+handleMailto(const char* url)
 {
     Str to;
     char* pos;
@@ -4152,13 +4152,12 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 static void
 cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* request)
 {
-    Buffer* buf;
 
     if (handleMailto(url))
         return;
 
     refresh();
-    buf = loadGeneralFile(url, current, referer, 0, request);
+    Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         char* emsg = Sprintf(_("Can't load %s"), conv_from_system(url))->ptr;
         disp_err_message(emsg, false);
@@ -4188,7 +4187,7 @@ goURL0(const char* prompt, int relative)
         if (current) {
             char* c_url = parsedURL2Str(current)->ptr;
             if (DefaultURLString == DEFAULT_URL_CURRENT)
-                url = url_decode2(c_url, NULL);
+                url = url_decode2(c_url, NULL)->ptr;
             else
                 pushHist(hist, c_url);
         }
@@ -4198,7 +4197,7 @@ goURL0(const char* prompt, int relative)
             p_url = parseURL2(a->url, current);
             a_url = parsedURL2Str(&p_url)->ptr;
             if (DefaultURLString == DEFAULT_URL_LINK)
-                url = url_decode2(a_url, Currentbuf);
+                url = url_decode2(a_url, Currentbuf)->ptr;
             else
                 pushHist(hist, a_url);
         }
@@ -4658,7 +4657,8 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
         file = conv_from_system(guess_save_name(NULL,
-            Currentbuf->currentURL.real_file)->ptr);
+            Currentbuf->currentURL.real_file)
+                ->ptr);
     else
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file)->ptr;
 
@@ -4716,7 +4716,7 @@ _peekURL(int only_img)
         s = parsedURL2Str(&pu);
     }
     if (DecodeURL)
-        s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
+        s = Strnew_charp(url_decode2(s->ptr, Currentbuf)->ptr);
 #ifdef USE_M17N
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->length);
@@ -4774,7 +4774,7 @@ DEFUN(curURL, PEEK, "Show current address")
         offset = 0;
         s = currentURL();
         if (DecodeURL)
-            s = Strnew_charp(url_decode2(s->ptr, NULL));
+            s = Strnew_charp(url_decode2(s->ptr, NULL)->ptr);
 #ifdef USE_M17N
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->length);

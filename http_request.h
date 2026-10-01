@@ -82,3 +82,5 @@ char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset);
 int openSocket(const char* hostname,
     const char* remoteport_name, unsigned short remoteport_num);
 wc_ces url_to_charset(const char* url, ParsedURL* base, wc_ces doc_charset);
+struct _Buffer;
+Str url_decode2(const char* url, struct _Buffer* buf);

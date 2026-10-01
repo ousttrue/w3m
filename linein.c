@@ -1,4 +1,3 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "linein.h"
 #include "str_gc.h"
 #include "str_const.h"
@@ -21,6 +20,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
+// Completion status.
+#define CPL_OK 0
+#define CPL_AMBIG 1
+#define CPL_FAIL 2
+#define CPL_MENU 3
 
 #ifdef USE_MOUSE
 #ifdef USE_GPM
@@ -1122,7 +1127,7 @@ _prev(void)
 	strCurrentBuf = strBuf;
     }
     if (DecodeURL && (cm_mode & CPL_URL) )
-	p = url_decode2(p, NULL);
+	p = url_decode2(p, NULL)->ptr;
     strBuf = Strnew_charp(p);
     CLen = CPos = setStrType(strBuf, strProp);
     offset = 0;
@@ -1141,7 +1146,7 @@ _next(void)
     p = nextHist(hist);
     if (p) {
 	if (DecodeURL && (cm_mode & CPL_URL) )
-	    p = url_decode2(p, NULL);
+	    p = url_decode2(p, NULL)->ptr;
 	strBuf = Strnew_charp(p);
     }
     else {

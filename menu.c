@@ -1418,7 +1418,7 @@ initSelectMenu(void)
 		break;
 	    default:
 		Strcat_char(str, ' ');
-		p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+		p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL)->ptr;
 		Strcat_charp(str, p);
 		break;
 	    }
@@ -1638,7 +1638,7 @@ initSelTabMenu(void)
 	    case SCM_MISSING:
 		break;
 	    default:
-		p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+		p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL)->ptr;
 		Strcat_charp(str, p);
 		break;
 	    }
@@ -2066,7 +2066,7 @@ link_menu(Buffer *buf)
 	if (!l->url)
 	    p = "";
 	else
-	    p = url_decode2(l->url, buf);
+	    p = url_decode2(l->url, buf)->ptr;
 	Strcat_charp(str, p);
 	label[i] = str->ptr;
 	if (len < str->length)
