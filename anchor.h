@@ -8,7 +8,6 @@ typedef struct {
 } BufferPoint;
 
 typedef struct Anchor {
-    const char* url;
     const char* target;
     const char* referer;
     const char* title;
@@ -20,6 +19,9 @@ typedef struct Anchor {
     short y;
     short rows;
     Image* image;
+
+    const char* url;
+    FormItemList* formitem;
 } Anchor;
 
 typedef struct {
@@ -36,7 +38,8 @@ typedef struct {
     int prevhseq;
 } HmarkerList;
 
-extern AnchorList* putAnchor(AnchorList* al, const char* url, const char* target,
+AnchorList* putAnchor(AnchorList* al, const char* url, FormItemList *formitem,
+    const char* target,
     Anchor** anchor_return, const char* referer,
     const char* title, unsigned char key, int line,
     int pos);

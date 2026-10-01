@@ -10,7 +10,7 @@
 typedef struct http_request {
     char command;
     char flag;
-    char* referer;
+    const char* referer;
     FormList* request;
 } HRequest;
 

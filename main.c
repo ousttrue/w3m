@@ -3298,7 +3298,7 @@ _followForm(int submit)
     a = retrieveCurrentForm(Currentbuf);
     if (a == NULL)
         return;
-    fi = (FormItemList*)a->url;
+    fi = a->formitem;
     switch (fi->type) {
     case FORM_INPUT_TEXT:
         if (submit)
@@ -3454,7 +3454,7 @@ _followForm(int submit)
     case FORM_INPUT_RESET:
         for (i = 0; i < Currentbuf->formitem->nanchor; i++) {
             a2 = &Currentbuf->formitem->anchors[i];
-            f2 = (FormItemList*)a2->url;
+            f2 = a2->formitem;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
@@ -4690,7 +4690,7 @@ _peekURL(int only_img)
             if (a == NULL)
                 return;
         } else
-            s = Strnew_charp(form2str((FormItemList*)a->url));
+            s = Strnew_charp(form2str(a->formitem));
     }
     if (s == NULL) {
         pu = parseURL2(a->url, baseURL(Currentbuf));
@@ -5740,7 +5740,7 @@ void set_buffer_environ(Buffer* buf)
             set_environ("W3M_CURRENT_IMG", "");
         a = retrieveCurrentForm(buf);
         if (a)
-            set_environ("W3M_CURRENT_FORM", form2str((FormItemList*)a->url));
+            set_environ("W3M_CURRENT_FORM", form2str(a->formitem));
         else
             set_environ("W3M_CURRENT_FORM", "");
         set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);

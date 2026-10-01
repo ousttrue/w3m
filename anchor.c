@@ -2,10 +2,8 @@
 #include "indep.h"
 #include "alloc.h"
 #include "config.h"
-#include "display.h"
 #include "fm.h"
 #include "proto.h"
-#include "linein.h"
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
@@ -17,7 +15,7 @@
 #define FIRST_ANCHOR_SIZE 30
 
 AnchorList*
-putAnchor(AnchorList* al, const char* url,
+putAnchor(AnchorList* al, const char* url, FormItemList* formitem,
     const char* target, Anchor** anchor_return,
     const char* referer, const char* title, unsigned char key, int line, int pos)
 {
@@ -54,6 +52,7 @@ putAnchor(AnchorList* al, const char* url,
         }
     a = &al->anchors[i];
     a->url = url;
+    a->formitem = formitem;
     a->target = target;
     a->referer = referer;
     a->title = title;
@@ -72,7 +71,8 @@ registerHref(Buffer* buf, const char* url, const char* target, const char* refer
     unsigned char key, int line, int pos)
 {
     Anchor* a;
-    buf->href = putAnchor(buf->href, url, target, &a, referer, title, key,
+    buf->href = putAnchor(buf->href, url, 0,
+        target, &a, referer, title, key,
         line, pos);
     return a;
 }
@@ -81,7 +81,8 @@ Anchor*
 registerName(Buffer* buf, const char* url, int line, int pos)
 {
     Anchor* a;
-    buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line,
+    buf->name = putAnchor(buf->name, url, 0,
+        NULL, &a, NULL, NULL, '\0', line,
         pos);
     return a;
 }
@@ -90,7 +91,8 @@ Anchor*
 registerImg(Buffer* buf, const char* url, const char* title, int line, int pos)
 {
     Anchor* a;
-    buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line,
+    buf->img = putAnchor(buf->img, url, 0,
+        NULL, &a, NULL, title, '\0', line,
         pos);
     return a;
 }
@@ -99,22 +101,21 @@ Anchor*
 registerForm(Buffer* buf, FormList* flist, struct parsed_tag* tag, int line,
     int pos)
 {
-    Anchor* a;
-    FormItemList* fi;
-
-    fi = formList_addInput(flist, tag);
+    FormItemList* fi = formList_addInput(flist, tag);
     if (fi == NULL)
         return NULL;
-    buf->formitem = putAnchor(buf->formitem, (char*)fi, flist->target, &a,
-        NULL, NULL, '\0', line, pos);
+    Anchor* a;
+    buf->formitem = putAnchor(buf->formitem, NULL, fi,
+        flist->target, &a, NULL, NULL, '\0', line, pos);
     return a;
 }
 
 int onAnchor(Anchor* a, int line, int pos)
 {
-    BufferPoint bp;
-    bp.line = line;
-    bp.pos = pos;
+    BufferPoint bp = {
+        .line = line,
+        .pos = pos,
+    };
 
     if (bpcmp(bp, a->start) < 0)
         return -1;
@@ -126,19 +127,15 @@ int onAnchor(Anchor* a, int line, int pos)
 Anchor*
 retrieveAnchor(AnchorList* al, int line, int pos)
 {
-    Anchor* a;
-    size_t b, e;
-    int cmp;
-
     if (al == NULL || al->nanchor == 0)
         return NULL;
 
     if (al->acache < 0 || al->acache >= al->nanchor)
         al->acache = 0;
 
-    for (b = 0, e = al->nanchor - 1; b <= e; al->acache = (b + e) / 2) {
-        a = &al->anchors[al->acache];
-        cmp = onAnchor(a, line, pos);
+    for (size_t b = 0, e = al->nanchor - 1; b <= e; al->acache = (b + e) / 2) {
+        Anchor* a = &al->anchors[al->acache];
+        int cmp = onAnchor(a, line, pos);
         if (cmp == 0)
             return a;
         else if (cmp > 0)
@@ -550,7 +547,6 @@ void shiftAnchorPosition(AnchorList* al, HmarkerList* hl, int line, int pos,
     }
 }
 
-#ifdef USE_IMAGE
 void addMultirowsImg(Buffer* buf, AnchorList* al)
 {
     int i, j, k, col, ecol, pos;
@@ -623,7 +619,7 @@ void addMultirowsImg(Buffer* buf, AnchorList* al)
                     l->propBuf[k] |= PE_ANCHOR;
             }
             if (a_form.url) {
-                buf->formitem = putAnchor(buf->formitem, a_form.url,
+                buf->formitem = putAnchor(buf->formitem, a_form.url, 0,
                     a_form.target, &a, NULL, NULL, '\0',
                     l->linenumber, pos);
                 a->hseq = a_form.hseq;
@@ -633,7 +629,6 @@ void addMultirowsImg(Buffer* buf, AnchorList* al)
         img->rows = 0;
     }
 }
-#endif
 
 void addMultirowsForm(Buffer* buf, AnchorList* al)
 {
@@ -675,7 +670,7 @@ void addMultirowsForm(Buffer* buf, AnchorList* al)
             }
             if (a_form.start.line == l->linenumber)
                 continue;
-            buf->formitem = putAnchor(buf->formitem, a_form.url,
+            buf->formitem = putAnchor(buf->formitem, a_form.url, 0,
                 a_form.target, &a, NULL, NULL, '\0',
                 l->linenumber, pos);
             a->hseq = a_form.hseq;
@@ -817,7 +812,7 @@ link_list_panel(Buffer* buf)
             a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
             if (!a)
                 continue;
-            fi = (const FormItemList*)a->url;
+            fi = a->formitem;
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
                 struct MapList* ml = searchMapList(buf, fi->value->ptr);

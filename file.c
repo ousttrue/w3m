@@ -165,8 +165,6 @@ KeyAbort(SIGNAL_ARG)
     LONGJMP(AbortLoading, 1);
 }
 
-
-
 int currentLn(Buffer* buf)
 {
     if (buf->currentLine)
@@ -275,8 +273,6 @@ void examineFile(const char* path, URLFile* uf)
         }
     }
 }
-
-
 
 int matchattr(const char* p, const char* attr, int len, Str* value)
 {
@@ -5237,8 +5233,9 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                         }
                     }
                     if (id && idFrame)
-                        idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                            (Anchor**)NULL, NULL, NULL, '\0',
+                        idFrame->body->nameList = putAnchor(idFrame->body->nameList,
+                            id, NULL, NULL,
+                            NULL, NULL, NULL, '\0',
                             currentLn(buf), pos);
                     if (p) {
                         effect |= PE_ANCHOR;
@@ -5531,7 +5528,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     break;
                 case HTML_N_TEXTAREA_INT:
                     if (a_textarea && n_textarea >= 0) {
-                        FormItemList* item = (FormItemList*)a_textarea[n_textarea]->url;
+                        FormItemList* item = a_textarea[n_textarea]->formitem;
                         item->init_value = item->value = textarea_str[n_textarea];
                     }
                     break;
@@ -5545,7 +5542,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     break;
                 case HTML_N_SELECT_INT:
                     if (a_select && n_select >= 0) {
-                        FormItemList* item = (FormItemList*)a_select[n_select]->url;
+                        FormItemList* item = a_select[n_select]->formitem;
                         item->select_option = select_option[n_select].first;
                         chooseSelectOption(item, item->select_option);
                         item->init_selected = item->selected;
@@ -5597,7 +5594,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                 }
                 if (id && idFrame)
                     idFrame->body->nameList = putAnchor(idFrame->body->nameList, id, NULL,
-                        (Anchor**)NULL, NULL, NULL, '\0',
+                        NULL, NULL, NULL, NULL, '\0',
                         currentLn(buf), pos);
             }
         }

@@ -139,7 +139,7 @@ retrieveCurrentMapArea(Buffer* buf)
     a_form = retrieveCurrentForm(buf);
     if (!(a_form && a_form->url))
         return NULL;
-    fi = (FormItemList*)a_form->url;
+    fi = a_form->formitem;
     if (!(fi && fi->parent && fi->parent->item))
         return NULL;
     fi = fi->parent->item;
@@ -178,14 +178,12 @@ int getMapXY(Buffer* buf, Anchor* a, int* x, int* y)
 Anchor*
 retrieveCurrentMap(Buffer* buf)
 {
-    Anchor* a;
-    FormItemList* fi;
-
-    a = retrieveCurrentForm(buf);
+    Anchor* a = retrieveCurrentForm(buf);
     if (!a || !a->url)
         return NULL;
-    fi = (FormItemList*)a->url;
-    if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map"))
+    FormItemList* fi = a->formitem;
+    if (fi->parent->method == FORM_METHOD_INTERNAL
+        && !Strcmp_charp(fi->parent->action, "map"))
         return a;
     return NULL;
 }
@@ -606,7 +604,7 @@ page_info_panel(Buffer* buf)
     }
     a = retrieveCurrentForm(buf);
     if (a != NULL) {
-        FormItemList* fi = (FormItemList*)a->url;
+        FormItemList* fi = a->formitem;
         p = form2str(fi);
         p = html_quote(url_decode2(p, buf)->ptr);
         Strcat_m_charp(tmp,
