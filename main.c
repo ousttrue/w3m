@@ -641,7 +641,7 @@ int main(int argc, char** argv)
 
         for (;;) {
             line = Strfgets(fp);
-            if (line->length == 0)
+            if (line->len == 0)
                 break;
             Strchop(line);
             if (n > max) {
@@ -770,7 +770,7 @@ int main(int argc, char** argv)
                     NULL);
                 request->body = body->ptr;
                 request->boundary = NULL;
-                request->length = body->length;
+                request->length = body->len;
             } else {
                 request = NULL;
             }
@@ -3177,7 +3177,7 @@ query_from_followform(pStr* query, FormItemList* fi, int multipart)
         if (f2->name == NULL)
             continue;
         /* <ISINDEX> is translated into single text form */
-        if (f2->name->length == 0 && (multipart || f2->type != FORM_INPUT_TEXT))
+        if (f2->name->len == 0 && (multipart || f2->type != FORM_INPUT_TEXT))
             continue;
         switch (f2->type) {
         case FORM_INPUT_RESET:
@@ -3207,7 +3207,7 @@ query_from_followform(pStr* query, FormItemList* fi, int multipart)
                 Strcat_charp(*query, ".y");
                 form_write_data(body, fi->parent->boundary, (*query)->ptr,
                     Sprintf("%d", y)->ptr);
-            } else if (f2->name && f2->name->length > 0 && f2->value != NULL) {
+            } else if (f2->name && f2->name->len > 0 && f2->value != NULL) {
                 /* not IMAGE */
                 *query = conv_form_encoding(f2->value, fi, Currentbuf);
                 if (f2->type == FORM_INPUT_FILE)
@@ -3239,7 +3239,7 @@ query_from_followform(pStr* query, FormItemList* fi, int multipart)
                 Strcat(*query, Sprintf(".y=%d", y));
             } else {
                 /* not IMAGE */
-                if (f2->name && f2->name->length > 0) {
+                if (f2->name && f2->name->len > 0) {
                     Strcat(*query,
                         Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
                     Strcat_char(*query, '=');
@@ -3392,7 +3392,7 @@ _followForm(int submit)
             /* It means "current URL" */
             tmp2 = parsedURL2Str(&Currentbuf->currentURL);
             if ((p = strchr(tmp2->ptr, '?')) != NULL)
-                Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+                Strshrink(tmp2, (tmp2->ptr + tmp2->len) - p);
         }
 
         if (fi->parent->method == FORM_METHOD_GET) {
@@ -3400,11 +3400,11 @@ _followForm(int submit)
 
             if ((p = strchr(tmp2->ptr, '#'))) {
                 fragment = Strnew_charp(p);
-                Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+                Strshrink(tmp2, (tmp2->ptr + tmp2->len) - p);
             }
 
             if ((p = strchr(tmp2->ptr, '?')))
-                Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+                Strshrink(tmp2, (tmp2->ptr + tmp2->len) - p);
 
             Strcat_char(tmp2, '?');
             Strcat(tmp2, tmp);
@@ -3421,7 +3421,7 @@ _followForm(int submit)
                 fi->parent->length = st.st_size;
             } else {
                 fi->parent->body = tmp->ptr;
-                fi->parent->length = tmp->length;
+                fi->parent->length = tmp->len;
             }
             buf = loadLink(tmp2->ptr, a->target, NULL, fi->parent);
             if (multipart) {
@@ -4285,7 +4285,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
 #endif
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
-    request->length = tmp->length;
+    request->length = tmp->len;
     cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER,
         request);
 }
@@ -4661,9 +4661,9 @@ _peekURL(int only_img)
     if (Currentbuf->firstLine == NULL)
         return;
     if (CurrentKey == prev_key && s != NULL) {
-        if (s->length - offset >= COLS)
+        if (s->len - offset >= COLS)
             offset++;
-        else if (s->length <= offset) /* bug ? */
+        else if (s->len <= offset) /* bug ? */
             offset = 0;
         goto disp;
     } else {
@@ -4688,15 +4688,15 @@ _peekURL(int only_img)
         s = Strnew_charp(url_decode2(s->ptr, Currentbuf)->ptr);
 #ifdef USE_M17N
     s = checkType(s, &pp, NULL);
-    p = NewAtom_N(Lineprop, s->length);
-    memmove(p, pp, s->length * sizeof(Lineprop));
+    p = NewAtom_N(Lineprop, s->len);
+    memmove(p, pp, s->len * sizeof(Lineprop));
 #endif
 disp:
     n = searchKeyNum();
-    if (n > 1 && s->length > (n - 1) * (COLS - 1))
+    if (n > 1 && s->len > (n - 1) * (COLS - 1))
         offset = (n - 1) * (COLS - 1);
 #ifdef USE_M17N
-    while (offset < s->length && p[offset] & PC_WCHAR2)
+    while (offset < s->len && p[offset] & PC_WCHAR2)
         offset++;
 #endif
     disp_message_nomouse(&s->ptr[offset], true);
@@ -4735,9 +4735,9 @@ DEFUN(curURL, PEEK, "Show current address")
     if (Currentbuf->bufferprop & BP_INTERNAL)
         return;
     if (CurrentKey == prev_key && s != NULL) {
-        if (s->length - offset >= COLS)
+        if (s->len - offset >= COLS)
             offset++;
-        else if (s->length <= offset) /* bug ? */
+        else if (s->len <= offset) /* bug ? */
             offset = 0;
     } else {
         offset = 0;
@@ -4746,15 +4746,15 @@ DEFUN(curURL, PEEK, "Show current address")
             s = Strnew_charp(url_decode2(s->ptr, NULL)->ptr);
 #ifdef USE_M17N
         s = checkType(s, &pp, NULL);
-        p = NewAtom_N(Lineprop, s->length);
-        memmove(p, pp, s->length * sizeof(Lineprop));
+        p = NewAtom_N(Lineprop, s->len);
+        memmove(p, pp, s->len * sizeof(Lineprop));
 #endif
     }
     n = searchKeyNum();
-    if (n > 1 && s->length > (n - 1) * (COLS - 1))
+    if (n > 1 && s->len > (n - 1) * (COLS - 1))
         offset = (n - 1) * (COLS - 1);
 #ifdef USE_M17N
-    while (offset < s->length && p[offset] & PC_WCHAR2)
+    while (offset < s->len && p[offset] & PC_WCHAR2)
         offset++;
 #endif
     disp_message_nomouse(&s->ptr[offset], true);
@@ -5007,14 +5007,11 @@ void change_charset(struct parsed_tagarg* arg)
 
 DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
 {
-    char* cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
+    const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         cs = inputStr(_("Document charset: "),
             wc_ces_to_charset(Currentbuf->document_charset));
-    charset = wc_guess_charset_short(cs, 0);
+    wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -5024,14 +5021,11 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
 
 DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
 {
-    char* cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
+    const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         cs = inputStr(_("Default document charset: "),
             wc_ces_to_charset(DocumentCharset));
-    charset = wc_guess_charset_short(cs, 0);
+    wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         DocumentCharset = charset;
     displayBuffer(Currentbuf, B_NORMAL);
@@ -5763,10 +5757,8 @@ const char* searchKeyData(void)
 static int
 searchKeyNum(void)
 {
-    char* d;
     int n = 1;
-
-    d = searchKeyData();
+    const char* d = searchKeyData();
     if (d != NULL)
         n = atoi(d);
     return n * PREC_NUM;
@@ -5842,10 +5834,7 @@ void w3m_exit(int i)
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 {
-    char *data, *p;
-    int cmd;
-
-    data = searchKeyData();
+    char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("command [; ...]: ", "", TextHist);
         if (data == NULL) {
@@ -5860,8 +5849,8 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
             data++;
             continue;
         }
-        p = getWord(&data);
-        cmd = getFuncList(p);
+        const char* p = getWord(&data);
+        int cmd = getFuncList(p);
         if (cmd < 0) {
             pStr e = Sprintf("Unknown command: %s", p);
             disp_err_message(e->ptr, false);

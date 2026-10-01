@@ -499,7 +499,7 @@ pStr file_unquote(const char* str)
 pStr Str_url_unquote(pStr x, bool is_form, bool safe)
 {
     pStr tmp = NULL;
-    char *p = x->ptr, *ep = x->ptr + x->length, *q;
+    char *p = x->ptr, *ep = x->ptr + x->len, *q;
     int c;
 
     for (; p < ep;) {
@@ -583,7 +583,7 @@ struct Url parseURL2(const char* src, const struct Url* current)
                 p = url.file;
                 if (current->file) {
                     pStr tmp = Strnew_charp(current->file);
-                    while (tmp->length > 0) {
+                    while (tmp->len > 0) {
                         if (Strlastchar(tmp) == '/')
                             break;
                         Strshrink(tmp, 1);

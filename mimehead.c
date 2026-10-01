@@ -117,8 +117,8 @@ decodeB_to_growbuf(struct growbuf *gb, char **ww)
 	    break;
     }
 last:
-    growbuf_reserve(gb, gb->length + 1);
-    gb->ptr[gb->length] = '\0';
+    growbuf_reserve(gb, gb->len + 1);
+    gb->ptr[gb->len] = '\0';
     *ww = wp;
     return;
 }
@@ -137,7 +137,7 @@ decodeU_to_growbuf(struct growbuf *gb, char **ww)
     for (w++, i = 2; *w != '\0' && n; n--) {
 	c1 = (w[0] - 0x20) % 0x40;
 	c2 = (w[1] - 0x20) % 0x40;
-	gb->ptr[gb->length++] = (c1 << i) | (c2 >> (6 - i));
+	gb->ptr[gb->len++] = (c1 << i) | (c2 >> (6 - i));
 	if (i == 6) {
 	    w += 2;
 	    i = 2;
@@ -147,7 +147,7 @@ decodeU_to_growbuf(struct growbuf *gb, char **ww)
 	    i += 2;
 	}
     }
-    gb->ptr[gb->length] = '\0';
+    gb->ptr[gb->len] = '\0';
     return;
 }
 
@@ -192,14 +192,14 @@ decodeQP_to_growbuf(struct growbuf *gb, char **ww)
 	    else {
 		if (*w == '\0' || *(w + 1) == '\0')
 		    break;
-		gb->ptr[gb->length++] = ha2d(*w, *(w + 1));
+		gb->ptr[gb->len++] = ha2d(*w, *(w + 1));
 		w++;
 	    }
 	}
 	else
-	    gb->ptr[gb->length++] = *w;
+	    gb->ptr[gb->len++] = *w;
     }
-    gb->ptr[gb->length] = '\0';
+    gb->ptr[gb->len] = '\0';
     *ww = w;
     return;
 }
@@ -281,7 +281,7 @@ pStr
 decodeMIME0(pStr orgstr)
 #endif
 {
-    char *org = orgstr->ptr, *endp = org + orgstr->length;
+    char *org = orgstr->ptr, *endp = org + orgstr->len;
     char *org0, *p;
     pStr cnv = NULL;
 
@@ -291,7 +291,7 @@ decodeMIME0(pStr orgstr)
     while (org < endp) {
 	if (*org == '=' && *(org + 1) == '?') {
 	    if (cnv == NULL) {
-		cnv = Strnew_size(orgstr->length);
+		cnv = Strnew_size(orgstr->len);
 		Strcat_charp_n(cnv, orgstr->ptr, org - orgstr->ptr);
 	    }
 	  nextEncodeWord:

@@ -264,20 +264,20 @@ cgi_filename(const char* uri)
         Strcat_char(tmp, '/');
     if (strncmp(uri, "/$LIB/", 6) == 0)
         offset = 6;
-    else if (strncmp(uri, tmp->ptr, tmp->length) == 0)
-        offset = tmp->length;
+    else if (strncmp(uri, tmp->ptr, tmp->len) == 0)
+        offset = tmp->len;
     else if (*uri == '/' && document_root) {
         pStr tmp2 = Strnew_charp(document_root);
         if (Strlastchar(tmp2) != '/')
             Strcat_char(tmp2, '/');
         Strcat_charp(tmp2, uri + 1);
-        if (strncmp(tmp2->ptr, tmp->ptr, tmp->length) != 0) {
+        if (strncmp(tmp2->ptr, tmp->ptr, tmp->len) != 0) {
             info.type = CGIFN_NORMAL;
             return info;
         }
         uri = tmp2->ptr;
         info.name = uri;
-        offset = tmp->length;
+        offset = tmp->len;
     } else {
         info.type = CGIFN_NORMAL;
         return info;
@@ -332,7 +332,7 @@ writeLocalCookie(void)
     if (!f)
         return;
     localCookie();
-    fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->length, f);
+    fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->len, f);
     fclose(f);
     chmod(Local_cookie_file, S_IRUSR | S_IWUSR);
 }

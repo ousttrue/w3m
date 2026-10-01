@@ -63,7 +63,7 @@ init_base_stream(struct input_stream* is, int bufsize)
 static void
 init_str_stream(struct input_stream* is, pStr s)
 {
-    init_buffer(is, s->ptr, s->length);
+    init_buffer(is, s->ptr, s->len);
 }
 
 // int file descriptor
@@ -206,38 +206,36 @@ ens_close(void* _handle)
     free(handle);
 }
 
-static void
-memchop(char* p, int* len)
+static uint32_t
+memchop(char* p, uint32_t len)
 {
-    char* q;
-
-    for (q = p + *len; q > p; --q) {
+    char* q = p + len;
+    for (; q > p; --q) {
         if (q[-1] != '\n' && q[-1] != '\r')
             break;
     }
-    if (q != p + *len)
+    if (q != p + len)
         *q = '\0';
-    *len = q - p;
-    return;
+    return q - p;
 }
 
 static int
 ens_read(void* _handle, unsigned char* buf, int len)
 {
     struct ens_handle* handle = (struct ens_handle*)_handle;
-    if (handle->pos == handle->gb.length) {
+    if (handle->pos == handle->gb.len) {
         char* p;
         struct growbuf gbtmp;
 
         ISgets_to_growbuf(handle->is, &handle->gb, true);
-        if (handle->gb.length == 0)
+        if (handle->gb.len == 0)
             return 0;
         if (handle->encoding == ENC_BASE64)
-            memchop(handle->gb.ptr, &handle->gb.length);
+            handle->gb.len = memchop(handle->gb.ptr, handle->gb.len);
         else if (handle->encoding == ENC_UUENCODE) {
-            if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
+            if (handle->gb.len>= 5 && !strncmp(handle->gb.ptr, "begin", 5))
                 ISgets_to_growbuf(handle->is, &handle->gb, true);
-            memchop(handle->gb.ptr, &handle->gb.length);
+            handle->gb.len= memchop(handle->gb.ptr, handle->gb.len);
         }
         growbuf_init_without_GC(&gbtmp);
         p = handle->gb.ptr;
@@ -252,8 +250,8 @@ ens_read(void* _handle, unsigned char* buf, int len)
         handle->pos = 0;
     }
 
-    if (len > handle->gb.length - handle->pos)
-        len = handle->gb.length - handle->pos;
+    if (len > handle->gb.len- handle->pos)
+        len = handle->gb.len- handle->pos;
 
     memcpy(buf, &handle->gb.ptr[handle->pos], len);
     handle->pos += len;
@@ -337,14 +335,14 @@ void ISgets_to_growbuf(struct input_stream* is, struct growbuf* gb, char crnl)
     struct stream_buffer* sb = &is->stream;
     int i;
 
-    gb->length = 0;
+    gb->len = 0;
 
     while (!is->iseos) {
         if (MUST_BE_UPDATED(is)) {
             do_update(is);
             continue;
         }
-        if (crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
+        if (crnl && gb->len > 0 && gb->ptr[gb->len - 1] == '\r') {
             if (sb->buf[sb->cur] == '\n') {
                 GROWBUF_ADD_CHAR(gb, '\n');
                 ++sb->cur;
@@ -359,12 +357,12 @@ void ISgets_to_growbuf(struct input_stream* is, struct growbuf* gb, char crnl)
         }
         growbuf_append(gb, &sb->buf[sb->cur], i - sb->cur);
         sb->cur = i;
-        if (gb->length > 0 && gb->ptr[gb->length - 1] == '\n')
+        if (gb->len > 0 && gb->ptr[gb->len - 1] == '\n')
             break;
     }
 
-    growbuf_reserve(gb, gb->length + 1);
-    gb->ptr[gb->length] = '\0';
+    growbuf_reserve(gb, gb->len + 1);
+    gb->ptr[gb->len] = '\0';
     return;
 }
 
@@ -622,8 +620,8 @@ pStr ssl_get_certificate(SSL* ssl, const char* hostname)
             ans = 1;
         else {
             pStr ep = Strdup(emsg);
-            if (ep->length > COLS - 16)
-                Strshrink(ep, ep->length - (COLS - 16));
+            if (ep->len > COLS - 16)
+                Strshrink(ep, ep->len - (COLS - 16));
             Strcat_charp(ep, ": accept?");
             ans = confirm(ep);
         }

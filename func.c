@@ -152,7 +152,7 @@ interpret_keymap(FILE * kf, struct stat *current, int force)
 	lineno++;
 	Strchop(line);
 	Strremovefirstspaces(line);
-	if (line->length == 0)
+	if (line->len == 0)
 	    continue;
 #ifdef USE_M17N
 	line = wc_Str_conv(line, charset, InnerCharset);
@@ -643,7 +643,7 @@ interpret_mouse_action(FILE * mf)
 	line = Strfgets(mf);
 	Strchop(line);
 	Strremovefirstspaces(line);
-	if (line->length == 0)
+	if (line->len == 0)
 	    continue;
 	p = conv_from_system(line->ptr);
 	s = getWord(&p);

@@ -459,7 +459,7 @@ void align(TextLine* lbuf, int width, int mode)
     int i, l, l1, l2;
     pStr buf, line = lbuf->line;
 
-    if (line->length == 0) {
+    if (line->len == 0) {
         for (i = 0; i < width; i++)
             Strcat_char(line, ' ');
         lbuf->pos = width;
@@ -1454,7 +1454,7 @@ make_caption(struct table* t, struct html_feed_environ* h_env)
     struct environment envs[MAX_ENV_LEVEL];
     int limit;
 
-    if (t->caption->length <= 0)
+    if (t->caption->len <= 0)
         return;
 
     if (t->total_width > 0)
@@ -2029,7 +2029,7 @@ skip_space(struct table* t, const char* line, struct table_linfo* linfo,
                     plen = get_mclen(c);
                 }
             }
-            if (prevchar->length
+            if (prevchar->len
                 && is_boundary(
                     (const unsigned char*)prevchar->ptr,
                     (const unsigned char*)c)) {
@@ -2688,7 +2688,7 @@ feed_table_tag(struct table* tbl, const char* line, struct table_mode* mode,
                 pStr tmp = process_anchor(tag, line);
                 if (displayLinkNumber) {
                     pStr t = getLinkNumberStr(-1);
-                    feed_table_inline_tag(tbl, NULL, mode, t->length);
+                    feed_table_inline_tag(tbl, NULL, mode, t->len);
                     Strcat(tmp, t);
                 }
                 pushdata(tbl, tbl->row, tbl->col, tmp->ptr);

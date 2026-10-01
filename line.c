@@ -175,7 +175,7 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
     Lineprop* prop;
     static Lineprop* prop_buffer = NULL;
     static int prop_size = 0;
-    char *str = s->ptr, *endp = &s->ptr[s->length], *bs = NULL;
+    char *str = s->ptr, *endp = &s->ptr[s->len], *bs = NULL;
 
     Lineprop ceffect = PE_NORMAL;
     Linecolor cmode = 0;
@@ -193,25 +193,25 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
     static int* plens_buffer = NULL;
     static int plens_size = 0;
 
-    if (prop_size < s->length) {
-        prop_size = (s->length > LINELEN) ? s->length : LINELEN;
+    if (prop_size < s->len) {
+        prop_size = (s->len > LINELEN) ? s->len : LINELEN;
         prop_buffer = New_Reuse(Lineprop, prop_buffer, prop_size);
     }
     prop = prop_buffer;
 
-    if (plens_size < s->length) {
-        plens_size = (s->length > LINELEN) ? s->length : LINELEN;
+    if (plens_size < s->len) {
+        plens_size = (s->len > LINELEN) ? s->len : LINELEN;
         plens_buffer = New_Reuse(int, plens_buffer, plens_size);
     }
     plens = plens_buffer;
 
     if (ShowEffect) {
-        bs = memchr(str, '\b', s->length);
+        bs = memchr(str, '\b', s->len);
         if (ocolor) {
-            es = memchr(str, ESC_CODE, s->length);
+            es = memchr(str, ESC_CODE, s->len);
             if (es) {
-                if (color_size < s->length) {
-                    color_size = (s->length > LINELEN) ? s->length : LINELEN;
+                if (color_size < s->len) {
+                    color_size = (s->len > LINELEN) ? s->len : LINELEN;
                     color_buffer = New_Reuse(Linecolor, color_buffer,
                         color_size);
                 }
@@ -221,7 +221,7 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
         if ((bs != NULL)
             || (es != NULL)) {
             char *sp = str, *ep;
-            s = Strnew_size(s->length);
+            s = Strnew_size(s->len);
             do_copy = true;
             ep = endp;
             if (bs && ep > bs - 2)
@@ -265,7 +265,7 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
                 continue;
             } else if (str == bs) {
                 if (*(str + 1) == '_') {
-                    if (s->length) {
+                    if (s->len) {
                         str += 2;
                         for (i = 1; i <= plen; i++)
                             *(prop - i) |= PE_UNDER;
@@ -273,7 +273,7 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
                         str++;
                     }
                 } else if (!strncmp(str + 1, "\b__", 3)) {
-                    if (s->length) {
+                    if (s->len) {
                         str += (plen == 1) ? 3 : 4;
                         for (i = 1; i <= plen; i++)
                             *(prop - i) |= PE_UNDER;
@@ -281,7 +281,7 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
                         str += 2;
                     }
                 } else if (*(str + 1) == '\b') {
-                    if (s->length) {
+                    if (s->len) {
                         clen = get_mclen(str + 2);
                         if (plen == clen && !strncmp(str - plen, str + 2, plen)) {
                             for (i = 1; i <= plen; i++)
@@ -289,7 +289,7 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
                             str += 2 + clen;
                         } else {
                             Strshrink(s, plen);
-                            if (s->length) {
+                            if (s->len) {
                                 prop -= plen;
                                 if (color)
                                     color -= plen;
@@ -307,7 +307,7 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
                         str += 2;
                     }
                 } else {
-                    if (s->length) {
+                    if (s->len) {
                         clen = get_mclen(str + 1);
                         if (plen == clen && !strncmp(str - plen, str + 1, plen)) {
                             for (i = 1; i <= plen; i++)
@@ -315,7 +315,7 @@ pStr checkType(pStr s, Lineprop** oprop, Linecolor** ocolor)
                             str += 1 + clen;
                         } else {
                             Strshrink(s, plen);
-                            if (s->length) {
+                            if (s->len) {
                                 prop -= plen;
                                 if (color)
                                     color -= plen;

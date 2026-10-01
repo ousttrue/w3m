@@ -45,7 +45,7 @@ wc_conv_to_ces(pStr is, wc_ces ces)
 {
     pStr os;
     const wc_uchar *sp = (const wc_uchar *)is->ptr;
-    const wc_uchar *ep = sp + is->length;
+    const wc_uchar *ep = sp + is->len;
     const wc_uchar *p;
     wc_status st;
 
@@ -68,7 +68,7 @@ wc_conv_to_ces(pStr is, wc_ces ces)
     if (p == ep)
 	return is;
 
-    os = Strnew_size(is->length);
+    os = Strnew_size(is->len);
     if (p > sp)
 	p--;	/* for precompose */
     if (p > sp)
@@ -123,7 +123,7 @@ wc_Str_conv_with_detect(pStr is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces)
     } else {
 	if (*f_ces & WC_CES_T_8BIT)
 	    hint = *f_ces;
-	detect = wc_auto_detect(is->ptr, is->length, hint);
+	detect = wc_auto_detect(is->ptr, is->len, hint);
 	if (WcOption.auto_detect == WC_OPT_DETECT_ON) {
 	    if ((detect & WC_CES_T_8BIT) ||
 		((detect & WC_CES_T_NASCII) && ! (*f_ces & WC_CES_T_8BIT)))

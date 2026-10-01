@@ -326,7 +326,7 @@ make_lastline_link(Buffer *buf, const char *title, const char *url)
     Strcat_charp(s, "..");
     i = get_Str_strwidth(u) - (COLS - 1 - get_Str_strwidth(s));
 #ifdef USE_M17N
-    while (i < u->length && pr[i] & PC_WCHAR2)
+    while (i < u->len && pr[i] & PC_WCHAR2)
 	i++;
 #endif
     Strcat_charp(s, &u->ptr[i]);

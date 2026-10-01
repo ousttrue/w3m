@@ -712,7 +712,7 @@ wtf_push_ucs(pStr os, wc_uint32 ucs, wc_status *st)
 		Strfree(st->tag);
 	    st->tag = NULL;
 	    st->ntag = 0;
-	}  else if (st->tag && st->tag->length < MAX_TAG_LEN &&
+	}  else if (st->tag && st->tag->len< MAX_TAG_LEN &&
 		    ucs >= WC_C_TAG_SPACE)
 	    Strcat_char(st->tag, (char)(ucs & 0x7f));
 	return;

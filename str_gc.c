@@ -335,7 +335,7 @@ static const char Base64Table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
 
 static void Strcatc(pStr x, char y)
 {
-    ((x)->ptr[(x)->length++] = (y));
+    ((x)->ptr[(x)->len++] = (y));
 }
 
 pStr base64_encode(const char* src, size_t len)
@@ -357,7 +357,7 @@ pStr base64_encode(const char* src, size_t len)
         return Strnew();
 
     dest = Strnew_size(k);
-    if (dest->area_size <= k) {
+    if (dest->capacity <= k) {
         Strfree(dest);
         return Strnew();
     }
@@ -394,7 +394,7 @@ pStr base64_encode(const char* src, size_t len)
         }
         Strcatc(dest, '=');
     }
-    dest->ptr[dest->length] = '\0';
+    dest->ptr[dest->len] = '\0';
     return dest;
 }
 
@@ -437,16 +437,16 @@ pStr tmpfname(int CurrentPid, enum TmpFileType type, const char* ext)
 
 void cleanup_line(pStr s, enum LineMode mode)
 {
-    if (s->length >= 2 && s->ptr[s->length - 2] == '\r' && s->ptr[s->length - 1] == '\n') {
+    if (s->len >= 2 && s->ptr[s->len - 2] == '\r' && s->ptr[s->len - 1] == '\n') {
         Strshrink(s, 2);
         Strcat_char(s, '\n');
     } else if (Strlastchar(s) == '\r')
-        s->ptr[s->length - 1] = '\n';
+        s->ptr[s->len - 1] = '\n';
     else if (Strlastchar(s) != '\n')
         Strcat_char(s, '\n');
     if (mode != PAGER_MODE) {
         int i;
-        for (i = 0; i < s->length; i++) {
+        for (i = 0; i < s->len; i++) {
             if (s->ptr[i] == '\0')
                 s->ptr[i] = ' ';
         }
@@ -509,7 +509,7 @@ pStr remove_space(const char* str)
 pStr Str_form_quote(pStr x)
 {
     pStr tmp = NULL;
-    char *p = x->ptr, *ep = x->ptr + x->length;
+    char *p = x->ptr, *ep = x->ptr + x->len;
     char buf[4];
 
     for (; p < ep; p++) {
@@ -557,7 +557,7 @@ pStr guess_filename(const char* file)
     pStr str = NULL;
     if (file != NULL)
         str = Strnew_charp(mybasename(file));
-    if (str == NULL || str->length == 0)
+    if (str == NULL || str->len == 0)
         return Strnew_charp(DEF_SAVE_FILE);
     char* p = str->ptr;
     if (*p == '#')

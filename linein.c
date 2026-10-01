@@ -225,7 +225,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str,
             i_quote = FALSE;
             cm_next = FALSE;
             cm_disp_next = -1;
-            if (CLen + tmp->length > STR_LEN || !tmp->length)
+            if (CLen + tmp->len > STR_LEN || !tmp->len)
                 goto next_char;
             ynkCon = 0;
             ins_char(tmp);
@@ -313,11 +313,11 @@ void addStr(char* p, Lineprop* pr, int len, int offset, int limit)
 
 void ins_char(pStr str)
 {
-    const char *p = str->ptr, *ep = p + str->length;
+    const char *p = str->ptr, *ep = p + str->len;
     Lineprop ctype;
     int len;
 
-    if (CLen + str->length >= STR_LEN)
+    if (CLen + str->len >= STR_LEN)
         return;
     while (p < ep) {
         len = get_mclen(p);
@@ -403,7 +403,7 @@ void insC(void)
     int i;
 
     Strinsert_char(strBuf, CPos, ' ');
-    CLen = strBuf->length;
+    CLen = strBuf->len;
     for (i = CLen; i > CPos; i--) {
         strProp[i] = strProp[i - 1];
     }
@@ -424,7 +424,7 @@ void delC(void)
         if (!ynkBuf)
             ynkBuf = Strnew();
         if (!ynkCon)
-            Strshrink(ynkBuf, ynkBuf->length); /* TODO(rkta): same as clear? */
+            Strshrink(ynkBuf, ynkBuf->len); /* TODO(rkta): same as clear? */
         Strinsert_charp_n(ynkBuf, 0, &strBuf->ptr[CPos], delta);
         ynkCon = 1;
     }
@@ -617,7 +617,7 @@ void next_compl(int next)
         a = CPos;
         CBeforeBuf = Strsubstr(strBuf, 0, b);
         buf = Strsubstr(strBuf, b, a - b);
-        CAfterBuf = Strsubstr(strBuf, a, strBuf->length - a);
+        CAfterBuf = Strsubstr(strBuf, a, strBuf->len - a);
         s = doComplete(buf, &status, next);
     } else {
         s = doComplete(strBuf, &status, next);
@@ -632,7 +632,7 @@ void next_compl(int next)
 
     strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, NULL);
     CLen = setStrType(strBuf, strProp);
-    CPos = CBeforeBuf->length + s->length;
+    CPos = CBeforeBuf->len + s->len;
     if (CPos > CLen)
         CPos = CLen;
 }
@@ -694,7 +694,7 @@ void next_dcompl(int next)
     cm_disp_next = 0;
 
     d = Str_conv_to_system(Strdup(CDirBuf));
-    if (d->length > 0 && Strlastchar(d) != '/')
+    if (d->len > 0 && Strlastchar(d) != '/')
         Strcat_char(d, '/');
     if (cm_mode & CPL_URL && d->ptr[0] == 'f') {
         p = d->ptr;
@@ -828,7 +828,7 @@ pStr doComplete(pStr ifn, int* status, int next)
         if (cm_mode & CPL_ON)
             ifn = unescape_spaces(ifn);
         CompleteBuf = Strdup(ifn);
-        while (Strlastchar(CompleteBuf) != '/' && CompleteBuf->length > 0)
+        while (Strlastchar(CompleteBuf) != '/' && CompleteBuf->len > 0)
             Strshrink(CompleteBuf, 1);
         CDirBuf = Strdup(CompleteBuf);
         if (cm_mode & CPL_URL) {
@@ -844,10 +844,10 @@ pStr doComplete(pStr ifn, int* status, int next)
                 return Str_conv_to_system(CompleteBuf);
             }
         }
-        if (CompleteBuf->length == 0) {
+        if (CompleteBuf->len == 0) {
             Strcat_char(CompleteBuf, '.');
         }
-        if (Strlastchar(CompleteBuf) == '/' && CompleteBuf->length > 1) {
+        if (Strlastchar(CompleteBuf) == '/' && CompleteBuf->len > 1) {
             Strshrink(CompleteBuf, 1);
         }
         if ((d = opendir(expandPath(CompleteBuf->ptr)->ptr)) == NULL) {
@@ -903,7 +903,7 @@ pStr doComplete(pStr ifn, int* status, int next)
         *status = CPL_MENU;
     }
     CompleteBuf = Strdup(CDirBuf);
-    if (CompleteBuf->length && Strlastchar(CompleteBuf) != '/')
+    if (CompleteBuf->len && Strlastchar(CompleteBuf) != '/')
         Strcat_char(CompleteBuf, '/');
     Strcat(CompleteBuf, CFileName);
     if (*status != CPL_AMBIG) {
@@ -973,7 +973,7 @@ void _next(void)
 int setStrType(pStr str, Lineprop* prop)
 {
     Lineprop ctype;
-    char *p = str->ptr, *ep = p + str->length;
+    char *p = str->ptr, *ep = p + str->len;
     int i, len = 1;
 
     for (i = 0; p < ep;) {

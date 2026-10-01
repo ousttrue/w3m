@@ -63,7 +63,7 @@ main(int argc, char *argv[])
     printf("#include \"hash.h\"\n");
     for (;;) {
 	s = Strfgets(f);
-	if (s->length == 0)
+	if (s->len == 0)
 	    exit(0);
 	Strremovetrailingspaces(s);
 	if (Strcmp_charp(s, "%%") == 0)
@@ -73,7 +73,7 @@ main(int argc, char *argv[])
     n = 0;
     for (;;) {
 	s = Strfgets(f);
-	if (s->length == 0)
+	if (s->len == 0)
 	    break;
 	Strremovefirstspaces(s);
 	Strremovetrailingspaces(s);

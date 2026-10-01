@@ -106,7 +106,7 @@ printMailcapPanel(char* mailcap)
     printf("<p><hr width=50%%><p>\n<table border='0' cellpadding='0'>\n\
 <tr><th align=left><b>%s</b><th><b>%s</b>\n",
         MSG_TYPE, MSG_COMMAND);
-    while (tmp = Strfgets(f), tmp->length > 0) {
+    while (tmp = Strfgets(f), tmp->len > 0) {
         if (tmp->ptr[0] == '#')
             continue;
         Strchop(tmp);
@@ -136,7 +136,7 @@ editMailcap(const char* mailcap, struct parsed_tagarg* args)
     if ((f = fopen(mailcap, "rt")) == NULL)
         bye("Can't open", mailcap);
 
-    while (tmp = Strfgets(f), tmp->length > 0) {
+    while (tmp = Strfgets(f), tmp->len > 0) {
         if (tmp->ptr[0] == '#')
             continue;
         Strchop(tmp);
@@ -187,7 +187,7 @@ int main(void)
 
     qs = Strfgets(stdin);
     Strchop(qs);
-    if (qs->length != length)
+    if (qs->len != length)
         goto request_err;
     cgiarg = cgistr2tagarg(qs->ptr);
 

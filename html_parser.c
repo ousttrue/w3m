@@ -222,7 +222,7 @@ int read_token(pStr buf, const char** instr, int* status, int pre, int append)
             Strcat_char(buf, (!pre && IS_SPACE(*p)) ? ' ' : *p);
             if (ST_IS_REAL_TAG(prev_status)) {
                 *instr = p + 1;
-                if (buf->length < 2 || buf->ptr[buf->length - 2] != '<' || buf->ptr[buf->length - 1] != '>')
+                if (buf->len < 2 || buf->ptr[buf->len - 2] != '<' || buf->ptr[buf->len - 1] != '>')
                     return 1;
                 Strshrink(buf, 2);
             }

@@ -52,14 +52,14 @@ news_command(News* news, const char* cmd, const char* arg, int* status)
             tmp = Sprintf("%s %s\r\n", cmd, arg);
         else
             tmp = Sprintf("%s\r\n", cmd);
-        fwrite(tmp->ptr, sizeof(char), tmp->length, news->wf);
+        fwrite(tmp->ptr, sizeof(char), tmp->len, news->wf);
         fflush(news->wf);
     }
     if (!status)
         return NULL;
     *status = -1;
     tmp = StrISgets(news->rf);
-    if (tmp && tmp->length)
+    if (tmp && tmp->len)
         sscanf(tmp->ptr, "%d", status);
     return tmp;
 }

@@ -76,7 +76,7 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
             tmp = Sprintf("%s %s\r\n", cmd, arg);
         else
             tmp = Sprintf("%s\r\n", cmd);
-        fwrite(tmp->ptr, sizeof(char), tmp->length, ftp->wf);
+        fwrite(tmp->ptr, sizeof(char), tmp->len, ftp->wf);
         fflush(ftp->wf);
     }
     if (!status)
@@ -564,7 +564,7 @@ pStr loadFTPDir0(ParsedURL* pu)
         int ftype, max_len, len, j;
 
         max_len = 20;
-        while (tmp = Strfgets(current_ftp.data), tmp->length > 0) {
+        while (tmp = Strfgets(current_ftp.data), tmp->len > 0) {
             Strchop(tmp);
             char* date;
             if ((ftype = ex_ftpdir_name_size_date(tmp->ptr,
@@ -631,7 +631,7 @@ pStr loadFTPDir0(ParsedURL* pu)
         }
         Strcat_charp(FTPDIRtmp, "</pre>\n");
     } else {
-        while (tmp = Strfgets(current_ftp.data), tmp->length > 0) {
+        while (tmp = Strfgets(current_ftp.data), tmp->len > 0) {
             Strchop(tmp);
             flist[nfile++] = mybasename(tmp->ptr);
             if (nfile == nfile_max) {

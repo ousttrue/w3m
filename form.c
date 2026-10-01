@@ -152,7 +152,7 @@ formList_addInput(struct form_list* fl, struct parsed_tag* tag)
         item->init_label = item->label;
     }
 #endif /* USE_MENU */
-    if (item->type == FORM_INPUT_FILE && item->value && item->value->length) {
+    if (item->type == FORM_INPUT_FILE && item->value && item->value->len) {
         /* security hole ! */
         return NULL;
     }
@@ -186,7 +186,7 @@ char* form2str(FormItemList* fi)
     if (fi->type != FORM_SELECT && fi->type != FORM_TEXTAREA)
         Strcat_charp(tmp, "input type=");
     Strcat_charp(tmp, _formtypetbl[fi->type]);
-    if (fi->name && fi->name->length)
+    if (fi->name && fi->name->len)
         Strcat_m_charp(tmp, " name=\"", fi->name->ptr, "\"", NULL);
     if ((fi->type == FORM_INPUT_RADIO || fi->type == FORM_INPUT_CHECKBOX || fi->type == FORM_SELECT) && fi->value)
         Strcat_m_charp(tmp, " value=\"", fi->value->ptr, "\"", NULL);
@@ -510,7 +510,7 @@ pStr textfieldrep(pStr s, int width)
     int i, j, k, c_len;
 
     j = 0;
-    for (i = 0; i < s->length; i += c_len) {
+    for (i = 0; i < s->len; i += c_len) {
         c_type = get_mctype((unsigned char*)&s->ptr[i]);
         c_len = get_mclen(&s->ptr[i]);
         if (s->ptr[i] == '\r')
@@ -600,11 +600,11 @@ void input_textarea(FormItemList* fi)
     auto_detect = WcOption.auto_detect;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
 #endif
-    while (tmp = Strfgets(f), tmp->length > 0) {
-        if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
+    while (tmp = Strfgets(f), tmp->len > 0) {
+        if (tmp->len == 1 && tmp->ptr[tmp->len - 1] == '\n') {
             /* null line with bare LF */
             tmp = Strnew_charp("\r\n");
-        } else if (tmp->length > 1 && tmp->ptr[tmp->length - 1] == '\n' && tmp->ptr[tmp->length - 2] != '\r') {
+        } else if (tmp->len > 1 && tmp->ptr[tmp->len - 1] == '\n' && tmp->ptr[tmp->len - 2] != '\r') {
             Strshrink(tmp, 1);
             Strcat_charp(tmp, "\r\n");
         }
@@ -857,7 +857,7 @@ void loadPreForm(void)
         Regex* re_arg;
 
         line = Strfgets(fp);
-        if (line->length == 0)
+        if (line->len == 0)
             break;
         if (textarea && !(!strncmp(line->ptr, "/textarea", 9) && IS_SPACE(line->ptr[9]))) {
             Strcat(textarea, line);
@@ -958,7 +958,7 @@ void preFormUpdateBuffer(Buffer* buf)
     for (pf = PreForm; pf; pf = pf->next) {
         if (pf->re_url) {
             pStr url = parsedURL2Str(&buf->currentURL);
-            if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
+            if (!RegexMatch(pf->re_url, url->ptr, url->len, 1))
                 continue;
         } else if (pf->url) {
             if (Strcmp_charp(parsedURL2Str(&buf->currentURL), pf->url))

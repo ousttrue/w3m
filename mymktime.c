@@ -38,7 +38,7 @@ static int get_month(const char** s)
         Strcat_char(tmp, *((*s)++));
 
     int mon;
-    if (tmp->length > 0) {
+    if (tmp->len > 0) {
         mon = atoi(tmp->ptr);
     } else {
         while (**s && IS_ALPHA(**s))
@@ -64,13 +64,13 @@ static int get_year(const char** s)
     pStr tmp = Strnew();
     while (**s && IS_DIGIT(**s))
         Strcat_char(tmp, *((*s)++));
-    if (tmp->length != 2 && tmp->length != 4) {
+    if (tmp->len != 2 && tmp->len != 4) {
         *s = ss;
         return -1;
     }
 
     int year = atoi(tmp->ptr);
-    if (tmp->length == 2) {
+    if (tmp->len == 2) {
         if (year >= 70)
             year += 1900;
         else
@@ -128,7 +128,7 @@ static int get_zone(const char** s, int* z_hour, int* z_min)
         Strcat_char(tmp, *((*s)++));
     while (**s && IS_DIGIT(**s))
         Strcat_char(tmp, *((*s)++));
-    if (!(tmp->length == 4 && IS_DIGIT(*ss)) && !(tmp->length == 5 && (*ss == '+' || *ss == '-'))) {
+    if (!(tmp->len == 4 && IS_DIGIT(*ss)) && !(tmp->len == 5 && (*ss == '+' || *ss == '-'))) {
         *s = ss;
         return -1;
     }

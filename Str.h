@@ -17,12 +17,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <stdint.h>
 
-typedef struct Str {
+struct Str {
     char* ptr;
-    int length;
-    int area_size;
-}* pStr;
+    int len;
+    int capacity;
+};
+typedef struct Str* pStr;
 
 pStr Strnew(void);
 pStr Strnew_size(int);
@@ -67,7 +69,7 @@ pStr Strfgetall(FILE*);
 
 pStr Strgrow(pStr s);
 
-inline static pStr Strcat_char(pStr x, char y) { return Strinsert_char(x, (x)->length, y); }
+inline static pStr Strcat_char(pStr x, char y) { return Strinsert_char(x, (x)->len, y); }
 inline static int Strcmp(pStr x, pStr y)
 {
     return strcmp((x)->ptr, (y)->ptr);
@@ -90,7 +92,7 @@ inline static int Strncasecmp_charp(pStr x, const char* y, int n)
 }
 inline static char Strlastchar(pStr s)
 {
-    return ((s)->length > 0 ? (s)->ptr[(s)->length - 1] : '\0');
+    return ((s)->len > 0 ? (s)->ptr[(s)->len - 1] : '\0');
 }
 inline static void Strshrinkfirst(pStr s, int n)
 {
@@ -98,7 +100,7 @@ inline static void Strshrinkfirst(pStr s, int n)
 }
 inline static void Strfputs(pStr s, FILE* f)
 {
-    fwrite((s)->ptr, 1, (s)->length, (f));
+    fwrite((s)->ptr, 1, (s)->len, (f));
 }
 
 char* allocStr(const char* s, int len);

@@ -161,11 +161,11 @@ extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
         } else if (matchMailcapAttr(p, "x-htmloutput", NULL) || matchMailcapAttr(p, "htmloutput", NULL)) {
             mcap->flags |= MAILCAP_HTMLOUTPUT;
         } else if (matchMailcapAttr(p, "test", &tmp)) {
-            mcap->test = allocStr(tmp->ptr, tmp->length);
+            mcap->test = allocStr(tmp->ptr, tmp->len);
         } else if (matchMailcapAttr(p, "nametemplate", &tmp)) {
-            mcap->nametemplate = allocStr(tmp->ptr, tmp->length);
+            mcap->nametemplate = allocStr(tmp->ptr, tmp->len);
         } else if (matchMailcapAttr(p, "edit", &tmp)) {
-            mcap->edit = allocStr(tmp->ptr, tmp->length);
+            mcap->edit = allocStr(tmp->ptr, tmp->len);
         }
         quoted = 0;
         while (*p && (quoted || *p != ';')) {
@@ -191,7 +191,7 @@ loadMailcap(char* filename)
     if (f == NULL)
         return NULL;
     i = 0;
-    while (tmp = Strfgets(f), tmp->length > 0) {
+    while (tmp = Strfgets(f), tmp->len > 0) {
         if (tmp->ptr[0] != '#')
             i++;
     }
@@ -199,7 +199,7 @@ loadMailcap(char* filename)
     n = i;
     mcap = New_N(struct mailcap, n + 1);
     i = 0;
-    while (tmp = Strfgets(f), tmp->length > 0) {
+    while (tmp = Strfgets(f), tmp->len > 0) {
         if (tmp->ptr[0] == '#')
             continue;
     redo:
@@ -436,7 +436,7 @@ unquote_mailcap_loop(const char* qstr, const char* type, const char* name, const
                 }
             } else if (*p == '}') {
                 char* q;
-                if (attr && (q = strcasestr(attr, tmp->ptr)) != NULL && (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, tmp->ptr, tmp->length, &tmp)) {
+                if (attr && (q = strcasestr(attr, tmp->ptr)) != NULL && (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') && matchattr(q, tmp->ptr, tmp->len, &tmp)) {
                     Strcat_charp(str, quote_mailcap(tmp->ptr, flag)->ptr);
                     if (mc_stat)
                         *mc_stat |= MCSTAT_REPPARAM;

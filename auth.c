@@ -139,7 +139,7 @@ next_token(pStr arg)
 {
     pStr narg = NULL;
     char *p, *q;
-    if (arg == NULL || arg->length == 0)
+    if (arg == NULL || arg->len == 0)
         return NULL;
     p = arg->ptr;
     q = p;
@@ -165,9 +165,9 @@ parsePasswd(FILE* fp, int netrc)
         pStr arg = NULL;
         char* p;
 
-        if (line == NULL || line->length == 0)
+        if (line == NULL || line->len == 0)
             line = Strfgets(fp);
-        if (line->length == 0)
+        if (line->len == 0)
             break;
         Strchop(line);
         Strremovefirstspaces(line);
@@ -210,7 +210,7 @@ parsePasswd(FILE* fp, int netrc)
             line = next_token(arg);
             ent.pwd = arg;
         } else if (netrc && !strcmp(p, "machdef")) {
-            while ((line = Strfgets(fp))->length != 0) {
+            while ((line = Strfgets(fp))->len != 0) {
                 if (*line->ptr == '\n')
                     break;
             }

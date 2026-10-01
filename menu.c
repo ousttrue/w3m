@@ -1423,8 +1423,8 @@ initSelectMenu(void)
 	    }
 	}
 	label[i] = str->ptr;
-	if (len < str->length)
-	    len = str->length;
+	if (len < str->len)
+	    len = str->len;
     }
     l = get_strwidth(comment);
     if (len < l + 4)
@@ -1643,8 +1643,8 @@ initSelTabMenu(void)
 	    }
 	}
 	label[i] = str->ptr;
-	if (len < str->length)
-	    len = str->length;
+	if (len < str->len)
+	    len = str->len;
     }
     l = strlen(comment);
     if (len < l + 4)
@@ -1863,7 +1863,7 @@ interpret_menu(FILE * mf)
 	line = Strfgets(mf);
 	Strchop(line);
 	Strremovefirstspaces(line);
-	if (line->length == 0)
+	if (line->len == 0)
 	    continue;
 #ifdef USE_M17N
 	line = wc_Str_conv(line, charset, InnerCharset);
@@ -2068,8 +2068,8 @@ link_menu(Buffer *buf)
 	    p = url_decode2(l->url, buf)->ptr;
 	Strcat_charp(str, p);
 	label[i] = str->ptr;
-	if (len < str->length)
-	    len = str->length;
+	if (len < str->len)
+	    len = str->len;
     }
     label[nitem] = NULL;
 

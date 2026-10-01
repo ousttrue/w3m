@@ -1393,10 +1393,10 @@ interpret_rc(FILE* f)
 
     for (;;) {
         line = Strfgets(f);
-        if (line->length == 0) /* end of file */
+        if (line->len == 0) /* end of file */
             break;
         Strchop(line);
-        if (line->length == 0) /* blank line */
+        if (line->len == 0) /* blank line */
             continue;
         Strremovefirstspaces(line);
         if (line->ptr[0] == '#') /* comment */
@@ -1955,7 +1955,7 @@ loadSiteconf(void)
     fp = fopen(efname, "r");
     if (fp == NULL)
         return;
-    while (line = Strfgets(fp), line->length > 0) {
+    while (line = Strfgets(fp), line->len > 0) {
         char *p, *s;
 
         Strchop(line);
@@ -2061,14 +2061,14 @@ void* querySiteconf(ParsedURL* query_pu, int field)
     if (!query_pu || IS_EMPTY_PARSED_URL(query_pu))
         return NULL;
     u = parsedURL2Str(query_pu);
-    if (u->length == 0)
+    if (u->len == 0)
         return NULL;
 
     for (ent = siteconf_head; ent; ent = ent->next) {
         if (!SCONF_TEST(ent, field))
             continue;
         if (ent->re_url) {
-            if (RegexMatch(ent->re_url, u->ptr, u->length, 1)) {
+            if (RegexMatch(ent->re_url, u->ptr, u->len, 1)) {
                 MatchedPosition(ent->re_url, &firstp, &lastp);
                 if (!ent->url_exact)
                     goto url_found;
@@ -2078,7 +2078,7 @@ void* querySiteconf(ParsedURL* query_pu, int field)
                     goto url_found;
             }
         } else {
-            int matchlen = strmatchlen(ent->url, u->ptr, u->length);
+            int matchlen = strmatchlen(ent->url, u->ptr, u->len);
             if (matchlen == 0 || ent->url[matchlen] != 0)
                 continue;
             firstp = u->ptr;

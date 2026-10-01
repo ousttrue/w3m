@@ -75,7 +75,7 @@ wc_conv_from_hkscs(pStr is, wc_ces ces)
 {
     pStr os;
     wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->length;
+    wc_uchar *ep = sp + is->len;
     wc_uchar *p;
     int state = WC_HKSCS_NOSTATE;
     wc_uint32 hkscs;
@@ -84,7 +84,7 @@ wc_conv_from_hkscs(pStr is, wc_ces ces)
 	;
     if (p == ep)
 	return is;
-    os = Strnew_size(is->length);
+    os = Strnew_size(is->len);
     if (p > sp)
 	Strcat_charp_n(os, (char *)is->ptr, (int)(p - sp));
 
