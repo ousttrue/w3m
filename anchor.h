@@ -7,7 +7,7 @@ typedef struct {
     int invalid;
 } BufferPoint;
 
-typedef struct {
+typedef struct Anchor {
     const char* url;
     const char* target;
     const char* referer;

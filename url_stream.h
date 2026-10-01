@@ -29,10 +29,10 @@ typedef struct UrlStream URLFile;
     }
 #define UFfileno(f) ISfileno((f)->stream)
 
-typedef struct {
-    char* referer;
+struct URLOption {
+    const char* referer;
     int flag;
-} URLOption;
+};
 
 struct UrlStream init_stream(enum UrlScheme scheme, struct input_stream* stream);
 

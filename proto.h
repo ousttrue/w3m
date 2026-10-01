@@ -173,7 +173,6 @@ extern void chkExternalURIBuffer(Buffer* buf);
 #endif
 extern ParsedURL* schemeToProxy(int scheme);
 
-
 extern void examineFile(const char* path, URLFile* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
@@ -248,8 +247,8 @@ extern Buffer* loadImageBuffer(URLFile* uf, Buffer* newBuf);
 #endif
 extern void saveBuffer(Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(Buffer* buf, FILE* f, int cont);
-extern Buffer* getshell(char* cmd);
-extern Buffer* getpipe(char* cmd);
+extern Buffer* getshell(const char* cmd);
+extern Buffer* getpipe(const char* cmd);
 extern Buffer* openPagerBuffer(struct input_stream* stream, Buffer* buf);
 extern Buffer* openGeneralPagerBuffer(struct input_stream* stream);
 extern Line* getNextPage(Buffer* buf, int plen);
@@ -326,20 +325,7 @@ extern void do_internal(char* action, char* data);
 extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
 extern void form_write_from_file(FILE* f, char* boundary, char* name,
     char* filename, char* file);
-extern MapList* searchMapList(Buffer* buf, char* name);
-extern void follow_map(struct parsed_tagarg* arg);
-#if defined(USE_MENU) || defined(USE_IMAGE)
-extern MapArea* follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x,
-    int y);
-#endif
-#ifndef USE_MENU
-extern Buffer* follow_map_panel(Buffer* buf, char* name);
-#endif
-#ifdef USE_IMAGE
-extern int getMapXY(Buffer* buf, Anchor* a, int* x, int* y);
-extern MapArea* retrieveCurrentMapArea(Buffer* buf);
-#endif
-extern Anchor* retrieveCurrentMap(Buffer* buf);
+
 extern Buffer* page_info_panel(Buffer* buf);
 extern int initscr(void);
 extern void move(int line, int column);

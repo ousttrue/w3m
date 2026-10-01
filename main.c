@@ -163,7 +163,7 @@ static void _nextA(int);
 static void _prevA(int);
 static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
 static void cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* request);
-static void cmd_loadfile(char* path);
+static void cmd_loadfile(const char* path);
 static void delBuffer(Buffer* buf);
 static void deleteFiles(void);
 static void do_dump(Buffer*);
@@ -2014,9 +2014,7 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
 
 DEFUN(cd, CD, "Change working directory")
 {
-    char* dir;
-
-    dir = inputFilename(_("cd to? "), NULL);
+    char* dir = inputFilename(_("cd to? "), NULL);
     if (chdir(dir) == -1)
         disp_err_message(strerror(errno), false);
     CurrentDir = currentdir();
@@ -2024,10 +2022,7 @@ DEFUN(cd, CD, "Change working directory")
 
 DEFUN(setEnv, SETENV, "Set environment variable")
 {
-    char* env;
-    char *var, *value;
-
-    env = searchKeyData();
+    const char* env = searchKeyData();
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
@@ -2037,6 +2032,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
             return;
         }
     }
+    const char *var, *value;
     if ((value = strchr(env, '=')) != NULL && value > env) {
         var = allocStr(env, value - env);
         value++;
@@ -2047,11 +2043,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
 
 DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and display output")
 {
-    Buffer* buf;
-    char *cmd, *tmpf;
-    FILE* f;
-
-    cmd = searchKeyData();
+    const char *cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist(_("Pipe buffer to: "), "", IN_COMMAND, ShellHist);
     }
@@ -2061,15 +2053,15 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
-    f = fopen(tmpf, "w");
+    char *tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
+    FILE* f = fopen(tmpf, "w");
     if (f == NULL) {
         disp_message(Sprintf(_("Can't save buffer to %s"), cmd)->ptr, true);
         return;
     }
     saveBuffer(Currentbuf, f, true);
     fclose(f);
-    buf = getpipe(myExtCommand(cmd, shell_quote(tmpf)->ptr, true)->ptr);
+    Buffer* buf = getpipe(myExtCommand(cmd, shell_quote(tmpf)->ptr, true)->ptr);
     if (buf == NULL) {
         disp_message("Execution failed", true);
         return;
@@ -2090,10 +2082,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
 /* Execute shell command and read output ac pipe. */
 DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 {
-    Buffer* buf;
-    char* cmd;
-
-    cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
     }
@@ -2103,7 +2092,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    buf = getpipe(cmd);
+    Buffer* buf = getpipe(cmd);
     if (buf == NULL) {
         disp_message("Execution failed", true);
         return;
@@ -2119,10 +2108,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 /* Execute shell command and load entire output to buffer */
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 {
-    Buffer* buf;
-    char* cmd;
-
-    cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
     }
@@ -2134,7 +2120,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     }
     SigActionFunc prevtrap = mySignal(SIGINT, intTrap);
     crmode();
-    buf = getshell(cmd);
+    Buffer* buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);
     term_raw();
     if (buf == NULL) {
@@ -2152,9 +2138,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 {
-    char* cmd;
-
-    cmd = searchKeyData();
+    const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
     }
@@ -2175,9 +2159,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 /* Load file */
 DEFUN(ldfile, LOAD, "Open local file in a new buffer")
 {
-    char* fn;
-
-    fn = searchKeyData();
+    const char* fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
         fn = inputFilenameHist(_("(Load)Filename? "), NULL, LoadHist);
     }
@@ -2210,7 +2192,7 @@ DEFUN(ldhelp, HELP, "Show help panel")
 }
 
 static void
-cmd_loadfile(char* fn)
+cmd_loadfile(const char* fn)
 {
     Buffer* buf = loadGeneralFile(file_to_url(fn, CurrentDir)->ptr, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
@@ -2602,7 +2584,7 @@ _goLine(const char* l)
 DEFUN(goLine, GOTO_LINE, "Go to the specified line")
 {
 
-    char* str = searchKeyData();
+    const char* str = searchKeyData();
     if (prec_num)
         _goLine("^");
     else if (str)
@@ -4442,9 +4424,8 @@ DEFUN(pginfo, INFO, "Display information about the current document")
 void follow_map(struct parsed_tagarg* arg)
 {
     char* name = tag_get_value(arg, "link");
-#if defined(USE_MENU) || defined(USE_IMAGE)
     Anchor* an;
-    MapArea* a;
+    struct MapArea* a;
     int x, y;
     ParsedURL p_url;
 
@@ -4453,7 +4434,7 @@ void follow_map(struct parsed_tagarg* arg)
     y = Currentbuf->cursorY + Currentbuf->rootY;
     a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
-#endif
+
 #ifndef USE_MENU
         Buffer* buf = follow_map_panel(Currentbuf, name);
 
@@ -4605,11 +4586,11 @@ DEFUN(svI, SAVE_IMAGE, "Save inline image")
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 {
-    char *qfile = NULL, *file;
+    char *qfile = NULL;
     FILE* f;
     int is_pipe;
 
-    file = searchKeyData();
+    const char* file = searchKeyData();
     if (file == NULL || *file == '\0') {
         qfile = inputLineHist(_("Save buffer to: "), NULL, IN_COMMAND, SaveHist);
         if (qfile == NULL || *qfile == '\0') {

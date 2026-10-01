@@ -88,7 +88,7 @@ typedef struct _Buffer {
     AnchorList* formitem;
     LinkList* linklist;
     FormList* formlist;
-    MapList* maplist;
+    struct MapList* maplist;
     HmarkerList* hmarklist;
     HmarkerList* imarklist;
     ParsedURL currentURL;

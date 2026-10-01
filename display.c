@@ -340,12 +340,12 @@ make_lastline_message(Buffer *buf)
     int sl = 0;
 
     if (displayLink) {
-#ifdef USE_IMAGE
-	MapArea *a = retrieveCurrentMapArea(buf);
+
+	struct MapArea *a = retrieveCurrentMapArea(buf);
 	if (a)
 	    s = make_lastline_link(buf, a->alt, a->url);
 	else
-#endif
+
 	{
 	    Anchor *a = retrieveCurrentAnchor(buf);
 	    const char *p = NULL;

@@ -30,7 +30,7 @@ typedef struct http_request {
 Str HTTPrequestMethod(HRequest* hr);
 Str HTTPrequestURI(ParsedURL* pu, HRequest* hr);
 URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
-    URLOption* option, FormList* request,
+    struct URLOption* option, FormList* request,
     TextList* extra_header, URLFile* ouf,
     HRequest* hr, unsigned char* status);
 

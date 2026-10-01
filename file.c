@@ -16,7 +16,6 @@
 #include "download.h"
 #include "frame.h"
 #include "fm.h"
-#include "func.h"
 #include "proto.h"
 #include "funcname1.h"
 #include "html.h"
@@ -1459,7 +1458,7 @@ loadGeneralFile(const char* path, ParsedURL* volatile current, const char* refer
     Str realm = NULL;
     int volatile add_auth_cookie_flag;
     unsigned char status = HTST_NORMAL;
-    URLOption url_option;
+    struct URLOption url_option;
     Str tmp;
     Str volatile page = NULL;
     int gopher_download = false;
@@ -5419,7 +5418,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     break;
                 case HTML_MAP:
                     if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
-                        MapList* m = New(MapList);
+                        struct MapList* m = New(struct MapList);
                         m->name = Strnew_charp(p);
                         m->area = newGeneralList();
                         m->next = buf->maplist;
@@ -5433,7 +5432,7 @@ HTMLlineproc2body(Buffer* buf, Str (*feed)(void), int llimit)
                     if (buf->maplist == NULL) /* outside of <map>..</map> */
                         break;
                     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-                        MapArea* a;
+                        struct MapArea* a;
                         p = url_encode(remove_space(p)->ptr, base,
                             buf->document_charset);
                         t = NULL;
@@ -7051,7 +7050,7 @@ loadcmdout(const char* cmd,
  * getshell: execute shell command and get the result into a buffer
  */
 Buffer*
-getshell(char* cmd)
+getshell(const char* cmd)
 {
     Buffer* buf;
 
@@ -7069,7 +7068,7 @@ getshell(char* cmd)
  * getpipe: execute shell command and connect pipe to the buffer
  */
 Buffer*
-getpipe(char* cmd)
+getpipe(const char* cmd)
 {
     FILE* f;
     Buffer* buf;

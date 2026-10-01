@@ -941,7 +941,7 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
 
 URLFile
 openURL(const char* url, ParsedURL* pu, ParsedURL* current,
-    URLOption* option, FormList* request, TextList* extra_header,
+    struct URLOption* option, FormList* request, TextList* extra_header,
     URLFile* ouf, HRequest* hr, unsigned char* status)
 {
     Str tmp;
