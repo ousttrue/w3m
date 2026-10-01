@@ -36,7 +36,7 @@ struct parsed_tag {
 
 extern struct parsed_tag *parse_tag(const char **s, int internal);
 extern int parsedtag_get_value(struct parsed_tag *tag, int id, void *value);
-extern int parsedtag_set_value(struct parsed_tag *tag, int id, char *value);
+extern int parsedtag_set_value(struct parsed_tag *tag, int id, const char *value);
 extern Str parsedtag2str(struct parsed_tag *tag);
 
 #endif

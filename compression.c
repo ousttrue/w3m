@@ -5,7 +5,7 @@
 #include "str_const.h"
 #include "textlist.h"
 #include "rc.h"
-#include "subprocess.h"
+#include "w3m.h"
 #include <string.h>
 #include <sys/stat.h>
 

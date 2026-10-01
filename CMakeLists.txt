@@ -47,6 +47,7 @@ set(TARGET_NAME ${PROJECT_NAME})
 add_executable(
   ${TARGET_NAME}
   main.c
+  w3m.c
   keybind.c
   url.c
   url_stream.c
@@ -58,7 +59,6 @@ add_executable(
   buffer.c
   display.c
   mymktime.c
-  subprocess.c
   str_const.c
   str_gc.c
   auth.c
@@ -98,14 +98,14 @@ target_compile_definitions(${TARGET_NAME} PRIVATE _GNU_SOURCE)
 add_executable(
   mktable
   mktable.c
+  w3m.c
   entity.c
   Str.c
   hash.c
   myctype.c
   str_gc.c
   str_const.c
-  url.c
-  subprocess.c)
+  url.c)
 target_compile_definitions(mktable PRIVATE DUMMY)
 target_link_libraries(mktable PRIVATE indep wc gc)
 
@@ -113,11 +113,11 @@ target_link_libraries(mktable PRIVATE indep wc gc)
 add_executable(
   w3mbookmark
   w3mbookmark.c
+  w3m.c
   entity.c
   str_gc.c
   str_const.c
-  url.c
-  subprocess.c)
+  url.c)
 target_compile_definitions(w3mbookmark PRIVATE DUMMY)
 target_link_libraries(w3mbookmark PRIVATE indep wc gc)
 
@@ -125,11 +125,11 @@ target_link_libraries(w3mbookmark PRIVATE indep wc gc)
 add_executable(
   w3mhelperpanel
   w3mhelperpanel.c
+  w3m.c
   entity.c
   str_gc.c
   str_const.c
-  url.c
-  subprocess.c)
+  url.c)
 target_compile_definitions(w3mhelperpanel PRIVATE DUMMY)
 target_link_libraries(w3mhelperpanel PRIVATE indep wc gc)
 

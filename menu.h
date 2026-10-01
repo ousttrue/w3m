@@ -67,7 +67,7 @@ extern void new_option_menu(Menu *menu, const char **label, int *variable,
 
 extern int setMenuItem(MenuItem *item, char *type, char *line);
 extern int addMenuList(MenuList **list, char *id);
-extern int getMenuN(MenuList *list, char *id);
+extern int getMenuN(MenuList *list, const char *id);
 
 extern void popupMenu(int x, int y, Menu *menu);
 extern void mainMn(void);

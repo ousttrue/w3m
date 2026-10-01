@@ -1,7 +1,7 @@
 #include "history.h"
 #include "indep.h"
 #include "str_gc.h"
-#include "subprocess.h"
+#include "w3m.h"
 #include "alloc.h"
 #include "config.h"
 #include "fm.h"

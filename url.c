@@ -2,7 +2,7 @@
 #include "Str.h"
 #include "myctype.h"
 #include "str_gc.h"
-#include "subprocess.h"
+#include "w3m.h"
 #include <stdlib.h>
 #include <string.h>
 

@@ -55,7 +55,7 @@ enum {
 Buffer* load_option_panel(void);
 Str auxbinFile(const char* base);
 Str confFile(const char* base);
-char* get_param_option(char* name);
+const char* get_param_option(const char* name);
 Str rcFile(const char* base);
 int set_param_option(char* option);
 int str_to_bool(const char* value, int old);

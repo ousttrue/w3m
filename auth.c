@@ -1,11 +1,9 @@
 #include "auth.h"
-#include "subprocess.h"
+#include "w3m.h"
 #include "str_gc.h"
 #include "alloc.h"
 #include "myctype.h"
-#include "indep.h"
 #include "rc.h"
-#include "display.h"
 #include "proto.h"
 #include <sys/stat.h>
 

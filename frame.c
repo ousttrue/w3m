@@ -293,7 +293,7 @@ popFrameTree(struct frameset_queue** fqpp)
 }
 
 void resetFrameElement(union frameset_element* f_element,
-    Buffer* buf, char* referer, FormList* request)
+    Buffer* buf, const char* referer, FormList* request)
 {
     char* f_name;
     struct frame_body* f_body;
@@ -443,10 +443,8 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
 {
     int r, c, t_stack;
     URLFile f2;
-#ifdef USE_M17N
     wc_ces charset, doc_charset;
-#endif
-    char *d_target, *p_target, *s_target, *t_target;
+    const char *d_target, *p_target, *s_target, *t_target;
     ParsedURL *currentURL, base;
     volatile SigActionFunc prevtrap = NULL;
     int flag;

@@ -2024,7 +2024,7 @@ addMenuList(MenuList **mlist, char *id)
 }
 
 int
-getMenuN(MenuList *list, char *id)
+getMenuN(MenuList *list, const char *id)
 {
     int n;
 

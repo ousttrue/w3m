@@ -6,7 +6,7 @@
 #include "input_stream.h"
 #include "entity.h"
 #include "str_gc.h"
-#include "subprocess.h"
+#include "w3m.h"
 #include "buffer.h"
 #include "charset.h"
 #include "config.h"
@@ -2820,7 +2820,7 @@ loadNormalBuf(Buffer* buf, int renderframe)
 }
 
 static Buffer*
-loadLink(char* url, char* target, char* referer, FormList* request)
+loadLink(const char* url, const char* target, const char* referer, FormList* request)
 {
     Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
@@ -2979,33 +2979,20 @@ handleMailto(const char* url)
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
-    Anchor* a;
-    ParsedURL u;
-#ifdef USE_IMAGE
-    int x = 0, y = 0, map = 0;
-#endif
-    char* url;
-
     if (Currentbuf->firstLine == NULL)
         return;
 
-#ifdef USE_IMAGE
-    a = retrieveCurrentImg(Currentbuf);
+    Anchor* a = retrieveCurrentImg(Currentbuf);
     if (a && a->image && a->image->map) {
         _followForm(false);
         return;
     }
+    bool map = false;
+    int x = 0, y = 0;
     if (a && a->image && a->image->ismap) {
         getMapXY(Currentbuf, a, &x, &y);
-        map = 1;
+        map = true;
     }
-#else
-    a = retrieveCurrentMap(Currentbuf);
-    if (a) {
-        _followForm(false);
-        return;
-    }
-#endif
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
         _followForm(false);
@@ -3015,7 +3002,8 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
         gotoLabel(a->url + 1);
         return;
     }
-    u = parseURL2(a->url, baseURL(Currentbuf));
+
+    struct Url u = parseURL2(a->url, baseURL(Currentbuf));
     if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
         /* index within this buffer */
         if (u.label) {
@@ -3025,13 +3013,15 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     }
     if (handleMailto(a->url))
         return;
-    url = a->url;
-#ifdef USE_IMAGE
+    const char* url = a->url;
+
     if (map)
         url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
-#endif
 
-    if (check_target && open_tab_blank && a->target && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+    if (check_target
+        && open_tab_blank
+        && a->target
+        && (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
         Buffer* buf;
 
         _newT();
@@ -4155,12 +4145,12 @@ cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* 
 static void
 goURL0(const char* prompt, int relative)
 {
-    char *url, *referer;
+    char* referer;
     ParsedURL p_url, *current;
     Buffer* cur_buf = Currentbuf;
     const int* no_referer_ptr;
 
-    url = searchKeyData();
+    const char* url = searchKeyData();
     if (url == NULL) {
         Hist* hist = copyHist(URLHist);
         Anchor* a;
@@ -4380,12 +4370,10 @@ DEFUN(ldOpt, OPTIONS, "Display options setting panel")
 /* set an option */
 DEFUN(setOpt, SET_OPTION, "Set option")
 {
-    char* opt;
-
-    opt = searchKeyData();
+    const char* opt = searchKeyData();
     if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
         if (opt != NULL && *opt != '\0') {
-            char* v = get_param_option(opt);
+            const char* v = get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
         opt = inputStrHist("Set option: ", opt, TextHist);

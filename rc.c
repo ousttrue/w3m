@@ -30,11 +30,11 @@
 #include <unistd.h>
 
 struct param_ptr {
-    char* name;
+    const char* name;
     int type;
     int inputtype;
     void* varptr;
-    char* comment;
+    const char* comment;
     void* select;
 };
 
@@ -1058,7 +1058,6 @@ create_option_search_table(void)
 {
     int i, j, k;
     int diff1, diff2;
-    char *p, *q;
 
     /* count table size */
     RC_table_size = 0;
@@ -1086,8 +1085,8 @@ create_option_search_table(void)
 
     diff2 = 0;
     for (i = 0; i < RC_table_size - 1; i++) {
-        p = RC_search_table[i].param->name;
-        q = RC_search_table[i + 1].param->name;
+        const char* p = RC_search_table[i].param->name;
+        const char* q = RC_search_table[i + 1].param->name;
         for (j = 0; p[j] != '\0' && q[j] != '\0' && p[j] == q[j]; j++)
             ;
         diff1 = j;
@@ -1139,23 +1138,17 @@ void show_params(FILE* fp)
 {
     int i, j, l;
     const char* t = "";
-    char* cmt;
 
-#ifdef USE_M17N
-#ifdef ENABLE_NLS
     OptionCharset = SystemCharset; /* FIXME */
-#endif
-#endif
 
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
-#ifdef USE_M17N
+        const char* cmt;
         if (!OptionEncode)
             cmt = wc_conv(_(sections[j].name), OptionCharset,
                 InnerCharset)
                       ->ptr;
         else
-#endif
             cmt = sections[j].name;
         fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
         i = 0;
@@ -1386,11 +1379,9 @@ option_assigned:
     return 1;
 }
 
-char* get_param_option(char* name)
+const char* get_param_option(const char* name)
 {
-    struct param_ptr* p;
-
-    p = search_param(name);
+    struct param_ptr* p = search_param(name);
     return p ? to_str(p)->ptr : NULL;
 }
 
