@@ -3,7 +3,7 @@
 #include "status.h"
 #include "wtf.h"
 
-static wc_status putc_st;
+static struct wc_status putc_st;
 static wc_ces putc_f_ces, putc_t_ces;
 static pStr putc_str;
 

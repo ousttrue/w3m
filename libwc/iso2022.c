@@ -74,7 +74,7 @@ wc_conv_from_iso2022(pStr is, wc_ces ces)
     uint8_t *ep = sp + is->len;
     uint8_t *p, *q = NULL;
     int state = WC_ISO_NOSTATE;
-    wc_status st;
+    struct wc_status st;
     wc_ccs gl_ccs, gr_ccs;
 
     for (p = sp; p < ep && !(WC_ISO_MAP[*p] & WC_ISO_MAP_DETECT); p++)
@@ -250,7 +250,7 @@ wc_conv_from_iso2022(pStr is, wc_ces ces)
 }
 
 int
-wc_parse_iso2022_esc(uint8_t **ptr, wc_status *st)
+wc_parse_iso2022_esc(uint8_t **ptr, struct wc_status *st)
 {
     uint8_t *p = *ptr, state, f = 0, g = 0, cs = 0;
 
@@ -392,7 +392,7 @@ wc_parse_iso2022_esc(uint8_t **ptr, wc_status *st)
 }
 
 void
-wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_iso2022(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
     uint8_t g = 0;
     bool is_wide = false, retry = false;
@@ -499,7 +499,7 @@ wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_iso2022_end(pStr os, wc_status *st)
+wc_push_to_iso2022_end(pStr os, struct wc_status *st)
 {
     if (st->design[1] != 0 && st->design[1] != st->g1_ccs)
 	wc_push_iso2022_esc(os, st->g1_ccs, WC_C_G1_CS94, 0, st);
@@ -507,7 +507,7 @@ wc_push_to_iso2022_end(pStr os, wc_status *st)
 }
 
 void
-wc_push_iso2022_esc(pStr os, wc_ccs ccs, uint8_t g, uint8_t invoke, wc_status *st)
+wc_push_iso2022_esc(pStr os, wc_ccs ccs, uint8_t g, uint8_t invoke, struct wc_status *st)
 {
     uint8_t g_invoke = g & 0x03;
 
@@ -556,7 +556,7 @@ wc_push_iso2022_esc(pStr os, wc_ccs ccs, uint8_t g, uint8_t invoke, wc_status *s
 }
 
 void
-wc_push_to_euc(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_euc(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
     wc_ccs g1_ccs = st->ces_info->gset[1].ccs;
 
@@ -600,7 +600,7 @@ wc_push_to_euc(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_eucjp(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_eucjp(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -672,7 +672,7 @@ wc_push_to_eucjp(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_euctw(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_euctw(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -727,7 +727,7 @@ wc_push_to_euctw(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_iso8859(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_iso8859(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
     wc_ccs g1_ccs = st->ces_info->gset[1].ccs;
 
@@ -762,7 +762,7 @@ wc_push_to_iso8859(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_create_gmap(wc_status *st)
+wc_create_gmap(struct wc_status *st)
 {
     wc_gset *gset = st->ces_info->gset;
     uint8_t *gset_ext = st->ces_info->gset_ext;
@@ -825,7 +825,7 @@ wc_create_gmap(wc_status *st)
 }
 
 pStr
-wc_char_conv_from_iso2022(uint8_t c, wc_status *st)
+wc_char_conv_from_iso2022(uint8_t c, struct wc_status *st)
 {
     static pStr os;
     static uint8_t buf[4];

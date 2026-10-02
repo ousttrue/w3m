@@ -323,7 +323,7 @@ wc_ucs_to_any_list(uint32_t ucs, wc_table **tlist)
 }
 
 wc_wchar_t
-wc_any_to_any_ces(wc_wchar_t cc, wc_status *st)
+wc_any_to_any_ces(wc_wchar_t cc, struct wc_status *st)
 {
     uint32_t ucs = wc_any_to_ucs(cc);
     wc_ccs is_wide = WC_CCS_IS_WIDE(cc.ccs);
@@ -387,7 +387,7 @@ wc_any_to_any_ces(wc_wchar_t cc, wc_status *st)
 }
 
 wc_wchar_t
-wc_any_to_iso2022(wc_wchar_t cc, wc_status *st)
+wc_any_to_iso2022(wc_wchar_t cc, struct wc_status *st)
 {
     uint32_t ucs = wc_any_to_ucs(cc);
     wc_ccs is_wide = WC_CCS_IS_WIDE(cc.ccs);
@@ -691,7 +691,7 @@ wc_ucs_get_tag(int ntag)
 }
 
 void
-wtf_push_ucs(pStr os, uint32_t ucs, wc_status *st)
+wtf_push_ucs(pStr os, uint32_t ucs, struct wc_status *st)
 {
     wc_ccs ccs;
 

@@ -73,7 +73,7 @@ static uint16_t CCS_MAP[ 33 ] = {
 
 wc_ccs wtf_gr_ccs = 0;
 static wc_ces wtf_major_ces = WC_CES_US_ASCII;
-static wc_status wtf_major_st;
+static struct wc_status wtf_major_st;
 
 void
 wtf_init(wc_ces ces1, wc_ces ces2)

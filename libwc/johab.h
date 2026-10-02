@@ -58,7 +58,7 @@ extern uint32_t  wc_N_to_johab1(uint32_t ucs);
 extern wc_wchar_t wc_johab_to_cs128w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs128w_to_johab(wc_wchar_t cc);
 extern pStr        wc_conv_from_johab(pStr is, wc_ces ces);
-extern void       wc_push_to_johab(pStr os, wc_wchar_t cc, wc_status *st);
-extern pStr        wc_char_conv_from_johab(uint8_t c, wc_status *st);
+extern void       wc_push_to_johab(pStr os, wc_wchar_t cc, struct wc_status *st);
+extern pStr        wc_char_conv_from_johab(uint8_t c, struct wc_status *st);
 
 #endif

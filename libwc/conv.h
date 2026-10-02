@@ -38,4 +38,4 @@ static inline pStr wc_conv_n_with_detect(const char* is, int n, wc_ces* f_ces, w
 
 extern void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces);
 extern pStr wc_char_conv(char c);
-extern void wc_push_end(pStr os, wc_status* st);
+extern void wc_push_end(pStr os, struct wc_status* st);

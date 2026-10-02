@@ -93,7 +93,7 @@ wc_conv_from_hz(pStr is, wc_ces ces)
 }
 
 void
-wc_push_to_hz(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_hz(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -147,7 +147,7 @@ wc_push_to_hz(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_hz_end(pStr os, wc_status *st)
+wc_push_to_hz_end(pStr os, struct wc_status *st)
 {
     if (st->gl) {
 	Strcat_char(os, WC_C_HZ_TILDA);

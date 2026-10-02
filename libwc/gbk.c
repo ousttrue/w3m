@@ -143,7 +143,7 @@ wc_conv_from_gbk(pStr is, wc_ces ces)
 }
 
 void
-wc_push_to_gbk(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_gbk(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -183,7 +183,7 @@ wc_push_to_gbk(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_gbk(uint8_t c, wc_status *st)
+wc_char_conv_from_gbk(uint8_t c, struct wc_status *st)
 {
     static pStr os;
     static uint8_t gbku;

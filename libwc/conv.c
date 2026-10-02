@@ -45,7 +45,7 @@ wc_conv_to_ces(pStr is, wc_ces ces)
     const uint8_t *sp = (const uint8_t *)is->ptr;
     const uint8_t *ep = sp + is->len;
     const uint8_t *p;
-    wc_status st;
+    struct wc_status st;
 
     switch (ces) {
     case WC_CES_HZ_GB_2312:
@@ -133,7 +133,7 @@ wc_Str_conv_with_detect(pStr is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces)
 }
 
 void
-wc_push_end(pStr os, wc_status *st)
+wc_push_end(pStr os, struct wc_status *st)
 {
     if (st->ces_info->id & WC_CES_T_ISO_2022)
 	wc_push_to_iso2022_end(os, st);

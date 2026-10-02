@@ -33,7 +33,7 @@ extern wc_wchar_t wc_gbk_to_cs128w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs128w_to_gbk(wc_wchar_t cc);
 extern uint32_t  wc_gbk_to_N(uint32_t c);
 extern pStr        wc_conv_from_gbk(pStr is, wc_ces ces);
-extern void       wc_push_to_gbk(pStr os, wc_wchar_t cc, wc_status *st);
-extern pStr        wc_char_conv_from_gbk(uint8_t c, wc_status *st);
+extern void       wc_push_to_gbk(pStr os, wc_wchar_t cc, struct wc_status *st);
+extern pStr        wc_char_conv_from_gbk(uint8_t c, struct wc_status *st);
 
 #endif

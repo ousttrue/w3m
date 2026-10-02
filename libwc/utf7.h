@@ -22,8 +22,8 @@
 extern uint8_t WC_UTF7_MAP[];
 
 extern pStr       wc_conv_from_utf7(pStr is, wc_ces ces);
-extern void      wc_push_to_utf7(pStr os, wc_wchar_t cc, wc_status *st);
-extern void      wc_push_to_utf7_end(pStr os, wc_status *st);
-extern pStr       wc_char_conv_from_utf7(uint8_t c, wc_status *st);
+extern void      wc_push_to_utf7(pStr os, wc_wchar_t cc, struct wc_status *st);
+extern void      wc_push_to_utf7_end(pStr os, struct wc_status *st);
+extern pStr       wc_char_conv_from_utf7(uint8_t c, struct wc_status *st);
 
 #endif

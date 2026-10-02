@@ -50,5 +50,5 @@ struct wc_status {
 };
 
 extern void wc_input_init(wc_ces ces, struct wc_status* st);
-extern void wc_output_init(wc_ces ces, wc_status* st);
-extern bool wc_ces_has_ccs(wc_ccs ccs, wc_status* st);
+extern void wc_output_init(wc_ces ces, struct wc_status* st);
+extern bool wc_ces_has_ccs(wc_ccs ccs, struct wc_status* st);

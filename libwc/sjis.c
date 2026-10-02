@@ -350,7 +350,7 @@ wc_conv_from_sjisx0213(pStr is, wc_ces ces)
 }
 
 void
-wc_push_to_sjis(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_sjis(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
     uint8_t ub, lb;
 
@@ -401,7 +401,7 @@ wc_push_to_sjis(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_sjisx0213(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_sjisx0213(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
     uint8_t ub, lb;
 
@@ -463,7 +463,7 @@ wc_push_to_sjisx0213(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_sjis(uint8_t c, wc_status *st)
+wc_char_conv_from_sjis(uint8_t c, struct wc_status *st)
 {
     static pStr os;
     static uint8_t jis[2];
@@ -528,7 +528,7 @@ wc_char_conv_from_sjis(uint8_t c, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_sjisx0213(uint8_t c, wc_status *st)
+wc_char_conv_from_sjisx0213(uint8_t c, struct wc_status *st)
 {
     static pStr os;
     static uint8_t jis[2];

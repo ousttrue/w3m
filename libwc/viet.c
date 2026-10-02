@@ -150,7 +150,7 @@ wc_conv_from_viet(pStr is, wc_ces ces)
 }
 
 void
-wc_push_to_viet(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_viet(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
     wc_ccs ccs1 = st->ces_info->gset[1].ccs;
     wc_ccs ccs2 = 0, ccs3 = 0;
@@ -213,7 +213,7 @@ wc_push_to_viet(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_viet(uint8_t c, wc_status *st)
+wc_char_conv_from_viet(uint8_t c, struct wc_status *st)
 {
     pStr os = Strnew_size(1);
     uint8_t *map = NULL;

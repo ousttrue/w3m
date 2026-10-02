@@ -23,14 +23,14 @@ struct wc_option WcOption = {
     false, /* east_asian_width */
 };
 
-static wc_status output_st;
+static struct wc_status output_st;
 static struct wc_option output_option;
 static bool output_set = false;
 
 #define wc_option_cmp(opt1, opt2) \
     memcmp((void*)(opt1), (void*)(opt2), sizeof(struct wc_option))
 
-void wc_input_init(wc_ces ces, wc_status* st)
+void wc_input_init(wc_ces ces, struct wc_status* st)
 {
     wc_gset* gset;
     int i, g;
@@ -61,7 +61,7 @@ void wc_input_init(wc_ces ces, wc_status* st)
     st->ntag = 0;
 }
 
-void wc_output_init(wc_ces ces, wc_status* st)
+void wc_output_init(wc_ces ces, struct wc_status* st)
 {
     wc_gset* gset;
     size_t i, n, nw;
@@ -147,7 +147,7 @@ void wc_output_init(wc_ces ces, wc_status* st)
     output_option = WcOption;
 }
 
-bool wc_ces_has_ccs(wc_ccs ccs, wc_status* st)
+bool wc_ces_has_ccs(wc_ccs ccs, struct wc_status* st)
 {
     wc_gset* gset = st->ces_info->gset;
     int i;

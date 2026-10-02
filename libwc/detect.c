@@ -77,7 +77,7 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
     uint8_t *ep = p + len;
     uint8_t *q;
     wc_ces euc = 0, priv = 0;
-    wc_status st;
+    struct wc_status st;
     int euc_state = 0, sjis_state = 0, big5_state = 0, hz_state = 0;
     int iso_detect = DETECT_ERROR, euc_detect = DETECT_ERROR,
 	sjis_detect = DETECT_ERROR, big5_detect = DETECT_ERROR,

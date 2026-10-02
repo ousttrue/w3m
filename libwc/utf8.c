@@ -142,7 +142,7 @@ wc_conv_from_utf8(pStr is, wc_ces ces)
     int state = WC_UTF8_NOSTATE;
     size_t next = 0;
     uint32_t ucs;
-    wc_status st;
+    struct wc_status st;
 
     for (p = sp; p < ep && *p < 0x80; p++)
 	;
@@ -227,7 +227,7 @@ wc_push_tag_to_utf8(pStr os, int ntag)
 }
 
 void
-wc_push_to_utf8(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_utf8(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (WC_CCS_SET(cc.ccs)) {
@@ -281,7 +281,7 @@ wc_push_to_utf8(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_utf8_end(pStr os, wc_status *st)
+wc_push_to_utf8_end(pStr os, struct wc_status *st)
 {
     if (st->ntag)
 	st->ntag = wc_push_tag_to_utf8(os, 0);
@@ -289,7 +289,7 @@ wc_push_to_utf8_end(pStr os, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_utf8(uint8_t c, wc_status *st)
+wc_char_conv_from_utf8(uint8_t c, struct wc_status *st)
 {
     static pStr os;
     static uint8_t buf[6];

@@ -29,7 +29,7 @@ wc_conv_from_priv1(pStr is, wc_ces ces)
 }
 
 pStr
-wc_char_conv_from_priv1(uint8_t c, wc_status *st)
+wc_char_conv_from_priv1(uint8_t c, struct wc_status *st)
 {
     pStr os = Strnew_size(1);
 
@@ -66,7 +66,7 @@ wc_conv_from_ascii(pStr is, wc_ces ces)
 }
 
 void
-wc_push_to_raw(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_raw(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
 
     switch (cc.ccs) {

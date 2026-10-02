@@ -66,7 +66,7 @@ wc_conv_from_utf7(pStr is, wc_ces ces)
     uint8_t *p;
     int state = WC_UTF7_NOSTATE;
     uint32_t b, high = 0;
-    wc_status st;
+    struct wc_status st;
 
     for (p = sp; p < ep && *p < 0x80 && *p != WC_C_UTF7_PLUS; p++)
 	;
@@ -142,7 +142,7 @@ wc_conv_from_utf7(pStr is, wc_ces ces)
 }
 
 static void
-wc_push_ucs_to_utf7(pStr os, uint32_t ucs, wc_status *st)
+wc_push_ucs_to_utf7(pStr os, uint32_t ucs, struct wc_status *st)
 {
     if (ucs > WC_C_UNICODE_END)
 	return;
@@ -200,7 +200,7 @@ wc_push_ucs_to_utf7(pStr os, uint32_t ucs, wc_status *st)
 }
 
 static int
-wc_push_tag_to_utf7(pStr os, int ntag, wc_status *st)
+wc_push_tag_to_utf7(pStr os, int ntag, struct wc_status *st)
 {
     char *p;
 
@@ -219,7 +219,7 @@ wc_push_tag_to_utf7(pStr os, int ntag, wc_status *st)
 }
 
 void
-wc_push_to_utf7(pStr os, wc_wchar_t cc, wc_status *st)
+wc_push_to_utf7(pStr os, wc_wchar_t cc, struct wc_status *st)
 {
     char *p;
 
@@ -274,7 +274,7 @@ wc_push_to_utf7(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 void
-wc_push_to_utf7_end(pStr os, wc_status *st)
+wc_push_to_utf7_end(pStr os, struct wc_status *st)
 {
     if (st->ntag)
 	st->ntag = wc_push_tag_to_utf7(os, 0, st);
@@ -287,7 +287,7 @@ wc_push_to_utf7_end(pStr os, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_utf7(uint8_t c, wc_status *st)
+wc_char_conv_from_utf7(uint8_t c, struct wc_status *st)
 {
     static pStr os;
     static uint32_t high;

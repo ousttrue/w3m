@@ -3,16 +3,21 @@
 #include "ccs_types.h"
 
 typedef uint32_t wc_ces;
-typedef struct wc_status wc_status;
-typedef struct wc_ces_info{
+
+struct wc_status;
+typedef pStr (*ConvFromFunc)(pStr, wc_ces);
+typedef void (*PushToFunc)(pStr, wc_wchar_t, struct wc_status*);
+typedef pStr (*CharConvFunc)(uint8_t, struct wc_status*);
+
+typedef struct wc_ces_info {
     wc_ces id;
     char* name;
     char* desc;
     wc_gset* gset;
     uint8_t* gset_ext;
-    pStr (*conv_from)(pStr, wc_ces);
-    void (*push_to)(pStr, wc_wchar_t, wc_status*);
-    pStr (*char_conv)(uint8_t, wc_status*);
+    ConvFromFunc conv_from;
+    PushToFunc push_to;
+    CharConvFunc char_conv;
 } wc_ces_info;
 extern wc_ces_info WcCesInfo[];
 
