@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "display.h"
-
+#include "w3m.h"
 #include "buffer.h"
 #include "indep.h"
 #include "charset.h"

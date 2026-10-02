@@ -1,4 +1,5 @@
 #include "Str.h"
+#include "w3m.h"
 #include "indep.h"
 #include "str_gc.h"
 #include "alloc.h"

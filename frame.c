@@ -1,4 +1,5 @@
 #include "alloc.h"
+#include "w3m.h"
 #include "entity.h"
 #include "indep.h"
 #include "str_gc.h"

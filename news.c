@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "w3m.h"
 #include "mymktime.h"
 #include "indep.h"
 #include "charset.h"

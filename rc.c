@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "w3m.h"
 #include "alloc.h"
 #include "func.h"
 #include "indep.h"

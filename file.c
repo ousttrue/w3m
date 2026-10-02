@@ -1,5 +1,6 @@
 #include "file.h"
 #include "mymktime.h"
+#include "w3m.h"
 #include "func.h"
 #include "compression.h"
 #include "entity.h"

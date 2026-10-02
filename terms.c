@@ -4,6 +4,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "w3m.h"
 #include "str_gc.h"
 #include "alloc.h"
 #include "str_const.h"
