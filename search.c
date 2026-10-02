@@ -10,6 +10,7 @@
 #include "rc.h"
 #include "regex.h"
 #include "tab.h"
+#include "libwc/status.h"
 
 #include <ctype.h>
 #include <errno.h>

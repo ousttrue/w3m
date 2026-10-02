@@ -1,6 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
 #include "wc.h"
+#include "status.h"
 #include "wtf.h"
 #include "sjis.h"
 #include "big5.h"
@@ -106,6 +105,11 @@ wtf_init(wc_ces ces1, wc_ces ces2)
 	    WTF_TYPE_MAP[i] = WTF_TYPE_WCHAR1;
 	}
     }
+}
+
+int wtf_width(const uint8_t* p) {
+    return (WcOption.use_wide ? (int)WTF_WIDTH_MAP[(uint8_t)*(p)] 
+	    : ((int)WTF_WIDTH_MAP[(uint8_t)*(p)] ? 1 : 0));
 }
 
 int

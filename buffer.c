@@ -16,6 +16,7 @@
 #include "rc.h"
 #include "terms.h"
 #include "util.h"
+#include "libwc/status.h"
 
 #include <stdio.h>
 #include <stdlib.h>

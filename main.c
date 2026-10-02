@@ -33,6 +33,7 @@
 #include "util.h"
 #include "http_request.h"
 #include "version.h"
+#include "libwc/status.h"
 
 #include <errno.h>
 #include <setjmp.h>

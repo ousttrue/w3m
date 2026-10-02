@@ -3,6 +3,7 @@
 #include "indep.h"
 #include "myctype.h"
 #include "ctrlcode.h"
+#include "libwc/status.h"
 
 int Tabstop = 8;
 int ShowEffect = true;

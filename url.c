@@ -3,6 +3,7 @@
 #include "myctype.h"
 #include "str_gc.h"
 #include "w3m.h"
+#include "libwc/status.h"
 #include <stdlib.h>
 #include <string.h>
 

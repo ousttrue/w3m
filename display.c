@@ -14,6 +14,7 @@
 #include "symbol.h"
 #include "tab.h"
 #include "terms.h"
+#include "libwc/status.h"
 
 #include <math.h>
 #include <signal.h>

@@ -24,6 +24,7 @@
 #include "terms.h"
 #include "http_request.h"
 #include "version.h"
+#include "libwc/status.h"
 
 #include <errno.h>
 #include <stdio.h>

@@ -1,8 +1,6 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
-
 #include <stdlib.h>
 #include "wc.h"
+#include "status.h"
 #include "ucs.h"
 #include "search.h"
 #include "big5.h"

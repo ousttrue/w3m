@@ -1,12 +1,11 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
 #include <string.h>
 #include "../alloc.h"
 
 #include "wc.h"
+#include "status.h"
 #include "ucs.h"
 
-wc_option WcOption = {
+struct wc_option WcOption = {
     WC_OPT_DETECT_ON,	/* auto_detect */
     WC_TRUE,		/* use_combining */
     WC_TRUE,		/* use_language_tag */
@@ -27,11 +26,11 @@ wc_option WcOption = {
 };
 
 static wc_status output_st;
-static wc_option output_option;
+static struct wc_option output_option;
 static bool output_set = WC_FALSE;
 
 #define wc_option_cmp(opt1, opt2) \
-    memcmp((void *)(opt1), (void *)(opt2), sizeof(wc_option))
+    memcmp((void *)(opt1), (void *)(opt2), sizeof(struct wc_option))
 
 void
 wc_input_init(wc_ces ces, wc_status *st)

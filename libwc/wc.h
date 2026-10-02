@@ -10,10 +10,6 @@
 #define WC_FALSE 0
 #define WC_TRUE 1
 
-#define WC_OPT_DETECT_OFF 0
-#define WC_OPT_DETECT_ISO_2022 1
-#define WC_OPT_DETECT_ON 2
-
 #define WC_LOCALE_JA_JP 1
 #define WC_LOCALE_ZH_CN 2
 #define WC_LOCALE_ZH_TW 3
@@ -23,7 +19,6 @@
 extern uint8_t WC_DETECT_MAP[];
 
 extern wc_ces_info WcCesInfo[];
-extern wc_option WcOption;
 extern wc_locale WcLocale;
 extern char* WcReplace;
 extern char* WcReplaceW;

@@ -20,6 +20,7 @@
 #include "rc.h"
 #include "regex.h"
 #include "util.h"
+#include "libwc/status.h"
 
 #ifdef USE_MENU
 extern FormSelectOption* select_option;

@@ -1,6 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
 #include "wc.h"
+#include "status.h"
 #include "wtf.h"
 #include "iso2022.h"
 #include "hz.h"
@@ -28,7 +27,7 @@ pStr
 wc_Str_conv_strict(pStr is, wc_ces f_ces, wc_ces t_ces)
 {
     pStr os;
-    wc_option opt = WcOption;
+    struct wc_option opt = WcOption;
 
     WcOption.strict_iso2022 = WC_TRUE;
     WcOption.no_replace = WC_TRUE;
