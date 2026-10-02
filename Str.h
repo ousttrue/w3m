@@ -27,16 +27,26 @@ struct Str {
 typedef struct Str* pStr;
 
 pStr Strnew(void);
-pStr Strnew_size(int);
-pStr Strnew_charp(const char*);
+
+struct Str Str_alloc(int n);
+
+inline static pStr Strnew_size(int n)
+{
+    pStr x = Strnew();
+    *x = Str_alloc(n);
+    return x;
+}
+
+pStr Strcopy_charp_n(pStr, const char*, int);
 pStr Strnew_charp_n(const char*, int);
+pStr Strnew_charp(const char*);
+
 pStr Strnew_m_charp(const char*, ...);
 pStr Strdup(pStr);
 pStr Strclear(pStr);
 void Strfree(pStr);
 pStr Strcopy(pStr dst, pStr src);
 pStr Strcopy_charp(pStr, const char*);
-pStr Strcopy_charp_n(pStr, const char*, int);
 pStr Strcat_charp_n(pStr, const char*, int);
 pStr Strcat(pStr, pStr);
 pStr Strcat_charp(pStr, const char*);

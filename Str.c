@@ -29,23 +29,16 @@
 #define STR_SIZE_MAX (STR_LEN_MAX + 1)
 #define STR_LEN_MAX (UINT_MAX / 32 - 1)
 
-static pStr Strgrow_n(pStr x, int n)
+pStr Strnew(void)
 {
-    if (n < 0)
-        n = STR_SIZE_MAX;
-    else
-        n = (n >= STR_SIZE_MAX) ? STR_SIZE_MAX : n + 1;
-
-    if (x->capacity >= n)
-        return x;
-
-    if (!(x->ptr = GC_REALLOC(x->ptr, n)))
+    pStr x = GC_MALLOC(sizeof(struct Str));
+    if (!x)
         exit(3);
-    x->capacity = n;
+    *x = Str_alloc(INITIAL_STR_SIZE - 1);
     return x;
 }
 
-pStr Strnew_size(int n)
+struct Str Str_alloc(int n)
 {
     if (n < 0 || n > STR_LEN_MAX)
         n = STR_SIZE_MAX;
@@ -53,18 +46,30 @@ pStr Strnew_size(int n)
         n = INITIAL_STR_SIZE;
     else
         n++;
-    pStr x = GC_MALLOC(sizeof(struct Str));
-    if (!x)
-        exit(3);
-    *x = (struct Str) {
+    struct Str str = {
         .ptr = GC_MALLOC_ATOMIC(n),
         .capacity = n,
         .len = 0,
     };
-    if (!x->ptr)
+    if (!str.ptr)
         exit(3);
-    x->ptr[0] = '\0';
-    return x;
+    str.ptr[0] = '\0';
+    return str;
+}
+
+static void Strgrow_n(pStr x, int n)
+{
+    if (n < 0)
+        n = STR_SIZE_MAX;
+    else
+        n = (n >= STR_SIZE_MAX) ? STR_SIZE_MAX : n + 1;
+
+    if (x->capacity >= n)
+        return;
+
+    if (!(x->ptr = GC_REALLOC(x->ptr, n)))
+        exit(3);
+    x->capacity = n;
 }
 
 pStr Strclear(pStr s)
@@ -83,9 +88,29 @@ void Strfree(pStr x)
 }
 
 //
-pStr Strnew(void)
+pStr Strcopy_charp_n(pStr x, const char* y, int n)
 {
-    return Strnew_size(INITIAL_STR_SIZE - 1);
+    if (!x)
+        x = Strnew();
+    if (!y)
+        return Strtruncate(x, 0);
+
+    if (n > STR_LEN_MAX)
+        n = STR_LEN_MAX;
+    if (x->capacity <= n)
+        Strgrow_n(x, n);
+    memmove(x->ptr, y, n);
+    x->len = n;
+    x->ptr[x->len] = '\0';
+    return x;
+}
+
+pStr Strnew_charp_n(const char* p, int n)
+{
+    pStr x = Strnew_size(n);
+    if (p)
+        Strcopy_charp_n(x, p, n);
+    return x;
 }
 
 pStr Strnew_charp(const char* p)
@@ -106,14 +131,6 @@ pStr Strnew_m_charp(const char* p, ...)
     return r;
 }
 
-pStr Strnew_charp_n(const char* p, int n)
-{
-    pStr x = Strnew_size(n);
-    if (p)
-        Strcopy_charp_n(x, p, n);
-    return x;
-}
-
 pStr Strdup(pStr s)
 {
     pStr n = Strnew_size(s->len);
@@ -132,23 +149,6 @@ pStr Strcopy_charp(pStr x, const char* y)
         return Strtruncate(x, 0);
     int len = strlen(y);
     return Strcopy_charp_n(x, y, len);
-}
-
-pStr Strcopy_charp_n(pStr x, const char* y, int n)
-{
-    if (!x)
-        x = Strnew();
-    if (!y)
-        return Strtruncate(x, 0);
-
-    if (n > STR_LEN_MAX)
-        n = STR_LEN_MAX;
-    if (x->capacity <= n)
-        Strgrow_n(x, n);
-    memmove(x->ptr, y, n);
-    x->len = n;
-    x->ptr[x->len] = '\0';
-    return x;
 }
 
 pStr Strcat_charp_n(pStr x, const char* y, int n)
@@ -214,7 +214,8 @@ pStr Strgrow(pStr x)
         if (x->len + 1 >= newlen)
             x->len = newlen - 2;
     }
-    return Strgrow_n(x, newlen - 1);
+    Strgrow_n(x, newlen - 1);
+    return x;
 }
 
 pStr Strsubstr(pStr s, int beg, int len)
