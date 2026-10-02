@@ -462,7 +462,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             uf->content_encoding = uf->compression;
         } else if (use_cookie && accept_cookie && pu && check_cookie_accept_domain(pu->host) && (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) || !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
             pStr name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
-                comment = NULL, commentURL = NULL, port = NULL, tmp2;
+                 comment = NULL, commentURL = NULL, port = NULL, tmp2;
             int version, quoted, flag = 0;
             time_t expires = (time_t)-1;
 
@@ -1243,12 +1243,14 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
             char* pp;
             term_raw();
             if ((pp = inputStr(Sprintf(_("Username for %s: "), realm)->ptr,
-                     NULL).ptr)
+                     NULL)
+                        .ptr)
                 == NULL)
                 return;
             *uname = Str_conv_to_system(Strnew_charp(pp));
             if ((pp = inputLine(Sprintf(_("Password for %s: "), realm)->ptr, NULL,
-                     IN_PASSWORD).ptr)
+                     IN_PASSWORD)
+                        .ptr)
                 == NULL) {
                 *uname = NULL;
                 return;
@@ -7481,7 +7483,6 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
 {
     pStr msg;
     pStr filen;
-    char *p, *q = NULL;
     pid_t pid;
     char* lock;
     struct stat st;
@@ -7489,10 +7490,12 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
     int is_pipe = false;
 
     if (fmInitialized) {
-        p = searchKeyData();
+        const char* p = searchKeyData();
+        const char* q = NULL;
         if (p == NULL || *p == '\0') {
             q = inputLineHist(_("(Download)Save file to: "),
-                defstr, IN_COMMAND, SaveHist).ptr;
+                defstr, IN_COMMAND, SaveHist)
+                    .ptr;
             if (q == NULL || *q == '\0')
                 return false;
             p = conv_to_system(q);
@@ -7536,7 +7539,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
             size = st.st_size;
         addDownloadList(pid, conv_from_system(tmpf), p, lock, size);
     } else {
-        q = searchKeyData();
+        char* q = allocStr(searchKeyData()).ptr;
         if (q == NULL || *q == '\0') {
             printf(_("(Download)Save file to: "));
             fflush(stdout);
@@ -7545,6 +7548,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
                 return -1;
             q = filen->ptr;
         }
+        char* p;
         for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
             ;
         *(p + 1) = '\0';
@@ -7581,14 +7585,8 @@ int doFileMove(char* tmpf, char* defstr)
 
 int doFileSave(URLFile uf, const char* defstr)
 {
-    pStr msg;
-    pStr filen;
-    char *p, *q;
-    pid_t pid;
-    char* lock;
-
     if (param_dl_dir && *param_dl_dir) {
-        filen = expandPath(param_dl_dir);
+        pStr filen = expandPath(param_dl_dir);
         if (Strlastchar(filen) != '/')
             Strcat_char(filen, '/');
         Strcat_charp(filen, defstr);
@@ -7596,10 +7594,11 @@ int doFileSave(URLFile uf, const char* defstr)
     }
 
     if (fmInitialized) {
-        p = searchKeyData();
+        const char* p = searchKeyData();
         if (p == NULL || *p == '\0') {
             p = inputLineHist(_("(Download)Save file to: "),
-                defstr, IN_FILENAME, SaveHist).ptr;
+                defstr, IN_FILENAME, SaveHist)
+                    .ptr;
             if (p == NULL || *p == '\0')
                 return -1;
             p = conv_to_system(p);
@@ -7607,15 +7606,15 @@ int doFileSave(URLFile uf, const char* defstr)
         if (!checkOverWrite(p))
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
-            msg = Sprintf(_("Can't save. Load file and %s are identical."),
+            pStr msg = Sprintf(_("Can't save. Load file and %s are identical."),
                 conv_from_system(p));
             disp_err_message(msg->ptr, false);
             return -1;
         }
-        lock = tmpfname(CurrentPid, TMPF_DFL, ".lock")->ptr;
+        const char* lock = tmpfname(CurrentPid, TMPF_DFL, ".lock")->ptr;
         symlink(p, lock);
         flush_tty();
-        pid = fork();
+        pid_t pid = fork();
         if (!pid) {
             int err;
             if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress)
@@ -7632,15 +7631,16 @@ int doFileSave(URLFile uf, const char* defstr)
         }
         addDownloadList(pid, uf.url, p, lock, current_content_length);
     } else {
-        q = searchKeyData();
+        char* q = allocStr(searchKeyData()).ptr;
         if (q == NULL || *q == '\0') {
             printf(_("(Download)Save file to: "));
             fflush(stdout);
-            filen = Strfgets(stdin);
+            pStr filen = Strfgets(stdin);
             if (filen->len == 0)
                 return -1;
             q = filen->ptr;
         }
+        char* p;
         for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
             ;
         *(p + 1) = '\0';

@@ -534,7 +534,7 @@ void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy
                     Strcat_charp(buf, "[0]");
                     argv[1] = buf->ptr;
                 } else {
-                    argv[1] = url;
+                    argv[1] = allocStr(url).ptr;
                 }
                 argv[2] = tmpf;
                 argv[3] = NULL;
@@ -728,7 +728,7 @@ void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy
         argv[n++] = "-c";
         sprintf(clip, "%dx%d+%d+%d", sw, sh, sx, sy);
         argv[n++] = clip;
-        argv[n++] = url;
+        argv[n++] = allocStr(url).ptr;
         if (getenv("TERM") && strcmp(getenv("TERM"), "screen") == 0 && (!getenv("SCREEN_VARIANT") || strcmp(getenv("SCREEN_VARIANT"), "sixel") != 0)) {
             argv[n++] = "-P";
         }
