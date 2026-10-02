@@ -13,7 +13,7 @@
 #include "map/cp1258_combining.map"
 #include "map/tcvn5712_combining.map"
 
-wc_bool
+bool
 wc_is_combining(wc_wchar_t cc)
 {
     switch (WC_CCS_SET(cc.ccs)) {

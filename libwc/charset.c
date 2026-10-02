@@ -453,7 +453,7 @@ wc_guess_8bit_charset(wc_ces orig)
     return orig;
 }
 
-wc_bool
+bool
 wc_check_ces(wc_ces ces)
 {
     size_t i = WC_CES_INDEX(ces);

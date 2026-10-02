@@ -535,7 +535,7 @@ wc_ucs_to_ccs(wc_uint32 ucs)
 	| (wc_is_ucs_combining(ucs) ? WC_CCS_A_COMB : 0);
 }
 
-wc_bool
+bool
 wc_is_ucs_ambiguous_width(wc_uint32 ucs)
 {
     if (0xa1 <= ucs && ucs <= 0xfe && WcOption.use_jisx0213)
@@ -548,7 +548,7 @@ wc_is_ucs_ambiguous_width(wc_uint32 ucs)
 		|| (0x100000 <= ucs && ucs <= 0x10FFFD));
 }
 
-wc_bool
+bool
 wc_is_ucs_wide(wc_uint32 ucs)
 {
     if (ucs <= WC_C_UCS2_END)
@@ -559,7 +559,7 @@ wc_is_ucs_wide(wc_uint32 ucs)
 		(ucs & ~0xFFFF) == WC_C_UCS4_PLANE3);
 }
 
-wc_bool
+bool
 wc_is_ucs_combining(wc_uint32 ucs)
 {
     return (WcOption.use_combining && ucs <= WC_C_UCS2_END &&
@@ -567,7 +567,7 @@ wc_is_ucs_combining(wc_uint32 ucs)
 	ucs_combining_map, N_ucs_combining_map) != NULL);
 }
 
-wc_bool
+bool
 wc_is_ucs_hangul(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
@@ -575,7 +575,7 @@ wc_is_ucs_hangul(wc_uint32 ucs)
 	ucs_hangul_map, N_ucs_hangul_map) != NULL);
 }
 
-wc_bool
+bool
 wc_is_ucs_alpha(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
@@ -583,7 +583,7 @@ wc_is_ucs_alpha(wc_uint32 ucs)
 	ucs_isalpha_map, N_ucs_isalpha_map) != NULL);
 }
 
-wc_bool
+bool
 wc_is_ucs_digit(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
@@ -591,13 +591,13 @@ wc_is_ucs_digit(wc_uint32 ucs)
 	ucs_isdigit_map, N_ucs_isdigit_map) != NULL);
 }
 
-wc_bool
+bool
 wc_is_ucs_alnum(wc_uint32 ucs)
 {
     return (wc_is_ucs_alpha(ucs) || wc_is_ucs_digit(ucs));
 }
 
-wc_bool
+bool
 wc_is_ucs_lower(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
@@ -605,7 +605,7 @@ wc_is_ucs_lower(wc_uint32 ucs)
 	ucs_islower_map, N_ucs_islower_map) != NULL);
 }
 
-wc_bool
+bool
 wc_is_ucs_upper(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&

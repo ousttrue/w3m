@@ -4779,7 +4779,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
         if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
 #ifdef USE_M17N
             wc_ces old_charset;
-            wc_bool old_fix_width_conv;
+            bool old_fix_width_conv;
 #endif
             FILE* f;
             pStr tmpf = tmpfname(CurrentPid, TMPF_SRC, NULL);

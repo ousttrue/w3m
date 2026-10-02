@@ -208,7 +208,7 @@ wtf_push(pStr os, wc_ccs ccs, wc_uint32 code)
 	}
 #ifdef USE_UNICODE
 	else if (WcOption.ucs_conv) {
-	    wc_bool fix_width_conv = WcOption.fix_width_conv;
+	    bool fix_width_conv = WcOption.fix_width_conv;
 	    WcOption.fix_width_conv = WC_FALSE;
 	    wc_output_init(wtf_major_ces, &wtf_major_st);
 	    if (! wc_ces_has_ccs(WC_CCS_SET(ccs), &wtf_major_st)) {
@@ -557,7 +557,7 @@ wtf_get_code(const wc_uchar *p)
    return wtf_parse1(&p).code;
 }
 
-wc_bool
+bool
 wtf_is_hangul(const wc_uchar *p)
 {
     if (*p > 0xa0)
@@ -590,7 +590,7 @@ wtf_conv_fit(const char *s, wc_ces ces)
     pStr os;
     wc_wchar_t cc;
     wc_ces major_ces;
-    wc_bool pre_conv, ucs_conv;
+    bool pre_conv, ucs_conv;
 
     if (ces == WC_CES_WTF || ces == WC_CES_US_ASCII)
 	return s;

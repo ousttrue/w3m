@@ -398,7 +398,7 @@ void
 wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
 {
     wc_uchar g = 0;
-    wc_bool is_wide = WC_FALSE, retry = WC_FALSE;
+    bool is_wide = WC_FALSE, retry = WC_FALSE;
     wc_wchar_t cc2;
 
   while (1) {

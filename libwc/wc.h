@@ -60,10 +60,10 @@ static inline pStr wc_conv_n_with_detect(const char* is, int n, wc_ces* f_ces, w
     return wc_Str_conv_with_detect(Strnew_charp_n(is, n), f_ces, hint, t_ces);
 }
 
-extern void wc_input_init(wc_ces ces, wc_status* st);
+extern void wc_input_init(wc_ces ces, struct wc_status* st);
 extern void wc_output_init(wc_ces ces, wc_status* st);
 extern void wc_push_end(pStr os, wc_status* st);
-extern wc_bool wc_ces_has_ccs(wc_ccs ccs, wc_status* st);
+extern bool wc_ces_has_ccs(wc_ccs ccs, wc_status* st);
 
 extern void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces);
 extern pStr wc_char_conv(char c);
@@ -73,7 +73,7 @@ extern void wc_putc(const char* c, FILE* f);
 extern void wc_putc_end(FILE* f);
 extern void wc_putc_clear_status(void);
 
-extern void wc_create_detect_map(wc_ces ces, wc_bool esc);
+extern void wc_create_detect_map(wc_ces ces, bool esc);
 extern wc_ces wc_auto_detect(char* is, size_t len, wc_ces hint);
 
 extern wc_ces wc_guess_charset(const char* charset, wc_ces orig);
@@ -85,7 +85,7 @@ extern wc_ces wc_locale_to_ces(char* locale);
 extern wc_ces wc_guess_8bit_charset(wc_ces orig);
 extern char* wc_ces_to_charset(wc_ces ces);
 extern char* wc_ces_to_charset_desc(wc_ces ces);
-extern wc_bool wc_check_ces(wc_ces ces);
+extern bool wc_check_ces(wc_ces ces);
 extern wc_ces_list* wc_get_ces_list(void);
 
 #endif
