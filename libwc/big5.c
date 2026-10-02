@@ -91,7 +91,7 @@ wc_conv_from_big5(pStr is, wc_ces ces)
 	    break;
 	case WC_BIG5_MBYTE1:
 	    if (WC_BIG5_MAP[*p] & LB)
-		wtf_push(os, WC_CCS_BIG5, ((wc_uint32)*(p-1) << 8) | *p);
+		wtf_push(os, WC_CCS_BIG5, ((uint32_t)*(p-1) << 8) | *p);
 	    else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_BIG5_NOSTATE;
@@ -166,7 +166,7 @@ wc_char_conv_from_big5(uint8_t c, wc_status *st)
 	break;
     case WC_BIG5_MBYTE1:
 	if (WC_BIG5_MAP[c] & LB)
-	    wtf_push(os, WC_CCS_BIG5, ((wc_uint32)big5u << 8) | c);
+	    wtf_push(os, WC_CCS_BIG5, ((uint32_t)big5u << 8) | c);
 	break;
     }
     st->state = -1;

@@ -74,7 +74,7 @@ wc_get_ucs_table(wc_ccs ccs)
 }
 
 wc_wchar_t
-wc_ucs_to_any(wc_uint32 ucs, wc_table *t)
+wc_ucs_to_any(uint32_t ucs, wc_table *t)
 {
     wc_wchar_t cc;
     wc_map *map;
@@ -105,12 +105,12 @@ wc_ucs_to_any(wc_uint32 ucs, wc_table *t)
     return cc;
 }
 
-wc_uint32
+uint32_t
 wc_any_to_ucs(wc_wchar_t cc)
 {
     int f;
     uint16_t *map = NULL;
-    wc_uint32 map_size = 0x80;
+    uint32_t map_size = 0x80;
     wc_map *map2;
 
     f = WC_CCS_INDEX(cc.ccs);
@@ -288,7 +288,7 @@ wc_wchar_t
 wc_any_to_any(wc_wchar_t cc, wc_table *t)
 {
     wc_ccs is_wide = WC_CCS_IS_WIDE(cc.ccs);
-    wc_uint32 ucs = wc_any_to_ucs(cc);
+    uint32_t ucs = wc_any_to_ucs(cc);
 
     if (ucs != WC_C_UCS4_ERROR) {
 	cc = wc_ucs_to_any(ucs, t);
@@ -307,7 +307,7 @@ wc_any_to_any(wc_wchar_t cc, wc_table *t)
 }
 
 wc_wchar_t
-wc_ucs_to_any_list(wc_uint32 ucs, wc_table **tlist)
+wc_ucs_to_any_list(uint32_t ucs, wc_table **tlist)
 {
     wc_wchar_t cc;
     wc_table **t;
@@ -328,7 +328,7 @@ wc_ucs_to_any_list(wc_uint32 ucs, wc_table **tlist)
 wc_wchar_t
 wc_any_to_any_ces(wc_wchar_t cc, wc_status *st)
 {
-    wc_uint32 ucs = wc_any_to_ucs(cc);
+    uint32_t ucs = wc_any_to_ucs(cc);
     wc_ccs is_wide = WC_CCS_IS_WIDE(cc.ccs);
 
     if (ucs < 0x80) {
@@ -392,7 +392,7 @@ wc_any_to_any_ces(wc_wchar_t cc, wc_status *st)
 wc_wchar_t
 wc_any_to_iso2022(wc_wchar_t cc, wc_status *st)
 {
-    wc_uint32 ucs = wc_any_to_ucs(cc);
+    uint32_t ucs = wc_any_to_ucs(cc);
     wc_ccs is_wide = WC_CCS_IS_WIDE(cc.ccs);
 
     if (ucs < 0x80) {
@@ -457,7 +457,7 @@ wc_any_to_iso2022(wc_wchar_t cc, wc_status *st)
 }
 
 wc_wchar_t
-wc_ucs_to_iso2022(wc_uint32 ucs)
+wc_ucs_to_iso2022(uint32_t ucs)
 {
     wc_table *t;
     wc_wchar_t cc;
@@ -494,7 +494,7 @@ wc_ucs_to_iso2022(wc_uint32 ucs)
 }
 
 wc_wchar_t
-wc_ucs_to_iso2022w(wc_uint32 ucs)
+wc_ucs_to_iso2022w(uint32_t ucs)
 {
     wc_table *t;
     wc_wchar_t cc;
@@ -523,7 +523,7 @@ wc_ucs_to_iso2022w(wc_uint32 ucs)
 }
 
 wc_ccs
-wc_ucs_to_ccs(wc_uint32 ucs)
+wc_ucs_to_ccs(uint32_t ucs)
 {
     if (0x80 <= ucs && ucs <= 0x9F)
 	return WC_CCS_C1;
@@ -535,7 +535,7 @@ wc_ucs_to_ccs(wc_uint32 ucs)
 }
 
 bool
-wc_is_ucs_ambiguous_width(wc_uint32 ucs)
+wc_is_ucs_ambiguous_width(uint32_t ucs)
 {
     if (0xa1 <= ucs && ucs <= 0xfe && WcOption.use_jisx0213)
 	return 1;
@@ -548,7 +548,7 @@ wc_is_ucs_ambiguous_width(wc_uint32 ucs)
 }
 
 bool
-wc_is_ucs_wide(wc_uint32 ucs)
+wc_is_ucs_wide(uint32_t ucs)
 {
     if (ucs <= WC_C_UCS2_END)
 	return (wc_map_range_search((uint16_t)ucs,
@@ -559,7 +559,7 @@ wc_is_ucs_wide(wc_uint32 ucs)
 }
 
 bool
-wc_is_ucs_combining(wc_uint32 ucs)
+wc_is_ucs_combining(uint32_t ucs)
 {
     return (WcOption.use_combining && ucs <= WC_C_UCS2_END &&
 	wc_map_range_search((uint16_t)ucs,
@@ -567,7 +567,7 @@ wc_is_ucs_combining(wc_uint32 ucs)
 }
 
 bool
-wc_is_ucs_hangul(wc_uint32 ucs)
+wc_is_ucs_hangul(uint32_t ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
 	wc_map_range_search((uint16_t)ucs,
@@ -575,7 +575,7 @@ wc_is_ucs_hangul(wc_uint32 ucs)
 }
 
 bool
-wc_is_ucs_alpha(wc_uint32 ucs)
+wc_is_ucs_alpha(uint32_t ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
 	wc_map_range_search((uint16_t)ucs,
@@ -583,7 +583,7 @@ wc_is_ucs_alpha(wc_uint32 ucs)
 }
 
 bool
-wc_is_ucs_digit(wc_uint32 ucs)
+wc_is_ucs_digit(uint32_t ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
 	wc_map_range_search((uint16_t)ucs,
@@ -591,13 +591,13 @@ wc_is_ucs_digit(wc_uint32 ucs)
 }
 
 bool
-wc_is_ucs_alnum(wc_uint32 ucs)
+wc_is_ucs_alnum(uint32_t ucs)
 {
     return (wc_is_ucs_alpha(ucs) || wc_is_ucs_digit(ucs));
 }
 
 bool
-wc_is_ucs_lower(wc_uint32 ucs)
+wc_is_ucs_lower(uint32_t ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
 	wc_map_range_search((uint16_t)ucs,
@@ -605,45 +605,45 @@ wc_is_ucs_lower(wc_uint32 ucs)
 }
 
 bool
-wc_is_ucs_upper(wc_uint32 ucs)
+wc_is_ucs_upper(uint32_t ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
 	wc_map_range_search((uint16_t)ucs,
 	ucs_isupper_map, N_ucs_isupper_map) != NULL);
 }
 
-wc_uint32
-wc_ucs_toupper(wc_uint32 ucs)
+uint32_t
+wc_ucs_toupper(uint32_t ucs)
 {
     wc_map *conv = NULL;
     if (ucs <= WC_C_UCS2_END)
 	conv = wc_map_search((uint16_t)ucs,
 			     ucs_toupper_map, N_ucs_toupper_map);
-    return conv ? (wc_uint32)(conv->code2) : ucs;
+    return conv ? (uint32_t)(conv->code2) : ucs;
 }
 
-wc_uint32
-wc_ucs_tolower(wc_uint32 ucs)
+uint32_t
+wc_ucs_tolower(uint32_t ucs)
 {
     wc_map *conv = NULL;
     if (ucs <= WC_C_UCS2_END)
 	conv = wc_map_search((uint16_t)ucs,
 			     ucs_tolower_map, N_ucs_tolower_map);
-    return conv ? (wc_uint32)(conv->code2) : ucs;
+    return conv ? (uint32_t)(conv->code2) : ucs;
 }
 
-wc_uint32
-wc_ucs_totitle(wc_uint32 ucs)
+uint32_t
+wc_ucs_totitle(uint32_t ucs)
 {
     wc_map *conv = NULL;
     if (ucs <= WC_C_UCS2_END)
 	conv = wc_map_search((uint16_t)ucs,
 			     ucs_totitle_map, N_ucs_totitle_map);
-    return conv ? (wc_uint32)(conv->code2) : ucs;
+    return conv ? (uint32_t)(conv->code2) : ucs;
 }
 
-wc_uint32
-wc_ucs_precompose(wc_uint32 ucs1, wc_uint32 ucs2)
+uint32_t
+wc_ucs_precompose(uint32_t ucs1, uint32_t ucs2)
 {
     wc_map3 *map;
 
@@ -655,8 +655,8 @@ wc_ucs_precompose(wc_uint32 ucs1, wc_uint32 ucs2)
     return WC_C_UCS4_ERROR;
 }
 
-wc_uint32
-wc_ucs_to_fullwidth(wc_uint32 ucs)
+uint32_t
+wc_ucs_to_fullwidth(uint32_t ucs)
 {
     wc_map *map;
 
@@ -694,7 +694,7 @@ wc_ucs_get_tag(int ntag)
 }
 
 void
-wtf_push_ucs(pStr os, wc_uint32 ucs, wc_status *st)
+wtf_push_ucs(pStr os, uint32_t ucs, wc_status *st)
 {
     wc_ccs ccs;
 

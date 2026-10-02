@@ -691,7 +691,7 @@ match_longchar(longchar * a, longchar * b, int ignore)
     if (a->type == RE_TYPE_WCHAR_T) {
 #ifdef USE_UNICODE
 	if (ignore) {
-	    wc_uint32 ua = wc_any_to_ucs(a->wch), ub = wc_any_to_ucs(b->wch);
+	    uint32_t ua = wc_any_to_ucs(a->wch), ub = wc_any_to_ucs(b->wch);
 	    return (ua == ub ||
 		    ua == wc_ucs_tolower(ub) ||
 	            ua == wc_ucs_toupper(ub) ||
@@ -718,14 +718,14 @@ match_range_longchar(longchar * a, longchar * b, longchar * c, int ignore)
 	    return 0;
 #ifdef USE_UNICODE
 	if (ignore) {
-	    wc_uint32 uc = wc_any_to_ucs(c->wch);
+	    uint32_t uc = wc_any_to_ucs(c->wch);
 
 	    if (wc_is_ucs_alpha(uc)) {
-	    	wc_uint32 ua = wc_any_to_ucs(a->wch);
-	    	wc_uint32 ub = wc_any_to_ucs(b->wch);
-		wc_uint32 upper = wc_ucs_toupper(uc);
-		wc_uint32 lower = wc_ucs_tolower(uc);
-		wc_uint32 title = wc_ucs_totitle(uc);
+	    	uint32_t ua = wc_any_to_ucs(a->wch);
+	    	uint32_t ub = wc_any_to_ucs(b->wch);
+		uint32_t upper = wc_ucs_toupper(uc);
+		uint32_t lower = wc_ucs_tolower(uc);
+		uint32_t title = wc_ucs_totitle(uc);
 
 		return ((ua <= upper && upper <= ub) ||
 			(ua <= lower && lower <= ub) ||

@@ -91,7 +91,7 @@ wc_sjis_to_jis(wc_wchar_t cc)
 	sjis_to_jisx02132(ub, lb);
 	cc.ccs = WC_CCS_JIS_X_0213_2;
     }
-    cc.code = ((wc_uint32)ub << 8) | lb;
+    cc.code = ((uint32_t)ub << 8) | lb;
     return cc;
 }
 
@@ -111,7 +111,7 @@ wc_jis_to_sjis(wc_wchar_t cc)
     } else {
 	jisx0208_to_sjis(ub, lb);
     }
-    cc.code = ((wc_uint32)ub << 8) | lb;
+    cc.code = ((uint32_t)ub << 8) | lb;
     return cc;
 }
 
@@ -129,7 +129,7 @@ wc_sjis_ext_to_cs94w(wc_wchar_t cc)
 	ub -= 0x5e;
 	cc.ccs = WC_CCS_SJIS_EXT_2;
     }
-    cc.code = ((wc_uint32)ub << 8) | lb;
+    cc.code = ((uint32_t)ub << 8) | lb;
     return cc;
 }
 
@@ -144,12 +144,12 @@ wc_cs94w_to_sjis_ext(wc_wchar_t cc)
 	ub += 0x5e;
     jisx0208_to_sjis(ub, lb);
     cc.ccs = WC_CCS_SJIS_EXT;
-    cc.code = ((wc_uint32)ub << 8) | lb;
+    cc.code = ((uint32_t)ub << 8) | lb;
     return cc;
 }
 
-wc_uint32
-wc_sjis_ext1_to_N(wc_uint32 c)
+uint32_t
+wc_sjis_ext1_to_N(uint32_t c)
 {
     uint8_t ub;
 
@@ -170,8 +170,8 @@ wc_sjis_ext1_to_N(wc_uint32 c)
     return ub * 0x5e + (c & 0x7f) - 0x21;
 }
 
-wc_uint32
-wc_sjis_ext2_to_N(wc_uint32 c)
+uint32_t
+wc_sjis_ext2_to_N(uint32_t c)
 {
     uint8_t ub;
 
@@ -223,7 +223,7 @@ wc_conv_from_sjis(pStr is, wc_ces ces)
 		state = WC_SJIS_SHIFT_X;
 		break;
 	    case SK:
-		wtf_push(os, WC_CCS_JIS_X_0201K, (wc_uint32)*p);
+		wtf_push(os, WC_CCS_JIS_X_0201K, (uint32_t)*p);
 		break;
 	    case S80:
 	    case SA0:
@@ -241,19 +241,19 @@ wc_conv_from_sjis(pStr is, wc_ces ces)
 		jis[0] = *(p-1);
 		jis[1] = *p;
 		sjis_to_jisx0208(jis[0], jis[1]);
-		cc.code = ((wc_uint32)jis[0] << 8) | jis[1];
+		cc.code = ((uint32_t)jis[0] << 8) | jis[1];
 		cc.ccs = wc_jisx0208_or_jisx02131(cc.code);
 		if (cc.ccs == WC_CCS_JIS_X_0208)
 		    wtf_push(os, cc.ccs, cc.code);
 		else
-		    wtf_push(os, WC_CCS_SJIS_EXT, ((wc_uint32)*(p-1) << 8) | *p);
+		    wtf_push(os, WC_CCS_SJIS_EXT, ((uint32_t)*(p-1) << 8) | *p);
 	    } else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_SJIS_NOSTATE;
 	    break;
 	case WC_SJIS_SHIFT_X:
 	    if (WC_SJIS_MAP[*p] & LB)
-		wtf_push(os, WC_CCS_SJIS_EXT, ((wc_uint32)*(p-1) << 8) | *p);
+		wtf_push(os, WC_CCS_SJIS_EXT, ((uint32_t)*(p-1) << 8) | *p);
 	    else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_SJIS_NOSTATE;
@@ -303,7 +303,7 @@ wc_conv_from_sjisx0213(pStr is, wc_ces ces)
 		state = WC_SJIS_SHIFT_X;
 		break;
 	    case SK:
-		wtf_push(os, WC_CCS_JIS_X_0201K, (wc_uint32)*p);
+		wtf_push(os, WC_CCS_JIS_X_0201K, (uint32_t)*p);
 		break;
 	    case S80:
 	    case SA0:
@@ -321,7 +321,7 @@ wc_conv_from_sjisx0213(pStr is, wc_ces ces)
 		jis[0] = *(p-1);
 		jis[1] = *p;
 		sjis_to_jisx0208(jis[0], jis[1]);
-		cc.code = ((wc_uint32)jis[0] << 8) | jis[1];
+		cc.code = ((uint32_t)jis[0] << 8) | jis[1];
 		cc.ccs = wc_jisx0208_or_jisx02131(cc.code);
 		wtf_push(os, cc.ccs, cc.code);
 	    } else
@@ -333,7 +333,7 @@ wc_conv_from_sjisx0213(pStr is, wc_ces ces)
 		jis[0] = *(p-1);
 		jis[1] = *p;
 		sjis_to_jisx02132(jis[0], jis[1]);
-		wtf_push(os, WC_CCS_JIS_X_0213_2, ((wc_uint32)jis[0] << 8) | jis[1]);
+		wtf_push(os, WC_CCS_JIS_X_0213_2, ((uint32_t)jis[0] << 8) | jis[1]);
 	    } else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_SJIS_NOSTATE;
@@ -491,7 +491,7 @@ wc_char_conv_from_sjis(uint8_t c, wc_status *st)
 	    st->state = WC_SJIS_SHIFT_X;
 	    return NULL;
 	case SK:
-	    wtf_push(os, WC_CCS_JIS_X_0201K, (wc_uint32)c);
+	    wtf_push(os, WC_CCS_JIS_X_0201K, (uint32_t)c);
 	    break;
 	case S80:
 	case SA0:
@@ -507,19 +507,19 @@ wc_char_conv_from_sjis(uint8_t c, wc_status *st)
 	if (WC_SJIS_MAP[c] & LB) {
 	    jis[1] = c;
 	    sjis_to_jisx0208(jis[0], jis[1]);
-	    cc.code = ((wc_uint32)jis[0] << 8) | jis[1];
+	    cc.code = ((uint32_t)jis[0] << 8) | jis[1];
 	    cc.ccs = wc_jisx0208_or_jisx02131(cc.code);
 	    if (cc.ccs == WC_CCS_JIS_X_0208)
 		wtf_push(os, cc.ccs, cc.code);
 	    else
-	        wtf_push(os, WC_CCS_SJIS_EXT, ((wc_uint32)jis[0] << 8) | jis[1]);
+	        wtf_push(os, WC_CCS_SJIS_EXT, ((uint32_t)jis[0] << 8) | jis[1]);
 	}
 	st->state = WC_SJIS_NOSTATE;
 	break;
     case WC_SJIS_SHIFT_X:
 	if (WC_SJIS_MAP[c] & LB) {
 	    jis[1] = c;
-	    wtf_push(os, WC_CCS_SJIS_EXT, ((wc_uint32)jis[0] << 8) | jis[1]);
+	    wtf_push(os, WC_CCS_SJIS_EXT, ((uint32_t)jis[0] << 8) | jis[1]);
 	}
 	st->state = WC_SJIS_NOSTATE;
 	break;
@@ -556,7 +556,7 @@ wc_char_conv_from_sjisx0213(uint8_t c, wc_status *st)
 	    st->state = WC_SJIS_SHIFT_X;
 	    return NULL;
 	case SK:
-	    wtf_push(os, WC_CCS_JIS_X_0201K, (wc_uint32)c);
+	    wtf_push(os, WC_CCS_JIS_X_0201K, (uint32_t)c);
 	    break;
 	case S80:
 	case SA0:
@@ -572,7 +572,7 @@ wc_char_conv_from_sjisx0213(uint8_t c, wc_status *st)
 	if (WC_SJIS_MAP[c] & LB) {
 	    jis[1] = c;
 	    sjis_to_jisx0208(jis[0], jis[1]);
-	    cc.code = ((wc_uint32)jis[0] << 8) | jis[1];
+	    cc.code = ((uint32_t)jis[0] << 8) | jis[1];
 	    cc.ccs = wc_jisx0208_or_jisx02131(cc.code);
 	    wtf_push(os, cc.ccs, cc.code);
 	}
@@ -582,7 +582,7 @@ wc_char_conv_from_sjisx0213(uint8_t c, wc_status *st)
 	if (WC_SJIS_MAP[c] & LB) {
 	    jis[1] = c;
 	    sjis_to_jisx02132(jis[0], jis[1]);
-	    wtf_push(os, WC_CCS_JIS_X_0213_2, ((wc_uint32)jis[0] << 8) | jis[1]);
+	    wtf_push(os, WC_CCS_JIS_X_0213_2, ((uint32_t)jis[0] << 8) | jis[1]);
 	}
 	st->state = WC_SJIS_NOSTATE;
 	break;

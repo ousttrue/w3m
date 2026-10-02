@@ -1,23 +1,17 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
-#ifndef _WC_TYPES_H
-#define _WC_TYPES_H
-
+#pragma once
 #include "../Str.h"
 #include "../config.h"
 #include <stdint.h>
 
-typedef uint32_t wc_uint32;
-
-typedef wc_uint32 wc_ccs;
-typedef wc_uint32 wc_ces;
-typedef wc_uint32 wc_locale;
+typedef uint32_t wc_ccs;
+typedef uint32_t wc_ces;
+typedef uint32_t wc_locale;
 
 typedef struct wc_status wc_status;
 
 typedef struct {
     wc_ccs ccs;
-    wc_uint32 code;
+    uint32_t code;
 } wc_wchar_t;
 
 typedef struct {
@@ -96,8 +90,7 @@ typedef struct wc_status {
     int          state;
     pStr          tag;
     int          ntag;
-    wc_uint32    base;
+    uint32_t    base;
     int          shift;
 } wc_status;
 
-#endif

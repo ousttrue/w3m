@@ -12,7 +12,7 @@ map_cmp(const void *a, const void *b)
 static int
 map3_cmp(const void *a, const void *b)
 {
-    return *(const wc_uint32 *)a - (((wc_uint32)((const wc_map3 *)b)->code << 16) | ((const wc_map3 *)b)->code2);
+    return *(const uint32_t *)a - (((uint32_t)((const wc_map3 *)b)->code << 16) | ((const wc_map3 *)b)->code2);
 }
 
 static int
@@ -46,7 +46,7 @@ wc_map_search(uint16_t code, wc_map *map, size_t n)
 wc_map3 *
 wc_map3_search(uint16_t c1, uint16_t c2, wc_map3 *map, size_t n)
 {
-    wc_uint32 code = ((wc_uint32)c1 << 16) | c2;
+    uint32_t code = ((uint32_t)c1 << 16) | c2;
     return (wc_map3 *)bsearch((void *)&code, (void *)map, n, sizeof(wc_map3),
 	map3_cmp);
 }

@@ -27,7 +27,7 @@
 
 #define wc_ucs_tag_to_ucs(c)		((c) & WC_C_UNICODE_MASK)
 #define wc_ucs_tag_to_tag(c)		(((c) >> 24) & 0xff)
-#define wc_ucs_to_ucs_tag(c,tag)	((c) | ((wc_uint32)((tag) & 0xff) << 24))
+#define wc_ucs_to_ucs_tag(c,tag)	((c) | ((uint32_t)((tag) & 0xff) << 24))
 #define wc_ccs_ucs_to_ccs_ucs_tag(ccs)	(WC_CCS_UCS_TAG | ((ccs) & ~WC_CCS_A_SET))
 #define wc_ucs_to_utf16(ucs) \
 	((((((ucs) - WC_C_UCS4_PLANE1) >> 10) | WC_C_UCS2_SURROGATE) << 16) \
@@ -36,31 +36,31 @@
 	(((((high) & 0x3ff) << 10) | ((low) & 0x3ff)) + WC_C_UCS4_PLANE1)
 
 extern wc_table  *wc_get_ucs_table(wc_ccs ccs);
-extern wc_wchar_t wc_ucs_to_any(wc_uint32 ucs, wc_table *t);
-extern wc_uint32  wc_any_to_ucs(wc_wchar_t cc);
+extern wc_wchar_t wc_ucs_to_any(uint32_t ucs, wc_table *t);
+extern uint32_t  wc_any_to_ucs(wc_wchar_t cc);
 extern wc_wchar_t wc_any_to_any(wc_wchar_t cc, wc_table *t);
-extern wc_wchar_t wc_ucs_to_any_list(wc_uint32 ucs, wc_table **tlist);
+extern wc_wchar_t wc_ucs_to_any_list(uint32_t ucs, wc_table **tlist);
 extern wc_wchar_t wc_any_to_any_ces(wc_wchar_t cc, wc_status *st);
 extern wc_wchar_t wc_any_to_iso2022(wc_wchar_t cc, wc_status *st);
-extern wc_wchar_t wc_ucs_to_iso2022(wc_uint32 ucs);
-extern wc_wchar_t wc_ucs_to_iso2022w(wc_uint32 ucs);
-extern wc_ccs     wc_ucs_to_ccs(wc_uint32 ucs);
-extern bool    wc_is_ucs_ambiguous_width(wc_uint32 ucs);
-extern bool    wc_is_ucs_wide(wc_uint32 ucs);
-extern bool    wc_is_ucs_combining(wc_uint32 ucs);
-extern bool    wc_is_ucs_hangul(wc_uint32 ucs);
-extern bool    wc_is_ucs_alpha(wc_uint32 ucs);
-extern bool    wc_is_ucs_digit(wc_uint32 ucs);
-extern bool    wc_is_ucs_alnum(wc_uint32 ucs);
-extern bool    wc_is_ucs_lower(wc_uint32 ucs);
-extern bool    wc_is_ucs_upper(wc_uint32 ucs);
-extern wc_uint32  wc_ucs_toupper(wc_uint32 ucs);
-extern wc_uint32  wc_ucs_tolower(wc_uint32 ucs);
-extern wc_uint32  wc_ucs_totitle(wc_uint32 ucs);
-extern wc_uint32  wc_ucs_precompose(wc_uint32 ucs1, wc_uint32 ucs2);
-extern wc_uint32  wc_ucs_to_fullwidth(wc_uint32 ucs);
+extern wc_wchar_t wc_ucs_to_iso2022(uint32_t ucs);
+extern wc_wchar_t wc_ucs_to_iso2022w(uint32_t ucs);
+extern wc_ccs     wc_ucs_to_ccs(uint32_t ucs);
+extern bool    wc_is_ucs_ambiguous_width(uint32_t ucs);
+extern bool    wc_is_ucs_wide(uint32_t ucs);
+extern bool    wc_is_ucs_combining(uint32_t ucs);
+extern bool    wc_is_ucs_hangul(uint32_t ucs);
+extern bool    wc_is_ucs_alpha(uint32_t ucs);
+extern bool    wc_is_ucs_digit(uint32_t ucs);
+extern bool    wc_is_ucs_alnum(uint32_t ucs);
+extern bool    wc_is_ucs_lower(uint32_t ucs);
+extern bool    wc_is_ucs_upper(uint32_t ucs);
+extern uint32_t  wc_ucs_toupper(uint32_t ucs);
+extern uint32_t  wc_ucs_tolower(uint32_t ucs);
+extern uint32_t  wc_ucs_totitle(uint32_t ucs);
+extern uint32_t  wc_ucs_precompose(uint32_t ucs1, uint32_t ucs2);
+extern uint32_t  wc_ucs_to_fullwidth(uint32_t ucs);
 extern int        wc_ucs_put_tag(char *tag);
 extern char      *wc_ucs_get_tag(int ntag);
-extern void       wtf_push_ucs(pStr os, wc_uint32 ucs, wc_status *st);
+extern void       wtf_push_ucs(pStr os, uint32_t ucs, wc_status *st);
 
 #endif

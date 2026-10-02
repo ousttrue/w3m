@@ -166,19 +166,19 @@ wtf_type(uint8_t *p)
     ((p)[4] = ( (c)        & 0x7f) | 0x80)
 #define wtf_to_wcs16(p) \
     ((p)[0] == 0 || (p)[1] == 0 || (p)[2] == 0 ? 0 : \
-      ((wc_uint32)((p)[0] & 0x03) << 14) \
-    | ((wc_uint32)((p)[1] & 0x7f) <<  7) \
-    | ((wc_uint32)((p)[2] & 0x7f)      ))
+      ((uint32_t)((p)[0] & 0x03) << 14) \
+    | ((uint32_t)((p)[1] & 0x7f) <<  7) \
+    | ((uint32_t)((p)[2] & 0x7f)      ))
 #define wtf_to_wcs32(p) \
     ((p)[0] == 0 || (p)[1] == 0 || (p)[2] == 0 || (p)[3] == 0 || (p)[4] == 0 ? 0 : \
-      ((wc_uint32)((p)[0] & 0x0f) << 28) \
-    | ((wc_uint32)((p)[1] & 0x7f) << 21) \
-    | ((wc_uint32)((p)[2] & 0x7f) << 14) \
-    | ((wc_uint32)((p)[3] & 0x7f) <<  7) \
-    | ((wc_uint32)((p)[4] & 0x7f)      ))
+      ((uint32_t)((p)[0] & 0x0f) << 28) \
+    | ((uint32_t)((p)[1] & 0x7f) << 21) \
+    | ((uint32_t)((p)[2] & 0x7f) << 14) \
+    | ((uint32_t)((p)[3] & 0x7f) <<  7) \
+    | ((uint32_t)((p)[4] & 0x7f)      ))
 
 void
-wtf_push(pStr os, wc_ccs ccs, wc_uint32 code)
+wtf_push(pStr os, wc_ccs ccs, uint32_t code)
 {
     uint8_t s[8];
     wc_wchar_t cc, cc2;
@@ -388,12 +388,12 @@ wtf_parse1(const uint8_t **p)
     } else if (*q > 0xa0) {
 	cc.ccs = wtf_gr_ccs;
 	if (WC_CCS_IS_WIDE(cc.ccs) && *(q+1)) {
-	    cc.code = ((wc_uint32)*q << 8) | *(q+1);
+	    cc.code = ((uint32_t)*q << 8) | *(q+1);
 	    q += 2;
 	} else
 	    cc.code = *(q++);
     } else {
-	cc.ccs = (wc_uint32)CCS_MAP[*(q++) - 0x80] << 8;
+	cc.ccs = (uint32_t)CCS_MAP[*(q++) - 0x80] << 8;
 	switch (WC_CCS_TYPE(cc.ccs)) {
 	case WC_CCS_A_CS94:
 	case WC_CCS_A_CS96:
@@ -405,7 +405,7 @@ wtf_parse1(const uint8_t **p)
 		cc.code = *(q++);
 	    } else {
 		cc.ccs = WC_CCS_US_ASCII;
-		cc.code = (wc_uint32)' ';
+		cc.code = (uint32_t)' ';
 	    }
 	    break;
 	case WC_CCS_A_CS94W:
@@ -413,11 +413,11 @@ wtf_parse1(const uint8_t **p)
 	case WC_CCS_A_PCSW:
 	    if (*q && *(q+1) && *(q+2)) {
 		cc.ccs |= *(q++) & 0x7f;
-		cc.code = ((wc_uint32)*q << 8) | *(q+1);
+		cc.code = ((uint32_t)*q << 8) | *(q+1);
 		q += 2;
 	    } else {
 		cc.ccs = WC_CCS_US_ASCII;
-		cc.code = (wc_uint32)' ';
+		cc.code = (uint32_t)' ';
 	    }
 	    break;
 	case WC_CCS_A_WCS16:
@@ -428,7 +428,7 @@ wtf_parse1(const uint8_t **p)
 		q += 3;
 	    } else {
 		cc.ccs = WC_CCS_US_ASCII;
-		cc.code = (wc_uint32)' ';
+		cc.code = (uint32_t)' ';
 	    }
 	    break;
 	case WC_CCS_A_WCS32:
@@ -439,13 +439,13 @@ wtf_parse1(const uint8_t **p)
 		q += 5;
 	    } else {
 		cc.ccs = WC_CCS_US_ASCII;
-		cc.code = (wc_uint32)' ';
+		cc.code = (uint32_t)' ';
 	    }
 	    break;
 	default:
 	/* case 0: */
 	    cc.ccs = WC_CCS_US_ASCII;
-	    cc.code = (wc_uint32)' ';
+	    cc.code = (uint32_t)' ';
 	    break;
 	}
     }
@@ -483,7 +483,7 @@ wtf_parse(const uint8_t **p)
 {
     const uint8_t *q;
     wc_wchar_t cc, cc2;
-    wc_uint32 ucs, ucs2;
+    uint32_t ucs, ucs2;
 
     if (**p < 0x80) {
 	cc.ccs = WC_CCS_US_ASCII;
@@ -545,7 +545,7 @@ wtf_get_ccs(const uint8_t *p)
    return wtf_parse1(&p).ccs;
 }
 
-wc_uint32
+uint32_t
 wtf_get_code(const uint8_t *p)
 {
    return wtf_parse1(&p).code;

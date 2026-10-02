@@ -66,7 +66,7 @@ wc_gbk_or_gbk_ext(uint16_t code) {
         ? WC_CCS_GBK_EXT : WC_CCS_GBK;
 }
 
-wc_uint32
+uint32_t
 wc_gb18030_to_ucs(wc_wchar_t cc)
 {
     wc_map3 *map;
@@ -114,7 +114,7 @@ wc_gb18030_to_ucs(wc_wchar_t cc)
 }
 
 wc_wchar_t
-wc_ucs_to_gb18030(wc_uint32 ucs)
+wc_ucs_to_gb18030(uint32_t ucs)
 {
     wc_wchar_t cc;
     wc_map3 *map;
@@ -161,9 +161,9 @@ wc_conv_from_gb18030(pStr is, wc_ces ces)
     uint8_t *ep = sp + is->len;
     uint8_t *p;
     int state = WC_GB18030_NOSTATE;
-    wc_uint32 gbk;
+    uint32_t gbk;
     wc_wchar_t cc;
-    wc_uint32 ucs;
+    uint32_t ucs;
 
     for (p = sp; p < ep && *p < 0x80; p++) 
 	;
@@ -190,7 +190,7 @@ wc_conv_from_gb18030(pStr is, wc_ces ces)
 	    break;
 	case WC_GB18030_MBYTE1:
 	    if (WC_GB18030_MAP[*p] & LB) {
-		gbk = ((wc_uint32)*(p-1) << 8) | *p;
+		gbk = ((uint32_t)*(p-1) << 8) | *p;
 		if (wc_gbk_or_gbk_ext(gbk) == WC_CCS_GBK_EXT)
 		    wtf_push(os, WC_CCS_GBK_EXT, gbk);
 		else if (*(p-1) >= 0xA1 && *p >= 0xA1)
@@ -215,9 +215,9 @@ wc_conv_from_gb18030(pStr is, wc_ces ces)
 	case WC_GB18030_MBYTE3:
 	    if (WC_GB18030_MAP[*p] == L4) {
 		cc.ccs = WC_CCS_GB18030_W;
-		cc.code = ((wc_uint32)*(p-3) << 24)
-		        | ((wc_uint32)*(p-2) << 16)
-		        | ((wc_uint32)*(p-1) << 8)
+		cc.code = ((uint32_t)*(p-3) << 24)
+		        | ((uint32_t)*(p-2) << 16)
+		        | ((uint32_t)*(p-1) << 8)
 		        | *p;
 		if (WcOption.gb18030_as_ucs &&
 		    (ucs = wc_gb18030_to_ucs(cc)) != WC_C_UCS4_ERROR)
@@ -299,9 +299,9 @@ wc_char_conv_from_gb18030(uint8_t c, wc_status *st)
 {
     static pStr os;
     static uint8_t gb[4];
-    wc_uint32 gbk;
+    uint32_t gbk;
     wc_wchar_t cc;
-    wc_uint32 ucs;
+    uint32_t ucs;
 
     if (st->state == -1) {
 	st->state = WC_GB18030_NOSTATE;
@@ -324,7 +324,7 @@ wc_char_conv_from_gb18030(uint8_t c, wc_status *st)
 	break;
     case WC_GB18030_MBYTE1:
 	if (WC_GB18030_MAP[c] & LB) {
-	    gbk = ((wc_uint32)gb[0] << 8) | c;
+	    gbk = ((uint32_t)gb[0] << 8) | c;
 	    if (wc_gbk_or_gbk_ext(gbk) == WC_CCS_GBK_EXT)
 		wtf_push(os, WC_CCS_GBK_EXT, gbk);
 	    else if (gb[0] >= 0xA1 && c >= 0xA1)
@@ -347,9 +347,9 @@ wc_char_conv_from_gb18030(uint8_t c, wc_status *st)
     case WC_GB18030_MBYTE3:
 	if (WC_GB18030_MAP[c] == L4) {
 	    cc.ccs = WC_CCS_GB18030_W;
-	    cc.code = ((wc_uint32)gb[0] << 24)
-		    | ((wc_uint32)gb[1] << 16)
-		    | ((wc_uint32)gb[2] << 8)
+	    cc.code = ((uint32_t)gb[0] << 24)
+		    | ((uint32_t)gb[1] << 16)
+		    | ((uint32_t)gb[2] << 8)
 		    | c;
 	    if (WcOption.gb18030_as_ucs &&
 		(ucs = wc_gb18030_to_ucs(cc)) != WC_C_UCS4_ERROR)

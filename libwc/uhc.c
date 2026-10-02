@@ -56,8 +56,8 @@ wc_cs128w_to_uhc(wc_wchar_t cc)
     return cc;
 }
 
-wc_uint32
-wc_uhc_to_N(wc_uint32 c)
+uint32_t
+wc_uhc_to_N(uint32_t c)
 {
     if (c <= 0xA1A0)	/* 0x8141 - 0xA1A0 */
 	return WC_UHC_N(c);
@@ -77,7 +77,7 @@ wc_conv_from_uhc(pStr is, wc_ces ces)
     uint8_t *ep = sp + is->len;
     uint8_t *p;
     int state = WC_UHC_NOSTATE;
-    wc_uint32 uhc;
+    uint32_t uhc;
 
     for (p = sp; p < ep && *p < 0x80; p++) 
 	;
@@ -104,7 +104,7 @@ wc_conv_from_uhc(pStr is, wc_ces ces)
 	    break;
 	case WC_UHC_MBYTE1:
 	    if (WC_UHC_MAP[*p] & LB) {
-		uhc = ((wc_uint32)*(p-1) << 8) | *p;
+		uhc = ((uint32_t)*(p-1) << 8) | *p;
 		if (*(p-1) >= 0xA1 && *p >= 0xA1 &&
 		    uhc != 0xA2E6 && uhc != 0xA2E7)
 		    wtf_push(os, WC_CCS_KS_X_1001, uhc);
@@ -166,7 +166,7 @@ wc_char_conv_from_uhc(uint8_t c, wc_status *st)
 {
     static pStr os;
     static uint8_t uhcu;
-    wc_uint32 uhc;
+    uint32_t uhc;
 
     if (st->state == -1) {
 	st->state = WC_UHC_NOSTATE;
@@ -189,7 +189,7 @@ wc_char_conv_from_uhc(uint8_t c, wc_status *st)
 	break;
     case WC_UHC_MBYTE1:
 	if (WC_UHC_MAP[c] & LB) {
-	    uhc = ((wc_uint32)uhcu << 8) | c;
+	    uhc = ((uint32_t)uhcu << 8) | c;
 	    if (uhcu >= 0xA1 && c >= 0xA1 &&
 		uhc != 0xA2E6 && uhc != 0xA2E7)
 		wtf_push(os, WC_CCS_KS_X_1001, uhc);

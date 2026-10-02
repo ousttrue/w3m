@@ -29,7 +29,7 @@ uint8_t WC_UTF8_MAP[ 0x100 ] = {
 static uint8_t utf8_buf[7];
 
 size_t
-wc_ucs_to_utf8(wc_uint32 ucs, uint8_t *utf8)
+wc_ucs_to_utf8(uint32_t ucs, uint8_t *utf8)
 {
     if (ucs < WC_C_UTF8_L2) {
 	utf8[0] =   ucs;
@@ -76,54 +76,54 @@ wc_ucs_to_utf8(wc_uint32 ucs, uint8_t *utf8)
     }
 }
 
-wc_uint32
+uint32_t
 wc_utf8_to_ucs(uint8_t *utf8)
 {
-    wc_uint32 ucs;
+    uint32_t ucs;
 
     switch (WC_UTF8_MAP[utf8[0]]) {
     case 1:
-	ucs =  (wc_uint32) utf8[0];
+	ucs =  (uint32_t) utf8[0];
 	if (ucs >= WC_C_UTF8_L2)
 	    break;
 	return ucs;
     case 2:
-	ucs = ((wc_uint32)(utf8[0] & 0x1f) << 6)
-	    |  (wc_uint32)(utf8[1] & 0x3f);
+	ucs = ((uint32_t)(utf8[0] & 0x1f) << 6)
+	    |  (uint32_t)(utf8[1] & 0x3f);
 	if (ucs < WC_C_UTF8_L2)
 	    break;
 	return ucs;
     case 3:
-	ucs = ((wc_uint32)(utf8[0] & 0x0f) << 12)
-	    | ((wc_uint32)(utf8[1] & 0x3f) << 6)
-	    |  (wc_uint32)(utf8[2] & 0x3f);
+	ucs = ((uint32_t)(utf8[0] & 0x0f) << 12)
+	    | ((uint32_t)(utf8[1] & 0x3f) << 6)
+	    |  (uint32_t)(utf8[2] & 0x3f);
 	if (ucs < WC_C_UTF8_L3)
 	    break;
 	return ucs;
     case 4:
-	ucs = ((wc_uint32)(utf8[0] & 0x07) << 18)
-	    | ((wc_uint32)(utf8[1] & 0x3f) << 12)
-	    | ((wc_uint32)(utf8[2] & 0x3f) << 6)
-	    |  (wc_uint32)(utf8[3] & 0x3f);
+	ucs = ((uint32_t)(utf8[0] & 0x07) << 18)
+	    | ((uint32_t)(utf8[1] & 0x3f) << 12)
+	    | ((uint32_t)(utf8[2] & 0x3f) << 6)
+	    |  (uint32_t)(utf8[3] & 0x3f);
 	if (ucs < WC_C_UTF8_L4)
 	    break;
 	return ucs;
     case 5:
-	ucs = ((wc_uint32)(utf8[0] & 0x03) << 24)
-	    | ((wc_uint32)(utf8[1] & 0x3f) << 18)
-	    | ((wc_uint32)(utf8[2] & 0x3f) << 12)
-	    | ((wc_uint32)(utf8[3] & 0x3f) << 6)
-	    |  (wc_uint32)(utf8[4] & 0x3f);
+	ucs = ((uint32_t)(utf8[0] & 0x03) << 24)
+	    | ((uint32_t)(utf8[1] & 0x3f) << 18)
+	    | ((uint32_t)(utf8[2] & 0x3f) << 12)
+	    | ((uint32_t)(utf8[3] & 0x3f) << 6)
+	    |  (uint32_t)(utf8[4] & 0x3f);
 	if (ucs < WC_C_UTF8_L5)
 	    break;
 	return ucs;
     case 6:
-	ucs = ((wc_uint32)(utf8[0] & 0x01) << 30)
-	    | ((wc_uint32)(utf8[1] & 0x3f) << 24)
-	    | ((wc_uint32)(utf8[2] & 0x3f) << 18)
-	    | ((wc_uint32)(utf8[3] & 0x3f) << 12)
-	    | ((wc_uint32)(utf8[4] & 0x3f) << 6)
-	    |  (wc_uint32)(utf8[5] & 0x3f);
+	ucs = ((uint32_t)(utf8[0] & 0x01) << 30)
+	    | ((uint32_t)(utf8[1] & 0x3f) << 24)
+	    | ((uint32_t)(utf8[2] & 0x3f) << 18)
+	    | ((uint32_t)(utf8[3] & 0x3f) << 12)
+	    | ((uint32_t)(utf8[4] & 0x3f) << 6)
+	    |  (uint32_t)(utf8[5] & 0x3f);
 	if (ucs < WC_C_UTF8_L6)
 	    break;
 	return ucs;
@@ -143,7 +143,7 @@ wc_conv_from_utf8(pStr is, wc_ces ces)
     uint8_t *q = NULL;
     int state = WC_UTF8_NOSTATE;
     size_t next = 0;
-    wc_uint32 ucs;
+    uint32_t ucs;
     wc_status st;
 
     for (p = sp; p < ep && *p < 0x80; p++)
@@ -162,7 +162,7 @@ wc_conv_from_utf8(pStr is, wc_ces ces)
 	    next = WC_UTF8_MAP[*p];
 	    switch (next) {
 	    case 1:
-		wtf_push_ucs(os, (wc_uint32)*p, &st);
+		wtf_push_ucs(os, (uint32_t)*p, &st);
 		break;
 	    case 8:
 		Strcat_char(os, (char)*p);
@@ -296,7 +296,7 @@ wc_char_conv_from_utf8(uint8_t c, wc_status *st)
     static pStr os;
     static uint8_t buf[6];
     static size_t nbuf, next;
-    wc_uint32 ucs;
+    uint32_t ucs;
 
     if (st->state == -1) {
 	st->state = WC_UTF8_NOSTATE;
@@ -310,7 +310,7 @@ wc_char_conv_from_utf8(uint8_t c, wc_status *st)
     case WC_UTF8_NOSTATE:
 	switch (next = WC_UTF8_MAP[c]) {
 	case 1:
-	    wtf_push_ucs(os, (wc_uint32)c, st);
+	    wtf_push_ucs(os, (uint32_t)c, st);
 	    break;
 	case 8:
 	    Strcat_char(os, (char)c);

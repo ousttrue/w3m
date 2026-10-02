@@ -114,7 +114,7 @@ wc_ksx1001_to_johab(wc_wchar_t cc)
 }
 
 wc_wchar_t
-wc_ucs_to_johab(wc_uint32 ucs)
+wc_ucs_to_johab(uint32_t ucs)
 {
     wc_table *t;
     wc_wchar_t cc;
@@ -133,10 +133,10 @@ wc_ucs_to_johab(wc_uint32 ucs)
     return cc;
 }
 
-wc_uint32
-wc_johab1_to_N(wc_uint32 code)
+uint32_t
+wc_johab1_to_N(uint32_t code)
 {
-    wc_uint32 a, b, c;
+    uint32_t a, b, c;
 
     a = johab1_N_map[0][(code >> 10) & 0x1F];
     b = johab1_N_map[1][(code >> 5)  & 0x1F];
@@ -146,10 +146,10 @@ wc_johab1_to_N(wc_uint32 code)
     return WC_C_JOHAB_ERROR;
 }
 
-wc_uint32
-wc_N_to_johab1(wc_uint32 code)
+uint32_t
+wc_N_to_johab1(uint32_t code)
 {
-    wc_uint32 a, b, c;
+    uint32_t a, b, c;
 
     a = N_johab1_map[0][(code / 28) / 21 & 0x1F];
     b = N_johab1_map[1][(code / 28) % 21 & 0x1F];
@@ -190,7 +190,7 @@ wc_N_to_johab1(wc_uint32 code)
 wc_wchar_t
 wc_johab_to_cs128w(wc_wchar_t cc)
 {
-    wc_uint32 n;
+    uint32_t n;
     uint8_t ub, lb;
 
     if (cc.code < 0xD800) {
@@ -207,7 +207,7 @@ wc_johab_to_cs128w(wc_wchar_t cc)
 	ub = cc.code >> 8;
 	lb = cc.code & 0xff;
 	johab3_to_ksx1001(ub, lb);
-	cc.code = ((wc_uint32)ub << 8) | lb;
+	cc.code = ((uint32_t)ub << 8) | lb;
 	cc.ccs = WC_CCS_JOHAB_3;
     }
     return cc;
@@ -216,7 +216,7 @@ wc_johab_to_cs128w(wc_wchar_t cc)
 wc_wchar_t
 wc_cs128w_to_johab(wc_wchar_t cc)
 {
-    wc_uint32 n;
+    uint32_t n;
     uint8_t ub, lb;
 
     switch (cc.ccs) {
@@ -232,7 +232,7 @@ wc_cs128w_to_johab(wc_wchar_t cc)
 	ub = (cc.code >> 8) & 0x7f;
 	lb = cc.code & 0x7f;
 	ksx1001_to_johab3(ub, lb);
-	cc.code = ((wc_uint32)ub << 8) | lb;
+	cc.code = ((uint32_t)ub << 8) | lb;
     }
     cc.ccs = WC_CCS_JOHAB;
     return cc;
@@ -275,14 +275,14 @@ wc_conv_from_johab(pStr is, wc_ces ces)
 	    break;
 	case WC_JOHAB_HANGUL1:
 	    if (WC_JOHAB_MAP[*p] & WC_JOHAB_MAP_LJ) 
-		wtf_push(os, WC_CCS_JOHAB, ((wc_uint32)*(p-1) << 8) | *p);
+		wtf_push(os, WC_CCS_JOHAB, ((uint32_t)*(p-1) << 8) | *p);
 	    else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_JOHAB_NOSTATE;
 	    break;
 	case WC_JOHAB_HANJA1:
 	    if (WC_JOHAB_MAP[*p] & WC_JOHAB_MAP_LH)
-		wtf_push(os, WC_CCS_JOHAB, ((wc_uint32)*(p-1) << 8) | *p);
+		wtf_push(os, WC_CCS_JOHAB, ((uint32_t)*(p-1) << 8) | *p);
 	    else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_JOHAB_NOSTATE;
@@ -366,11 +366,11 @@ wc_char_conv_from_johab(uint8_t c, wc_status *st)
 	break;
     case WC_JOHAB_HANGUL1:
 	if (WC_JOHAB_MAP[c] & WC_JOHAB_MAP_LJ)
-	    wtf_push(os, WC_CCS_JOHAB, ((wc_uint32)johabu << 8) | c);
+	    wtf_push(os, WC_CCS_JOHAB, ((uint32_t)johabu << 8) | c);
 	break;
     case WC_JOHAB_HANJA1:
 	if (WC_JOHAB_MAP[c] & WC_JOHAB_MAP_LH)
-	    wtf_push(os, WC_CCS_JOHAB, ((wc_uint32)johabu << 8) | c);
+	    wtf_push(os, WC_CCS_JOHAB, ((uint32_t)johabu << 8) | c);
 	break;
     }
     st->state = -1;

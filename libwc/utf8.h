@@ -14,8 +14,8 @@
 
 extern uint8_t WC_UTF8_MAP[];
 
-extern size_t    wc_ucs_to_utf8(wc_uint32 ucs, uint8_t *utf8);
-extern wc_uint32 wc_utf8_to_ucs(uint8_t *utf8);
+extern size_t    wc_ucs_to_utf8(uint32_t ucs, uint8_t *utf8);
+extern uint32_t wc_utf8_to_ucs(uint8_t *utf8);
 extern pStr       wc_conv_from_utf8(pStr is, wc_ces ces);
 extern void      wc_push_to_utf8(pStr os, wc_wchar_t cc, wc_status *st);
 extern void      wc_push_to_utf8_end(pStr os, wc_status *st);

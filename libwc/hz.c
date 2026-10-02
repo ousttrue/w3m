@@ -53,7 +53,7 @@ wc_conv_from_hz(pStr is, wc_ces ces)
 		break;
 	    }
 	    else if (WC_ISO_MAP[*p & 0x7f] == WC_ISO_MAP_GL)
-		wtf_push(os, WC_CCS_GB_2312, ((wc_uint32)*(p-1) << 8) | *p);
+		wtf_push(os, WC_CCS_GB_2312, ((uint32_t)*(p-1) << 8) | *p);
 	    else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_HZ_MBYTE;
@@ -68,14 +68,14 @@ wc_conv_from_hz(pStr is, wc_ces ces)
 	    break;
 	case WC_HZ_MBYTE1:
 	    if (WC_ISO_MAP[*p & 0x7f] == WC_ISO_MAP_GL)
-		wtf_push(os, WC_CCS_GB_2312, ((wc_uint32)*(p-1) << 8) | *p);
+		wtf_push(os, WC_CCS_GB_2312, ((uint32_t)*(p-1) << 8) | *p);
 	    else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_HZ_MBYTE;
 	    break;
 	case WC_HZ_MBYTE1_GR:
 	    if (WC_ISO_MAP[*p] == WC_ISO_MAP_GR)
-		wtf_push(os, WC_CCS_GB_2312, ((wc_uint32)*(p-1) << 8) | *p);
+		wtf_push(os, WC_CCS_GB_2312, ((uint32_t)*(p-1) << 8) | *p);
 	    else
 		wtf_push_unknown(os, p-1, 2);
 	    state = WC_HZ_NOSTATE;

@@ -32,14 +32,14 @@ exec_cmd(char *cmd)
 #include "libwc/ucs.h"
 #include "libwc/wtf.h"
 
-wc_uint32
+uint32_t
 getChar(const char *p)
 {
     return wc_any_to_ucs(wtf_parse1((const uint8_t **)&p));
 }
 
 int
-is_wordchar(wc_uint32 c)
+is_wordchar(uint32_t c)
 {
     return wc_is_ucs_alnum(c);
 }

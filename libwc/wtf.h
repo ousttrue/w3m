@@ -65,13 +65,13 @@ extern size_t     wtf_len(const uint8_t *p);
 /* extern int     wtf_type(uint8_t *p); */
 #define wtf_type(p) WTF_TYPE_MAP[(uint8_t)*(p)]
 
-extern void       wtf_push(pStr os, wc_ccs ccs, wc_uint32 code);
+extern void       wtf_push(pStr os, wc_ccs ccs, uint32_t code);
 extern void       wtf_push_unknown(pStr os, uint8_t *p, size_t len);
 extern wc_wchar_t wtf_parse(const uint8_t **p);
 extern wc_wchar_t wtf_parse1(const uint8_t **p);
 
 extern wc_ccs     wtf_get_ccs(const uint8_t *p);
-extern wc_uint32  wtf_get_code(const uint8_t *p);
+extern uint32_t  wtf_get_code(const uint8_t *p);
 
 extern bool    wtf_is_hangul(const uint8_t *p);
 

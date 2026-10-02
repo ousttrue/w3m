@@ -10,8 +10,8 @@ int exec_cmd(char *cmd);
 #include "libwc/wc_types.h"
 #define nextChar(s, l)	do { (s)++; } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
 #define prevChar(s, l)	do { (s)--; } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
-wc_uint32 getChar(const char *p);
-int is_wordchar(wc_uint32 c);
+uint32_t getChar(const char *p);
+int is_wordchar(uint32_t c);
 
 #else		/* USE_M17N && USE_UNICODE */
 #define nextChar(s, l)	(s)++
