@@ -108,13 +108,13 @@ struct Url copyParsedURL(const struct Url* q)
     struct Url url;
     if (q) {
         url = *q;
-        url.user = allocStr(q->user, -1);
-        url.pass = allocStr(q->pass, -1);
-        url.host = allocStr(q->host, -1);
-        url.file = allocStr(q->file, -1);
-        url.real_file = allocStr(q->real_file, -1);
-        url.label = allocStr(q->label, -1);
-        url.query = allocStr(q->query, -1);
+        url.user = allocStr(q->user).ptr;
+        url.pass = allocStr(q->pass).ptr;
+        url.host = allocStr(q->host).ptr;
+        url.file = allocStr(q->file).ptr;
+        url.real_file = allocStr(q->real_file).ptr;
+        url.label = allocStr(q->label).ptr;
+        url.query = allocStr(q->query).ptr;
     } else {
         memset(&url, 0, sizeof(struct Url));
         url.scheme = SCM_UNKNOWN;
@@ -265,7 +265,7 @@ struct Url parseURL(const char* src, const struct Url* current)
     }
     /* scheme part has been found */
     if (url.scheme == SCM_UNKNOWN) {
-        url.file = allocStr(src, -1);
+        url.file = allocStr(src).ptr;
         return url;
     }
     /* get host and port */
@@ -436,10 +436,10 @@ do_query:
 do_label:
     if (url.scheme == SCM_MISSING) {
         url.scheme = SCM_LOCAL;
-        url.file = allocStr(p, -1);
+        url.file = allocStr(p).ptr;
         url.label = NULL;
     } else if (*p == '#')
-        url.label = allocStr(p + 1, -1);
+        url.label = allocStr(p + 1).ptr;
     else
         url.label = NULL;
 
@@ -548,7 +548,7 @@ struct Url parseURL2(const char* src, const struct Url* current)
     }
     if (url.scheme == SCM_NNTP || url.scheme == SCM_NNTP_GROUP) {
         if (url.file && *url.file == '/')
-            url.file = allocStr(url.file + 1, -1);
+            url.file = allocStr(url.file + 1).ptr;
         if (url.file && !strchr(url.file, '@') && (!(p = strchr(url.file, '/')) || strchr(p + 1, '-') || *(p + 1) == '\0'))
             url.scheme = SCM_NNTP_GROUP;
         else
@@ -596,7 +596,7 @@ struct Url parseURL2(const char* src, const struct Url* current)
                            || url.scheme == SCM_GOPHERS)
                 && url.file[0] == '/') {
                 p = url.file;
-                url.file = allocStr(p + 1, -1);
+                url.file = allocStr(p + 1).ptr;
             }
         } else { /* scheme:[?query][#label] */
             url.file = current->file;
@@ -654,7 +654,7 @@ pStr file_to_url(const char* file, const char* CurrentDir)
     if (!(file = expandPath(file)->ptr))
         return NULL;
     if (IS_ALPHA(file[0]) && file[1] == ':') {
-        drive = allocStr(file, 2);
+        drive = allocStr(file).ptr;
         file += 2;
     } else
         if (file[0] != '/') {

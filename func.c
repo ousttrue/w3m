@@ -509,7 +509,7 @@ getRegexWord(char **str, Regex **regex_ret)
     }
 
     /* Save the expression */
-    word = allocStr(headp, p - headp);
+    word = allocStr_n(headp, p - headp).ptr;
 
     /* Compile */
     if (regex_ret) {

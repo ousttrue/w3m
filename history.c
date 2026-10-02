@@ -198,7 +198,7 @@ unshiftHist(Hist *hist, const char *ptr)
     if (hist == NULL || hist->list == NULL ||
 	hist->list->nitem >= HIST_LIST_MAX)
 	return NULL;
-    item = (HistItem *)newListItem(allocStr(ptr, -1),
+    item = (HistItem *)newListItem(allocStr(ptr).ptr,
 				   (ListItem *)hist->list->first, NULL);
     if (hist->list->first)
 	hist->list->first->prev = item;
@@ -217,7 +217,7 @@ pushHist(Hist *hist, const char *ptr)
     if (hist == NULL || hist->list == NULL ||
 	hist->list->nitem >= HIST_LIST_MAX)
 	return NULL;
-    item = (HistItem *)newListItem(allocStr(ptr, -1),
+    item = (HistItem *)newListItem(allocStr(ptr).ptr,
 				   NULL, (ListItem *)hist->list->last);
     if (hist->list->last)
 	hist->list->last->next = item;

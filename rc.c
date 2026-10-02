@@ -1566,7 +1566,7 @@ void init_rc(void)
 
     if (!(w3m_dir = getenv("W3M_DIR")) || !*w3m_dir)
         w3m_dir = RC_DIR;
-    rc_dir = expandPath(allocStr(w3m_dir, -1))->ptr;
+    rc_dir = expandPath(allocStr(w3m_dir).ptr)->ptr;
 
     i = strlen(rc_dir);
     if (i > 1 && rc_dir[i - 1] == '/')

@@ -1230,7 +1230,7 @@ record_err_message(const char *s)
 	    message_list = newGeneralList();
 	if (message_list->nitem >= LINES)
 	    popValue(message_list);
-	pushValue(message_list, allocStr(s, -1));
+	pushValue(message_list, allocStr(s).ptr);
     }
 }
 
@@ -1319,7 +1319,7 @@ disp_message_nomouse(char *s, int redraw_current)
 void
 set_delayed_message(const char *s)
 {
-    delayed_msg = allocStr(s, -1);
+    delayed_msg = allocStr(s).ptr;
 }
 
 void

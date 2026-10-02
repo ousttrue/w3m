@@ -251,7 +251,7 @@ int parsedtag_set_value(struct parsed_tag* tag, int id, const char* value)
     i = tag->map[id];
     tag->attrid[i] = id;
     if (value)
-        tag->value[i] = allocStr(value, -1);
+        tag->value[i] = allocStr(value).ptr;
     else
         tag->value[i] = NULL;
     tag->need_reconstruct = TRUE;

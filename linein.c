@@ -258,7 +258,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str,
     if (flag & IN_FILENAME)
         return expandPath(p)->ptr;
     else
-        return allocStr(p, -1);
+        return allocStr(p).ptr;
 }
 
 void addPasswd(char* p, Lineprop* pr, int len, int offset, int limit)

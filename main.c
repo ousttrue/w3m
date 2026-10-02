@@ -257,7 +257,7 @@ int main(int argc, char** argv)
             hostname[HOST_NAME_MAX + 1] = '\0';
             hostname_len = strlen(hostname);
             if (hostname_len <= HOST_NAME_MAX)
-                HostName = allocStr(hostname, hostname_len);
+                HostName = allocStr_n(hostname, hostname_len).ptr;
         }
     }
 
@@ -2034,7 +2034,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
     }
     const char *var, *value;
     if ((value = strchr(env, '=')) != NULL && value > env) {
-        var = allocStr(env, value - env);
+        var = allocStr_n(env, value - env).ptr;
         value++;
         set_environ(var, value);
     }
@@ -2926,7 +2926,7 @@ gotoLabel(const char* label)
     copyBuffer(buf, Currentbuf);
     for (i = 0; i < MAX_LB; i++)
         buf->linkBuffer[i] = NULL;
-    buf->currentURL.label = allocStr(label, -1);
+    buf->currentURL.label = allocStr(label).ptr;
     pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
     (*buf->clone)++;
     pushBuffer(buf);
@@ -5144,7 +5144,7 @@ invoke_browser(const char* url)
     }
 
     if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' && browser[len - 2] != '\\') {
-        browser = allocStr(browser, len - 2);
+        browser = allocStr_n(browser, len - 2).ptr;
         bg = 1;
     }
     cmd = myExtCommand(browser, shell_quote(url)->ptr, false);
@@ -5751,7 +5751,7 @@ const char* searchKeyData(void)
     CurrentCmdData = NULL;
     if (data == NULL || *data == '\0')
         return NULL;
-    return allocStr(data, -1);
+    return allocStr(data).ptr;
 }
 
 static int
@@ -6033,7 +6033,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
             return;
         }
     }
-    setKeymap(allocStr(data, -1), -1, true);
+    setKeymap(allocStr(data).ptr, -1, true);
     displayBuffer(Currentbuf, B_NORMAL);
 }
 

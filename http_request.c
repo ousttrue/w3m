@@ -490,9 +490,9 @@ int openSocket(const char* hostname,
 
 #ifdef INET6
     /* rfc2732 compliance */
-    hname = allocStr(hostname, -1);
+    hname = allocStr(hostname).ptr;
     if (hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
-        hname = allocStr(hostname + 1, -1);
+        hname = allocStr(hostname + 1).ptr;
         hname[strlen(hname) - 1] = '\0';
         if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
             goto error;
@@ -1064,7 +1064,7 @@ retry:
     case SCM_FTP:
     case SCM_FTPDIR:
         if (pu->file == NULL)
-            pu->file = allocStr("/", -1);
+            pu->file = allocStr("/").ptr;
         if (non_null(FTP_proxy) && use_proxy && pu->host != NULL && needs_proxy(pu->host)) {
             hr->flag |= HR_FLAG_PROXY;
             sock = openSocket(FTP_proxy_parsed.host,
@@ -1087,7 +1087,7 @@ retry:
     case SCM_HTTPS:
 #endif /* USE_SSL */
         if (pu->file == NULL)
-            pu->file = allocStr("/", -1);
+            pu->file = allocStr("/").ptr;
         if (request && request->method == FORM_METHOD_POST && request->body)
             hr->command = HR_COMMAND_POST;
         if (request && request->method == FORM_METHOD_HEAD)
@@ -1298,12 +1298,12 @@ retry:
         if (pu->file == NULL)
             return uf;
         p = Strnew_charp(pu->file)->ptr;
-        char* q = allocStr(strchr(p, ','), -1);
+        char* q = allocStr(strchr(p, ',')).ptr;
         if (q == NULL)
             return uf;
         *q++ = '\0';
         tmp = Strnew_charp(q);
-        q = allocStr(strrchr(p, ';'), -1);
+        q = allocStr(strrchr(p, ';')).ptr;
         if (q != NULL && !strcmp(q, ";base64")) {
             *q = '\0';
             uf.encoding = ENC_BASE64;

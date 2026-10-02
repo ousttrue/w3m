@@ -19,5 +19,5 @@ char* html_quote(const char* str)
     }
     if (tmp)
         return tmp->ptr;
-    return allocStr(str, -1);
+    return allocStr(str).ptr;
 }

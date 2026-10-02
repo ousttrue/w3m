@@ -113,4 +113,8 @@ inline static void Strfputs(pStr s, FILE* f)
     fwrite((s)->ptr, 1, (s)->len, (f));
 }
 
-char* allocStr(const char* s, int len);
+struct Str allocStr_n(const char* s, int len);
+inline static struct Str allocStr(const char* s)
+{
+    return allocStr_n(s, -1);
+}

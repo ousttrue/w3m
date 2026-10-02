@@ -446,10 +446,10 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
     }
 
     if (!current_ftp.host) {
-        current_ftp.host = allocStr(pu->host, -1);
+        current_ftp.host = allocStr(pu->host).ptr;
         current_ftp.port = pu->port;
-        current_ftp.user = allocStr(user, -1);
-        current_ftp.pass = allocStr(pass, -1);
+        current_ftp.user = allocStr(user).ptr;
+        current_ftp.pass = allocStr(pass).ptr;
         if (!ftp_login(&current_ftp))
             return NULL;
     }
@@ -730,7 +730,7 @@ ex_ftpdir_name_size_date(const char* line,
         cp++;
         EX_SKIP_SPACE(cp);
         EX_SKIP_NONE_SPACE(cp);
-        *sizep = allocStr(p, cp - p);
+        *sizep = allocStr_n(p, cp - p).ptr;
     } else {
         *sizep = size_int2str(size)->ptr;
     }
@@ -745,7 +745,7 @@ ex_ftpdir_name_size_date(const char* line,
     EX_SKIP_NONE_SPACE(cp); /* day ? */
     EX_SKIP_SPACE(cp);
     EX_SKIP_NONE_SPACE(cp); /* year or time ? */
-    *date = allocStr(p, cp - p);
+    *date = allocStr_n(p, cp - p).ptr;
     cp++;
 
     /* extract file name */
@@ -755,19 +755,19 @@ ex_ftpdir_name_size_date(const char* line,
         ftype = FTPDIR_LINK;
         if ((p = strstr(cp, " -> ")) == NULL)
             goto done;
-        *name = allocStr(cp, p - cp);
-        *link = allocStr(p, -1);
+        *name = allocStr_n(cp, p - cp).ptr;
+        *link = allocStr(p).ptr;
         *sizep = "";
         break;
     case 'd':
         ftype = FTPDIR_DIR;
-        *name = allocStr(cp, -1);
+        *name = allocStr(cp).ptr;
         *link = "";
         *sizep = "";
         break;
     default:
         ftype = FTPDIR_FILE;
-        *name = allocStr(cp, -1);
+        *name = allocStr(cp).ptr;
         *link = "";
         break;
     }

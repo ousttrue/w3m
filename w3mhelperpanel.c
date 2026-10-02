@@ -45,12 +45,12 @@ extractMailcapEntry(char* mcap_entry, char** type, char** cmd)
         mcap_entry[j] && mcap_entry[j] != ';' && !IS_SPACE(mcap_entry[j]);
         j++)
         ;
-    *type = allocStr(mcap_entry, j);
+    *type = allocStr_n(mcap_entry, j).ptr;
     if (mcap_entry[j] == ';')
         j++;
     while (mcap_entry[j] && IS_SPACE(mcap_entry[j]))
         j++;
-    *cmd = allocStr(&mcap_entry[j], -1);
+    *cmd = allocStr(&mcap_entry[j]).ptr;
 }
 
 static void

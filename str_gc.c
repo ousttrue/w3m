@@ -214,7 +214,7 @@ pStr expandPath(const char* name)
         if (IS_ALPHA(*p)) {
             const char* q = strchr(p, '/');
             if (q) { /* ~user/dir... */
-                passent = getpwnam(allocStr(p, q - p));
+                passent = getpwnam(allocStr_n(p, q - p).ptr);
                 p = q;
             } else { /* ~user */
                 passent = getpwnam(p);
@@ -251,7 +251,7 @@ pStr expandName(const char* name)
             p += 2;
             const char* q = strchr(p, '/');
             if (q) { /* /~user/dir... */
-                passent = getpwnam(allocStr(p, q - p));
+                passent = getpwnam(allocStr_n(p, q - p).ptr);
                 p = q;
             } else { /* /~user */
                 passent = getpwnam(p);

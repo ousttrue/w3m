@@ -118,7 +118,7 @@ parse_ansi_color(char** str, Lineprop* effect, Linecolor* color)
             q = p;
             for (p++; IS_DIGIT(*p); p++)
                 ;
-            i = atoi(allocStr(q, p - q));
+            i = atoi(allocStr_n(q, p - q).ptr);
             switch (i) {
             case 0:
                 e = PE_NORMAL;

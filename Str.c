@@ -414,11 +414,15 @@ pStr Strfgetall(FILE* f)
     return s;
 }
 
-char* allocStr(const char* s, int len)
+struct Str allocStr_n(const char* s, int len)
 {
     if (s == NULL)
-        return NULL;
+        return (struct Str) { };
     if (len < 0)
         len = strlen(s);
-    return Strnew_charp_n(s, len)->ptr;
+    struct Str str = Str_alloc(len);
+    memcpy(str.ptr, s, len);
+    str.len = len;
+    str.ptr[len] = '\0';
+    return str;
 }

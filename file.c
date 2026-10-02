@@ -1352,7 +1352,7 @@ static pStr loadLocalDir(const char* dname)
     flist = New_N(char*, nfile_max);
     nfile = 0;
     while ((dir = readdir(d)) != NULL) {
-        flist[nfile++] = allocStr(dir->d_name, -1);
+        flist[nfile++] = allocStr(dir->d_name).ptr;
         if (nfile == nfile_max) {
             nfile_max *= 2;
             flist = New_Reuse(char*, flist, nfile_max);
@@ -1925,7 +1925,7 @@ page_loaded:
         b->real_scheme = f.scheme;
         b->real_type = real_type;
         if (w3m_backend)
-            b->type = allocStr(t, -1);
+            b->type = allocStr(t).ptr;
         if (pu.label) {
             if (proc == loadHTMLBuffer) {
                 Anchor* a = searchURLLabel(b, pu.label);
@@ -2183,7 +2183,7 @@ static void
 push_tag(struct readbuffer* obuf, const char* cmdname, int cmd)
 {
     obuf->tag_stack[obuf->tag_sp] = New(struct cmdtable);
-    obuf->tag_stack[obuf->tag_sp]->cmdname = allocStr(cmdname, -1);
+    obuf->tag_stack[obuf->tag_sp]->cmdname = allocStr(cmdname).ptr;
     obuf->tag_stack[obuf->tag_sp]->cmd = cmd;
     obuf->tag_sp++;
     if (obuf->tag_sp >= TAG_STACK_SIZE || obuf->flag & (RB_SPECIAL & ~RB_NOBR))
@@ -6131,7 +6131,7 @@ addnewline(Buffer* buf, char* line, Lineprop* prop, Linecolor* color, int pos,
     int i, bpos, bwidth;
 
     if (pos > 0) {
-        s = allocStr(line, pos);
+        s = allocStr_n(line, pos).ptr;
         p = NewAtom_N(Lineprop, pos);
         memmove(p, prop, pos * sizeof(Lineprop));
     } else {

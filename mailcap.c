@@ -148,7 +148,7 @@ extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
         else if (p[j] == '\\')
             quoted = 1;
     }
-    mcap->viewer = allocStr(p, (k >= 0) ? k + 1 : j);
+    mcap->viewer = allocStr_n(p, (k >= 0) ? k + 1 : j).ptr;
     p += j;
 
     while (*p == ';') {
@@ -161,11 +161,11 @@ extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
         } else if (matchMailcapAttr(p, "x-htmloutput", NULL) || matchMailcapAttr(p, "htmloutput", NULL)) {
             mcap->flags |= MAILCAP_HTMLOUTPUT;
         } else if (matchMailcapAttr(p, "test", &tmp)) {
-            mcap->test = allocStr(tmp->ptr, tmp->len);
+            mcap->test = allocStr_n(tmp->ptr, tmp->len).ptr;
         } else if (matchMailcapAttr(p, "nametemplate", &tmp)) {
-            mcap->nametemplate = allocStr(tmp->ptr, tmp->len);
+            mcap->nametemplate = allocStr_n(tmp->ptr, tmp->len).ptr;
         } else if (matchMailcapAttr(p, "edit", &tmp)) {
-            mcap->edit = allocStr(tmp->ptr, tmp->len);
+            mcap->edit = allocStr_n(tmp->ptr, tmp->len).ptr;
         }
         quoted = 0;
         while (*p && (quoted || *p != ';')) {
@@ -262,7 +262,7 @@ char* acceptableMimeTypes(void)
             p = strchr(mp->type, '/');
             if (p == NULL)
                 continue;
-            mt = allocStr(mp->type, p - mp->type);
+            mt = allocStr_n(mp->type, p - mp->type).ptr;
             if (getHash_si(mhash, mt, 0) == 0) {
                 pushText(l, mt);
                 putHash_si(mhash, mt, 1);

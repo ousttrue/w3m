@@ -123,7 +123,7 @@ name_from_address(char* str, int n)
     char *s, *p;
     int l, space = true;
 
-    if (!(s = allocStr(str, -1)))
+    if (!(s = allocStr(str).ptr))
         return NULL;
     SKIP_BLANKS(s);
     if (*s == '<' && (p = strchr(s, '>'))) {
@@ -256,7 +256,7 @@ openNewsStream(ParsedURL* pu)
 
     const char* p;
     if (pu->scheme != SCM_NNTP && pu->scheme != SCM_NNTP_GROUP && (p = strchr(host, ':'))) {
-        host = allocStr(host, p - host);
+        host = allocStr_n(host, p - host).ptr;
         port = atoi(p + 1);
     } else
         port = pu->port;
@@ -274,16 +274,16 @@ openNewsStream(ParsedURL* pu)
             news_quit(&current_news);
     }
     if (!current_news.host) {
-        current_news.host = allocStr(host, -1);
+        current_news.host = allocStr(host).ptr;
         current_news.port = port;
-        current_news.mode = mode ? allocStr(mode, -1) : NULL;
+        current_news.mode = mode ? allocStr(mode).ptr : NULL;
         if (!news_open(&current_news))
             return NULL;
     }
     if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NEWS) {
         /* News article */
-        char* group = file_unquote(allocStr(pu->file, -1))->ptr;
-        char* q = allocStr(strchr(group, '/'), -1);
+        char* group = file_unquote(allocStr(pu->file).ptr)->ptr;
+        char* q = allocStr(strchr(group, '/')).ptr;
         if (q == NULL) { /* <message-id> */
             if (!strchr(group, '@'))
                 return NULL;
@@ -328,7 +328,7 @@ pStr loadNewsgroup0(ParsedURL* pu)
 #endif
     if (current_news.host == NULL || !pu->file || *pu->file == '\0')
         return NULL;
-    group = allocStr(pu->file, -1);
+    group = allocStr(pu->file).ptr;
     if (pu->scheme == SCM_NNTP_GROUP)
         scheme = "/";
     else

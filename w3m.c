@@ -218,7 +218,7 @@ checkPath(const char* fn, const char* path)
 {
     while (*path) {
         const char* p = strchr(path, ':');
-        pStr tmp = expandPath(p ? allocStr(path, p - path) : path);
+        pStr tmp = expandPath(p ? allocStr_n(path, p - path).ptr : path);
         if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');
         Strcat_charp(tmp, fn);
@@ -248,7 +248,7 @@ cgi_filename(const char* uri)
     if (cgi_bin && strncmp(uri, "/cgi-bin/", 9) == 0) {
         offset = 9;
         if ((info.path_info = strchr(uri + offset, '/')))
-            info.name = allocStr(uri, info.path_info - uri);
+            info.name = allocStr_n(uri, info.path_info - uri).ptr;
         pStr tmp = checkPath(info.name + offset, cgi_bin);
         if (!tmp) {
             info.type = CGIFN_NORMAL;
@@ -283,7 +283,7 @@ cgi_filename(const char* uri)
         return info;
     }
     if ((info.path_info = strchr(uri + offset, '/')))
-        info.name = allocStr(uri, info.path_info - uri);
+        info.name = allocStr_n(uri, info.path_info - uri).ptr;
     Strcat_charp(tmp, info.name + offset);
     info.file = tmp->ptr;
     info.type = CGIFN_LIBDIR;
