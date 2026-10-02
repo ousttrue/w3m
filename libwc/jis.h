@@ -1,5 +1,5 @@
 #pragma once
-#include "ccs.h"
+#include "ccs_types.h"
 
 extern uint8_t* wc_jisx0212_jisx02132_map;
 extern wc_wchar_t wc_jisx0201k_to_jisx0208(wc_wchar_t cc);

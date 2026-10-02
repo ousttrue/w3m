@@ -7,6 +7,7 @@
 #include "fm.h"
 #include "proto.h"
 #include "libwc/status.h"
+#include "libwc/ccs.h"
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

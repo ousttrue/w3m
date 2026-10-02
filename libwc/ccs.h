@@ -1,28 +1,8 @@
 #pragma once
 #include "search.h"
+#include "ccs_types.h"
 #include "iso2022.h"
 #include "priv.h"
-#include <stddef.h>
-
-typedef uint32_t wc_ccs;
-
-typedef struct {
-    wc_ccs ccs;
-    uint32_t code;
-} wc_wchar_t;
-
-typedef struct {
-    wc_ccs ccs;
-    size_t n;
-    wc_map* map;
-    wc_wchar_t (*conv)(wc_ccs, uint16_t);
-} wc_table;
-
-typedef struct {
-    wc_ccs ccs;
-    uint8_t g;
-    bool init;
-} wc_gset;
 
 #define WC_F_ISO_BASE 0x40
 #define WC_F_PCS_BASE 0x01

@@ -1,5 +1,6 @@
 #include "status.h"
 #include "wtf.h"
+#include "ccs.h"
 
 pStr
 wc_conv_from_priv1(pStr is, wc_ces ces)

@@ -1,5 +1,6 @@
 #pragma once
-#include "status.h"
+#include "../Str.h"
+#include "ccs.h"
 
 #define WC_C_UCS2_NBSP 0xA0
 #define WC_C_UCS2_BOM 0xFEFF
@@ -38,8 +39,9 @@ extern wc_wchar_t wc_ucs_to_any(uint32_t ucs, wc_table* t);
 extern uint32_t wc_any_to_ucs(wc_wchar_t cc);
 extern wc_wchar_t wc_any_to_any(wc_wchar_t cc, wc_table* t);
 extern wc_wchar_t wc_ucs_to_any_list(uint32_t ucs, wc_table** tlist);
-extern wc_wchar_t wc_any_to_any_ces(wc_wchar_t cc, wc_status* st);
-extern wc_wchar_t wc_any_to_iso2022(wc_wchar_t cc, wc_status* st);
+struct wc_status;
+extern wc_wchar_t wc_any_to_any_ces(wc_wchar_t cc, struct wc_status* st);
+extern wc_wchar_t wc_any_to_iso2022(wc_wchar_t cc, struct wc_status* st);
 extern wc_wchar_t wc_ucs_to_iso2022(uint32_t ucs);
 extern wc_wchar_t wc_ucs_to_iso2022w(uint32_t ucs);
 extern wc_ccs wc_ucs_to_ccs(uint32_t ucs);
@@ -59,4 +61,4 @@ extern uint32_t wc_ucs_precompose(uint32_t ucs1, uint32_t ucs2);
 extern uint32_t wc_ucs_to_fullwidth(uint32_t ucs);
 extern int wc_ucs_put_tag(char* tag);
 extern char* wc_ucs_get_tag(int ntag);
-extern void wtf_push_ucs(pStr os, uint32_t ucs, wc_status* st);
+extern void wtf_push_ucs(pStr os, uint32_t ucs, struct wc_status* st);

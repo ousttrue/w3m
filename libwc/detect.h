@@ -1,5 +1,6 @@
 #pragma once
-#include "status.h"
+#include <stdint.h>
+#include "ces.h"
 
 extern uint8_t WC_DETECT_MAP[];
 

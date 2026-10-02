@@ -1,10 +1,10 @@
 #pragma once
 #include "../Str.h"
-#include "ccs.h"
+#include "ccs_types.h"
 
 typedef uint32_t wc_ces;
 typedef struct wc_status wc_status;
-typedef struct {
+typedef struct wc_ces_info{
     wc_ces id;
     char* name;
     char* desc;
