@@ -1226,7 +1226,7 @@ void addch(const char pc)
     static pStr tmp = NULL;
     char** p;
     char c = *pc;
-    int width = wtf_width((const wc_uchar*)pc);
+    int width = wtf_width((const uint8_t*)pc);
 
     if (tmp == NULL)
         tmp = Strnew();
@@ -1886,7 +1886,7 @@ void addstr(const char* s)
     int len;
 
     while (*s != '\0') {
-        len = wtf_len((const wc_uchar*)s);
+        len = wtf_len((const uint8_t*)s);
         addmch(s, len);
         s += len;
     }
@@ -1903,10 +1903,10 @@ void addnstr(const char* s, int n)
     int len, width;
 
     for (i = 0; *s != '\0';) {
-        width = wtf_width((const wc_uchar*)s);
+        width = wtf_width((const uint8_t*)s);
         if (i + width > n)
             break;
-        len = wtf_len((const wc_uchar*)s);
+        len = wtf_len((const uint8_t*)s);
         addmch(s, len);
         s += len;
         i += width;
@@ -1924,10 +1924,10 @@ void addnstr_sup(const char* s, int n)
     int len, width;
 
     for (i = 0; *s != '\0';) {
-        width = wtf_width((const wc_uchar*)s);
+        width = wtf_width((const uint8_t*)s);
         if (i + width > n)
             break;
-        len = wtf_len((const wc_uchar*)s);
+        len = wtf_len((const uint8_t*)s);
         addmch(s, len);
         s += len;
         i += width;

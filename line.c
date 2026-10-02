@@ -21,7 +21,7 @@ nextColumn(int n, char* p, const Lineprop* pr)
     }
     if (*pr & PC_UNKNOWN)
         return n + 4;
-    return n + wtf_width((wc_uchar*)p);
+    return n + wtf_width((uint8_t*)p);
 }
 
 int calcPosition(char* l, Lineprop* pr, int len, int pos, int bpos, int mode)

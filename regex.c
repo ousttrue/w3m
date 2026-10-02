@@ -57,7 +57,7 @@ int verbose;
 #endif				/* REGEX_DEBUG */
 
 #ifdef USE_M17N
-#define get_mclen(c) wtf_len1((const wc_uchar *)(c))
+#define get_mclen(c) wtf_len1((const uint8_t *)(c))
 #else
 #define get_mclen(c) 1
 #endif

@@ -7,9 +7,9 @@ pStr
 wc_conv_from_priv1(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
     wc_ccs ccs = WcCesInfo[WC_CCS_INDEX(ces)].gset[1].ccs;
 
     for (p = sp; p < ep && *p < 0x80; p++)
@@ -30,7 +30,7 @@ wc_conv_from_priv1(pStr is, wc_ces ces)
 }
 
 pStr
-wc_char_conv_from_priv1(wc_uchar c, wc_status *st)
+wc_char_conv_from_priv1(uint8_t c, wc_status *st)
 {
     pStr os = Strnew_size(1);
 
@@ -45,9 +45,9 @@ pStr
 wc_conv_from_ascii(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
 
     for (p = sp; p < ep && *p < 0x80; p++)
 	;

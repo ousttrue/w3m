@@ -490,7 +490,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
  */
 void reshapeBuffer(Buffer* buf)
 {
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
+    uint8_t old_auto_detect = WcOption.auto_detect;
 
     buf->need_reshape = false;
     buf->width = INIT_BUFFER_WIDTH;

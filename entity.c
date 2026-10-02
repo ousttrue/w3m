@@ -2215,7 +2215,7 @@ const char* conv_entity(unsigned int c)
 #ifdef USE_UNICODE
     if (c <= WC_C_UCS4_END) { /* Unicode */
         char* chk;
-        wc_uchar utf8[7];
+        uint8_t utf8[7];
         wc_ucs_to_utf8(c, utf8);
         /* we eventually need to display it so check DisplayCharset */
         chk = wc_conv((char*)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII)->ptr;

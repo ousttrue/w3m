@@ -7,19 +7,19 @@
 #include "ucs.h"
 #include "map/tcvn57123_tcvn5712.map"
 
-wc_uint8 wc_c0_tcvn57122_map[ 0x20 ] = {
+uint8_t wc_c0_tcvn57122_map[ 0x20 ] = {
     0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,     
     0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,     
 };
-wc_uint8 wc_c0_viscii112_map[ 0x20 ] = {
+uint8_t wc_c0_viscii112_map[ 0x20 ] = {
     0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,     
     0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,     
 };
-wc_uint8 wc_c0_vps2_map[ 0x20 ] = {
+uint8_t wc_c0_vps2_map[ 0x20 ] = {
     0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,     
     1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0,     
 };
-static wc_uint8 tcvn5712_precompose_map[ 0x100 ] = {
+static uint8_t tcvn5712_precompose_map[ 0x100 ] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -44,7 +44,7 @@ static wc_uint8 tcvn5712_precompose_map[ 0x100 ] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
-static wc_uint8 cp1258_precompose_map[ 0x100 ] = {
+static uint8_t cp1258_precompose_map[ 0x100 ] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -73,7 +73,7 @@ static wc_uint8 cp1258_precompose_map[ 0x100 ] = {
 };
 
 wc_uint32
-wc_tcvn5712_precompose(wc_uchar c1, wc_uchar c2)
+wc_tcvn5712_precompose(uint8_t c1, uint8_t c2)
 {
     if (tcvn5712_precompose_map[c1] == 1 && tcvn5712_precompose_map[c2] == 2)
 	return ((wc_uint32)c1 << 8) | c2;
@@ -98,7 +98,7 @@ wc_tcvn57123_to_tcvn5712(wc_wchar_t cc)
 }
 
 wc_uint32
-wc_cp1258_precompose(wc_uchar c1, wc_uchar c2)
+wc_cp1258_precompose(uint8_t c1, uint8_t c2)
 {
     if (cp1258_precompose_map[c1] == 1 && cp1258_precompose_map[c2] == 2)
 	return ((wc_uint32)c1 << 8) | c2;
@@ -110,12 +110,12 @@ pStr
 wc_conv_from_viet(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
     wc_ccs ccs1 = WcCesInfo[WC_CCS_INDEX(ces)].gset[1].ccs;
     wc_ccs ccs2 = WcCesInfo[WC_CCS_INDEX(ces)].gset[2].ccs;
-    wc_uint8 *map = NULL;
+    uint8_t *map = NULL;
 
     switch (ces) {
     case WC_CES_TCVN_5712:
@@ -154,7 +154,7 @@ wc_push_to_viet(pStr os, wc_wchar_t cc, wc_status *st)
 {
     wc_ccs ccs1 = st->ces_info->gset[1].ccs;
     wc_ccs ccs2 = 0, ccs3 = 0;
-    wc_uint8 *map = NULL;
+    uint8_t *map = NULL;
 
     switch (st->ces_info->id) {
     case WC_CES_CP1258:
@@ -213,10 +213,10 @@ wc_push_to_viet(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_viet(wc_uchar c, wc_status *st)
+wc_char_conv_from_viet(uint8_t c, wc_status *st)
 {
     pStr os = Strnew_size(1);
-    wc_uint8 *map = NULL;
+    uint8_t *map = NULL;
 
     switch (st->ces_info->id) {
     case WC_CES_TCVN_5712:

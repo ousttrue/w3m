@@ -20,7 +20,7 @@
 #define SS2 WC_ISO_MAP_SS2
 #define SS3 WC_ISO_MAP_SS3
 
-wc_uint8 WC_ISO_MAP[ 0x100 ] = {
+uint8_t WC_ISO_MAP[ 0x100 ] = {
    C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, SO, SI,
    C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, ESC,C0, C0, C0, C0,
    GL2,GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL,
@@ -40,11 +40,11 @@ wc_uint8 WC_ISO_MAP[ 0x100 ] = {
    GR, GR, GR, GR, GR, GR, GR, GR, GR, GR, GR, GR, GR, GR, GR, GR2,
 };
 
-static wc_uchar cs94_gmap[ 0x80 - WC_F_ISO_BASE ];
-static wc_uchar cs94w_gmap[ 0x80 - WC_F_ISO_BASE ];
-static wc_uchar cs96_gmap[ 0x80 - WC_F_ISO_BASE ];
-static wc_uchar cs96w_gmap[ 0x80 - WC_F_ISO_BASE ];
-static wc_uchar cs942_gmap[ 0x80 - WC_F_ISO_BASE ];
+static uint8_t cs94_gmap[ 0x80 - WC_F_ISO_BASE ];
+static uint8_t cs94w_gmap[ 0x80 - WC_F_ISO_BASE ];
+static uint8_t cs96_gmap[ 0x80 - WC_F_ISO_BASE ];
+static uint8_t cs96w_gmap[ 0x80 - WC_F_ISO_BASE ];
+static uint8_t cs942_gmap[ 0x80 - WC_F_ISO_BASE ];
 
 static void
 wtf_push_iso2022(pStr os, wc_ccs ccs, wc_uint32 code)
@@ -71,9 +71,9 @@ pStr
 wc_conv_from_iso2022(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p, *q = NULL;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p, *q = NULL;
     int state = WC_ISO_NOSTATE;
     wc_status st;
     wc_ccs gl_ccs, gr_ccs;
@@ -251,9 +251,9 @@ wc_conv_from_iso2022(pStr is, wc_ces ces)
 }
 
 int
-wc_parse_iso2022_esc(wc_uchar **ptr, wc_status *st)
+wc_parse_iso2022_esc(uint8_t **ptr, wc_status *st)
 {
-    wc_uchar *p = *ptr, state, f = 0, g = 0, cs = 0;
+    uint8_t *p = *ptr, state, f = 0, g = 0, cs = 0;
 
     if (*p != WC_C_ESC)
 	return 0;
@@ -395,7 +395,7 @@ wc_parse_iso2022_esc(wc_uchar **ptr, wc_status *st)
 void
 wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
 {
-    wc_uchar g = 0;
+    uint8_t g = 0;
     bool is_wide = WC_FALSE, retry = WC_FALSE;
     wc_wchar_t cc2;
 
@@ -508,9 +508,9 @@ wc_push_to_iso2022_end(pStr os, wc_status *st)
 }
 
 void
-wc_push_iso2022_esc(pStr os, wc_ccs ccs, wc_uchar g, wc_uint8 invoke, wc_status *st)
+wc_push_iso2022_esc(pStr os, wc_ccs ccs, uint8_t g, uint8_t invoke, wc_status *st)
 {
-    wc_uint8 g_invoke = g & 0x03;
+    uint8_t g_invoke = g & 0x03;
 
     if (st->design[g_invoke] != ccs) {
 	Strcat_char(os, WC_C_ESC);
@@ -766,7 +766,7 @@ void
 wc_create_gmap(wc_status *st)
 {
     wc_gset *gset = st->ces_info->gset;
-    wc_uchar *gset_ext = st->ces_info->gset_ext;
+    uint8_t *gset_ext = st->ces_info->gset_ext;
     int i, f;
 
     if (WcOption.strict_iso2022) {
@@ -826,12 +826,12 @@ wc_create_gmap(wc_status *st)
 }
 
 pStr
-wc_char_conv_from_iso2022(wc_uchar c, wc_status *st)
+wc_char_conv_from_iso2022(uint8_t c, wc_status *st)
 {
     static pStr os;
-    static wc_uchar buf[4];
+    static uint8_t buf[4];
     static size_t nbuf;
-    wc_uchar *p;
+    uint8_t *p;
     wc_ccs gl_ccs, gr_ccs;
 
     if (st->state == -1) {

@@ -33,11 +33,11 @@ extern unsigned char MYCTYPE_DIGITMAP[];
 #define	TOUPPER(x)	(IS_ALPHA(x) ? ((x)&~0x20) : (x))
 
 #ifdef USE_M17N
-#define get_mctype(c) ((Lineprop)wtf_type((const wc_uchar *)(c)) << 8)
-#define get_mclen(c) wtf_len1((const wc_uchar *)(c))
-#define get_mcwidth(c) wtf_width((const wc_uchar *)(c))
-#define get_strwidth(c) wtf_strwidth((const wc_uchar *)(c))
-#define get_Str_strwidth(c) wtf_strwidth((wc_uchar *)((c)->ptr))
+#define get_mctype(c) ((Lineprop)wtf_type((const uint8_t *)(c)) << 8)
+#define get_mclen(c) wtf_len1((const uint8_t *)(c))
+#define get_mcwidth(c) wtf_width((const uint8_t *)(c))
+#define get_strwidth(c) wtf_strwidth((const uint8_t *)(c))
+#define get_Str_strwidth(c) wtf_strwidth((uint8_t *)((c)->ptr))
 #else
 #define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
 #define get_mclen(c) 1

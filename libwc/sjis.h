@@ -20,7 +20,7 @@
 #define WC_SJIS_MAP_A0	(0x7 | WC_SJIS_MAP_LB)
 #define WC_SJIS_MAP_C1	0x40
 
-extern wc_uint8 WC_SJIS_MAP[];
+extern uint8_t WC_SJIS_MAP[];
 
 extern wc_wchar_t wc_sjis_to_jis(wc_wchar_t cc);
 extern wc_wchar_t wc_jis_to_sjis(wc_wchar_t cc);
@@ -32,8 +32,8 @@ extern pStr        wc_conv_from_sjis(pStr is, wc_ces ces);
 extern pStr        wc_conv_from_sjisx0213(pStr is, wc_ces ces);
 extern void       wc_push_to_sjis(pStr os, wc_wchar_t cc, wc_status *st);
 extern void       wc_push_to_sjisx0213(pStr os, wc_wchar_t cc, wc_status *st);
-extern pStr        wc_char_conv_from_sjis(wc_uchar c, wc_status *st);
-extern pStr        wc_char_conv_from_sjisx0213(wc_uchar c, wc_status *st);
+extern pStr        wc_char_conv_from_sjis(uint8_t c, wc_status *st);
+extern pStr        wc_char_conv_from_sjisx0213(uint8_t c, wc_status *st);
 
 
 #endif

@@ -49,31 +49,31 @@
 #define WTF_TYPE_WCHAR1W	(WTF_TYPE_WCHAR1|WTF_TYPE_WIDE)
 #define WTF_TYPE_WCHAR2W	(WTF_TYPE_WCHAR2|WTF_TYPE_WIDE)
 
-extern wc_uint8 WTF_WIDTH_MAP[];
-extern wc_uint8 WTF_LEN_MAP[];
-extern wc_uint8 WTF_TYPE_MAP[];
+extern uint8_t WTF_WIDTH_MAP[];
+extern uint8_t WTF_LEN_MAP[];
+extern uint8_t WTF_TYPE_MAP[];
 extern wc_ccs   wtf_gr_ccs;
 
 extern void       wtf_init(wc_ces ces1, wc_ces ces2);
 
-/* extern int     wtf_width(wc_uchar *p); */
-#define wtf_width(p) (WcOption.use_wide ? (int)WTF_WIDTH_MAP[(wc_uchar)*(p)] \
-		      : ((int)WTF_WIDTH_MAP[(wc_uchar)*(p)] ? 1 : 0))
-extern int        wtf_strwidth(const wc_uchar *p);
-extern size_t     wtf_len1(const wc_uchar *p);
-extern size_t     wtf_len(const wc_uchar *p);
-/* extern int     wtf_type(wc_uchar *p); */
-#define wtf_type(p) WTF_TYPE_MAP[(wc_uchar)*(p)]
+/* extern int     wtf_width(uint8_t *p); */
+#define wtf_width(p) (WcOption.use_wide ? (int)WTF_WIDTH_MAP[(uint8_t)*(p)] \
+		      : ((int)WTF_WIDTH_MAP[(uint8_t)*(p)] ? 1 : 0))
+extern int        wtf_strwidth(const uint8_t *p);
+extern size_t     wtf_len1(const uint8_t *p);
+extern size_t     wtf_len(const uint8_t *p);
+/* extern int     wtf_type(uint8_t *p); */
+#define wtf_type(p) WTF_TYPE_MAP[(uint8_t)*(p)]
 
 extern void       wtf_push(pStr os, wc_ccs ccs, wc_uint32 code);
-extern void       wtf_push_unknown(pStr os, wc_uchar *p, size_t len);
-extern wc_wchar_t wtf_parse(const wc_uchar **p);
-extern wc_wchar_t wtf_parse1(const wc_uchar **p);
+extern void       wtf_push_unknown(pStr os, uint8_t *p, size_t len);
+extern wc_wchar_t wtf_parse(const uint8_t **p);
+extern wc_wchar_t wtf_parse1(const uint8_t **p);
 
-extern wc_ccs     wtf_get_ccs(const wc_uchar *p);
-extern wc_uint32  wtf_get_code(const wc_uchar *p);
+extern wc_ccs     wtf_get_ccs(const uint8_t *p);
+extern wc_uint32  wtf_get_code(const uint8_t *p);
 
-extern bool    wtf_is_hangul(const wc_uchar *p);
+extern bool    wtf_is_hangul(const uint8_t *p);
 
 extern const char *wtf_conv_fit(const char *s, wc_ces ces);
 

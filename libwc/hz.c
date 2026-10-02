@@ -10,9 +10,9 @@ pStr
 wc_conv_from_hz(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
     int state = WC_HZ_NOSTATE;
 
     for (p = sp; p < ep && *p < 0x80 && *p != WC_C_HZ_TILDA; p++)

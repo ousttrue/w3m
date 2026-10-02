@@ -14,7 +14,7 @@
 #define UB WC_HKSCS_MAP_UB
 #define UH WC_HKSCS_MAP_UH
 
-wc_uint8 WC_HKSCS_MAP[ 0x100 ] = {
+uint8_t WC_HKSCS_MAP[ 0x100 ] = {
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL,
@@ -72,9 +72,9 @@ pStr
 wc_conv_from_hkscs(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
     int state = WC_HKSCS_NOSTATE;
     wc_uint32 hkscs;
 
@@ -164,10 +164,10 @@ wc_push_to_hkscs(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_hkscs(wc_uchar c, wc_status *st)
+wc_char_conv_from_hkscs(uint8_t c, wc_status *st)
 {
     static pStr os;
-    static wc_uchar hkscsu;
+    static uint8_t hkscsu;
     wc_uint32 hkscs;
 
     if (st->state == -1) {

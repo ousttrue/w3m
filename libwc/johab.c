@@ -24,7 +24,7 @@
   C0    GL    GH    GB    C0 C1 CJ    JJ    JB    CB    HB    CB HB    CB    C1 
 */
 
-wc_uint8 WC_JOHAB_MAP[ 0x100 ] = {
+uint8_t WC_JOHAB_MAP[ 0x100 ] = {
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
 /*  20 */
@@ -51,7 +51,7 @@ wc_uint8 WC_JOHAB_MAP[ 0x100 ] = {
     HB, HB, HB, HB, HB, HB, HB, HB, HB, HB, CB, CB, CB, CB, CB, C1,
 };
 
-static wc_uint8 johab1_N_map[ 3 ][ 32 ] = {
+static uint8_t johab1_N_map[ 3 ][ 32 ] = {
   { 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,
    15,16,17,18,19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
   { 0, 0, 0, 1, 2, 3, 4, 5, 0, 0, 6, 7, 8, 9,10,11,
@@ -60,7 +60,7 @@ static wc_uint8 johab1_N_map[ 3 ][ 32 ] = {
    16,17, 0,18,19,20,21,22,23,24,25,26,27,28, 0, 0 }
 };
 
-static wc_uint8 N_johab1_map[ 3 ][ 32 ] = {
+static uint8_t N_johab1_map[ 3 ][ 32 ] = {
   { 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,
    18,19,20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
   { 3, 4, 5, 6, 7,10,11,12,13,14,15,18,19,20,21,22,
@@ -191,7 +191,7 @@ wc_wchar_t
 wc_johab_to_cs128w(wc_wchar_t cc)
 {
     wc_uint32 n;
-    wc_uchar ub, lb;
+    uint8_t ub, lb;
 
     if (cc.code < 0xD800) {
 	n = WC_JOHAB1_N(cc.code);
@@ -217,7 +217,7 @@ wc_wchar_t
 wc_cs128w_to_johab(wc_wchar_t cc)
 {
     wc_uint32 n;
-    wc_uchar ub, lb;
+    uint8_t ub, lb;
 
     switch (cc.ccs) {
     case WC_CCS_JOHAB_1:
@@ -242,9 +242,9 @@ pStr
 wc_conv_from_johab(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
     int state = WC_JOHAB_NOSTATE;
 
     for (p = sp; p < ep && *p < 0x80; p++)
@@ -336,10 +336,10 @@ wc_push_to_johab(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_johab(wc_uchar c, wc_status *st)
+wc_char_conv_from_johab(uint8_t c, wc_status *st)
 {
     static pStr os;
-    static wc_uchar johabu;
+    static uint8_t johabu;
 
     if (st->state == -1) {
 	st->state = WC_JOHAB_NOSTATE;

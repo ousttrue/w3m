@@ -11,7 +11,7 @@
 #define LB WC_UHC_MAP_LB
 #define UB WC_UHC_MAP_UB
 
-wc_uint8 WC_UHC_MAP[ 0x100 ] = {
+uint8_t WC_UHC_MAP[ 0x100 ] = {
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL,
@@ -73,9 +73,9 @@ pStr
 wc_conv_from_uhc(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
     int state = WC_UHC_NOSTATE;
     wc_uint32 uhc;
 
@@ -162,10 +162,10 @@ wc_push_to_uhc(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_uhc(wc_uchar c, wc_status *st)
+wc_char_conv_from_uhc(uint8_t c, wc_status *st)
 {
     static pStr os;
-    static wc_uchar uhcu;
+    static uint8_t uhcu;
     wc_uint32 uhc;
 
     if (st->state == -1) {

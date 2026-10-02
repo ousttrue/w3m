@@ -15,7 +15,7 @@
 #include "ucs.h"
 #include "utf8.h"
 
-wc_uint8 WTF_WIDTH_MAP[ 0x100 ] = {
+uint8_t WTF_WIDTH_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
@@ -27,7 +27,7 @@ wc_uint8 WTF_WIDTH_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
 };
 
-wc_uint8 WTF_LEN_MAP[ 0x100 ] = {
+uint8_t WTF_LEN_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
@@ -39,7 +39,7 @@ wc_uint8 WTF_LEN_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
 };
 
-wc_uint8 WTF_TYPE_MAP[ 0x100 ] = {
+uint8_t WTF_TYPE_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
     0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
@@ -109,10 +109,10 @@ wtf_init(wc_ces ces1, wc_ces ces2)
 }
 
 int
-wtf_strwidth(const wc_uchar *p)
+wtf_strwidth(const uint8_t *p)
 {
     int w = 0;
-    const wc_uchar *q = p + strlen((const char *)p);
+    const uint8_t *q = p + strlen((const char *)p);
 
     while (p < q) {
 	w += wtf_width(p);
@@ -122,7 +122,7 @@ wtf_strwidth(const wc_uchar *p)
 }
 
 size_t
-wtf_len1(const wc_uchar *p)
+wtf_len1(const uint8_t *p)
 {
     size_t len, len_max = WTF_LEN_MAP[*p];
 
@@ -135,10 +135,10 @@ wtf_len1(const wc_uchar *p)
 }
 
 size_t
-wtf_len(const wc_uchar *p)
+wtf_len(const uint8_t *p)
 {
-    const wc_uchar *q = p;
-    const wc_uchar *strz = p + strlen((const char *)p);
+    const uint8_t *q = p;
+    const uint8_t *strz = p + strlen((const char *)p);
 
     q += WTF_LEN_MAP[*q];
     while (q < strz && ! WTF_WIDTH_MAP[*q])
@@ -148,7 +148,7 @@ wtf_len(const wc_uchar *p)
 
 /*
 int
-wtf_type(wc_uchar *p)
+wtf_type(uint8_t *p)
 {
     return (int)WTF_TYPE_MAP[*p];
 }
@@ -180,7 +180,7 @@ wtf_type(wc_uchar *p)
 void
 wtf_push(pStr os, wc_ccs ccs, wc_uint32 code)
 {
-    wc_uchar s[8];
+    uint8_t s[8];
     wc_wchar_t cc, cc2;
     size_t n;
 
@@ -366,7 +366,7 @@ wtf_push(pStr os, wc_ccs ccs, wc_uint32 code)
 }
 
 void
-wtf_push_unknown(pStr os, wc_uchar *p, size_t len)
+wtf_push_unknown(pStr os, uint8_t *p, size_t len)
 {
     for (; len--; p++) {
 	if (*p & 0x80)
@@ -377,9 +377,9 @@ wtf_push_unknown(pStr os, wc_uchar *p, size_t len)
 }
 
 wc_wchar_t
-wtf_parse1(const wc_uchar **p)
+wtf_parse1(const uint8_t **p)
 {
-    const wc_uchar *q = *p;
+    const uint8_t *q = *p;
     wc_wchar_t cc;
 
     if (*q < 0x80) {
@@ -479,9 +479,9 @@ wtf_parse1(const wc_uchar **p)
 }
 
 wc_wchar_t
-wtf_parse(const wc_uchar **p)
+wtf_parse(const uint8_t **p)
 {
-    const wc_uchar *q;
+    const uint8_t *q;
     wc_wchar_t cc, cc2;
     wc_uint32 ucs, ucs2;
 
@@ -540,35 +540,35 @@ wtf_parse(const wc_uchar **p)
 }
 
 wc_ccs
-wtf_get_ccs(const wc_uchar *p)
+wtf_get_ccs(const uint8_t *p)
 {
    return wtf_parse1(&p).ccs;
 }
 
 wc_uint32
-wtf_get_code(const wc_uchar *p)
+wtf_get_code(const uint8_t *p)
 {
    return wtf_parse1(&p).code;
 }
 
 bool
-wtf_is_hangul(const wc_uchar *p)
+wtf_is_hangul(const uint8_t *p)
 {
     if (*p > 0xa0)
 	return (wtf_gr_ccs == WC_CCS_KS_X_1001 || wtf_gr_ccs == WC_CCS_JOHAB_1);
     else if (*p == WTF_C_CS94W)
 	return ((*(p + 1) & 0x7f) == WC_F_KS_X_1001);
     else if (*p == WTF_C_PCSW) {
-	wc_uchar f = *(p + 1) & 0x7f;
+	uint8_t f = *(p + 1) & 0x7f;
 	return (f == WC_F_JOHAB_1 || f == WC_F_JOHAB_2 || f == WC_F_JOHAB_3 ||
 		f == WC_F_UHC_1 || f == WC_F_UHC_2);
     }
     else if (*p == WTF_C_WCS16W) {
-	wc_uchar f = (*(++p) & 0x7f) >> 2;
+	uint8_t f = (*(++p) & 0x7f) >> 2;
 	if (f == WC_F_UCS2)
 	    return wc_is_ucs_hangul(wtf_to_wcs16(p));
     } else if (*p == WTF_C_WCS32W) {
-	wc_uchar f = (*(++p) & 0x7f) >> 4;
+	uint8_t f = (*(++p) & 0x7f) >> 4;
 	if (f == WC_F_UCS_TAG)
 	    return wc_is_ucs_hangul(wc_ucs_tag_to_ucs(wtf_to_wcs32(p)));
     }
@@ -578,7 +578,7 @@ wtf_is_hangul(const wc_uchar *p)
 const char *
 wtf_conv_fit(const char *s, wc_ces ces)
 {
-    const wc_uchar *p;
+    const uint8_t *p;
     pStr os;
     wc_wchar_t cc;
     wc_ces major_ces;
@@ -587,14 +587,14 @@ wtf_conv_fit(const char *s, wc_ces ces)
     if (ces == WC_CES_WTF || ces == WC_CES_US_ASCII)
 	return s;
 
-    for (p = (const wc_uchar *)s; *p && *p < 0x80; p++)
+    for (p = (const uint8_t *)s; *p && *p < 0x80; p++)
 	;
     if (! *p)
 	return s;
 
     os = Strnew_size(strlen(s));
-    if (p > (const wc_uchar *)s)
-	Strcopy_charp_n(os, s, (int)(p - (const wc_uchar *)s));
+    if (p > (const uint8_t *)s)
+	Strcopy_charp_n(os, s, (int)(p - (const uint8_t *)s));
 
     major_ces = wtf_major_ces;
     pre_conv = WcOption.pre_conv;

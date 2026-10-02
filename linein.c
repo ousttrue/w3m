@@ -296,7 +296,7 @@ void addStr(char* p, Lineprop* pr, int len, int offset, int limit)
             addChar(' ', 0);
     }
     for (; i < len; i += delta) {
-        delta = wtf_len((wc_uchar*)&p[i]);
+        delta = wtf_len((uint8_t*)&p[i]);
         ncol = calcPosition(p, pr, len, i + delta, 0, CP_AUTO);
         if (ncol - offset > limit)
             break;

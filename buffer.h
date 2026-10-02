@@ -103,7 +103,7 @@ typedef struct _Buffer {
     char check_url;
 #ifdef USE_M17N
     wc_ces document_charset;
-    wc_uint8 auto_detect;
+    uint8_t auto_detect;
 #endif
     TextList* document_header;
     FormItemList* form_submit;

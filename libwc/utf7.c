@@ -15,7 +15,7 @@
 #define CB (WC_UTF7_MAP_SET_B | WC_UTF7_MAP_C0)
 #define C1 WC_UTF7_MAP_C1
 
-wc_uint8 WC_UTF7_MAP[ 0x100 ] = {
+uint8_t WC_UTF7_MAP[ 0x100 ] = {
 /*                                       TAB NL          CR          */
     CB, CB, CB, CB, CB, CB, CB, CB,  CB, CD, CD, CB, CB, CD, CB, CB,
 /*                                                                  */
@@ -62,9 +62,9 @@ pStr
 wc_conv_from_utf7(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
     int state = WC_UTF7_NOSTATE;
     wc_uint32 b, high = 0;
     wc_status st;
@@ -288,7 +288,7 @@ wc_push_to_utf7_end(pStr os, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_utf7(wc_uchar c, wc_status *st)
+wc_char_conv_from_utf7(uint8_t c, wc_status *st)
 {
     static pStr os;
     static wc_uint32 high;

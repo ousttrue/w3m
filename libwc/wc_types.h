@@ -7,8 +7,6 @@
 #include "../config.h"
 #include <stdint.h>
 
-typedef unsigned char  wc_uchar;
-typedef uint8_t wc_uint8;
 typedef uint16_t wc_uint16;
 typedef uint32_t wc_uint32;
 
@@ -43,7 +41,7 @@ typedef struct {
 
 typedef struct {
     wc_ccs   ccs;
-    wc_uchar g;
+    uint8_t g;
     bool  init;
 } wc_gset;
 
@@ -52,10 +50,10 @@ typedef struct {
     char     *name;
     char     *desc;
     wc_gset  *gset;
-    wc_uchar *gset_ext;
+    uint8_t *gset_ext;
     pStr     (*conv_from)(pStr, wc_ces);
     void    (*push_to)(pStr, wc_wchar_t, wc_status *);
-    pStr     (*char_conv)(wc_uchar, wc_status *);
+    pStr     (*char_conv)(uint8_t, wc_status *);
 } wc_ces_info;
 
 typedef struct {
@@ -65,7 +63,7 @@ typedef struct {
 } wc_ces_list;
 
 typedef struct {
-    wc_uint8 auto_detect;	/* automatically charset detection */
+    uint8_t auto_detect;	/* automatically charset detection */
     bool use_combining;	/* use combining characters */
     bool use_language_tag;	/* use language_tags */
     bool ucs_conv;		/* charset conversion using Unicode */
@@ -88,9 +86,9 @@ typedef struct {
 
 typedef struct wc_status {
     wc_ces_info *ces_info;
-    wc_uint8     gr;
-    wc_uint8     gl;
-    wc_uint8     ss;
+    uint8_t     gr;
+    uint8_t     gl;
+    uint8_t     ss;
     wc_ccs       g0_ccs;
     wc_ccs       g1_ccs;
     wc_ccs       design[4];

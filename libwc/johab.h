@@ -48,7 +48,7 @@
 #define WC_N_CS128W(c)		((WC_N_CS128WU(c) << 8) + WC_N_CS128WL(c))
 #endif
 
-extern wc_uchar WC_JOHAB_MAP[];
+extern uint8_t WC_JOHAB_MAP[];
 
 extern wc_wchar_t wc_johab_to_ksx1001(wc_wchar_t cc);
 extern wc_wchar_t wc_ksx1001_to_johab(wc_wchar_t cc);
@@ -59,6 +59,6 @@ extern wc_wchar_t wc_johab_to_cs128w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs128w_to_johab(wc_wchar_t cc);
 extern pStr        wc_conv_from_johab(pStr is, wc_ces ces);
 extern void       wc_push_to_johab(pStr os, wc_wchar_t cc, wc_status *st);
-extern pStr        wc_char_conv_from_johab(wc_uchar c, wc_status *st);
+extern pStr        wc_char_conv_from_johab(uint8_t c, wc_status *st);
 
 #endif

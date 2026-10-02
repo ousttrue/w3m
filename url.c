@@ -673,7 +673,7 @@ pStr file_to_url(const char* file, const char* CurrentDir)
 
 pStr url_unquote_conv(const char* url, wc_ces charset)
 {
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
+    uint8_t old_auto_detect = WcOption.auto_detect;
     pStr tmp = Str_url_unquote(Strnew_charp(url), false, true);
     if (!charset || charset == WC_CES_US_ASCII)
         charset = SystemCharset;

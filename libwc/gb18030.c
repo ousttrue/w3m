@@ -14,7 +14,7 @@
 #define UB WC_GB18030_MAP_UB
 #define L4 WC_GB18030_MAP_L4
 
-wc_uint8 WC_GB18030_MAP[ 0x100 ] = {
+uint8_t WC_GB18030_MAP[ 0x100 ] = {
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL,
@@ -157,9 +157,9 @@ pStr
 wc_conv_from_gb18030(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
     int state = WC_GB18030_NOSTATE;
     wc_uint32 gbk;
     wc_wchar_t cc;
@@ -295,10 +295,10 @@ wc_push_to_gb18030(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_gb18030(wc_uchar c, wc_status *st)
+wc_char_conv_from_gb18030(uint8_t c, wc_status *st)
 {
     static pStr os;
-    static wc_uchar gb[4];
+    static uint8_t gb[4];
     wc_uint32 gbk;
     wc_wchar_t cc;
     wc_uint32 ucs;

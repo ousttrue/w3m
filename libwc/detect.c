@@ -9,7 +9,7 @@
 #include "utf8.h"
 #include "utf7.h"
 
-wc_uint8 WC_DETECT_MAP[ 0x100 ] = {
+uint8_t WC_DETECT_MAP[ 0x100 ] = {
     0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 
@@ -44,7 +44,7 @@ wc_create_detect_map(wc_ces ces, bool esc)
 
     if (ces != detect_ces) {
 	if (ces & WC_CES_T_VIET) {
-	    wc_uint8 *map = NULL;
+	    uint8_t *map = NULL;
 	    switch (ces) {
 	    case WC_CES_TCVN_5712:
 		map = wc_c0_tcvn57122_map;
@@ -73,9 +73,9 @@ wc_create_detect_map(wc_ces ces, bool esc)
 wc_ces
 wc_auto_detect(char *is, size_t len, wc_ces hint)
 {
-    wc_uchar *p = (wc_uchar *)is;
-    wc_uchar *ep = p + len;
-    wc_uchar *q;
+    uint8_t *p = (uint8_t *)is;
+    uint8_t *ep = p + len;
+    uint8_t *q;
     wc_ces euc = 0, priv = 0;
     wc_status st;
     int euc_state = 0, sjis_state = 0, big5_state = 0, hz_state = 0;

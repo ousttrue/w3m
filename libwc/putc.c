@@ -19,12 +19,12 @@ wc_putc_init(wc_ces f_ces, wc_ces t_ces)
 void
 wc_putc(const char *c, FILE *f)
 {
-    const wc_uchar *p;
+    const uint8_t *p;
 
     if (putc_f_ces != WC_CES_WTF)
-	p = (const wc_uchar *)wc_conv(c, putc_f_ces, WC_CES_WTF)->ptr;
+	p = (const uint8_t *)wc_conv(c, putc_f_ces, WC_CES_WTF)->ptr;
     else
-	p = (const wc_uchar *)c;
+	p = (const uint8_t *)c;
 
     Strclear(putc_str);
     while (*p)

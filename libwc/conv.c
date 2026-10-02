@@ -42,9 +42,9 @@ static pStr
 wc_conv_to_ces(pStr is, wc_ces ces)
 {
     pStr os;
-    const wc_uchar *sp = (const wc_uchar *)is->ptr;
-    const wc_uchar *ep = sp + is->len;
-    const wc_uchar *p;
+    const uint8_t *sp = (const uint8_t *)is->ptr;
+    const uint8_t *ep = sp + is->len;
+    const uint8_t *p;
     wc_status st;
 
     switch (ces) {

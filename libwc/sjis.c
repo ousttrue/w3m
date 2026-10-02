@@ -7,7 +7,7 @@
 #include "ucs.h"
 
 #include "map/jisx02132_sjis.map"
-wc_uchar *wc_jisx0212_jisx02132_map = jisx02132_sjis_map;
+uint8_t *wc_jisx0212_jisx02132_map = jisx02132_sjis_map;
 
 #define C0  WC_SJIS_MAP_C0
 #define GL  WC_SJIS_MAP_GL
@@ -20,7 +20,7 @@ wc_uchar *wc_jisx0212_jisx02132_map = jisx02132_sjis_map;
 #define C1  WC_SJIS_MAP_C1
 #define SA0 WC_SJIS_MAP_A0
 
-wc_uint8 WC_SJIS_MAP[ 0x100 ] = {
+uint8_t WC_SJIS_MAP[ 0x100 ] = {
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL,
@@ -80,7 +80,7 @@ wc_uint8 WC_SJIS_MAP[ 0x100 ] = {
 wc_wchar_t
 wc_sjis_to_jis(wc_wchar_t cc)
 {
-    wc_uchar ub, lb;
+    uint8_t ub, lb;
 
     ub = cc.code >> 8;
     lb = cc.code & 0xff;
@@ -98,7 +98,7 @@ wc_sjis_to_jis(wc_wchar_t cc)
 wc_wchar_t
 wc_jis_to_sjis(wc_wchar_t cc)
 {
-    wc_uchar ub, lb;
+    uint8_t ub, lb;
 
     ub = (cc.code >> 8) & 0x7f;
     lb = cc.code & 0x7f;
@@ -118,7 +118,7 @@ wc_jis_to_sjis(wc_wchar_t cc)
 wc_wchar_t
 wc_sjis_ext_to_cs94w(wc_wchar_t cc)
 {
-    wc_uchar ub, lb;
+    uint8_t ub, lb;
 
     ub = cc.code >> 8;
     lb = cc.code & 0xff;
@@ -136,7 +136,7 @@ wc_sjis_ext_to_cs94w(wc_wchar_t cc)
 wc_wchar_t
 wc_cs94w_to_sjis_ext(wc_wchar_t cc)
 {
-    wc_uchar ub, lb;
+    uint8_t ub, lb;
 
     ub = (cc.code >> 8) & 0x7f;
     lb = cc.code & 0x7f;
@@ -151,7 +151,7 @@ wc_cs94w_to_sjis_ext(wc_wchar_t cc)
 wc_uint32
 wc_sjis_ext1_to_N(wc_uint32 c)
 {
-    wc_uchar ub;
+    uint8_t ub;
 
     ub = (c >> 8) & 0x7f;
     switch(ub) {
@@ -173,7 +173,7 @@ wc_sjis_ext1_to_N(wc_uint32 c)
 wc_uint32
 wc_sjis_ext2_to_N(wc_uint32 c)
 {
-    wc_uchar ub;
+    uint8_t ub;
 
     ub = (c >> 8) & 0x7f;
     switch(ub) {
@@ -194,10 +194,10 @@ pStr
 wc_conv_from_sjis(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
-    wc_uchar jis[2];
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
+    uint8_t jis[2];
     int state = WC_SJIS_NOSTATE;
     wc_wchar_t cc;
 
@@ -274,10 +274,10 @@ pStr
 wc_conv_from_sjisx0213(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
-    wc_uchar jis[2];
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
+    uint8_t jis[2];
     int state = WC_SJIS_NOSTATE;
     wc_wchar_t cc;
 
@@ -353,7 +353,7 @@ wc_conv_from_sjisx0213(pStr is, wc_ces ces)
 void
 wc_push_to_sjis(pStr os, wc_wchar_t cc, wc_status *st)
 {
-    wc_uchar ub, lb;
+    uint8_t ub, lb;
 
   while (1) {
     switch (cc.ccs) {
@@ -404,7 +404,7 @@ wc_push_to_sjis(pStr os, wc_wchar_t cc, wc_status *st)
 void
 wc_push_to_sjisx0213(pStr os, wc_wchar_t cc, wc_status *st)
 {
-    wc_uchar ub, lb;
+    uint8_t ub, lb;
 
   while (1) {
     switch (cc.ccs) {
@@ -464,10 +464,10 @@ wc_push_to_sjisx0213(pStr os, wc_wchar_t cc, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_sjis(wc_uchar c, wc_status *st)
+wc_char_conv_from_sjis(uint8_t c, wc_status *st)
 {
     static pStr os;
-    static wc_uchar jis[2];
+    static uint8_t jis[2];
     wc_wchar_t cc;
 
     if (st->state == -1) {
@@ -529,10 +529,10 @@ wc_char_conv_from_sjis(wc_uchar c, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_sjisx0213(wc_uchar c, wc_status *st)
+wc_char_conv_from_sjisx0213(uint8_t c, wc_status *st)
 {
     static pStr os;
-    static wc_uchar jis[2];
+    static uint8_t jis[2];
     wc_wchar_t cc;
 
     if (st->state == -1) {

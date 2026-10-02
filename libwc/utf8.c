@@ -6,7 +6,7 @@
 #include "utf8.h"
 #include "wtf.h"
 
-wc_uint8 WC_UTF8_MAP[ 0x100 ] = {
+uint8_t WC_UTF8_MAP[ 0x100 ] = {
    8, 8, 8, 8, 8, 8, 8, 8,  8, 8, 8, 8, 8, 8, 8, 8,
    8, 8, 8, 8, 8, 8, 8, 8,  8, 8, 8, 8, 8, 8, 8, 8,
    1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1,
@@ -26,10 +26,10 @@ wc_uint8 WC_UTF8_MAP[ 0x100 ] = {
    4, 4, 4, 4, 4, 4, 4, 4,  5, 5, 5, 5, 6, 6, 7, 7,
 };
 
-static wc_uchar utf8_buf[7];
+static uint8_t utf8_buf[7];
 
 size_t
-wc_ucs_to_utf8(wc_uint32 ucs, wc_uchar *utf8)
+wc_ucs_to_utf8(wc_uint32 ucs, uint8_t *utf8)
 {
     if (ucs < WC_C_UTF8_L2) {
 	utf8[0] =   ucs;
@@ -77,7 +77,7 @@ wc_ucs_to_utf8(wc_uint32 ucs, wc_uchar *utf8)
 }
 
 wc_uint32
-wc_utf8_to_ucs(wc_uchar *utf8)
+wc_utf8_to_ucs(uint8_t *utf8)
 {
     wc_uint32 ucs;
 
@@ -137,10 +137,10 @@ pStr
 wc_conv_from_utf8(pStr is, wc_ces ces)
 {
     pStr os;
-    wc_uchar *sp = (wc_uchar *)is->ptr;
-    wc_uchar *ep = sp + is->len;
-    wc_uchar *p;
-    wc_uchar *q = NULL;
+    uint8_t *sp = (uint8_t *)is->ptr;
+    uint8_t *ep = sp + is->len;
+    uint8_t *p;
+    uint8_t *q = NULL;
     int state = WC_UTF8_NOSTATE;
     size_t next = 0;
     wc_uint32 ucs;
@@ -291,10 +291,10 @@ wc_push_to_utf8_end(pStr os, wc_status *st)
 }
 
 pStr
-wc_char_conv_from_utf8(wc_uchar c, wc_status *st)
+wc_char_conv_from_utf8(uint8_t c, wc_status *st)
 {
     static pStr os;
-    static wc_uchar buf[6];
+    static uint8_t buf[6];
     static size_t nbuf, next;
     wc_uint32 ucs;
 

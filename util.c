@@ -35,7 +35,7 @@ exec_cmd(char *cmd)
 wc_uint32
 getChar(const char *p)
 {
-    return wc_any_to_ucs(wtf_parse1((const wc_uchar **)&p));
+    return wc_any_to_ucs(wtf_parse1((const uint8_t **)&p));
 }
 
 int

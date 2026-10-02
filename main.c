@@ -206,7 +206,7 @@ int main(int argc, char** argv)
     int opt_restore = false;
 #ifdef USE_M17N
     char* Locale = NULL;
-    wc_uint8 auto_detect;
+    uint8_t auto_detect;
 #ifdef __EMX__
     wc_ces CodePage;
 #endif
