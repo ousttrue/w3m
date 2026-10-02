@@ -36,7 +36,7 @@ uint8_t WC_GBK_MAP[ 0x100 ] = {
 };
 
 wc_ccs
-wc_gb2312_or_gbk(wc_uint16 code) {
+wc_gb2312_or_gbk(uint16_t code) {
     return wc_map_range_search(code,
 	gb2312_gbk_map, N_gb2312_gbk_map)
 	? WC_CCS_GBK : WC_CCS_GB_2312;

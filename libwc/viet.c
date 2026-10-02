@@ -86,7 +86,7 @@ wc_tcvn57123_to_tcvn5712(wc_wchar_t cc)
 {
     wc_map *map;
 
-    map = wc_map_search((wc_uint16)(cc.code & 0x7f7f),
+    map = wc_map_search((uint16_t)(cc.code & 0x7f7f),
 	tcvn57123_tcvn5712_map, N_tcvn57123_tcvn5712_map);
     if (map) {
 	cc.ccs = (map->code2 < 0x20) ? WC_CCS_TCVN_5712_2 : WC_CCS_TCVN_5712_1;

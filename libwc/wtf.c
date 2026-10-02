@@ -52,7 +52,7 @@ uint8_t WTF_TYPE_MAP[ 0x100 ] = {
     2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,
 };
 
-static wc_uint16 CCS_MAP[ 33 ] = {
+static uint16_t CCS_MAP[ 33 ] = {
     WC_CCS_A_CS94    >> 8, WC_CCS_A_CS94W    >> 8,
     WC_CCS_A_CS96    >> 8, WC_CCS_A_CS96W    >> 8,
     WC_CCS_A_CS942   >> 8, WC_CCS_A_UNKNOWN  >> 8,

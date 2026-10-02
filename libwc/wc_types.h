@@ -7,7 +7,6 @@
 #include "../config.h"
 #include <stdint.h>
 
-typedef uint16_t wc_uint16;
 typedef uint32_t wc_uint32;
 
 typedef wc_uint32 wc_ccs;
@@ -22,21 +21,21 @@ typedef struct {
 } wc_wchar_t;
 
 typedef struct {
-    wc_uint16 code;
-    wc_uint16 code2;
+    uint16_t code;
+    uint16_t code2;
 } wc_map;
 
 typedef struct {
-    wc_uint16 code;
-    wc_uint16 code2;
-    wc_uint16 code3;
+    uint16_t code;
+    uint16_t code2;
+    uint16_t code3;
 } wc_map3;
 
 typedef struct {
     wc_ccs       ccs;
     size_t       n;
     wc_map      *map;
-    wc_wchar_t (*conv)(wc_ccs, wc_uint16);
+    wc_wchar_t (*conv)(wc_ccs, uint16_t);
 } wc_table;
 
 typedef struct {

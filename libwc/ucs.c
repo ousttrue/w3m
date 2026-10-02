@@ -80,20 +80,20 @@ wc_ucs_to_any(wc_uint32 ucs, wc_table *t)
     wc_map *map;
 
     if (t && t->map && ucs && ucs <= WC_C_UCS2_END) {
-	map = wc_map_search((wc_uint16)ucs, t->map, t->n);
+	map = wc_map_search((uint16_t)ucs, t->map, t->n);
 	if (map)
 	    return t->conv(t->ccs, map->code2);
     }
     if (t && (ucs & ~0xFFFF) == WC_C_UCS4_PLANE2) {
 	if (t->ccs == WC_CCS_JIS_X_0213_1)
-	    map = wc_map_search((wc_uint16)(ucs & 0xffff),
+	    map = wc_map_search((uint16_t)(ucs & 0xffff),
 		ucs_p2_jisx02131_map, N_ucs_p2_jisx02131_map);
 	else if (t->ccs == WC_CCS_JIS_X_0213_2)
-	    map = wc_map_search((wc_uint16)(ucs & 0xffff),
+	    map = wc_map_search((uint16_t)(ucs & 0xffff),
 		ucs_p2_jisx02132_map, N_ucs_p2_jisx02132_map);
 	else if (t->ccs == WC_CCS_HKSCS ||
 		 t->ccs == WC_CCS_HKSCS_1 || t->ccs == WC_CCS_HKSCS_2)
-	    map = wc_map_search((wc_uint16)(ucs & 0xffff),
+	    map = wc_map_search((uint16_t)(ucs & 0xffff),
 		ucs_p2_hkscs_map, N_ucs_p2_hkscs_map);
 	else
 	    map = NULL;
@@ -109,7 +109,7 @@ wc_uint32
 wc_any_to_ucs(wc_wchar_t cc)
 {
     int f;
-    wc_uint16 *map = NULL;
+    uint16_t *map = NULL;
     wc_uint32 map_size = 0x80;
     wc_map *map2;
 
@@ -128,12 +128,12 @@ wc_any_to_ucs(wc_wchar_t cc)
 	    cc.ccs = WC_CCS_GB_12345;
 	    return wc_any_to_ucs(cc);
 	} else if (cc.ccs == WC_CCS_JIS_X_0213_1) {
-	    map2 = wc_map_search((wc_uint16)(cc.code & 0x7f7f),
+	    map2 = wc_map_search((uint16_t)(cc.code & 0x7f7f),
 		jisx02131_ucs_p2_map, N_jisx02131_ucs_p2_map);
 	    if (map2)
 		return map2->code2 | WC_C_UCS4_PLANE2;
 	} else if (cc.ccs == WC_CCS_JIS_X_0213_2) {
-	    map2 = wc_map_search((wc_uint16)(cc.code & 0x7f7f),
+	    map2 = wc_map_search((uint16_t)(cc.code & 0x7f7f),
 		jisx02132_ucs_p2_map, N_jisx02132_ucs_p2_map);
 	    if (map2)
 		return map2->code2 | WC_C_UCS4_PLANE2;
@@ -168,7 +168,7 @@ wc_any_to_ucs(wc_wchar_t cc)
 	    return WC_C_UCS4_ERROR;
 	switch (cc.ccs) {
 	case WC_CCS_CP1258_2:
-	    map2 = wc_map_search((wc_uint16)cc.code,
+	    map2 = wc_map_search((uint16_t)cc.code,
 		cp12582_ucs_map, N_cp12582_ucs_map);
 	    if (map2)
 		return map2->code2;
@@ -198,7 +198,7 @@ wc_any_to_ucs(wc_wchar_t cc)
 	case WC_CCS_HKSCS_2:
 	    cc = wc_cs128w_to_hkscs(cc);
 	case WC_CCS_HKSCS:
-	    map2 = wc_map_search((wc_uint16)cc.code,
+	    map2 = wc_map_search((uint16_t)cc.code,
 		hkscs_ucs_p2_map, N_hkscs_ucs_p2_map);
 	    if (map2)
 		return map2->code2 | WC_C_UCS4_PLANE2;
@@ -211,7 +211,7 @@ wc_any_to_ucs(wc_wchar_t cc)
 	case WC_CCS_JOHAB_2:
 	    cc.code = WC_CS128W_N(cc.code);
 	    cc.code = WC_N_JOHAB2(cc.code);
-	    map2 = wc_map_search((wc_uint16)cc.code,
+	    map2 = wc_map_search((uint16_t)cc.code,
 		johab2_ucs_map, N_johab2_ucs_map);
 	    if (map2)
 		return map2->code2;
@@ -468,7 +468,7 @@ wc_ucs_to_iso2022(wc_uint32 ucs)
 	    t = &ucs_cs96_table[f];
 	    if (t->map == NULL)
 		continue;
-	    cc = wc_ucs_to_any((wc_uint16)ucs, t);
+	    cc = wc_ucs_to_any((uint16_t)ucs, t);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
 	}
@@ -476,7 +476,7 @@ wc_ucs_to_iso2022(wc_uint32 ucs)
 	    t = &ucs_cs94_table[f];
 	    if (t->map == NULL)
 		continue;
-	    cc = wc_ucs_to_any((wc_uint16)ucs, t);
+	    cc = wc_ucs_to_any((uint16_t)ucs, t);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
 	}
@@ -484,7 +484,7 @@ wc_ucs_to_iso2022(wc_uint32 ucs)
 	    t = &ucs_cs942_table[f];
 	    if (t->map == NULL)
 		continue;
-	    cc = wc_ucs_to_any((wc_uint16)ucs, t);
+	    cc = wc_ucs_to_any((uint16_t)ucs, t);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
 	}
@@ -505,7 +505,7 @@ wc_ucs_to_iso2022w(wc_uint32 ucs)
 	    t = &ucs_cs94w_table[f];
 	    if (t->map == NULL)
 		continue;
-	    cc = wc_ucs_to_any((wc_uint16)ucs, t);
+	    cc = wc_ucs_to_any((uint16_t)ucs, t);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
 	}
@@ -513,7 +513,7 @@ wc_ucs_to_iso2022w(wc_uint32 ucs)
 	    t = &ucs_cs96w_table[f];
 	    if (t->map == NULL)
 		continue;
-	    cc = wc_ucs_to_any((wc_uint16)ucs, t);
+	    cc = wc_ucs_to_any((uint16_t)ucs, t);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
 	}
@@ -540,7 +540,7 @@ wc_is_ucs_ambiguous_width(wc_uint32 ucs)
     if (0xa1 <= ucs && ucs <= 0xfe && WcOption.use_jisx0213)
 	return 1;
     else if (ucs <= WC_C_UCS2_END)
-	return (wc_map_range_search((wc_uint16)ucs,
+	return (wc_map_range_search((uint16_t)ucs,
 		    ucs_ambwidth_map, N_ucs_ambwidth_map) != NULL);
     else
 	return ((0xF0000 <= ucs && ucs <= 0xFFFFD)
@@ -551,7 +551,7 @@ bool
 wc_is_ucs_wide(wc_uint32 ucs)
 {
     if (ucs <= WC_C_UCS2_END)
-	return (wc_map_range_search((wc_uint16)ucs,
+	return (wc_map_range_search((uint16_t)ucs,
 		ucs_wide_map, N_ucs_wide_map) != NULL);
     else
 	return ((ucs & ~0xFFFF) == WC_C_UCS4_PLANE2 ||
@@ -562,7 +562,7 @@ bool
 wc_is_ucs_combining(wc_uint32 ucs)
 {
     return (WcOption.use_combining && ucs <= WC_C_UCS2_END &&
-	wc_map_range_search((wc_uint16)ucs,
+	wc_map_range_search((uint16_t)ucs,
 	ucs_combining_map, N_ucs_combining_map) != NULL);
 }
 
@@ -570,7 +570,7 @@ bool
 wc_is_ucs_hangul(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
-	wc_map_range_search((wc_uint16)ucs,
+	wc_map_range_search((uint16_t)ucs,
 	ucs_hangul_map, N_ucs_hangul_map) != NULL);
 }
 
@@ -578,7 +578,7 @@ bool
 wc_is_ucs_alpha(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
-	wc_map_range_search((wc_uint16)ucs,
+	wc_map_range_search((uint16_t)ucs,
 	ucs_isalpha_map, N_ucs_isalpha_map) != NULL);
 }
 
@@ -586,7 +586,7 @@ bool
 wc_is_ucs_digit(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
-	wc_map_range_search((wc_uint16)ucs,
+	wc_map_range_search((uint16_t)ucs,
 	ucs_isdigit_map, N_ucs_isdigit_map) != NULL);
 }
 
@@ -600,7 +600,7 @@ bool
 wc_is_ucs_lower(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
-	wc_map_range_search((wc_uint16)ucs,
+	wc_map_range_search((uint16_t)ucs,
 	ucs_islower_map, N_ucs_islower_map) != NULL);
 }
 
@@ -608,7 +608,7 @@ bool
 wc_is_ucs_upper(wc_uint32 ucs)
 {
     return (ucs <= WC_C_UCS2_END &&
-	wc_map_range_search((wc_uint16)ucs,
+	wc_map_range_search((uint16_t)ucs,
 	ucs_isupper_map, N_ucs_isupper_map) != NULL);
 }
 
@@ -617,7 +617,7 @@ wc_ucs_toupper(wc_uint32 ucs)
 {
     wc_map *conv = NULL;
     if (ucs <= WC_C_UCS2_END)
-	conv = wc_map_search((wc_uint16)ucs,
+	conv = wc_map_search((uint16_t)ucs,
 			     ucs_toupper_map, N_ucs_toupper_map);
     return conv ? (wc_uint32)(conv->code2) : ucs;
 }
@@ -627,7 +627,7 @@ wc_ucs_tolower(wc_uint32 ucs)
 {
     wc_map *conv = NULL;
     if (ucs <= WC_C_UCS2_END)
-	conv = wc_map_search((wc_uint16)ucs,
+	conv = wc_map_search((uint16_t)ucs,
 			     ucs_tolower_map, N_ucs_tolower_map);
     return conv ? (wc_uint32)(conv->code2) : ucs;
 }
@@ -637,7 +637,7 @@ wc_ucs_totitle(wc_uint32 ucs)
 {
     wc_map *conv = NULL;
     if (ucs <= WC_C_UCS2_END)
-	conv = wc_map_search((wc_uint16)ucs,
+	conv = wc_map_search((uint16_t)ucs,
 			     ucs_totitle_map, N_ucs_totitle_map);
     return conv ? (wc_uint32)(conv->code2) : ucs;
 }
@@ -649,7 +649,7 @@ wc_ucs_precompose(wc_uint32 ucs1, wc_uint32 ucs2)
 
     if (WcOption.use_combining &&
 	ucs1 <= WC_C_UCS2_END && ucs2 <= WC_C_UCS2_END &&
-	(map = wc_map3_search((wc_uint16)ucs1, (wc_uint16)ucs2,
+	(map = wc_map3_search((uint16_t)ucs1, (uint16_t)ucs2,
 	ucs_precompose_map, N_ucs_precompose_map)) != NULL)
 	return map->code3;
     return WC_C_UCS4_ERROR;
@@ -661,7 +661,7 @@ wc_ucs_to_fullwidth(wc_uint32 ucs)
     wc_map *map;
 
     if (ucs <= WC_C_UCS2_END &&
-	(map = wc_map_search((wc_uint16)ucs,
+	(map = wc_map_search((uint16_t)ucs,
 	ucs_fullwidth_map, N_ucs_fullwidth_map)) != NULL)
 	return map->code2;
     return WC_C_UCS4_ERROR;

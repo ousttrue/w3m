@@ -60,7 +60,7 @@ wc_cs128w_to_gbk_ext(wc_wchar_t cc)
 }
 
 static wc_ccs
-wc_gbk_or_gbk_ext(wc_uint16 code) {
+wc_gbk_or_gbk_ext(uint16_t code) {
     return wc_map3_range_search(code,
         gbk_ext_ucs_map, N_gbk_ext_ucs_map)
         ? WC_CCS_GBK_EXT : WC_CCS_GBK;
@@ -76,7 +76,7 @@ wc_gb18030_to_ucs(wc_wchar_t cc)
     case WC_CCS_GBK_EXT_2:
 	cc = wc_cs128w_to_gbk_ext(cc);
     case WC_CCS_GBK_EXT:
-	map = wc_map3_range_search((wc_uint16)cc.code,
+	map = wc_map3_range_search((uint16_t)cc.code,
 		gbk_ext_ucs_map, N_gbk_ext_ucs_map);
 	if (map)
 	    return map->code3 + WC_GBK_N(cc.code) - WC_GBK_N(map->code2);
@@ -120,7 +120,7 @@ wc_ucs_to_gb18030(wc_uint32 ucs)
     wc_map3 *map;
 
     if (ucs <= WC_C_UCS2_END) {
-	map = wc_map3_range_search((wc_uint16)ucs,
+	map = wc_map3_range_search((uint16_t)ucs,
 		ucs_gbk_ext_map, N_ucs_gbk_ext_map);
 	if (map) {
 	    cc.code = WC_GBK_N(map->code3) + ucs - map->code;
@@ -128,7 +128,7 @@ wc_ucs_to_gb18030(wc_uint32 ucs)
 	    cc.ccs = WC_CCS_GBK_EXT;
 	    return cc;
 	}
-	map = wc_map3_range_search((wc_uint16)ucs,
+	map = wc_map3_range_search((uint16_t)ucs,
 		ucs_gb18030_map, N_ucs_gb18030_map);
 	if (map) {
 	    cc.code = map->code3 + ucs - map->code + WC_GB18030_N(WC_C_GB18030_UCS2);
