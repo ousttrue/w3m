@@ -4793,7 +4793,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
             DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
                 ? Currentbuf->document_charset
                 : 0;
-            WcOption.fix_width_conv = WC_FALSE;
+            WcOption.fix_width_conv = false;
 #endif
             saveBufferBody(Currentbuf, f, true);
 #ifdef USE_M17N

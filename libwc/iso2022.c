@@ -395,7 +395,7 @@ void
 wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
 {
     uint8_t g = 0;
-    bool is_wide = WC_FALSE, retry = WC_FALSE;
+    bool is_wide = false, retry = false;
     wc_wchar_t cc2;
 
   while (1) {
@@ -486,7 +486,7 @@ wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
 	    cc = wc_any_to_any_ces(cc, st);
 	else
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
-	retry = WC_TRUE;
+	retry = true;
 	continue;
     }
 

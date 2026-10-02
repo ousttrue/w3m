@@ -36,5 +36,5 @@ wc_is_combining(wc_wchar_t cc)
     case WC_CCS_UCS_TAG:
 	return wc_is_ucs_combining(cc.code);
     }
-    return WC_FALSE;
+    return false;
 }

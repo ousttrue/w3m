@@ -7,27 +7,27 @@
 
 struct wc_option WcOption = {
     WC_OPT_DETECT_ON,	/* auto_detect */
-    WC_TRUE,		/* use_combining */
-    WC_TRUE,		/* use_language_tag */
-    WC_TRUE,		/* ucs_conv */
-    WC_FALSE,		/* pre_conv */
-    WC_TRUE,		/* fix_width_conv */
-    WC_FALSE,		/* use_gb12345_map */
-    WC_FALSE,		/* use_jisx0201 */
-    WC_FALSE,		/* use_jisc6226 */
-    WC_FALSE,		/* use_jisx0201k */
-    WC_FALSE,		/* use_jisx0212 */
-    WC_FALSE,		/* use_jisx0213 */
-    WC_TRUE,		/* strict_iso2022 */
-    WC_FALSE,		/* gb18030_as_ucs */
-    WC_FALSE,		/* no_replace */
-    WC_TRUE,		/* use_wide */
-    WC_FALSE,		/* east_asian_width */
+    true,		/* use_combining */
+    true,		/* use_language_tag */
+    true,		/* ucs_conv */
+    false,		/* pre_conv */
+    true,		/* fix_width_conv */
+    false,		/* use_gb12345_map */
+    false,		/* use_jisx0201 */
+    false,		/* use_jisc6226 */
+    false,		/* use_jisx0201k */
+    false,		/* use_jisx0212 */
+    false,		/* use_jisx0213 */
+    true,		/* strict_iso2022 */
+    false,		/* gb18030_as_ucs */
+    false,		/* no_replace */
+    true,		/* use_wide */
+    false,		/* east_asian_width */
 };
 
 static wc_status output_st;
 static struct wc_option output_option;
-static bool output_set = WC_FALSE;
+static bool output_set = false;
 
 #define wc_option_cmp(opt1, opt2) \
     memcmp((void *)(opt1), (void *)(opt2), sizeof(struct wc_option))
@@ -149,7 +149,7 @@ wc_output_init(wc_ces ces, wc_status *st)
     }
 
     output_st = *st;
-    output_set = WC_TRUE;
+    output_set = true;
     output_option = WcOption;
 }
 
@@ -161,7 +161,7 @@ wc_ces_has_ccs(wc_ccs ccs, wc_status *st)
 
     for (i = 0; gset[i].ccs; i++) {
 	if (ccs == gset[i].ccs)
-	    return WC_TRUE;
+	    return true;
     }
-    return WC_FALSE;
+    return false;
 }

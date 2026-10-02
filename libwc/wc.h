@@ -2,9 +2,6 @@
 #include "../Str.h"
 #include "ces.h"
 
-#define WC_FALSE 0
-#define WC_TRUE 1
-
 #define WC_LOCALE_JA_JP 1
 #define WC_LOCALE_ZH_CN 2
 #define WC_LOCALE_ZH_TW 3

@@ -128,7 +128,7 @@ wc_conv_from_viet(pStr is, wc_ces ces)
 	break;
     }
 
-    wc_create_detect_map(ces, WC_FALSE);
+    wc_create_detect_map(ces, false);
     for (p = sp; p < ep && ! WC_DETECT_MAP[*p]; p++)
 	;
     if (p == ep)
