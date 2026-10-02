@@ -1,11 +1,4 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-/*
- * w3m func.h
- */
-
-#ifndef W3M_FUNC_H
-#define W3M_FUNC_H
-
+#pragma once
 #define KEY_HASH_SIZE 127
 
 #define K_ESC  0x100
@@ -21,4 +14,7 @@ typedef struct _FuncList {
 
 extern FuncList w3mFuncList[]; /* Generated in funcname.c */
 
-#endif
+struct Str getWord(const char** str);
+struct Str getQWord(const char** str);
+int getFuncList(const char* id);
+void setKeymap(const char* p, int lineno, int verbose);

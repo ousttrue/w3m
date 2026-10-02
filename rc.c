@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "alloc.h"
+#include "func.h"
 #include "indep.h"
 #include "str_const.h"
 #include "str_gc.h"
@@ -1956,14 +1957,12 @@ loadSiteconf(void)
     if (fp == NULL)
         return;
     while (line = Strfgets(fp), line->len > 0) {
-        char *p, *s;
-
         Strchop(line);
-        p = line->ptr;
+        const char* p = line->ptr;
         SKIP_BLANKS(p);
         if (*p == '#' || *p == '\0')
             continue;
-        s = getWord(&p);
+        const char* s = getWord(&p).ptr;
 
         /* The "url" begins a new record. */
         if (strcmp(s, "url") == 0) {
@@ -1980,7 +1979,7 @@ loadSiteconf(void)
             /* Second, create a new record. */
             newent = newSiteconfRec();
             url = getRegexWord(&p, &newent->re_url);
-            opt = getWord(&p);
+            opt = getWord(&p).ptr;
             SKIP_BLANKS(p);
             if (!newent->re_url) {
                 ParsedURL pu;
@@ -2007,25 +2006,25 @@ loadSiteconf(void)
 
         /* Fill the new record. */
         if (strcmp(s, "substitute_url") == 0) {
-            ent->substitute_url = getQWord(&p);
+            ent->substitute_url = getQWord(&p).ptr;
             SCONF_SET(ent, SCONF_SUBSTITUTE_URL);
         }
         if (strcmp(s, "user_agent") == 0) {
-            ent->user_agent = getQWord(&p);
+            ent->user_agent = getQWord(&p).ptr;
             SCONF_SET(ent, SCONF_USER_AGENT);
         }
 #ifdef USE_M17N
         else if (strcmp(s, "url_charset") == 0) {
-            char* charset = getWord(&p);
+            char* charset = getWord(&p).ptr;
             ent->url_charset = (charset && *charset) ? wc_charset_to_ces(charset) : 0;
             SCONF_SET(ent, SCONF_URL_CHARSET);
         }
 #endif /* USE_M17N */
         else if (strcmp(s, "no_referer_from") == 0) {
-            ent->no_referer_from = str_to_bool(getWord(&p), 0);
+            ent->no_referer_from = str_to_bool(getWord(&p).ptr, 0);
             SCONF_SET(ent, SCONF_NO_REFERER_FROM);
         } else if (strcmp(s, "no_referer_to") == 0) {
-            ent->no_referer_to = str_to_bool(getWord(&p), 0);
+            ent->no_referer_to = str_to_bool(getWord(&p).ptr, 0);
             SCONF_SET(ent, SCONF_NO_REFERER_TO);
         }
     }

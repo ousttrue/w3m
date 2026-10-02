@@ -3,6 +3,7 @@
  */
 #include "alloc.h"
 #include "w3m.h"
+#include "func.h"
 #include "buffer.h"
 #include "str_const.h"
 #include "str_gc.h"
@@ -760,17 +761,17 @@ write_end:
 
 struct pre_form_item {
     int type;
-    char* name;
-    char* value;
+    const char* name;
+    const char* value;
     int checked;
     struct pre_form_item* next;
 };
 
 struct pre_form {
-    char* url;
+    const char* url;
     Regex* re_url;
-    char* name;
-    char* action;
+    const char* name;
+    const char* action;
     struct pre_form_item* item;
     struct pre_form* next;
 };
@@ -778,7 +779,8 @@ struct pre_form {
 static struct pre_form* PreForm = NULL;
 
 static struct pre_form*
-add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* action)
+add_pre_form(struct pre_form* prev,
+    const char* url, Regex* re_url, const char* name, const char* action)
 {
     ParsedURL pu;
     struct pre_form* new;
@@ -802,7 +804,7 @@ add_pre_form(struct pre_form* prev, char* url, Regex* re_url, char* name, char* 
 
 static struct pre_form_item*
 add_pre_form_item(struct pre_form* pf, struct pre_form_item* prev, int type,
-    char* name, char* value, char* checked)
+    const char* name, const char* value, const char* checked)
 {
     struct pre_form_item* new;
 
@@ -853,7 +855,7 @@ void loadPreForm(void)
     if (fp == NULL)
         return;
     while (1) {
-        char *p, *s, *arg;
+        const char* p;
         Regex* re_arg;
 
         line = Strfgets(fp);
@@ -868,13 +870,13 @@ void loadPreForm(void)
         p = line->ptr;
         if (*p == '#' || *p == '\0')
             continue; /* comment or empty line */
-        s = getWord(&p);
+        const char* s = getWord(&p).ptr;
 
         if (!strcmp(s, "url")) {
-            arg = getRegexWord(&p, &re_arg);
+            const char* arg = getRegexWord(&p, &re_arg);
             if (!arg || !*arg)
                 continue;
-            p = getQWord(&p);
+            p = getQWord(&p).ptr;
             pf = add_pre_form(pf, arg, re_arg, NULL, p);
             pi = pf->item;
             continue;
@@ -882,12 +884,12 @@ void loadPreForm(void)
         if (!pf)
             continue;
 
-        arg = getWord(&p);
+        const char* arg = getWord(&p).ptr;
         if (!strcmp(s, "form")) {
             if (!arg || !*arg)
                 continue;
-            s = getQWord(&p);
-            p = getQWord(&p);
+            s = getQWord(&p).ptr;
+            p = getQWord(&p).ptr;
             if (!p || !*p) {
                 p = s;
                 s = NULL;
@@ -933,8 +935,8 @@ void loadPreForm(void)
             continue;
         } else
             continue;
-        s = getQWord(&p);
-        pi = add_pre_form_item(pf, pi, type, arg, s, getQWord(&p));
+        s = getQWord(&p).ptr;
+        pi = add_pre_form_item(pf, pi, type, arg, s, getQWord(&p).ptr);
     }
     fclose(fp);
 }

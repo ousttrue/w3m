@@ -763,15 +763,14 @@ char* getCurWord(Buffer* buf, int* spos, int* epos)
     return &p[b];
 }
 
-char* GetWord(Buffer* buf)
+struct Str GetWord(Buffer* buf)
 {
     int b, e;
-    char* p;
-
-    if ((p = getCurWord(buf, &b, &e)) != NULL) {
-        return Strnew_charp_n(p, e - b)->ptr;
+    const char* p = getCurWord(buf, &b, &e);
+    if (p) {
+        return allocStr_n(p, e - b);
     }
-    return NULL;
+    return (struct Str) { };
 }
 
 /* mark URL-like patterns as anchors */

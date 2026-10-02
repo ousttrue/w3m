@@ -1,5 +1,6 @@
 #include "file.h"
 #include "mymktime.h"
+#include "func.h"
 #include "compression.h"
 #include "entity.h"
 #include "indep.h"
@@ -577,14 +578,13 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             }
         } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) && uf->scheme == SCM_LOCAL_CGI) {
             pStr funcname = Strnew();
-            int f;
 
             p = lineBuf2->ptr + 12;
             SKIP_BLANKS(p);
             while (*p && !IS_SPACE(*p))
                 Strcat_char(funcname, *(p++));
             SKIP_BLANKS(p);
-            f = getFuncList(funcname->ptr);
+            int f = getFuncList(funcname->ptr);
             if (f >= 0) {
                 tmp = Strnew_charp(p);
                 Strchop(tmp);

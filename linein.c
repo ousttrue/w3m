@@ -242,7 +242,7 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
     }
 
     if (i_broken)
-        return (struct Str){};
+        return (struct Str) { };
 
     move(LASTLINE, 0);
     refresh();
@@ -526,7 +526,8 @@ void _enter(void)
 
 void _iword(void)
 {
-    ins_char(Strnew_charp(GetWord(Currentbuf)));
+    struct Str str = GetWord(Currentbuf);
+    ins_char(&str);
 }
 
 void _noop(void)

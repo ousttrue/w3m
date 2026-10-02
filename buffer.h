@@ -133,7 +133,7 @@ Buffer* prevBuffer(Buffer* first, const Buffer* buf);
 Buffer* replaceBuffer(Buffer* first, Buffer* delbuf, Buffer* newbuf);
 Buffer* selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar);
 char* getCurWord(Buffer* buf, int* spos, int* epos);
-char* GetWord(Buffer* buf);
+struct Str GetWord(Buffer* buf);
 int readBufferCache(Buffer* buf);
 int writeBufferCache(Buffer* buf);
 void chkURLBuffer(Buffer* buf);

@@ -67,7 +67,7 @@ static void Strgrow_n(pStr x, int n)
     if (x->capacity >= n)
         return;
 
-    if (!(x->ptr = GC_REALLOC(x->ptr, n)))
+    if (!(x->ptr = GC_REALLOC(x->capacity ? x->ptr : NULL, n)))
         exit(3);
     x->capacity = n;
 }

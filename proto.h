@@ -489,15 +489,11 @@ extern void clearImage(void);
 
 extern const char* searchKeyData(void);
 
-extern void setKeymap(char* p, int lineno, int verbose);
 extern void initKeymap(int force);
-extern int getFuncList(char* id);
 extern int getKey(const char* s);
 extern char* getKeyData(int key);
-extern char* getWord(char** str);
-extern char* getQWord(char** str);
 struct regex;
-extern char* getRegexWord(char** str, struct regex** regex_ret);
+extern char* getRegexWord(const char** str, struct regex** regex_ret);
 #ifdef USE_MOUSE
 extern void initMouseAction(void);
 #endif

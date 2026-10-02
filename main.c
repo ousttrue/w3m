@@ -5013,7 +5013,8 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         cs = inputStr(_("Document charset: "),
-            wc_ces_to_charset(Currentbuf->document_charset)).ptr;
+            wc_ces_to_charset(Currentbuf->document_charset))
+                 .ptr;
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -5027,7 +5028,8 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         cs = inputStr(_("Default document charset: "),
-            wc_ces_to_charset(DocumentCharset)).ptr;
+            wc_ces_to_charset(DocumentCharset))
+                 .ptr;
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         DocumentCharset = charset;
@@ -5682,7 +5684,7 @@ DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
 DEFUN(dictwordat, DICT_WORD_AT,
     "Execute dictionary command for word at cursor")
 {
-    execdict(GetWord(Currentbuf));
+    execdict(GetWord(Currentbuf).ptr);
 }
 #endif /* USE_DICT */
 
@@ -5701,17 +5703,14 @@ void set_buffer_environ(Buffer* buf)
         set_environ("W3M_TITLE", buf->buffername);
         set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
         set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
-#ifdef USE_M17N
         set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
-#endif
     }
     l = buf->currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
-        Anchor* a;
-        ParsedURL pu;
-        char* s = GetWord(buf);
+        const char* s = GetWord(buf).ptr;
         set_environ("W3M_CURRENT_WORD", s ? s : "");
-        a = retrieveCurrentAnchor(buf);
+        Anchor* a = retrieveCurrentAnchor(buf);
+        ParsedURL pu;
         if (a) {
             pu = parseURL2(a->url, baseURL(buf));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
@@ -5837,7 +5836,7 @@ void w3m_exit(int i)
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 {
-    char* data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("command [; ...]: ", "", TextHist).ptr;
         if (data == NULL) {
@@ -5852,14 +5851,14 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
             data++;
             continue;
         }
-        const char* p = getWord(&data);
+        const char* p = getWord(&data).ptr;
         int cmd = getFuncList(p);
         if (cmd < 0) {
             pStr e = Sprintf("Unknown command: %s", p);
             disp_err_message(e->ptr, false);
             break;
         }
-        p = getQWord(&data);
+        p = getQWord(&data).ptr;
         CurrentKey = -1;
         CurrentCmdData = *p ? p : NULL;
 #ifdef USE_MOUSE
@@ -5882,7 +5881,7 @@ SigAlarm(SIGNAL_ARG)
 {
     if (CurrentAlarm->sec > 0) {
         CurrentKey = -1;
-        CurrentCmdData = (char*)CurrentAlarm->data;
+        CurrentCmdData = (const char*)CurrentAlarm->data;
 #ifdef USE_MOUSE
         if (use_mouse)
             mouse_inactive();
@@ -5914,10 +5913,7 @@ SigAlarm(SIGNAL_ARG)
 
 DEFUN(setAlarm, ALARM, "Set alarm")
 {
-    char* data;
-    int sec = 0, cmd = -1;
-
-    data = searchKeyData();
+    const char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
         data = inputStrHist("(Alarm)sec command: ", "", TextHist).ptr;
         if (data == NULL) {
@@ -5925,13 +5921,16 @@ DEFUN(setAlarm, ALARM, "Set alarm")
             return;
         }
     }
+
+    int sec = 0;
+    int cmd = -1;
     if (*data != '\0') {
-        sec = atoi(getWord(&data));
+        sec = atoi(getWord(&data).ptr);
         if (sec > 0)
-            cmd = getFuncList(getWord(&data));
+            cmd = getFuncList(getWord(&data).ptr);
     }
     if (cmd >= 0) {
-        data = getQWord(&data);
+        data = getQWord(&data).ptr;
         setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
         disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
                               data)
