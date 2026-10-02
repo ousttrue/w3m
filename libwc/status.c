@@ -3,26 +3,6 @@
 #include "../alloc.h"
 #include "ucs.h"
 
-struct wc_option WcOption = {
-    WC_OPT_DETECT_ON, /* auto_detect */
-    true, /* use_combining */
-    true, /* use_language_tag */
-    true, /* ucs_conv */
-    false, /* pre_conv */
-    true, /* fix_width_conv */
-    false, /* use_gb12345_map */
-    false, /* use_jisx0201 */
-    false, /* use_jisc6226 */
-    false, /* use_jisx0201k */
-    false, /* use_jisx0212 */
-    false, /* use_jisx0213 */
-    true, /* strict_iso2022 */
-    false, /* gb18030_as_ucs */
-    false, /* no_replace */
-    true, /* use_wide */
-    false, /* east_asian_width */
-};
-
 static struct wc_status output_st;
 static struct wc_option output_option;
 static bool output_set = false;
@@ -61,12 +41,12 @@ void wc_input_init(wc_ces ces, struct wc_status* st)
     st->ntag = 0;
 }
 
-void wc_output_init(wc_ces ces, struct wc_status* st)
+void wc_output_init(struct wc_option *WcOption, wc_ces ces, struct wc_status* st)
 {
     wc_gset* gset;
     size_t i, n, nw;
 
-    if (output_set && ces == output_st.ces_info->id && !wc_option_cmp(&WcOption, &output_option)) {
+    if (output_set && ces == output_st.ces_info->id && !wc_option_cmp(WcOption, &output_option)) {
         *st = output_st;
         return;
     }
@@ -75,10 +55,10 @@ void wc_output_init(wc_ces ces, struct wc_status* st)
     st->ces_info = &WcCesInfo[WC_CES_INDEX(ces)];
     gset = st->ces_info->gset;
 
-    st->g0_ccs = ((ces == WC_CES_ISO_2022_JP || ces == WC_CES_ISO_2022_JP_2 || ces == WC_CES_ISO_2022_JP_3) && WcOption.use_jisx0201)
+    st->g0_ccs = ((ces == WC_CES_ISO_2022_JP || ces == WC_CES_ISO_2022_JP_2 || ces == WC_CES_ISO_2022_JP_3) && WcOption->use_jisx0201)
         ? WC_CCS_JIS_X_0201
         : gset[0].ccs;
-    st->g1_ccs = ((ces == WC_CES_ISO_2022_JP || ces == WC_CES_ISO_2022_JP_2 || ces == WC_CES_ISO_2022_JP_3) && WcOption.use_jisc6226)
+    st->g1_ccs = ((ces == WC_CES_ISO_2022_JP || ces == WC_CES_ISO_2022_JP_2 || ces == WC_CES_ISO_2022_JP_3) && WcOption->use_jisc6226)
         ? WC_CCS_JIS_C_6226
         : gset[1].ccs;
     st->design[0] = st->g0_ccs;
@@ -90,12 +70,12 @@ void wc_output_init(wc_ces ces, struct wc_status* st)
     st->ss = 0;
 
     if (ces & WC_CES_T_ISO_2022)
-        wc_create_gmap(st);
+        wc_create_gmap(WcOption, st);
 
     st->tag = NULL;
     st->ntag = 0;
 
-    if (!WcOption.ucs_conv) {
+    if (!WcOption->ucs_conv) {
         st->tlist = NULL;
         st->tlistw = NULL;
     } else {
@@ -112,16 +92,16 @@ void wc_output_init(wc_ces ces, struct wc_status* st)
             if (WC_CCS_IS_WIDE(gset[i].ccs)) {
                 switch (gset[i].ccs) {
                 case WC_CCS_JIS_X_0212:
-                    if (!WcOption.use_jisx0212)
+                    if (!WcOption->use_jisx0212)
                         continue;
                     break;
                 case WC_CCS_JIS_X_0213_1:
                 case WC_CCS_JIS_X_0213_2:
-                    if (!WcOption.use_jisx0213)
+                    if (!WcOption->use_jisx0213)
                         continue;
                     break;
                 case WC_CCS_GB_2312:
-                    if (WcOption.use_gb12345_map && ces != WC_CES_GBK && ces != WC_CES_GB18030) {
+                    if (WcOption->use_gb12345_map && ces != WC_CES_GBK && ces != WC_CES_GB18030) {
                         st->tlistw[nw++] = wc_get_ucs_table(WC_CCS_GB_12345);
                         continue;
                     }
@@ -131,7 +111,7 @@ void wc_output_init(wc_ces ces, struct wc_status* st)
             } else {
                 switch (gset[i].ccs) {
                 case WC_CCS_JIS_X_0201K:
-                    if (!WcOption.use_jisx0201k)
+                    if (!WcOption->use_jisx0201k)
                         continue;
                     break;
                 }
@@ -144,7 +124,7 @@ void wc_output_init(wc_ces ces, struct wc_status* st)
 
     output_st = *st;
     output_set = true;
-    output_option = WcOption;
+    output_option = *WcOption;
 }
 
 bool wc_ces_has_ccs(wc_ccs ccs, struct wc_status* st)

@@ -418,7 +418,7 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
             if (fmInitialized) {
                 term_raw();
                 pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD).ptr);
-                pwd = Str_conv_to_system(pwd);
+                pwd = Str_conv_to_system(&WcOption, pwd);
                 term_cbreak();
             } else {
 #ifndef __MINGW32_VERSION
@@ -620,7 +620,7 @@ pStr loadFTPDir0(ParsedURL* pu)
                 Strcat_char(tmp, '@');
             Strcat_m_charp(FTPDIRtmp, "<a href=\"", html_quote(file_quote(fn)->ptr),
                 "\">", html_quote(tmp->ptr), "</a>", NULL);
-            for (i = get_Str_strwidth(tmp); i <= max_len; i++) {
+            for (i = get_Str_strwidth(&WcOption, tmp); i <= max_len; i++) {
                 if ((max_len % 2 + i) % 2)
                     Strcat_char(FTPDIRtmp, '.');
                 else

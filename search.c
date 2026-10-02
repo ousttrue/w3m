@@ -1,6 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "search.h"
-
+#include "w3m.h"
 #include "buffer.h"
 #include "charset.h"
 #include "config.h"
@@ -102,7 +101,7 @@ conv_search_string(const char *str, wc_ces f_ces)
 {
     if (SearchConv && !WcOption.pre_conv &&
 	Currentbuf->document_charset != f_ces)
-	str = wtf_conv_fit(str, Currentbuf->document_charset);
+	str = wtf_conv_fit(&WcOption, str, Currentbuf->document_charset);
     return str;
 }
 #endif

@@ -35,9 +35,9 @@ extern unsigned char MYCTYPE_DIGITMAP[];
 #ifdef USE_M17N
 #define get_mctype(c) ((Lineprop)wtf_type((const uint8_t *)(c)) << 8)
 #define get_mclen(c) wtf_len1((const uint8_t *)(c))
-#define get_mcwidth(c) wtf_width((const uint8_t *)(c))
-#define get_strwidth(c) wtf_strwidth((const uint8_t *)(c))
-#define get_Str_strwidth(c) wtf_strwidth((uint8_t *)((c)->ptr))
+#define get_mcwidth(o, c) wtf_width(o, (const uint8_t *)(c))
+#define get_strwidth(o, c) wtf_strwidth(o, (const uint8_t *)(c))
+#define get_Str_strwidth(o, c) wtf_strwidth(o, (uint8_t *)((c)->ptr))
 #else
 #define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
 #define get_mclen(c) 1

@@ -13,23 +13,23 @@ extern char UseContentCharset;
 extern char SearchConv;
 extern char SimplePreserveSpace;
 
-static inline pStr Str_conv_from_system(pStr x)
+static inline pStr Str_conv_from_system(struct wc_option* WcOption, pStr x)
 {
-    return wc_Str_conv(x, SystemCharset, InnerCharset);
+    return wc_Str_conv(WcOption, x, SystemCharset, InnerCharset);
 }
-static inline pStr Str_conv_to_system(pStr x)
+static inline pStr Str_conv_to_system(struct wc_option* WcOption, pStr x)
 {
-    return wc_Str_conv_strict(x, InnerCharset, SystemCharset);
+    return wc_Str_conv_strict(WcOption, x, InnerCharset, SystemCharset);
 }
-static inline pStr Str_conv_to_halfdump(pStr x)
+static inline pStr Str_conv_to_halfdump(struct wc_option* WcOption, pStr x)
 {
-    return (ExtHalfdump ? wc_Str_conv(x, InnerCharset, DisplayCharset) : x);
+    return (ExtHalfdump ? wc_Str_conv(WcOption, x, InnerCharset, DisplayCharset) : x);
 }
-static inline char* conv_from_system(const char* x)
+static inline char* conv_from_system(struct wc_option* WcOption, const char* x)
 {
-    return wc_conv((x), SystemCharset, InnerCharset)->ptr;
+    return wc_conv(WcOption, (x), SystemCharset, InnerCharset)->ptr;
 }
-static inline char* conv_to_system(const char* x)
+static inline char* conv_to_system(struct wc_option *WcOption, const char* x)
 {
-    return wc_conv_strict((x), InnerCharset, SystemCharset)->ptr;
+    return wc_conv_strict(WcOption, (x), InnerCharset, SystemCharset)->ptr;
 }

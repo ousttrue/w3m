@@ -11,5 +11,6 @@ int exec_cmd(char* cmd);
     do {               \
         (s)--;         \
     } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
-uint32_t getChar(const char* p);
+struct wc_option;
+uint32_t getChar(struct wc_option *WcOption, const char* p);
 int is_wordchar(uint32_t c);

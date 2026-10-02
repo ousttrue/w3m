@@ -225,7 +225,7 @@ writeBufferName(Buffer* buf, int n)
         case SCM_LOCAL_CGI:
             if (strcmp(buf->currentURL.file, "-")) {
                 Strcat_char(msg, ' ');
-                Strcat_charp(msg, conv_from_system(buf->currentURL.real_file));
+                Strcat_charp(msg, conv_from_system(&WcOption, buf->currentURL.real_file));
             }
             break;
         case SCM_UNKNOWN:
@@ -746,19 +746,19 @@ char* getCurWord(Buffer* buf, int* spos, int* epos)
         return NULL;
     p = l->lineBuf;
     e = buf->pos;
-    while (e > 0 && !is_wordchar(getChar(&p[e])))
+    while (e > 0 && !is_wordchar(getChar(&WcOption, &p[e])))
         prevChar(e, l);
-    if (!is_wordchar(getChar(&p[e])))
+    if (!is_wordchar(getChar(&WcOption, &p[e])))
         return NULL;
     b = e;
     while (b > 0) {
         int tmp = b;
         prevChar(tmp, l);
-        if (!is_wordchar(getChar(&p[tmp])))
+        if (!is_wordchar(getChar(&WcOption, &p[tmp])))
             break;
         b = tmp;
     }
-    while (e < l->len && is_wordchar(getChar(&p[e])))
+    while (e < l->len && is_wordchar(getChar(&WcOption, &p[e])))
         nextChar(e, l);
     *spos = b;
     *epos = e;

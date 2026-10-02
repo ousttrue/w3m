@@ -33,9 +33,9 @@ exec_cmd(char *cmd)
 #include "libwc/wtf.h"
 
 uint32_t
-getChar(const char *p)
+getChar(struct wc_option *WcOption, const char *p)
 {
-    return wc_any_to_ucs(wtf_parse1((const uint8_t **)&p));
+    return wc_any_to_ucs(WcOption, wtf_parse1((const uint8_t **)&p));
 }
 
 int

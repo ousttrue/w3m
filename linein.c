@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "w3m.h"
 #include "str_gc.h"
 #include "str_const.h"
 #include "alloc.h"
@@ -15,6 +16,7 @@
 #include "tab.h"
 #include "terms.h"
 #include "libwc/charset.h"
+#include "libwc/char_conv.h"
 
 #include <dirent.h>
 #include <stdlib.h>
@@ -138,7 +140,7 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
         cm_mode = CPL_ON;
     else
         cm_mode = CPL_OFF;
-    opos = get_strwidth(prompt);
+    opos = get_strwidth(&WcOption, prompt);
     epos = CLEN - opos;
     if (epos < 0)
         epos = 0;
@@ -218,7 +220,7 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
             if (cm_disp_clear)
                 cm_disp_next = -1;
         } else {
-            tmp = wc_char_conv(c);
+            tmp = wc_char_conv(&WcOption, c);
             if (tmp == NULL) {
                 i_quote = TRUE;
                 goto next_char;
@@ -394,7 +396,7 @@ void _esc(void)
             _bsw();
         break;
     default:
-        if (wc_char_conv(ESC_CODE) == NULL && wc_char_conv(c) == NULL)
+        if (wc_char_conv(&WcOption, ESC_CODE) == NULL && wc_char_conv(&WcOption, c) == NULL)
             i_quote = TRUE;
     }
 }
@@ -695,7 +697,7 @@ void next_dcompl(int next)
         return;
     cm_disp_next = 0;
 
-    d = Str_conv_to_system(Strdup(CDirBuf));
+    d = Str_conv_to_system(&WcOption, Strdup(CDirBuf));
     if (d->len > 0 && Strlastchar(d) != '/')
         Strcat_char(d, '/');
     if (cm_mode & CPL_URL && d->ptr[0] == 'f') {
@@ -756,7 +758,7 @@ disp_next:
             clrtoeolx();
             f = Strdup(d);
             Strcat_charp(f, CFileBuf[n]);
-            addstr(conv_from_system(CFileBuf[n]));
+            addstr(conv_from_system(&WcOption, CFileBuf[n]));
             if (stat(expandPath(f->ptr)->ptr, &st) != -1 && S_ISDIR(st.st_mode))
                 addstr("/");
         }
@@ -826,7 +828,7 @@ pStr doComplete(pStr ifn, int* status, int next)
 
     if (!cm_next) {
         NCFileBuf = 0;
-        ifn = Str_conv_to_system(ifn);
+        ifn = Str_conv_to_system(&WcOption, ifn);
         if (cm_mode & CPL_ON)
             ifn = unescape_spaces(ifn);
         CompleteBuf = Strdup(ifn);
@@ -843,7 +845,7 @@ pStr doComplete(pStr ifn, int* status, int next)
             else {
                 CompleteBuf = Strdup(ifn);
                 *status = CPL_FAIL;
-                return Str_conv_to_system(CompleteBuf);
+                return Str_conv_to_system(&WcOption, CompleteBuf);
             }
         }
         if (CompleteBuf->len == 0) {
@@ -923,7 +925,7 @@ pStr doComplete(pStr ifn, int* status, int next)
     }
     if (cm_mode & CPL_ON)
         CompleteBuf = escape_spaces(CompleteBuf);
-    return Str_conv_from_system(CompleteBuf);
+    return Str_conv_from_system(&WcOption, CompleteBuf);
 }
 
 void _prev(void)

@@ -30,7 +30,28 @@ struct wc_option {
     bool east_asian_width; /* East Asian Ambiguous characters are wide */
 };
 
-extern struct wc_option WcOption;
+static inline struct wc_option makeDefaultOption()
+{
+    return (struct wc_option) {
+        WC_OPT_DETECT_ON, /* auto_detect */
+        true, /* use_combining */
+        true, /* use_language_tag */
+        true, /* ucs_conv */
+        false, /* pre_conv */
+        true, /* fix_width_conv */
+        false, /* use_gb12345_map */
+        false, /* use_jisx0201 */
+        false, /* use_jisc6226 */
+        false, /* use_jisx0201k */
+        false, /* use_jisx0212 */
+        false, /* use_jisx0213 */
+        true, /* strict_iso2022 */
+        false, /* gb18030_as_ucs */
+        false, /* no_replace */
+        true, /* use_wide */
+        false, /* east_asian_width */
+    };
+}
 
 struct wc_status {
     struct wc_ces_info* ces_info;
@@ -50,5 +71,5 @@ struct wc_status {
 };
 
 extern void wc_input_init(wc_ces ces, struct wc_status* st);
-extern void wc_output_init(wc_ces ces, struct wc_status* st);
+extern void wc_output_init(struct wc_option* WcOption, wc_ces ces, struct wc_status* st);
 extern bool wc_ces_has_ccs(wc_ccs ccs, struct wc_status* st);

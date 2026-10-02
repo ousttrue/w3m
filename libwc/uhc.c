@@ -10,6 +10,7 @@
 #define LB WC_UHC_MAP_LB
 #define UB WC_UHC_MAP_UB
 
+// clang-format off
 uint8_t WC_UHC_MAP[ 0x100 ] = {
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
@@ -29,16 +30,17 @@ uint8_t WC_UHC_MAP[ 0x100 ] = {
     UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
     UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, C1,
 };
+// clang-format on
 
 wc_wchar_t
 wc_uhc_to_cs128w(wc_wchar_t cc)
 {
     cc.code = WC_UHC_N(cc.code);
     if (cc.code < 0x4000)
-	cc.ccs = WC_CCS_UHC_1;
+        cc.ccs = WC_CCS_UHC_1;
     else {
-	cc.ccs = WC_CCS_UHC_2;
-	cc.code -= 0x4000;
+        cc.ccs = WC_CCS_UHC_2;
+        cc.code -= 0x4000;
     }
     cc.code = WC_N_CS128W(cc.code);
     return cc;
@@ -49,7 +51,7 @@ wc_cs128w_to_uhc(wc_wchar_t cc)
 {
     cc.code = WC_CS128W_N(cc.code);
     if (cc.ccs == WC_CCS_UHC_2)
-	cc.code += 0x4000;
+        cc.code += 0x4000;
     cc.ccs = WC_CCS_UHC;
     cc.code = WC_N_UHC(cc.code);
     return cc;
@@ -58,144 +60,139 @@ wc_cs128w_to_uhc(wc_wchar_t cc)
 uint32_t
 wc_uhc_to_N(uint32_t c)
 {
-    if (c <= 0xA1A0)	/* 0x8141 - 0xA1A0 */
-	return WC_UHC_N(c);
-    if (c <= 0xA2A0)	/* 0xA240 - 0xA2A0 */
-	return WC_UHC_N(c) - 0x5E;
-    if (c <= 0xA2E7)	/* 0xA2E6 - 0xA2E7 */
-	return WC_UHC_N(0xA2A0) - 0x5E + c - 0xA2E5;
-			/* 0xA340 - 0xFEA0 */
+    if (c <= 0xA1A0) /* 0x8141 - 0xA1A0 */
+        return WC_UHC_N(c);
+    if (c <= 0xA2A0) /* 0xA240 - 0xA2A0 */
+        return WC_UHC_N(c) - 0x5E;
+    if (c <= 0xA2E7) /* 0xA2E6 - 0xA2E7 */
+        return WC_UHC_N(0xA2A0) - 0x5E + c - 0xA2E5;
+    /* 0xA340 - 0xFEA0 */
     return WC_UHC_N(c) - ((c >> 8) - 0xA1) * 0x5E + 2;
 }
 
-pStr
-wc_conv_from_uhc(pStr is, wc_ces ces)
+pStr wc_conv_from_uhc(struct wc_option *WcOption, pStr is, wc_ces ces)
 {
     pStr os;
-    uint8_t *sp = (uint8_t *)is->ptr;
-    uint8_t *ep = sp + is->len;
-    uint8_t *p;
+    uint8_t* sp = (uint8_t*)is->ptr;
+    uint8_t* ep = sp + is->len;
+    uint8_t* p;
     int state = WC_UHC_NOSTATE;
     uint32_t uhc;
 
-    for (p = sp; p < ep && *p < 0x80; p++) 
-	;
+    for (p = sp; p < ep && *p < 0x80; p++)
+        ;
     if (p == ep)
-	return is;
+        return is;
     os = Strnew_size(is->len);
     if (p > sp)
-	Strcat_charp_n(os, (char *)is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
 
     for (; p < ep; p++) {
-	switch (state) {
-	case WC_UHC_NOSTATE:
-	    switch (WC_UHC_MAP[*p]) {
-	    case UB:
-		state = WC_UHC_MBYTE1;
-		break;
-	    case C1:
-		wtf_push_unknown(os, p, 1);
-		break;
-	    default:
-		Strcat_char(os, (char)*p);
-		break;
-	    }
-	    break;
-	case WC_UHC_MBYTE1:
-	    if (WC_UHC_MAP[*p] & LB) {
-		uhc = ((uint32_t)*(p-1) << 8) | *p;
-		if (*(p-1) >= 0xA1 && *p >= 0xA1 &&
-		    uhc != 0xA2E6 && uhc != 0xA2E7)
-		    wtf_push(os, WC_CCS_KS_X_1001, uhc);
-		else
-		    wtf_push(os, WC_CCS_UHC, uhc);
-	    } else
-		wtf_push_unknown(os, p-1, 2);
-	    state = WC_UHC_NOSTATE;
-	    break;
-	}
+        switch (state) {
+        case WC_UHC_NOSTATE:
+            switch (WC_UHC_MAP[*p]) {
+            case UB:
+                state = WC_UHC_MBYTE1;
+                break;
+            case C1:
+                wtf_push_unknown(WcOption, os, p, 1);
+                break;
+            default:
+                Strcat_char(os, (char)*p);
+                break;
+            }
+            break;
+        case WC_UHC_MBYTE1:
+            if (WC_UHC_MAP[*p] & LB) {
+                uhc = ((uint32_t)*(p - 1) << 8) | *p;
+                if (*(p - 1) >= 0xA1 && *p >= 0xA1 && uhc != 0xA2E6 && uhc != 0xA2E7)
+                    wtf_push(WcOption, os, WC_CCS_KS_X_1001, uhc);
+                else
+                    wtf_push(WcOption, os, WC_CCS_UHC, uhc);
+            } else
+                wtf_push_unknown(WcOption, os, p - 1, 2);
+            state = WC_UHC_NOSTATE;
+            break;
+        }
     }
     switch (state) {
     case WC_UHC_MBYTE1:
-	wtf_push_unknown(os, p-1, 1);
-	break;
+        wtf_push_unknown(WcOption, os, p - 1, 1);
+        break;
     }
     return os;
 }
 
-void
-wc_push_to_uhc(pStr os, wc_wchar_t cc, struct wc_status *st)
+void wc_push_to_uhc(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
-  while (1) {
-    switch (cc.ccs) {
-    case WC_CCS_US_ASCII:
-	Strcat_char(os, (char)cc.code);
-	return;
-    case WC_CCS_KS_X_1001:
-	Strcat_char(os, (char)((cc.code >> 8) | 0x80));
-	Strcat_char(os, (char)((cc.code & 0xff) | 0x80));
-	return;
-    case WC_CCS_UHC_1:
-    case WC_CCS_UHC_2:
-	cc = wc_cs128w_to_uhc(cc);
-    case WC_CCS_UHC:
-	Strcat_char(os, (char)(cc.code >> 8));
-	Strcat_char(os, (char)(cc.code & 0xff));
-	return;
-    case WC_CCS_UNKNOWN_W:
-	if (!WcOption.no_replace)
-	    Strcat_charp(os, WC_REPLACE_W);
-	return;
-    case WC_CCS_UNKNOWN:
-	if (!WcOption.no_replace)
-	    Strcat_charp(os, WC_REPLACE);
-	return;
-    default:
-	if (WcOption.ucs_conv)
-	    cc = wc_any_to_any_ces(cc, st);
-	else
-	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
-	continue;
+    while (1) {
+        switch (cc.ccs) {
+        case WC_CCS_US_ASCII:
+            Strcat_char(os, (char)cc.code);
+            return;
+        case WC_CCS_KS_X_1001:
+            Strcat_char(os, (char)((cc.code >> 8) | 0x80));
+            Strcat_char(os, (char)((cc.code & 0xff) | 0x80));
+            return;
+        case WC_CCS_UHC_1:
+        case WC_CCS_UHC_2:
+            cc = wc_cs128w_to_uhc(cc);
+        case WC_CCS_UHC:
+            Strcat_char(os, (char)(cc.code >> 8));
+            Strcat_char(os, (char)(cc.code & 0xff));
+            return;
+        case WC_CCS_UNKNOWN_W:
+            if (!WcOption->no_replace)
+                Strcat_charp(os, WC_REPLACE_W);
+            return;
+        case WC_CCS_UNKNOWN:
+            if (!WcOption->no_replace)
+                Strcat_charp(os, WC_REPLACE);
+            return;
+        default:
+            if (WcOption->ucs_conv)
+                cc = wc_any_to_any_ces(WcOption, cc, st);
+            else
+                cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
+            continue;
+        }
     }
-  }
 }
 
-pStr
-wc_char_conv_from_uhc(uint8_t c, struct wc_status *st)
+pStr wc_char_conv_from_uhc(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
 {
     static pStr os;
     static uint8_t uhcu;
     uint32_t uhc;
 
     if (st->state == -1) {
-	st->state = WC_UHC_NOSTATE;
-	os = Strnew_size(8);
+        st->state = WC_UHC_NOSTATE;
+        os = Strnew_size(8);
     }
 
     switch (st->state) {
     case WC_UHC_NOSTATE:
-	switch (WC_UHC_MAP[c]) {
-	case UB:
-	    uhcu = c;
-	    st->state = WC_UHC_MBYTE1;
-	    return NULL;
-	case C1:
-	    break;
-	default:
-	    Strcat_char(os, (char)c);
-	    break;
-	}
-	break;
+        switch (WC_UHC_MAP[c]) {
+        case UB:
+            uhcu = c;
+            st->state = WC_UHC_MBYTE1;
+            return NULL;
+        case C1:
+            break;
+        default:
+            Strcat_char(os, (char)c);
+            break;
+        }
+        break;
     case WC_UHC_MBYTE1:
-	if (WC_UHC_MAP[c] & LB) {
-	    uhc = ((uint32_t)uhcu << 8) | c;
-	    if (uhcu >= 0xA1 && c >= 0xA1 &&
-		uhc != 0xA2E6 && uhc != 0xA2E7)
-		wtf_push(os, WC_CCS_KS_X_1001, uhc);
-	    else
-		wtf_push(os, WC_CCS_UHC, uhc);
-	}
-	break;
+        if (WC_UHC_MAP[c] & LB) {
+            uhc = ((uint32_t)uhcu << 8) | c;
+            if (uhcu >= 0xA1 && c >= 0xA1 && uhc != 0xA2E6 && uhc != 0xA2E7)
+                wtf_push(WcOption, os, WC_CCS_KS_X_1001, uhc);
+            else
+                wtf_push(WcOption, os, WC_CCS_UHC, uhc);
+        }
+        break;
     }
     st->state = -1;
     return os;

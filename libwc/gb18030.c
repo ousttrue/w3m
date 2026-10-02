@@ -13,6 +13,7 @@
 #define UB WC_GB18030_MAP_UB
 #define L4 WC_GB18030_MAP_L4
 
+// clang-format off
 uint8_t WC_GB18030_MAP[ 0x100 ] = {
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
@@ -32,16 +33,17 @@ uint8_t WC_GB18030_MAP[ 0x100 ] = {
     UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
     UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, C1,
 };
+// clang-format on
 
 wc_wchar_t
 wc_gbk_ext_to_cs128w(wc_wchar_t cc)
 {
     cc.code = WC_GBK_N(cc.code);
     if (cc.code < 0x4000)
-	cc.ccs = WC_CCS_GBK_EXT_1;
+        cc.ccs = WC_CCS_GBK_EXT_1;
     else {
-	cc.ccs = WC_CCS_GBK_EXT_2;
-	cc.code -= 0x4000;
+        cc.ccs = WC_CCS_GBK_EXT_2;
+        cc.code -= 0x4000;
     }
     cc.code = WC_N_CS128W(cc.code);
     return cc;
@@ -52,249 +54,247 @@ wc_cs128w_to_gbk_ext(wc_wchar_t cc)
 {
     cc.code = WC_CS128W_N(cc.code);
     if (cc.ccs == WC_CCS_GBK_EXT_2)
-	cc.code += 0x4000;
+        cc.code += 0x4000;
     cc.ccs = WC_CCS_GBK_EXT;
     cc.code = WC_N_GBK(cc.code);
     return cc;
 }
 
 static wc_ccs
-wc_gbk_or_gbk_ext(uint16_t code) {
+wc_gbk_or_gbk_ext(uint16_t code)
+{
     return wc_map3_range_search(code,
-        gbk_ext_ucs_map, N_gbk_ext_ucs_map)
-        ? WC_CCS_GBK_EXT : WC_CCS_GBK;
+               gbk_ext_ucs_map, N_gbk_ext_ucs_map)
+        ? WC_CCS_GBK_EXT
+        : WC_CCS_GBK;
 }
 
 uint32_t
-wc_gb18030_to_ucs(wc_wchar_t cc)
+wc_gb18030_to_ucs(struct wc_option *WcOption, wc_wchar_t cc)
 {
-    wc_map3 *map;
+    wc_map3* map;
 
     switch (WC_CCS_SET(cc.ccs)) {
     case WC_CCS_GBK_EXT_1:
     case WC_CCS_GBK_EXT_2:
-	cc = wc_cs128w_to_gbk_ext(cc);
+        cc = wc_cs128w_to_gbk_ext(cc);
     case WC_CCS_GBK_EXT:
-	map = wc_map3_range_search((uint16_t)cc.code,
-		gbk_ext_ucs_map, N_gbk_ext_ucs_map);
-	if (map)
-	    return map->code3 + WC_GBK_N(cc.code) - WC_GBK_N(map->code2);
-	return WC_C_UCS4_ERROR;
+        map = wc_map3_range_search((uint16_t)cc.code,
+            gbk_ext_ucs_map, N_gbk_ext_ucs_map);
+        if (map)
+            return map->code3 + WC_GBK_N(cc.code) - WC_GBK_N(map->code2);
+        return WC_C_UCS4_ERROR;
     case WC_CCS_GB18030:
-	break;
+        break;
     default:
-	return wc_any_to_ucs(cc);
+        return wc_any_to_ucs(WcOption, cc);
     }
     if (cc.code >= WC_C_GB18030_UCS2 && cc.code <= WC_C_GB18030_UCS2_END) {
-	int i, min = 0, max = N_ucs_gb18030_map - 1;
+        int i, min = 0, max = N_ucs_gb18030_map - 1;
 
-	cc.code = WC_GB18030_N(cc.code) - WC_GB18030_N(WC_C_GB18030_UCS2);
-	if (cc.code >= ucs_gb18030_map[max].code3)
-	    i = max;
-	else {
-	    while(1) {
-		i = (min + max) / 2;
-		if (min == max)
-		    break;
-		if (cc.code < ucs_gb18030_map[i].code3)
-		    max = i - 1;
-		else if (cc.code >= ucs_gb18030_map[i+1].code3)
-		    min = i + 1;
-		else
-		    break;
-	    }
-	}
-	return ucs_gb18030_map[i].code + cc.code - ucs_gb18030_map[i].code3;
+        cc.code = WC_GB18030_N(cc.code) - WC_GB18030_N(WC_C_GB18030_UCS2);
+        if (cc.code >= ucs_gb18030_map[max].code3)
+            i = max;
+        else {
+            while (1) {
+                i = (min + max) / 2;
+                if (min == max)
+                    break;
+                if (cc.code < ucs_gb18030_map[i].code3)
+                    max = i - 1;
+                else if (cc.code >= ucs_gb18030_map[i + 1].code3)
+                    min = i + 1;
+                else
+                    break;
+            }
+        }
+        return ucs_gb18030_map[i].code + cc.code - ucs_gb18030_map[i].code3;
     }
     if (cc.code >= WC_C_GB18030_UCS4 && cc.code <= WC_C_GB18030_UCS4_END)
-	return WC_GB18030_N(cc.code) - WC_GB18030_N(WC_C_GB18030_UCS4)
-		+ 0x10000;
+        return WC_GB18030_N(cc.code) - WC_GB18030_N(WC_C_GB18030_UCS4)
+            + 0x10000;
     return WC_C_UCS4_ERROR;
 }
 
 wc_wchar_t
-wc_ucs_to_gb18030(uint32_t ucs)
+wc_ucs_to_gb18030(struct wc_option* WcOption, uint32_t ucs)
 {
     wc_wchar_t cc;
-    wc_map3 *map;
+    wc_map3* map;
 
     if (ucs <= WC_C_UCS2_END) {
-	map = wc_map3_range_search((uint16_t)ucs,
-		ucs_gbk_ext_map, N_ucs_gbk_ext_map);
-	if (map) {
-	    cc.code = WC_GBK_N(map->code3) + ucs - map->code;
-	    cc.code = WC_N_GBK(cc.code);
-	    cc.ccs = WC_CCS_GBK_EXT;
-	    return cc;
-	}
-	map = wc_map3_range_search((uint16_t)ucs,
-		ucs_gb18030_map, N_ucs_gb18030_map);
-	if (map) {
-	    cc.code = map->code3 + ucs - map->code + WC_GB18030_N(WC_C_GB18030_UCS2);
-	    cc.code = WC_N_GB18030(cc.code);
-	    if (WcOption.gb18030_as_ucs)
-		cc.ccs = WC_CCS_GB18030 | (wc_ucs_to_ccs(ucs) & ~WC_CCS_A_SET);
-	    else
-		cc.ccs = WC_CCS_GB18030_W;
-	    return cc;
-	}
+        map = wc_map3_range_search((uint16_t)ucs,
+            ucs_gbk_ext_map, N_ucs_gbk_ext_map);
+        if (map) {
+            cc.code = WC_GBK_N(map->code3) + ucs - map->code;
+            cc.code = WC_N_GBK(cc.code);
+            cc.ccs = WC_CCS_GBK_EXT;
+            return cc;
+        }
+        map = wc_map3_range_search((uint16_t)ucs,
+            ucs_gb18030_map, N_ucs_gb18030_map);
+        if (map) {
+            cc.code = map->code3 + ucs - map->code + WC_GB18030_N(WC_C_GB18030_UCS2);
+            cc.code = WC_N_GB18030(cc.code);
+            if (WcOption->gb18030_as_ucs)
+                cc.ccs = WC_CCS_GB18030 | (wc_ucs_to_ccs(WcOption, ucs) & ~WC_CCS_A_SET);
+            else
+                cc.ccs = WC_CCS_GB18030_W;
+            return cc;
+        }
     } else if (ucs <= WC_C_UNICODE_END) {
-	cc.code = ucs - 0x10000 + WC_GB18030_N(WC_C_GB18030_UCS4);
-	cc.code = WC_N_GB18030(cc.code);
-	if (WcOption.gb18030_as_ucs)
-	    cc.ccs = WC_CCS_GB18030 | (wc_ucs_to_ccs(ucs) & ~WC_CCS_A_SET);
-	else
-	    cc.ccs = WC_CCS_GB18030_W;
-	return cc;
+        cc.code = ucs - 0x10000 + WC_GB18030_N(WC_C_GB18030_UCS4);
+        cc.code = WC_N_GB18030(cc.code);
+        if (WcOption->gb18030_as_ucs)
+            cc.ccs = WC_CCS_GB18030 | (wc_ucs_to_ccs(WcOption, ucs) & ~WC_CCS_A_SET);
+        else
+            cc.ccs = WC_CCS_GB18030_W;
+        return cc;
     }
     cc.ccs = WC_CCS_UNKNOWN;
     cc.code = 0;
     return cc;
 }
 
-pStr
-wc_conv_from_gb18030(pStr is, wc_ces ces)
+pStr wc_conv_from_gb18030(struct wc_option *WcOption, pStr is, wc_ces ces)
 {
     pStr os;
-    uint8_t *sp = (uint8_t *)is->ptr;
-    uint8_t *ep = sp + is->len;
-    uint8_t *p;
+    uint8_t* sp = (uint8_t*)is->ptr;
+    uint8_t* ep = sp + is->len;
+    uint8_t* p;
     int state = WC_GB18030_NOSTATE;
     uint32_t gbk;
     wc_wchar_t cc;
     uint32_t ucs;
 
-    for (p = sp; p < ep && *p < 0x80; p++) 
-	;
+    for (p = sp; p < ep && *p < 0x80; p++)
+        ;
     if (p == ep)
-	return is;
+        return is;
     os = Strnew_size(is->len);
     if (p > sp)
-	Strcat_charp_n(os, (char *)is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
 
     for (; p < ep; p++) {
-	switch (state) {
-	case WC_GB18030_NOSTATE:
-	    switch (WC_GB18030_MAP[*p]) {
-	    case UB:
-		state = WC_GB18030_MBYTE1;
-		break;
-	    case C1:
-		wtf_push_unknown(os, p, 1);
-		break;
-	    default:
-		Strcat_char(os, (char)*p);
-		break;
-	    }
-	    break;
-	case WC_GB18030_MBYTE1:
-	    if (WC_GB18030_MAP[*p] & LB) {
-		gbk = ((uint32_t)*(p-1) << 8) | *p;
-		if (wc_gbk_or_gbk_ext(gbk) == WC_CCS_GBK_EXT)
-		    wtf_push(os, WC_CCS_GBK_EXT, gbk);
-		else if (*(p-1) >= 0xA1 && *p >= 0xA1)
-		    wtf_push(os, wc_gb2312_or_gbk(gbk), gbk);
-		else
-		    wtf_push(os, WC_CCS_GBK, gbk);
-	    } else if (WC_GB18030_MAP[*p] == L4) {
-		state = WC_GB18030_MBYTE2;
-		break;
-	    } else
-		wtf_push_unknown(os, p-1, 2);
-	    state = WC_GB18030_NOSTATE;
-	    break;
-	case WC_GB18030_MBYTE2:
-	    if (WC_GB18030_MAP[*p] == UB) {
-		state = WC_GB18030_MBYTE3;
-		break;
-	    } else
-		wtf_push_unknown(os, p-2, 3);
-	    state = WC_GB18030_NOSTATE;
-	    break;
-	case WC_GB18030_MBYTE3:
-	    if (WC_GB18030_MAP[*p] == L4) {
-		cc.ccs = WC_CCS_GB18030_W;
-		cc.code = ((uint32_t)*(p-3) << 24)
-		        | ((uint32_t)*(p-2) << 16)
-		        | ((uint32_t)*(p-1) << 8)
-		        | *p;
-		if (WcOption.gb18030_as_ucs &&
-		    (ucs = wc_gb18030_to_ucs(cc)) != WC_C_UCS4_ERROR)
-		    wtf_push(os, WC_CCS_GB18030 | (wc_ucs_to_ccs(ucs) & ~WC_CCS_A_SET), cc.code);
-		else
-		    wtf_push(os, cc.ccs, cc.code);
-	    } else
-		wtf_push_unknown(os, p-3, 4);
-	    state = WC_GB18030_NOSTATE;
-	    break;
-	}
+        switch (state) {
+        case WC_GB18030_NOSTATE:
+            switch (WC_GB18030_MAP[*p]) {
+            case UB:
+                state = WC_GB18030_MBYTE1;
+                break;
+            case C1:
+                wtf_push_unknown(WcOption, os, p, 1);
+                break;
+            default:
+                Strcat_char(os, (char)*p);
+                break;
+            }
+            break;
+        case WC_GB18030_MBYTE1:
+            if (WC_GB18030_MAP[*p] & LB) {
+                gbk = ((uint32_t)*(p - 1) << 8) | *p;
+                if (wc_gbk_or_gbk_ext(gbk) == WC_CCS_GBK_EXT)
+                    wtf_push(WcOption, os, WC_CCS_GBK_EXT, gbk);
+                else if (*(p - 1) >= 0xA1 && *p >= 0xA1)
+                    wtf_push(WcOption, os, wc_gb2312_or_gbk(gbk), gbk);
+                else
+                    wtf_push(WcOption, os, WC_CCS_GBK, gbk);
+            } else if (WC_GB18030_MAP[*p] == L4) {
+                state = WC_GB18030_MBYTE2;
+                break;
+            } else
+                wtf_push_unknown(WcOption, os, p - 1, 2);
+            state = WC_GB18030_NOSTATE;
+            break;
+        case WC_GB18030_MBYTE2:
+            if (WC_GB18030_MAP[*p] == UB) {
+                state = WC_GB18030_MBYTE3;
+                break;
+            } else
+                wtf_push_unknown(WcOption, os, p - 2, 3);
+            state = WC_GB18030_NOSTATE;
+            break;
+        case WC_GB18030_MBYTE3:
+            if (WC_GB18030_MAP[*p] == L4) {
+                cc.ccs = WC_CCS_GB18030_W;
+                cc.code = ((uint32_t)*(p - 3) << 24)
+                    | ((uint32_t)*(p - 2) << 16)
+                    | ((uint32_t)*(p - 1) << 8)
+                    | *p;
+                if (WcOption->gb18030_as_ucs && (ucs = wc_gb18030_to_ucs(WcOption, cc)) != WC_C_UCS4_ERROR)
+                    wtf_push(WcOption, os, WC_CCS_GB18030 | (wc_ucs_to_ccs(WcOption, ucs) & ~WC_CCS_A_SET), cc.code);
+                else
+                    wtf_push(WcOption, os, cc.ccs, cc.code);
+            } else
+                wtf_push_unknown(WcOption, os, p - 3, 4);
+            state = WC_GB18030_NOSTATE;
+            break;
+        }
     }
     switch (state) {
     case WC_GB18030_MBYTE1:
-	wtf_push_unknown(os, p-1, 1);
-	break;
+        wtf_push_unknown(WcOption, os, p - 1, 1);
+        break;
     case WC_GB18030_MBYTE2:
-	wtf_push_unknown(os, p-2, 2);
-	break;
+        wtf_push_unknown(WcOption, os, p - 2, 2);
+        break;
     case WC_GB18030_MBYTE3:
-	wtf_push_unknown(os, p-3, 3);
-	break;
+        wtf_push_unknown(WcOption, os, p - 3, 3);
+        break;
     }
     return os;
 }
 
-void
-wc_push_to_gb18030(pStr os, wc_wchar_t cc, struct wc_status *st)
+void wc_push_to_gb18030(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
-  while (1) {
-    switch (WC_CCS_SET(cc.ccs)) {
-    case WC_CCS_US_ASCII:
-	Strcat_char(os, (char)cc.code);
-	return;
-    case WC_CCS_GB_2312:
-	Strcat_char(os, (char)((cc.code >> 8) | 0x80));
-	Strcat_char(os, (char)((cc.code & 0xff) | 0x80));
-	return;
-    case WC_CCS_GBK_1:
-    case WC_CCS_GBK_2:
-	cc = wc_cs128w_to_gbk(cc);
-    case WC_CCS_GBK:
-	Strcat_char(os, (char)(cc.code >> 8));
-	Strcat_char(os, (char)(cc.code & 0xff));
-	return;
-    case WC_CCS_GBK_EXT_1:
-    case WC_CCS_GBK_EXT_2:
-	cc = wc_cs128w_to_gbk(cc);
-    case WC_CCS_GBK_EXT:
-	Strcat_char(os, (char)(cc.code >> 8));
-	Strcat_char(os, (char)(cc.code & 0xff));
-	return;
-    case WC_CCS_GB18030:
-	Strcat_char(os, (char)((cc.code >> 24) & 0xff));
-	Strcat_char(os, (char)((cc.code >> 16) & 0xff));
-	Strcat_char(os, (char)((cc.code >> 8)  & 0xff));
-	Strcat_char(os, (char)(cc.code & 0xff));
-	return;
-    case WC_CCS_UNKNOWN_W:
-	if (!WcOption.no_replace)
-	    Strcat_charp(os, WC_REPLACE_W);
-	return;
-    case WC_CCS_UNKNOWN:
-	if (!WcOption.no_replace)
-	    Strcat_charp(os, WC_REPLACE);
-	return;
-    default:
-	if (WcOption.ucs_conv)
-	    cc = wc_any_to_any_ces(cc, st);
-	else
-	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
-	continue;
+    while (1) {
+        switch (WC_CCS_SET(cc.ccs)) {
+        case WC_CCS_US_ASCII:
+            Strcat_char(os, (char)cc.code);
+            return;
+        case WC_CCS_GB_2312:
+            Strcat_char(os, (char)((cc.code >> 8) | 0x80));
+            Strcat_char(os, (char)((cc.code & 0xff) | 0x80));
+            return;
+        case WC_CCS_GBK_1:
+        case WC_CCS_GBK_2:
+            cc = wc_cs128w_to_gbk(cc);
+        case WC_CCS_GBK:
+            Strcat_char(os, (char)(cc.code >> 8));
+            Strcat_char(os, (char)(cc.code & 0xff));
+            return;
+        case WC_CCS_GBK_EXT_1:
+        case WC_CCS_GBK_EXT_2:
+            cc = wc_cs128w_to_gbk(cc);
+        case WC_CCS_GBK_EXT:
+            Strcat_char(os, (char)(cc.code >> 8));
+            Strcat_char(os, (char)(cc.code & 0xff));
+            return;
+        case WC_CCS_GB18030:
+            Strcat_char(os, (char)((cc.code >> 24) & 0xff));
+            Strcat_char(os, (char)((cc.code >> 16) & 0xff));
+            Strcat_char(os, (char)((cc.code >> 8) & 0xff));
+            Strcat_char(os, (char)(cc.code & 0xff));
+            return;
+        case WC_CCS_UNKNOWN_W:
+            if (!WcOption->no_replace)
+                Strcat_charp(os, WC_REPLACE_W);
+            return;
+        case WC_CCS_UNKNOWN:
+            if (!WcOption->no_replace)
+                Strcat_charp(os, WC_REPLACE);
+            return;
+        default:
+            if (WcOption->ucs_conv)
+                cc = wc_any_to_any_ces(WcOption, cc, st);
+            else
+                cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
+            continue;
+        }
     }
-  }
 }
 
-pStr
-wc_char_conv_from_gb18030(uint8_t c, struct wc_status *st)
+pStr wc_char_conv_from_gb18030(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
 {
     static pStr os;
     static uint8_t gb[4];
@@ -303,60 +303,59 @@ wc_char_conv_from_gb18030(uint8_t c, struct wc_status *st)
     uint32_t ucs;
 
     if (st->state == -1) {
-	st->state = WC_GB18030_NOSTATE;
-	os = Strnew_size(8);
+        st->state = WC_GB18030_NOSTATE;
+        os = Strnew_size(8);
     }
 
     switch (st->state) {
     case WC_GB18030_NOSTATE:
-	switch (WC_GB18030_MAP[c]) {
-	case UB:
-	    gb[0] = c;
-	    st->state = WC_GB18030_MBYTE1;
-	    return NULL;
-	case C1:
-	    break;
-	default:
-	    Strcat_char(os, (char)c);
-	    break;
-	}
-	break;
+        switch (WC_GB18030_MAP[c]) {
+        case UB:
+            gb[0] = c;
+            st->state = WC_GB18030_MBYTE1;
+            return NULL;
+        case C1:
+            break;
+        default:
+            Strcat_char(os, (char)c);
+            break;
+        }
+        break;
     case WC_GB18030_MBYTE1:
-	if (WC_GB18030_MAP[c] & LB) {
-	    gbk = ((uint32_t)gb[0] << 8) | c;
-	    if (wc_gbk_or_gbk_ext(gbk) == WC_CCS_GBK_EXT)
-		wtf_push(os, WC_CCS_GBK_EXT, gbk);
-	    else if (gb[0] >= 0xA1 && c >= 0xA1)
-		wtf_push(os, wc_gb2312_or_gbk(gbk), gbk);
-	    else
-		wtf_push(os, WC_CCS_GBK, gbk);
-	} else if (WC_GB18030_MAP[c] == L4) {
-	    gb[1] = c;
-	    st->state = WC_GB18030_MBYTE2;
-	    return NULL;
-	}
-	break;
+        if (WC_GB18030_MAP[c] & LB) {
+            gbk = ((uint32_t)gb[0] << 8) | c;
+            if (wc_gbk_or_gbk_ext(gbk) == WC_CCS_GBK_EXT)
+                wtf_push(WcOption, os, WC_CCS_GBK_EXT, gbk);
+            else if (gb[0] >= 0xA1 && c >= 0xA1)
+                wtf_push(WcOption, os, wc_gb2312_or_gbk(gbk), gbk);
+            else
+                wtf_push(WcOption, os, WC_CCS_GBK, gbk);
+        } else if (WC_GB18030_MAP[c] == L4) {
+            gb[1] = c;
+            st->state = WC_GB18030_MBYTE2;
+            return NULL;
+        }
+        break;
     case WC_GB18030_MBYTE2:
-	if (WC_GB18030_MAP[c] == UB) {
-	    gb[2] = c;
-	    st->state = WC_GB18030_MBYTE3;
-	    return NULL;
-	}
-	break;
+        if (WC_GB18030_MAP[c] == UB) {
+            gb[2] = c;
+            st->state = WC_GB18030_MBYTE3;
+            return NULL;
+        }
+        break;
     case WC_GB18030_MBYTE3:
-	if (WC_GB18030_MAP[c] == L4) {
-	    cc.ccs = WC_CCS_GB18030_W;
-	    cc.code = ((uint32_t)gb[0] << 24)
-		    | ((uint32_t)gb[1] << 16)
-		    | ((uint32_t)gb[2] << 8)
-		    | c;
-	    if (WcOption.gb18030_as_ucs &&
-		(ucs = wc_gb18030_to_ucs(cc)) != WC_C_UCS4_ERROR)
-		wtf_push(os, WC_CCS_GB18030 | (wc_ucs_to_ccs(ucs) & ~WC_CCS_A_SET), cc.code);
-	    else
-	        wtf_push(os, cc.ccs, cc.code);
-	}
-	break;
+        if (WC_GB18030_MAP[c] == L4) {
+            cc.ccs = WC_CCS_GB18030_W;
+            cc.code = ((uint32_t)gb[0] << 24)
+                | ((uint32_t)gb[1] << 16)
+                | ((uint32_t)gb[2] << 8)
+                | c;
+            if (WcOption->gb18030_as_ucs && (ucs = wc_gb18030_to_ucs(WcOption, cc)) != WC_C_UCS4_ERROR)
+                wtf_push(WcOption, os, WC_CCS_GB18030 | (wc_ucs_to_ccs(WcOption, ucs) & ~WC_CCS_A_SET), cc.code);
+            else
+                wtf_push(WcOption, os, cc.ccs, cc.code);
+        }
+        break;
     }
     st->state = -1;
     return os;

@@ -1,6 +1,7 @@
 #include "entity.h"
 #include "config.h"
 #include "myctype.h"
+#include "w3m.h"
 
 #ifdef DUMMY
 #include "Str.h"
@@ -2206,7 +2207,7 @@ const char* conv_entity(unsigned int c)
         if (UseAltEntity)
             return alt_latin1[c - 0xa0];
 #ifdef USE_M17N
-        return wc_conv_n(&b, 1, WC_CES_ISO_8859_1, InnerCharset)->ptr;
+        return wc_conv_n(&WcOption, &b, 1, WC_CES_ISO_8859_1, InnerCharset)->ptr;
 #else
         return Strnew_charp_n(&b, 1)->ptr;
 #endif
@@ -2218,9 +2219,9 @@ const char* conv_entity(unsigned int c)
         uint8_t utf8[7];
         wc_ucs_to_utf8(c, utf8);
         /* we eventually need to display it so check DisplayCharset */
-        chk = wc_conv((char*)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII)->ptr;
+        chk = wc_conv(&WcOption, (char*)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII)->ptr;
         if (strcmp(chk, "?") != 0)
-            return wc_conv((char*)utf8, WC_CES_UTF_8, InnerCharset)->ptr;
+            return wc_conv(&WcOption, (char*)utf8, WC_CES_UTF_8, InnerCharset)->ptr;
     }
 #endif
 #endif

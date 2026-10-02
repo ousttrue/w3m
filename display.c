@@ -297,7 +297,7 @@ make_lastline_link(Buffer *buf, const char *title, const char *url)
 	}
 	if (url)
 	    Strcat_charp(s, " ");
-	l -= get_Str_strwidth(s);
+	l -= get_Str_strwidth(&WcOption, s);
 	if (l <= 0)
 	    return s;
     }
@@ -310,7 +310,7 @@ make_lastline_link(Buffer *buf, const char *title, const char *url)
 #ifdef USE_M17N
     u = checkType(u, &pr, NULL);
 #endif
-    if (l <= 4 || l >= get_Str_strwidth(u)) {
+    if (l <= 4 || l >= get_Str_strwidth(&WcOption, u)) {
 	if (!s)
 	    return u;
 	Strcat(s, u);
@@ -325,7 +325,7 @@ make_lastline_link(Buffer *buf, const char *title, const char *url)
 #endif
     Strcat_charp_n(s, u->ptr, i);
     Strcat_charp(s, "..");
-    i = get_Str_strwidth(u) - (COLS - 1 - get_Str_strwidth(s));
+    i = get_Str_strwidth(&WcOption, u) - (COLS - 1 - get_Str_strwidth(&WcOption, s));
 #ifdef USE_M17N
     while (i < u->len && pr[i] & PC_WCHAR2)
 	i++;
@@ -361,7 +361,7 @@ make_lastline_message(Buffer *buf)
 		s = make_lastline_link(buf, p, a ? a->url : NULL);
 	}
 	if (s) {
-	    sl = get_Str_strwidth(s);
+	    sl = get_Str_strwidth(&WcOption, s);
 	    if (sl >= COLS - 3)
 		return s;
 	}
@@ -397,11 +397,11 @@ make_lastline_message(Buffer *buf)
 
     if (s) {
 	int l = COLS - 3 - sl;
-	if (get_Str_strwidth(msg) > l) {
+	if (get_Str_strwidth(&WcOption, msg) > l) {
 #ifdef USE_M17N
 	    char *p;
 	    for (p = msg->ptr; *p; p += get_mclen(p)) {
-		l -= get_mcwidth(p);
+		l -= get_mcwidth(&WcOption, p);
 		if (l < 0)
 		    break;
 	    }
@@ -532,7 +532,7 @@ displayBuffer(Buffer *buf, int mode)
     standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     standend();
-    term_title(conv_to_system(buf->buffername));
+    term_title(conv_to_system(&WcOption, buf->buffername));
     refresh();
 #ifdef USE_IMAGE
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
@@ -662,7 +662,7 @@ redrawNLine(Buffer *buf, int n)
 	    if (t == CurrentTab)
 		bold();
 	    addch('[');
-	    l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
+	    l = t->x2 - t->x1 - 1 - get_strwidth(&WcOption, t->currentBuffer->buffername);
 	    if (l < 0)
 		l = 0;
 	    if (l / 2 > 0)
@@ -1282,7 +1282,7 @@ disp_message_nsec(const char *s, int redraw_current, int sec, int purge, int mou
     if (QuietMessage)
 	return;
     if (!fmInitialized) {
-	fprintf(stderr, "%s\n", conv_to_system(s));
+	fprintf(stderr, "%s\n", conv_to_system(&WcOption, s));
 	return;
     }
     if (CurrentTab != NULL && Currentbuf != NULL)

@@ -71,7 +71,7 @@ wc_create_detect_map(wc_ces ces, bool esc)
 }
 
 wc_ces
-wc_auto_detect(char *is, size_t len, wc_ces hint)
+wc_auto_detect(struct wc_option *WcOption, char *is, size_t len, wc_ces hint)
 {
     uint8_t *p = (uint8_t *)is;
     uint8_t *ep = p + len;
@@ -282,7 +282,7 @@ wc_auto_detect(char *is, size_t len, wc_ces hint)
 		    SET_DETECT(sjis_detect, DETECT_POSSIBLE);
 		    break;
 		case WC_SJIS_MAP_SX:
-		    if (WcOption.use_jisx0213) {
+		    if (WcOption->use_jisx0213) {
 			sjis_state = WC_SJIS_SHIFT_X;
 			break;
 		    }

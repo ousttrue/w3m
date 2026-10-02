@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "symbol.h"
-
+#include "w3m.h"
 #include "alloc.h"
 #include "charset.h"
 #include "config.h"
@@ -86,7 +86,7 @@ encode_symbol(symbol_set * s)
     s->conved_item = New_N(char *, i);
     for (i = 0; s->item[i]; i++) {
 	if (*(s->item[i]))
-	    s->conved_item[i] = wc_conv(s->item[i], s->ces, InnerCharset)->ptr;
+	    s->conved_item[i] = wc_conv(&WcOption, s->item[i], s->ces, InnerCharset)->ptr;
     }
 }
 
@@ -144,9 +144,9 @@ set_symbol(int width)
     for (i = 0; s->item[i]; i++) {
 	tmp = Strnew_size(4);
 	if (width == 2)
-	    wtf_push(tmp, WC_CCS_SPECIAL_W, (uint32_t) (SYMBOL_BASE + i));
+	    wtf_push(&WcOption, tmp, WC_CCS_SPECIAL_W, (uint32_t) (SYMBOL_BASE + i));
 	else
-	    wtf_push(tmp, WC_CCS_SPECIAL, (uint32_t) (SYMBOL_BASE + i));
+	    wtf_push(&WcOption, tmp, WC_CCS_SPECIAL, (uint32_t) (SYMBOL_BASE + i));
 	symbol_buf[i] = tmp->ptr;
     }
     save_width = width;

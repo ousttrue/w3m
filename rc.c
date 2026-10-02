@@ -1149,12 +1149,12 @@ void show_params(FILE* fp)
     for (j = 0; sections[j].name != NULL; j++) {
         const char* cmt;
         if (!OptionEncode)
-            cmt = wc_conv(_(sections[j].name), OptionCharset,
+            cmt = wc_conv(&WcOption, _(sections[j].name), OptionCharset,
                 InnerCharset)
                       ->ptr;
         else
             cmt = sections[j].name;
-        fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
+        fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(&WcOption, cmt));
         i = 0;
         while (sections[j].params[i].name) {
             switch (sections[j].params[i].type) {
@@ -1194,7 +1194,7 @@ void show_params(FILE* fp)
             }
 #ifdef USE_M17N
             if (!OptionEncode)
-                cmt = wc_conv(_(sections[j].params[i].comment),
+                cmt = wc_conv(&WcOption, _(sections[j].params[i].comment),
                     OptionCharset, InnerCharset)
                           ->ptr;
             else
@@ -1205,7 +1205,7 @@ void show_params(FILE* fp)
                 l = 1;
             fprintf(fp, "    -o %s=<%s>%*s%s\n",
                 sections[j].params[i].name, t, l, " ",
-                conv_to_system(cmt));
+                conv_to_system(&WcOption, cmt));
             i++;
         }
     }
@@ -1693,7 +1693,7 @@ to_str(struct param_ptr* p)
     case P_SSLPATH:
 #endif
         /*  SystemCharset -> InnerCharset */
-        return Strnew_charp(conv_from_system(*(char**)p->varptr));
+        return Strnew_charp(conv_from_system(&WcOption, *(char**)p->varptr));
     case P_PIXELS:
     case P_SCALE:
         return Sprintf("%g", *(double*)p->varptr);
@@ -1723,13 +1723,13 @@ load_option_panel(void)
     OptionCharset = SystemCharset; /* FIXME */
 #endif
     if (!OptionEncode) {
-        optionpanel_str = wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
+        optionpanel_str = wc_Str_conv(&WcOption, optionpanel_str, OptionCharset, InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
-            sections[i].name = wc_conv(_(sections[i].name), OptionCharset,
+            sections[i].name = wc_conv(&WcOption, _(sections[i].name), OptionCharset,
                 InnerCharset)
                                    ->ptr;
             for (p = sections[i].params; p->name; p++) {
-                p->comment = wc_conv(_(p->comment), OptionCharset,
+                p->comment = wc_conv(&WcOption, _(p->comment), OptionCharset,
                     InnerCharset)
                                  ->ptr;
                 if (p->inputtype == PI_SEL_C
@@ -1738,7 +1738,7 @@ load_option_panel(void)
 #endif
                 ) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
-                        s->text = wc_conv(_(s->text), OptionCharset,
+                        s->text = wc_conv(&WcOption, _(s->text), OptionCharset,
                             InnerCharset)
                                       ->ptr;
                     }
@@ -1747,7 +1747,7 @@ load_option_panel(void)
         }
 #ifdef USE_COLOR
         for (s = colorstr; s->text; s++)
-            s->text = wc_conv(_(s->text), OptionCharset,
+            s->text = wc_conv(&WcOption, _(s->text), OptionCharset,
                 InnerCharset)
                           ->ptr;
 #endif
@@ -1843,7 +1843,7 @@ void panel_set_option(struct parsed_tagarg* arg)
     while (arg) {
         /*  InnerCharset -> SystemCharset */
         if (arg->value) {
-            p = conv_to_system(arg->value);
+            p = conv_to_system(&WcOption, arg->value);
             if (set_param(arg->arg, p)) {
                 tmp = Sprintf("%s %s\n", arg->arg, p);
                 Strcat(tmp, s);

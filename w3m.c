@@ -7,6 +7,7 @@
 #include "form.h"
 #include "str_gc.h"
 #include "str_const.h"
+#include "libwc/status.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -14,6 +15,13 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+
+struct wc_option WcOption;
+
+void w3m_init()
+{
+    WcOption = makeDefaultOption();
+}
 
 const char* CurrentDir;
 int CurrentPid;

@@ -152,7 +152,7 @@ name_from_address(char* str, int n)
             space = true;
         } else
             space = false;
-        l += get_mcwidth(p);
+        l += get_mcwidth(&WcOption, p);
         if (l > n)
             break;
     }

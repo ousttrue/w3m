@@ -15,6 +15,7 @@
 #define CJ WC_JOHAB_MAP_CJ
 #define CB WC_JOHAB_MAP_CB
 
+// clang-format off
 /*
   00-1F 20-30 31-40 41-7E 7F 80 81-83 84-90 91-D3 D4-D7 D8-DE DF E0-F9 FA-FE FF
   C0    GL    GL    GL    C0 -  -     J     J     -     H     -  H     -     -
@@ -67,67 +68,66 @@ static uint8_t N_johab1_map[ 3 ][ 32 ] = {
   { 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,
    17,19,20,21,22,23,24,25,26,27,28,29, 0, 0, 0, 0 }
 };
+// clang-format on
 
 wc_wchar_t
-wc_johab_to_ksx1001(wc_wchar_t cc)
+wc_johab_to_ksx1001(struct wc_option *WcOption, wc_wchar_t cc)
 {
-    static wc_table *t = NULL;
+    static wc_table* t = NULL;
 
     switch (cc.ccs) {
     case WC_CCS_JOHAB:
-	return wc_johab_to_ksx1001(wc_johab_to_cs128w(cc));
+        return wc_johab_to_ksx1001(WcOption, wc_johab_to_cs128w(cc));
     case WC_CCS_JOHAB_1:
     case WC_CCS_JOHAB_2:
-	if (WcOption.ucs_conv) {
-	    if (t == NULL)
-		t = wc_get_ucs_table(WC_CCS_KS_X_1001);
-	    cc = wc_any_to_any(cc, t);
-	} else
-	    cc.ccs = WC_CCS_UNKNOWN_W;
-	break;
+        if (WcOption->ucs_conv) {
+            if (t == NULL)
+                t = wc_get_ucs_table(WC_CCS_KS_X_1001);
+            cc = wc_any_to_any(WcOption, cc, t);
+        } else
+            cc.ccs = WC_CCS_UNKNOWN_W;
+        break;
     case WC_CCS_JOHAB_3:
-	if (cc.code >= 0x2121)
-	    cc.ccs = WC_CCS_KS_X_1001;
-	else
-	    cc.ccs = WC_CCS_UNKNOWN_W;
-	break;
+        if (cc.code >= 0x2121)
+            cc.ccs = WC_CCS_KS_X_1001;
+        else
+            cc.ccs = WC_CCS_UNKNOWN_W;
+        break;
     }
     return cc;
 }
 
 wc_wchar_t
-wc_ksx1001_to_johab(wc_wchar_t cc)
+wc_ksx1001_to_johab(struct wc_option *WcOption, wc_wchar_t cc)
 {
     cc.code &= 0x7f7f;
-    if ((cc.code >= 0x2121 && cc.code <  0x2421) ||
-	(cc.code >  0x2453 && cc.code <= 0x2C7E) ||
-	(cc.code >= 0x4A21 && cc.code <= 0x7D7E)) {
-	cc.ccs = WC_CCS_JOHAB_3;
-	return cc;
+    if ((cc.code >= 0x2121 && cc.code < 0x2421) || (cc.code > 0x2453 && cc.code <= 0x2C7E) || (cc.code >= 0x4A21 && cc.code <= 0x7D7E)) {
+        cc.ccs = WC_CCS_JOHAB_3;
+        return cc;
     }
-    if (WcOption.ucs_conv)
-	cc = wc_ucs_to_johab(wc_any_to_ucs(cc));
+    if (WcOption->ucs_conv)
+        cc = wc_ucs_to_johab(wc_any_to_ucs(WcOption, cc));
     else
-	cc.ccs = WC_CCS_UNKNOWN_W;
+        cc.ccs = WC_CCS_UNKNOWN_W;
     return cc;
 }
 
 wc_wchar_t
 wc_ucs_to_johab(uint32_t ucs)
 {
-    wc_table *t;
+    wc_table* t;
     wc_wchar_t cc;
 
     if (ucs >= WC_C_UCS2_HANGUL && ucs <= WC_C_UCS2_HANGUL_END) {
-	ucs -= WC_C_UCS2_HANGUL;
-	cc.code = WC_N_JOHAB1(ucs);
-	cc.ccs = WC_CCS_JOHAB;
+        ucs -= WC_C_UCS2_HANGUL;
+        cc.code = WC_N_JOHAB1(ucs);
+        cc.ccs = WC_CCS_JOHAB;
     } else if (ucs >= 0x3131 && ucs <= 0x3163) {
-	t = wc_get_ucs_table(WC_CCS_JOHAB_2);
-	cc = wc_ucs_to_any(ucs, t);
+        t = wc_get_ucs_table(WC_CCS_JOHAB_2);
+        cc = wc_ucs_to_any(ucs, t);
     } else {
-	t = wc_get_ucs_table(WC_CCS_JOHAB_3);
-	cc = wc_ucs_to_any(ucs, t);
+        t = wc_get_ucs_table(WC_CCS_JOHAB_3);
+        cc = wc_ucs_to_any(ucs, t);
     }
     return cc;
 }
@@ -138,10 +138,10 @@ wc_johab1_to_N(uint32_t code)
     uint32_t a, b, c;
 
     a = johab1_N_map[0][(code >> 10) & 0x1F];
-    b = johab1_N_map[1][(code >> 5)  & 0x1F];
-    c = johab1_N_map[2][ code        & 0x1F];
+    b = johab1_N_map[1][(code >> 5) & 0x1F];
+    c = johab1_N_map[2][code & 0x1F];
     if (a && b && c)
-	return ((a - 1) * 21 + (b - 1)) * 28 + (c - 1);
+        return ((a - 1) * 21 + (b - 1)) * 28 + (c - 1);
     return WC_C_JOHAB_ERROR;
 }
 
@@ -152,39 +152,39 @@ wc_N_to_johab1(uint32_t code)
 
     a = N_johab1_map[0][(code / 28) / 21 & 0x1F];
     b = N_johab1_map[1][(code / 28) % 21 & 0x1F];
-    c = N_johab1_map[2][ code % 28       & 0x1F];
+    c = N_johab1_map[2][code % 28 & 0x1F];
     return 0x8000 | (a << 10) | (b << 5) | c;
 }
 
 /* 0x1F21 - 0x2C7E, 0x4A21 - 0x7C7E
   (0x1F21 - 0x207E are not in KS X 1001) */
-#define johab3_to_ksx1001(ub, lb) \
-{ \
-    if (ub < 0xe0) { \
-	ub = ((ub - 0xd8) << 1) + 0x1f; \
-    } else { \
-	ub = ((ub - 0xe0) << 1) + 0x4a; \
-    } \
-    if (lb < 0xa1) { \
-	lb -= (lb < 0x91) ? 0x10 : 0x22; \
-    } else { \
-	ub++; \
-	lb -= 0x80; \
-    } \
-}
+#define johab3_to_ksx1001(ub, lb)            \
+    {                                        \
+        if (ub < 0xe0) {                     \
+            ub = ((ub - 0xd8) << 1) + 0x1f;  \
+        } else {                             \
+            ub = ((ub - 0xe0) << 1) + 0x4a;  \
+        }                                    \
+        if (lb < 0xa1) {                     \
+            lb -= (lb < 0x91) ? 0x10 : 0x22; \
+        } else {                             \
+            ub++;                            \
+            lb -= 0x80;                      \
+        }                                    \
+    }
 
-#define ksx1001_to_johab3(ub, lb) \
-{ \
-    if (ub < 0x4a) { \
-	ub -= 0x1f; \
-	lb += (ub & 0x1) ? 0x80 : ((lb < 0x6f) ? 0x10 : 0x22); \
-	ub = (ub >> 1) + 0xd8; \
-    } else { \
-	ub -= 0x4a; \
-	lb += (ub & 0x1) ? 0x80 : ((lb < 0x6f) ? 0x10 : 0x22); \
-	ub = (ub >> 1) + 0xe0; \
-    } \
-}
+#define ksx1001_to_johab3(ub, lb)                                  \
+    {                                                              \
+        if (ub < 0x4a) {                                           \
+            ub -= 0x1f;                                            \
+            lb += (ub & 0x1) ? 0x80 : ((lb < 0x6f) ? 0x10 : 0x22); \
+            ub = (ub >> 1) + 0xd8;                                 \
+        } else {                                                   \
+            ub -= 0x4a;                                            \
+            lb += (ub & 0x1) ? 0x80 : ((lb < 0x6f) ? 0x10 : 0x22); \
+            ub = (ub >> 1) + 0xe0;                                 \
+        }                                                          \
+    }
 
 wc_wchar_t
 wc_johab_to_cs128w(wc_wchar_t cc)
@@ -193,21 +193,21 @@ wc_johab_to_cs128w(wc_wchar_t cc)
     uint8_t ub, lb;
 
     if (cc.code < 0xD800) {
-	n = WC_JOHAB1_N(cc.code);
-	if (n != WC_C_JOHAB_ERROR) {
-	    cc.code = WC_N_CS94x128(n);
-	    cc.ccs = WC_CCS_JOHAB_1;
-	} else {
-	    n = WC_JOHAB2_N(cc.code);
-	    cc.code = WC_N_CS128W(n);
-	    cc.ccs = WC_CCS_JOHAB_2;
-	}
+        n = WC_JOHAB1_N(cc.code);
+        if (n != WC_C_JOHAB_ERROR) {
+            cc.code = WC_N_CS94x128(n);
+            cc.ccs = WC_CCS_JOHAB_1;
+        } else {
+            n = WC_JOHAB2_N(cc.code);
+            cc.code = WC_N_CS128W(n);
+            cc.ccs = WC_CCS_JOHAB_2;
+        }
     } else {
-	ub = cc.code >> 8;
-	lb = cc.code & 0xff;
-	johab3_to_ksx1001(ub, lb);
-	cc.code = ((uint32_t)ub << 8) | lb;
-	cc.ccs = WC_CCS_JOHAB_3;
+        ub = cc.code >> 8;
+        lb = cc.code & 0xff;
+        johab3_to_ksx1001(ub, lb);
+        cc.code = ((uint32_t)ub << 8) | lb;
+        cc.ccs = WC_CCS_JOHAB_3;
     }
     return cc;
 }
@@ -220,157 +220,154 @@ wc_cs128w_to_johab(wc_wchar_t cc)
 
     switch (cc.ccs) {
     case WC_CCS_JOHAB_1:
-	n = WC_CS94x128_N(cc.code);
-	cc.code = WC_N_JOHAB1(n);
-	break;
+        n = WC_CS94x128_N(cc.code);
+        cc.code = WC_N_JOHAB1(n);
+        break;
     case WC_CCS_JOHAB_2:
-	n = WC_CS128W_N(cc.code);
-	cc.code = WC_N_JOHAB2(n);
-	break;
+        n = WC_CS128W_N(cc.code);
+        cc.code = WC_N_JOHAB2(n);
+        break;
     case WC_CCS_JOHAB_3:
-	ub = (cc.code >> 8) & 0x7f;
-	lb = cc.code & 0x7f;
-	ksx1001_to_johab3(ub, lb);
-	cc.code = ((uint32_t)ub << 8) | lb;
+        ub = (cc.code >> 8) & 0x7f;
+        lb = cc.code & 0x7f;
+        ksx1001_to_johab3(ub, lb);
+        cc.code = ((uint32_t)ub << 8) | lb;
     }
     cc.ccs = WC_CCS_JOHAB;
     return cc;
 }
 
-pStr
-wc_conv_from_johab(pStr is, wc_ces ces)
+pStr wc_conv_from_johab(struct wc_option *WcOption, pStr is, wc_ces ces)
 {
     pStr os;
-    uint8_t *sp = (uint8_t *)is->ptr;
-    uint8_t *ep = sp + is->len;
-    uint8_t *p;
+    uint8_t* sp = (uint8_t*)is->ptr;
+    uint8_t* ep = sp + is->len;
+    uint8_t* p;
     int state = WC_JOHAB_NOSTATE;
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep)
-	return is;
+        return is;
     os = Strnew_size(is->len);
     if (p > sp)
-	Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
     for (; p < ep; p++) {
-	switch (state) {
-	case WC_JOHAB_NOSTATE:
-	    switch (WC_JOHAB_MAP[*p] & WC_JOHAB_MAP_1) {
-	    case WC_JOHAB_MAP_UJ:
-		state = WC_JOHAB_HANGUL1;
-		break;
-	    case WC_JOHAB_MAP_UH:
-		state = WC_JOHAB_HANJA1;
-		break;
-	    case WC_JOHAB_MAP_C1:
-		wtf_push_unknown(os, p, 1);
-		break;
-	    default:
-		Strcat_char(os, (char)*p);
-		break;
-	    }
-	    break;
-	case WC_JOHAB_HANGUL1:
-	    if (WC_JOHAB_MAP[*p] & WC_JOHAB_MAP_LJ) 
-		wtf_push(os, WC_CCS_JOHAB, ((uint32_t)*(p-1) << 8) | *p);
-	    else
-		wtf_push_unknown(os, p-1, 2);
-	    state = WC_JOHAB_NOSTATE;
-	    break;
-	case WC_JOHAB_HANJA1:
-	    if (WC_JOHAB_MAP[*p] & WC_JOHAB_MAP_LH)
-		wtf_push(os, WC_CCS_JOHAB, ((uint32_t)*(p-1) << 8) | *p);
-	    else
-		wtf_push_unknown(os, p-1, 2);
-	    state = WC_JOHAB_NOSTATE;
-	    break;
-	}
+        switch (state) {
+        case WC_JOHAB_NOSTATE:
+            switch (WC_JOHAB_MAP[*p] & WC_JOHAB_MAP_1) {
+            case WC_JOHAB_MAP_UJ:
+                state = WC_JOHAB_HANGUL1;
+                break;
+            case WC_JOHAB_MAP_UH:
+                state = WC_JOHAB_HANJA1;
+                break;
+            case WC_JOHAB_MAP_C1:
+                wtf_push_unknown(WcOption, os, p, 1);
+                break;
+            default:
+                Strcat_char(os, (char)*p);
+                break;
+            }
+            break;
+        case WC_JOHAB_HANGUL1:
+            if (WC_JOHAB_MAP[*p] & WC_JOHAB_MAP_LJ)
+                wtf_push(WcOption, os, WC_CCS_JOHAB, ((uint32_t)*(p - 1) << 8) | *p);
+            else
+                wtf_push_unknown(WcOption, os, p - 1, 2);
+            state = WC_JOHAB_NOSTATE;
+            break;
+        case WC_JOHAB_HANJA1:
+            if (WC_JOHAB_MAP[*p] & WC_JOHAB_MAP_LH)
+                wtf_push(WcOption, os, WC_CCS_JOHAB, ((uint32_t)*(p - 1) << 8) | *p);
+            else
+                wtf_push_unknown(WcOption, os, p - 1, 2);
+            state = WC_JOHAB_NOSTATE;
+            break;
+        }
     }
     switch (state) {
     case WC_JOHAB_HANGUL1:
     case WC_JOHAB_HANJA1:
-	wtf_push_unknown(os, p-1, 1);
-	break;
+        wtf_push_unknown(WcOption, os, p - 1, 1);
+        break;
     }
     return os;
 }
 
-void
-wc_push_to_johab(pStr os, wc_wchar_t cc, struct wc_status *st)
+void wc_push_to_johab(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
-  while (1) {
-    switch (cc.ccs) {
-    case WC_CCS_US_ASCII:
-	Strcat_char(os, (char)cc.code);
-	return;
-    case WC_CCS_JOHAB_1:
-    case WC_CCS_JOHAB_2:
-    case WC_CCS_JOHAB_3:
-	cc = wc_cs128w_to_johab(cc);
-    case WC_CCS_JOHAB:
-	Strcat_char(os, (char)(cc.code >> 8));
-	Strcat_char(os, (char)(cc.code & 0xff));
-	return;
-    case WC_CCS_KS_X_1001:
-	cc = wc_ksx1001_to_johab(cc);
-	continue;
-    case WC_CCS_UNKNOWN_W:
-	if (!WcOption.no_replace)
-	    Strcat_charp(os, WC_REPLACE_W);
-	return;
-    case WC_CCS_UNKNOWN:
-	if (!WcOption.no_replace)
-	    Strcat_charp(os, WC_REPLACE);
-	return;
-    default:
-	if (WcOption.ucs_conv)
-	    cc = wc_any_to_any_ces(cc, st);
-	else
-	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
-	continue;
+    while (1) {
+        switch (cc.ccs) {
+        case WC_CCS_US_ASCII:
+            Strcat_char(os, (char)cc.code);
+            return;
+        case WC_CCS_JOHAB_1:
+        case WC_CCS_JOHAB_2:
+        case WC_CCS_JOHAB_3:
+            cc = wc_cs128w_to_johab(cc);
+        case WC_CCS_JOHAB:
+            Strcat_char(os, (char)(cc.code >> 8));
+            Strcat_char(os, (char)(cc.code & 0xff));
+            return;
+        case WC_CCS_KS_X_1001:
+            cc = wc_ksx1001_to_johab(WcOption, cc);
+            continue;
+        case WC_CCS_UNKNOWN_W:
+            if (!WcOption->no_replace)
+                Strcat_charp(os, WC_REPLACE_W);
+            return;
+        case WC_CCS_UNKNOWN:
+            if (!WcOption->no_replace)
+                Strcat_charp(os, WC_REPLACE);
+            return;
+        default:
+            if (WcOption->ucs_conv)
+                cc = wc_any_to_any_ces(WcOption, cc, st);
+            else
+                cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
+            continue;
+        }
     }
-  }
 }
 
-pStr
-wc_char_conv_from_johab(uint8_t c, struct wc_status *st)
+pStr wc_char_conv_from_johab(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
 {
     static pStr os;
     static uint8_t johabu;
 
     if (st->state == -1) {
-	st->state = WC_JOHAB_NOSTATE;
-	os = Strnew_size(8);
+        st->state = WC_JOHAB_NOSTATE;
+        os = Strnew_size(8);
     }
 
     switch (st->state) {
     case WC_JOHAB_NOSTATE:
-	switch (WC_JOHAB_MAP[c] & WC_JOHAB_MAP_1) {
-	case WC_JOHAB_MAP_UJ:
-	    johabu = c;
-	    st->state = WC_JOHAB_HANGUL1;
-	    return NULL;
-	case WC_JOHAB_MAP_UH:
-	    johabu = c;
-	    st->state = WC_JOHAB_HANJA1;
-	    return NULL;
-	case WC_JOHAB_MAP_C1:
-	    break;
-	default:
-	    Strcat_char(os, (char)c);
-	    break;
-	}
-	break;
+        switch (WC_JOHAB_MAP[c] & WC_JOHAB_MAP_1) {
+        case WC_JOHAB_MAP_UJ:
+            johabu = c;
+            st->state = WC_JOHAB_HANGUL1;
+            return NULL;
+        case WC_JOHAB_MAP_UH:
+            johabu = c;
+            st->state = WC_JOHAB_HANJA1;
+            return NULL;
+        case WC_JOHAB_MAP_C1:
+            break;
+        default:
+            Strcat_char(os, (char)c);
+            break;
+        }
+        break;
     case WC_JOHAB_HANGUL1:
-	if (WC_JOHAB_MAP[c] & WC_JOHAB_MAP_LJ)
-	    wtf_push(os, WC_CCS_JOHAB, ((uint32_t)johabu << 8) | c);
-	break;
+        if (WC_JOHAB_MAP[c] & WC_JOHAB_MAP_LJ)
+            wtf_push(WcOption, os, WC_CCS_JOHAB, ((uint32_t)johabu << 8) | c);
+        break;
     case WC_JOHAB_HANJA1:
-	if (WC_JOHAB_MAP[c] & WC_JOHAB_MAP_LH)
-	    wtf_push(os, WC_CCS_JOHAB, ((uint32_t)johabu << 8) | c);
-	break;
+        if (WC_JOHAB_MAP[c] & WC_JOHAB_MAP_LH)
+            wtf_push(WcOption, os, WC_CCS_JOHAB, ((uint32_t)johabu << 8) | c);
+        break;
     }
     st->state = -1;
     return os;

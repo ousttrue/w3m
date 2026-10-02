@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "table.h"
+#include "w3m.h"
 #include "indep.h"
 #include "html_parser.h"
 #include "entity.h"
@@ -350,7 +351,7 @@ int visible_length(const char* str)
         prev_status = status;
         if (next_status(*str, &status)) {
 #ifdef USE_M17N
-            len += get_mcwidth(str);
+            len += get_mcwidth(&WcOption, str);
             n = get_mclen(str);
         } else {
             n = 1;
@@ -382,7 +383,7 @@ int visible_length(const char* str)
                     max_len = len;
                 len = 0;
             } else
-                len += get_strwidth(t) + get_strwidth(r2);
+                len += get_strwidth(&WcOption, t) + get_strwidth(&WcOption, r2);
         } else if (status == R_ST_NORMAL && ST_IS_REAL_TAG(prev_status)) {
             ;
         } else if (*str == '\t') {
@@ -406,7 +407,7 @@ int visible_length(const char* str)
         const char* r2 = tagbuf->ptr;
         const char* t = getescapecmd(&r2);
         if (*t != '\r' && *t != '\n')
-            len += get_strwidth(t) + get_strwidth(r2);
+            len += get_strwidth(&WcOption, t) + get_strwidth(&WcOption, r2);
     }
     return len > max_len ? len : max_len;
 }
@@ -429,7 +430,7 @@ visible_length_plain(const char* str)
             str++;
         } else {
 #ifdef USE_M17N
-            len += get_mcwidth(str);
+            len += get_mcwidth(&WcOption, str);
             str += get_mclen(str);
 #else
             len++;
@@ -2010,7 +2011,7 @@ skip_space(struct table* t, const char* line, struct table_linfo* linfo,
         const char *save = line, *c = line;
         int len, wlen, plen;
         ctype = get_mctype(line);
-        len = get_mcwidth(line);
+        len = get_mcwidth(&WcOption, line);
         wlen = plen = get_mclen(line);
 
         if (min < w)
@@ -2024,7 +2025,7 @@ skip_space(struct table* t, const char* line, struct table_linfo* linfo,
                 if (estr) {
                     c = estr;
                     ctype = get_mctype(c);
-                    len = get_strwidth(c);
+                    len = get_strwidth(&WcOption, c);
                     wlen = line - save;
                     plen = get_mclen(c);
                 }

@@ -146,7 +146,7 @@ pStr url_quote(const char* str)
 
 pStr url_quote_conv(const char* x, wc_ces c)
 {
-    return url_quote(wc_conv_strict(x, InnerCharset, c)->ptr);
+    return url_quote(wc_conv_strict(&WcOption, x, InnerCharset, c)->ptr);
 }
 
 enum CopyPathOption {

@@ -1,7 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
-#ifndef _WC_JOHAB_H
-#define _WC_JOHAB_H
+#pragma once
+#include "ces.h"
 
 #define WC_C_JOHAB_ERROR	0xFFFFFFFFU
 
@@ -50,15 +48,15 @@
 
 extern uint8_t WC_JOHAB_MAP[];
 
-extern wc_wchar_t wc_johab_to_ksx1001(wc_wchar_t cc);
-extern wc_wchar_t wc_ksx1001_to_johab(wc_wchar_t cc);
+struct wc_option;
+extern wc_wchar_t wc_johab_to_ksx1001(struct wc_option *WcOption, wc_wchar_t cc);
+extern wc_wchar_t wc_ksx1001_to_johab(struct wc_option *WcOption, wc_wchar_t cc);
 extern wc_wchar_t wc_ucs_to_johab(uint32_t ucs);
 extern uint32_t  wc_johab1_to_N(uint32_t cc);
 extern uint32_t  wc_N_to_johab1(uint32_t ucs);
 extern wc_wchar_t wc_johab_to_cs128w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs128w_to_johab(wc_wchar_t cc);
-extern pStr        wc_conv_from_johab(pStr is, wc_ces ces);
-extern void       wc_push_to_johab(pStr os, wc_wchar_t cc, struct wc_status *st);
-extern pStr        wc_char_conv_from_johab(uint8_t c, struct wc_status *st);
+extern pStr        wc_conv_from_johab(struct wc_option *WcOption, pStr is, wc_ces ces);
+extern void       wc_push_to_johab(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status *st);
+extern pStr        wc_char_conv_from_johab(struct wc_option *WcOption, uint8_t c, struct wc_status *st);
 
-#endif

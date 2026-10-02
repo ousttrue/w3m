@@ -103,7 +103,7 @@ wc_ucs_to_any(uint32_t ucs, wc_table *t)
 }
 
 uint32_t
-wc_any_to_ucs(wc_wchar_t cc)
+wc_any_to_ucs(struct wc_option *WcOption, wc_wchar_t cc)
 {
     int f;
     uint16_t *map = NULL;
@@ -121,9 +121,9 @@ wc_any_to_ucs(wc_wchar_t cc)
 	cc.code &= 0x7f;
 	break;
     case WC_CCS_A_CS94W:
-	if (cc.ccs == WC_CCS_GB_2312 && WcOption.use_gb12345_map) {
+	if (cc.ccs == WC_CCS_GB_2312 && WcOption->use_gb12345_map) {
 	    cc.ccs = WC_CCS_GB_12345;
-	    return wc_any_to_ucs(cc);
+	    return wc_any_to_ucs(WcOption, cc);
 	} else if (cc.ccs == WC_CCS_JIS_X_0213_1) {
 	    map2 = wc_map_search((uint16_t)(cc.code & 0x7f7f),
 		jisx02131_ucs_p2_map, N_jisx02131_ucs_p2_map);
@@ -171,7 +171,7 @@ wc_any_to_ucs(wc_wchar_t cc)
 		return map2->code2;
 	    return WC_C_UCS4_ERROR;
 	case WC_CCS_TCVN_5712_3:
-	    return wc_any_to_ucs(wc_tcvn57123_to_tcvn5712(cc));
+	    return wc_any_to_ucs(WcOption, wc_tcvn57123_to_tcvn5712(cc));
 	case WC_CCS_GBK_80:
 	    return WC_C_UCS2_EURO;
 	}
@@ -202,7 +202,7 @@ wc_any_to_ucs(wc_wchar_t cc)
 	    cc.code = wc_hkscs_to_N(cc.code);
 	    break;
 	case WC_CCS_JOHAB:
-	    return wc_any_to_ucs(wc_johab_to_cs128w(cc));
+	    return wc_any_to_ucs(WcOption, wc_johab_to_cs128w(cc));
 	case WC_CCS_JOHAB_1:
 	    return WC_CS94x128_N(cc.code) + WC_C_UCS2_HANGUL;
 	case WC_CCS_JOHAB_2:
@@ -217,7 +217,7 @@ wc_any_to_ucs(wc_wchar_t cc)
 	    if ((cc.code & 0x7f7f) < 0x2121)
 		return WC_C_UCS4_ERROR;
 	case WC_CCS_SJIS_EXT:
-	    return wc_any_to_ucs(wc_sjis_ext_to_cs94w(cc));
+	    return wc_any_to_ucs(WcOption, wc_sjis_ext_to_cs94w(cc));
 	case WC_CCS_SJIS_EXT_1:
 	    cc.code = wc_sjis_ext1_to_N(cc.code);
 	    if (cc.code == WC_C_SJIS_ERROR)
@@ -237,7 +237,7 @@ wc_any_to_ucs(wc_wchar_t cc)
 	case WC_CCS_GBK_EXT:
 	case WC_CCS_GBK_EXT_1:
 	case WC_CCS_GBK_EXT_2:
-	    return wc_gb18030_to_ucs(cc);
+	    return wc_gb18030_to_ucs(WcOption, cc);
 	case WC_CCS_UHC_1:
 	case WC_CCS_UHC_2:
 	    cc = wc_cs128w_to_uhc(cc);
@@ -264,7 +264,7 @@ wc_any_to_ucs(wc_wchar_t cc)
 	case WC_CCS_UCS_TAG:
 	    return wc_ucs_tag_to_ucs(cc.code);
 	case WC_CCS_GB18030:
-	    return wc_gb18030_to_ucs(cc);
+	    return wc_gb18030_to_ucs(WcOption, cc);
 	}
 	return WC_C_UCS4_ERROR;
     case WC_CCS_A_UNKNOWN:
@@ -282,10 +282,10 @@ wc_any_to_ucs(wc_wchar_t cc)
 }
 
 wc_wchar_t
-wc_any_to_any(wc_wchar_t cc, wc_table *t)
+wc_any_to_any(struct wc_option *WcOption, wc_wchar_t cc, wc_table *t)
 {
     wc_ccs is_wide = WC_CCS_IS_WIDE(cc.ccs);
-    uint32_t ucs = wc_any_to_ucs(cc);
+    uint32_t ucs = wc_any_to_ucs(WcOption, cc);
 
     if (ucs != WC_C_UCS4_ERROR) {
 	cc = wc_ucs_to_any(ucs, t);
@@ -323,9 +323,9 @@ wc_ucs_to_any_list(uint32_t ucs, wc_table **tlist)
 }
 
 wc_wchar_t
-wc_any_to_any_ces(wc_wchar_t cc, struct wc_status *st)
+wc_any_to_any_ces(struct wc_option *WcOption, wc_wchar_t cc, struct wc_status *st)
 {
-    uint32_t ucs = wc_any_to_ucs(cc);
+    uint32_t ucs = wc_any_to_ucs(WcOption, cc);
     wc_ccs is_wide = WC_CCS_IS_WIDE(cc.ccs);
 
     if (ucs < 0x80) {
@@ -335,7 +335,7 @@ wc_any_to_any_ces(wc_wchar_t cc, struct wc_status *st)
     }
     if (ucs != WC_C_UCS4_ERROR) {
 	if (st->ces_info->id & WC_CES_T_UTF) {
-	    cc.ccs = wc_ucs_to_ccs(ucs);
+	    cc.ccs = wc_ucs_to_ccs(WcOption, ucs);
 	    cc.code = ucs;
 	    return cc;
 	} else if (st->ces_info->id == WC_CES_JOHAB) {
@@ -347,13 +347,13 @@ wc_any_to_any_ces(wc_wchar_t cc, struct wc_status *st)
 	cc = wc_ucs_to_any_list(ucs, is_wide ? st->tlistw : st->tlist);
 	if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 	    return cc;
-	if (! WcOption.fix_width_conv) {
+	if (! WcOption->fix_width_conv) {
 	    cc = wc_ucs_to_any_list(ucs, is_wide ? st->tlist : st->tlistw);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
 	}
 	if (st->ces_info->id == WC_CES_GB18030) {
-	    cc = wc_ucs_to_gb18030(ucs);
+	    cc = wc_ucs_to_gb18030(WcOption, ucs);
 	    if (WC_CCS_IS_UNKNOWN(cc.ccs))
 		cc.ccs = is_wide ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	    return cc;
@@ -375,7 +375,7 @@ wc_any_to_any_ces(wc_wchar_t cc, struct wc_status *st)
 	    cc = wc_ucs_to_any_list(ucs, is_wide ? st->tlistw : st->tlist);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
-	    if (! WcOption.fix_width_conv) {
+	    if (! WcOption->fix_width_conv) {
 		cc = wc_ucs_to_any_list(ucs, is_wide ? st->tlist : st->tlistw);
 		if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		    return cc;
@@ -387,9 +387,9 @@ wc_any_to_any_ces(wc_wchar_t cc, struct wc_status *st)
 }
 
 wc_wchar_t
-wc_any_to_iso2022(wc_wchar_t cc, struct wc_status *st)
+wc_any_to_iso2022(struct wc_option *WcOption, wc_wchar_t cc, struct wc_status *st)
 {
-    uint32_t ucs = wc_any_to_ucs(cc);
+    uint32_t ucs = wc_any_to_ucs(WcOption, cc);
     wc_ccs is_wide = WC_CCS_IS_WIDE(cc.ccs);
 
     if (ucs < 0x80) {
@@ -401,16 +401,16 @@ wc_any_to_iso2022(wc_wchar_t cc, struct wc_status *st)
 	cc = wc_ucs_to_any_list(ucs, is_wide ? st->tlistw : st->tlist);
 	if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 	    return cc;
-	if (! WcOption.strict_iso2022) {
+	if (! WcOption->strict_iso2022) {
 	    cc = (is_wide) ? wc_ucs_to_iso2022w(ucs) : wc_ucs_to_iso2022(ucs);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
 	}
-	if (! WcOption.fix_width_conv) {
+	if (! WcOption->fix_width_conv) {
 	    cc = wc_ucs_to_any_list(ucs, is_wide ? st->tlist : st->tlistw);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
-	    if (! WcOption.strict_iso2022) {
+	    if (! WcOption->strict_iso2022) {
 		cc = (is_wide) ? wc_ucs_to_iso2022(ucs) : wc_ucs_to_iso2022w(ucs);
 		if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		    return cc;
@@ -427,16 +427,16 @@ wc_any_to_iso2022(wc_wchar_t cc, struct wc_status *st)
 	    cc = wc_ucs_to_any_list(ucs, is_wide ? st->tlistw : st->tlist);
 	    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		return cc;
-	    if (! WcOption.strict_iso2022) {
+	    if (! WcOption->strict_iso2022) {
 		cc = (is_wide) ? wc_ucs_to_iso2022w(ucs) : wc_ucs_to_iso2022(ucs);
 		if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		    return cc;
 	    }
-	    if (! WcOption.fix_width_conv) {
+	    if (! WcOption->fix_width_conv) {
 		cc = wc_ucs_to_any_list(ucs, is_wide ? st->tlist : st->tlistw);
 		if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 		    return cc;
-		if (! WcOption.strict_iso2022) {
+		if (! WcOption->strict_iso2022) {
 		    cc = (is_wide) ? wc_ucs_to_iso2022(ucs) : wc_ucs_to_iso2022w(ucs);
 		    if (!WC_CCS_IS_UNKNOWN(cc.ccs))
 			return cc;
@@ -520,21 +520,21 @@ wc_ucs_to_iso2022w(uint32_t ucs)
 }
 
 wc_ccs
-wc_ucs_to_ccs(uint32_t ucs)
+wc_ucs_to_ccs(struct wc_option *WcOption, uint32_t ucs)
 {
     if (0x80 <= ucs && ucs <= 0x9F)
 	return WC_CCS_C1;
     return ((ucs <= WC_C_UCS2_END) ? WC_CCS_UCS2 : WC_CCS_UCS4)
-	| ((WcOption.east_asian_width && wc_is_ucs_ambiguous_width(ucs))
+	| ((WcOption->east_asian_width && wc_is_ucs_ambiguous_width(WcOption, ucs))
 		    ? WC_CCS_A_WIDE : 0)
 	| (wc_is_ucs_wide(ucs) ? WC_CCS_A_WIDE : 0)
-	| (wc_is_ucs_combining(ucs) ? WC_CCS_A_COMB : 0);
+	| (wc_is_ucs_combining(WcOption, ucs) ? WC_CCS_A_COMB : 0);
 }
 
 bool
-wc_is_ucs_ambiguous_width(uint32_t ucs)
+wc_is_ucs_ambiguous_width(struct wc_option *WcOption, uint32_t ucs)
 {
-    if (0xa1 <= ucs && ucs <= 0xfe && WcOption.use_jisx0213)
+    if (0xa1 <= ucs && ucs <= 0xfe && WcOption->use_jisx0213)
 	return 1;
     else if (ucs <= WC_C_UCS2_END)
 	return (wc_map_range_search((uint16_t)ucs,
@@ -556,9 +556,9 @@ wc_is_ucs_wide(uint32_t ucs)
 }
 
 bool
-wc_is_ucs_combining(uint32_t ucs)
+wc_is_ucs_combining(struct wc_option *WcOption, uint32_t ucs)
 {
-    return (WcOption.use_combining && ucs <= WC_C_UCS2_END &&
+    return (WcOption->use_combining && ucs <= WC_C_UCS2_END &&
 	wc_map_range_search((uint16_t)ucs,
 	ucs_combining_map, N_ucs_combining_map) != NULL);
 }
@@ -640,11 +640,11 @@ wc_ucs_totitle(uint32_t ucs)
 }
 
 uint32_t
-wc_ucs_precompose(uint32_t ucs1, uint32_t ucs2)
+wc_ucs_precompose(struct wc_option *WcOption, uint32_t ucs1, uint32_t ucs2)
 {
     wc_map3 *map;
 
-    if (WcOption.use_combining &&
+    if (WcOption->use_combining &&
 	ucs1 <= WC_C_UCS2_END && ucs2 <= WC_C_UCS2_END &&
 	(map = wc_map3_search((uint16_t)ucs1, (uint16_t)ucs2,
 	ucs_precompose_map, N_ucs_precompose_map)) != NULL)
@@ -691,12 +691,12 @@ wc_ucs_get_tag(int ntag)
 }
 
 void
-wtf_push_ucs(pStr os, uint32_t ucs, struct wc_status *st)
+wtf_push_ucs(struct wc_option *WcOption, pStr os, uint32_t ucs, struct wc_status *st)
 {
     wc_ccs ccs;
 
     if (ucs >= WC_C_LANGUAGE_TAG0 && ucs <= WC_C_CANCEL_TAG) {
-	if (! WcOption.use_language_tag)
+	if (! WcOption->use_language_tag)
 	    return;
 	if (ucs == WC_C_LANGUAGE_TAG)
 	    if (st->tag)
@@ -719,16 +719,16 @@ wtf_push_ucs(pStr os, uint32_t ucs, struct wc_status *st)
     }
     if (ucs < 0x80) {
 	if (st->ntag)
-	    wtf_push(os, WC_CCS_UCS_TAG,  wc_ucs_to_ucs_tag(ucs, st->ntag));
+	    wtf_push(WcOption, os, WC_CCS_UCS_TAG,  wc_ucs_to_ucs_tag(ucs, st->ntag));
 	else
 	    Strcat_char(os, (char)ucs);
     } else {
-	ccs = wc_ucs_to_ccs(ucs);
+	ccs = wc_ucs_to_ccs(WcOption, ucs);
 	if (st->ntag && ucs <= WC_C_UNICODE_END) {
 	    ccs = wc_ccs_ucs_to_ccs_ucs_tag(ccs);
 	    ucs = wc_ucs_to_ucs_tag(ucs, st->ntag);
 	}
-	wtf_push(os, ccs, ucs);
+	wtf_push(WcOption, os, ccs, ucs);
     }
 }
 

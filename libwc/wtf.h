@@ -54,16 +54,16 @@ extern wc_ccs wtf_gr_ccs;
 
 extern void wtf_init(wc_ces ces1, wc_ces ces2);
 
-extern int wtf_width(const uint8_t* p);
-extern int wtf_strwidth(const uint8_t* p);
+extern int wtf_width(struct wc_option *WcOption, const uint8_t* p);
+extern int wtf_strwidth(struct wc_option *WcOption, const uint8_t* p);
 extern size_t wtf_len1(const uint8_t* p);
 extern size_t wtf_len(const uint8_t* p);
 /* extern int     wtf_type(uint8_t *p); */
 #define wtf_type(p) WTF_TYPE_MAP[(uint8_t)*(p)]
 
-extern void wtf_push(pStr os, wc_ccs ccs, uint32_t code);
-extern void wtf_push_unknown(pStr os, uint8_t* p, size_t len);
-extern wc_wchar_t wtf_parse(const uint8_t** p);
+extern void wtf_push(struct wc_option *WcOption, pStr os, wc_ccs ccs, uint32_t code);
+extern void wtf_push_unknown(struct wc_option *WcOption, pStr os, uint8_t* p, size_t len);
+extern wc_wchar_t wtf_parse(struct wc_option *WcOption, const uint8_t** p);
 extern wc_wchar_t wtf_parse1(const uint8_t** p);
 
 extern wc_ccs wtf_get_ccs(const uint8_t* p);
@@ -71,4 +71,4 @@ extern uint32_t wtf_get_code(const uint8_t* p);
 
 extern bool wtf_is_hangul(const uint8_t* p);
 
-extern const char* wtf_conv_fit(const char* s, wc_ces ces);
+extern const char* wtf_conv_fit(struct wc_option *WcOption, const char* s, wc_ces ces);

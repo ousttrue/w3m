@@ -1227,7 +1227,7 @@ void addch(const char pc)
     static pStr tmp = NULL;
     char** p;
     char c = *pc;
-    int width = wtf_width((const uint8_t*)pc);
+    int width = wtf_width(&WcOption, (const uint8_t*)pc);
 
     if (tmp == NULL)
         tmp = Strnew();
@@ -1528,7 +1528,7 @@ void refresh(void)
     short* dirty;
 
 #ifdef USE_M17N
-    wc_putc_init(InnerCharset, DisplayCharset);
+    wc_putc_init(&WcOption, InnerCharset, DisplayCharset);
 #endif
     for (line = 0; line <= LASTLINE; line++) {
         dirty = &ScreenImage[line]->isdirty;
@@ -1651,7 +1651,7 @@ void refresh(void)
 #endif /* USE_BG_COLOR */
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
 #ifdef USE_M17N
-                        wc_putc_end(ttyf);
+                        wc_putc_end(&WcOption, ttyf);
 #endif
                         if (!graph_enabled) {
                             graph_enabled = 1;
@@ -1664,7 +1664,7 @@ void refresh(void)
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
-                        wc_putc(pc[col], ttyf);
+                        wc_putc(&WcOption, pc[col], ttyf);
 #else
                     write1((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
 #endif
@@ -1695,7 +1695,7 @@ void refresh(void)
         }
     }
 #ifdef USE_M17N
-    wc_putc_end(ttyf);
+    wc_putc_end(&WcOption, ttyf);
 #endif
     MOVE(CurLine, CurColumn);
     flush_tty();
@@ -1904,7 +1904,7 @@ void addnstr(const char* s, int n)
     int len, width;
 
     for (i = 0; *s != '\0';) {
-        width = wtf_width((const uint8_t*)s);
+        width = wtf_width(&WcOption, (const uint8_t*)s);
         if (i + width > n)
             break;
         len = wtf_len((const uint8_t*)s);
@@ -1925,7 +1925,7 @@ void addnstr_sup(const char* s, int n)
     int len, width;
 
     for (i = 0; *s != '\0';) {
-        width = wtf_width((const uint8_t*)s);
+        width = wtf_width(&WcOption, (const uint8_t*)s);
         if (i + width > n)
             break;
         len = wtf_len((const uint8_t*)s);

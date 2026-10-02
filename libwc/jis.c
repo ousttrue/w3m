@@ -16,7 +16,7 @@ wc_jisx0201k_to_jisx0208(wc_wchar_t cc)
 }
 
 wc_wchar_t
-wc_jisx0212_to_jisx0213(wc_wchar_t cc)
+wc_jisx0212_to_jisx0213(struct wc_option *WcOption, wc_wchar_t cc)
 {
     wc_wchar_t cc2;
     static wc_table *t1 = NULL;
@@ -26,20 +26,20 @@ wc_jisx0212_to_jisx0213(wc_wchar_t cc)
 	t1 = wc_get_ucs_table(WC_CCS_JIS_X_0213_1);
 	t2 = wc_get_ucs_table(WC_CCS_JIS_X_0213_2);
     }
-    cc2 = wc_any_to_any(cc, t2);
+    cc2 = wc_any_to_any(WcOption, cc, t2);
     if (cc2.ccs == WC_CCS_JIS_X_0212)
 	return cc2;
-    return wc_any_to_any(cc, t1);
+    return wc_any_to_any(WcOption, cc, t1);
 }
 
 wc_wchar_t
-wc_jisx0213_to_jisx0212(wc_wchar_t cc)
+wc_jisx0213_to_jisx0212(struct wc_option *WcOption, wc_wchar_t cc)
 {
     static wc_table *t = NULL;
 
     if (t == NULL)
 	t = wc_get_ucs_table(WC_CCS_JIS_X_0212);
-    return wc_any_to_any(cc, t);
+    return wc_any_to_any(WcOption, cc, t);
 }
 
 wc_ccs

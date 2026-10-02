@@ -3,7 +3,7 @@
  * w3m func.c
  */
 #include "func.h"
-
+#include "w3m.h"
 #include "alloc.h"
 #include "charset.h"
 #include "config.h"
@@ -144,7 +144,7 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
         Strremovefirstspaces(line);
         if (line->len == 0)
             continue;
-        line = wc_Str_conv(line, charset, InnerCharset);
+        line = wc_Str_conv(&WcOption, line, charset, InnerCharset);
         const char* p = line->ptr;
         char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */
@@ -524,7 +524,7 @@ setMouseAction0(char** str, int* width, MouseActionMap** map, const char* p)
     }
     int w = *width;
     *str = s;
-    *width = get_strwidth(s);
+    *width = get_strwidth(&WcOption, s);
     if (*width >= LIMIT_MOUSE_MENU)
         *width = LIMIT_MOUSE_MENU;
     if (*width <= w)
@@ -591,7 +591,7 @@ interpret_mouse_action(FILE* mf)
         Strremovefirstspaces(line);
         if (line->len == 0)
             continue;
-        const char* p = conv_from_system(line->ptr);
+        const char* p = conv_from_system(&WcOption, line->ptr);
         const char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */
             continue;

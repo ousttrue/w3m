@@ -284,7 +284,7 @@ form_update_line(Line* line, char** str, int spos, int epos, int width,
         c_type = get_mctype((unsigned char*)p);
 #ifdef USE_M17N
         c_len = get_mclen(p);
-        c_width = get_mcwidth(p);
+        c_width = get_mcwidth(&WcOption, p);
 #endif
         if (c_type == PC_CTRL) {
             if (newline && *p == '\n')
@@ -327,7 +327,7 @@ form_update_line(Line* line, char** str, int spos, int epos, int width,
         c_type = get_mctype((unsigned char*)p);
 #ifdef USE_M17N
         c_len = get_mclen(p);
-        c_width = get_mcwidth(p);
+        c_width = get_mcwidth(&WcOption, p);
 #endif
         if (c_type == PC_CTRL) {
             if (newline && *p == '\n')
@@ -518,7 +518,7 @@ pStr textfieldrep(pStr s, int width)
         c_len = get_mclen(&s->ptr[i]);
         if (s->ptr[i] == '\r')
             continue;
-        k = j + get_mcwidth(&s->ptr[i]);
+        k = j + get_mcwidth(&WcOption, &s->ptr[i]);
         if (k > width)
             break;
         if (c_type == PC_CTRL)
@@ -564,7 +564,7 @@ form_fputs_decode(pStr s, FILE* f)
         }
     }
 #ifdef USE_M17N
-    z = wc_Str_conv_strict(z, InnerCharset, DisplayCharset);
+    z = wc_Str_conv_strict(&WcOption, z, InnerCharset, DisplayCharset);
 #endif
     Strfputs(z, f);
 }

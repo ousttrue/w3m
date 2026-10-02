@@ -1,6 +1,6 @@
+#include "big5.h"
 #include "conv.h"
 #include "status.h"
-#include "big5.h"
 #include "search.h"
 #include "wtf.h"
 #include "ucs.h"
@@ -57,7 +57,7 @@ wc_cs94w_to_big5(wc_wchar_t cc)
 }
 
 pStr
-wc_conv_from_big5(pStr is, wc_ces ces)
+wc_conv_from_big5(struct wc_option *WcOption, pStr is, wc_ces ces)
 {
     pStr os;
     uint8_t *sp = (uint8_t *)is->ptr;
@@ -81,7 +81,7 @@ wc_conv_from_big5(pStr is, wc_ces ces)
 		state = WC_BIG5_MBYTE1;
 		break;
 	    case C1:
-		wtf_push_unknown(os, p, 1);
+		wtf_push_unknown(WcOption, os, p, 1);
 		break;
 	    default:
 		Strcat_char(os, (char)*p);
@@ -90,23 +90,23 @@ wc_conv_from_big5(pStr is, wc_ces ces)
 	    break;
 	case WC_BIG5_MBYTE1:
 	    if (WC_BIG5_MAP[*p] & LB)
-		wtf_push(os, WC_CCS_BIG5, ((uint32_t)*(p-1) << 8) | *p);
+		wtf_push(WcOption, os, WC_CCS_BIG5, ((uint32_t)*(p-1) << 8) | *p);
 	    else
-		wtf_push_unknown(os, p-1, 2);
+		wtf_push_unknown(WcOption, os, p-1, 2);
 	    state = WC_BIG5_NOSTATE;
 	    break;
 	}
     }
     switch (state) {
     case WC_BIG5_MBYTE1:
-	wtf_push_unknown(os, p-1, 1);
+	wtf_push_unknown(WcOption, os, p-1, 1);
 	break;
     }
     return os;
 }
 
 void
-wc_push_to_big5(pStr os, wc_wchar_t cc, struct wc_status *st)
+wc_push_to_big5(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status *st)
 {
   while (1) {
     switch (cc.ccs) {
@@ -121,16 +121,16 @@ wc_push_to_big5(pStr os, wc_wchar_t cc, struct wc_status *st)
 	Strcat_char(os, (char)(cc.code & 0xff));
 	return;
     case WC_CCS_UNKNOWN_W:
-	if (!WcOption.no_replace)
+	if (!WcOption->no_replace)
 	    Strcat_charp(os, WC_REPLACE_W);
 	return;
     case WC_CCS_UNKNOWN:
-	if (!WcOption.no_replace)
+	if (!WcOption->no_replace)
 	    Strcat_charp(os, WC_REPLACE);
 	return;
     default:
-	if (WcOption.ucs_conv)
-	    cc = wc_any_to_any_ces(cc, st);
+	if (WcOption->ucs_conv)
+	    cc = wc_any_to_any_ces(WcOption, cc, st);
 	else
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	continue;
@@ -139,7 +139,7 @@ wc_push_to_big5(pStr os, wc_wchar_t cc, struct wc_status *st)
 }
 
 pStr
-wc_char_conv_from_big5(uint8_t c, struct wc_status *st)
+wc_char_conv_from_big5(struct wc_option *WcOption, uint8_t c, struct wc_status *st)
 {
     static pStr os;
     static uint8_t big5u;
@@ -165,7 +165,7 @@ wc_char_conv_from_big5(uint8_t c, struct wc_status *st)
 	break;
     case WC_BIG5_MBYTE1:
 	if (WC_BIG5_MAP[c] & LB)
-	    wtf_push(os, WC_CCS_BIG5, ((uint32_t)big5u << 8) | c);
+	    wtf_push(WcOption, os, WC_CCS_BIG5, ((uint32_t)big5u << 8) | c);
 	break;
     }
     st->state = -1;

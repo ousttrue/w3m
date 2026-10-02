@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "Str.h"
 
+extern struct wc_option WcOption;
+
 extern const char* CurrentDir;
 extern int CurrentPid;
 extern bool fmInitialized;
@@ -11,6 +13,7 @@ extern bool TrapSignal;
 extern const char* cgi_bin;
 extern const char* document_root;
 
+void w3m_init();
 void set_environ(const char* var, const char* value);
 const char* currentdir(void);
 typedef void (*SigActionFunc)(int);

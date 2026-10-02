@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "menu.h"
-
+#include "w3m.h"
 #include "alloc.h"
 #include "buffer.h"
 #include "charset.h"
@@ -819,7 +819,7 @@ void new_menu(Menu* menu, MenuItem* item)
                 p++;
             }
         }
-        l = get_strwidth(item[i].label);
+        l = get_strwidth(&WcOption, item[i].label);
         if (l > menu->width)
             menu->width = l;
     }
@@ -1831,7 +1831,7 @@ initSelectMenu(void)
                 if (strcmp(buf->currentURL.file, "-")) {
                     Strcat_char(str, ' ');
                     Strcat_charp(str,
-                        conv_from_system(buf->currentURL.real_file));
+                        conv_from_system(&WcOption, buf->currentURL.real_file));
                 }
                 break;
                 /* case SCM_UNKNOWN: */
@@ -1848,7 +1848,7 @@ initSelectMenu(void)
         if (len < str->len)
             len = str->len;
     }
-    l = get_strwidth(comment);
+    l = get_strwidth(&WcOption, comment);
     if (len < l + 4)
         len = l + 4;
     if (len > COLS - 2 * FRAME_WIDTH)
@@ -2057,7 +2057,7 @@ initSelTabMenu(void)
                 if (strcmp(buf->currentURL.file, "-")) {
                     Strcat_char(str, ' ');
                     Strcat_charp(str,
-                        conv_from_system(buf->currentURL.real_file));
+                        conv_from_system(&WcOption, buf->currentURL.real_file));
                 }
                 break;
                 /* case SCM_UNKNOWN: */
@@ -2288,7 +2288,7 @@ interpret_menu(FILE* mf)
         Strremovefirstspaces(line);
         if (line->len == 0)
             continue;
-        line = wc_Str_conv(line, charset, InnerCharset);
+        line = wc_Str_conv(&WcOption, line, charset, InnerCharset);
         const char* p = line->ptr;
         char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */
@@ -2354,7 +2354,7 @@ void initMenu(void)
         MainMenuCharset = SystemCharset;
 #endif
         for (item = MainMenuItem; item->type != MENU_END; item++)
-            item->label = wc_conv(_(item->label), MainMenuCharset,
+            item->label = wc_conv(&WcOption, _(item->label), MainMenuCharset,
                 InnerCharset)
                               ->ptr;
         MainMenuEncode = true;

@@ -5,9 +5,10 @@
 typedef uint32_t wc_ces;
 
 struct wc_status;
-typedef pStr (*ConvFromFunc)(pStr, wc_ces);
-typedef void (*PushToFunc)(pStr, wc_wchar_t, struct wc_status*);
-typedef pStr (*CharConvFunc)(uint8_t, struct wc_status*);
+struct wc_option;
+typedef pStr (*ConvFromFunc)(struct wc_option*, pStr, wc_ces);
+typedef void (*PushToFunc)(struct wc_option*, pStr, wc_wchar_t, struct wc_status*);
+typedef pStr (*CharConvFunc)(struct wc_option*, uint8_t, struct wc_status*);
 
 typedef struct wc_ces_info {
     wc_ces id;
@@ -222,7 +223,8 @@ enum {
 
 #define WC_CES_END WC_CES_N_UTF_7
 
-extern pStr wc_conv_from_iso2022(pStr is, wc_ces ces);
+struct wc_option;
+extern pStr wc_conv_from_priv1(struct wc_option* WcOption, pStr is, wc_ces ces);
+extern pStr wc_conv_from_ascii(struct wc_option* WcOption, pStr is, wc_ces ces);
 
-extern pStr wc_conv_from_priv1(pStr is, wc_ces ces);
-extern pStr wc_conv_from_ascii(pStr is, wc_ces ces);
+pStr wc_conv_from_iso2022(struct wc_option* WcOption, pStr is, wc_ces ces);

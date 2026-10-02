@@ -1,8 +1,10 @@
+#include "char_conv.h"
 #include "detect.h"
-#include "conv.h"
 #include "status.h"
+#include "conv.h"
 
-static wc_ces char_conv_f_ces = 0, char_conv_t_ces = WC_CES_WTF;
+static wc_ces char_conv_f_ces = 0;
+static wc_ces char_conv_t_ces = WC_CES_WTF;
 static struct wc_status char_conv_st;
 
 void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces)
@@ -13,8 +15,9 @@ void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces)
     char_conv_t_ces = t_ces;
 }
 
-pStr wc_char_conv(char c)
+pStr wc_char_conv(struct wc_option* WcOption, char c)
 {
-    return wc_Str_conv((*char_conv_st.ces_info->char_conv)((uint8_t)c, &char_conv_st),
+    return wc_Str_conv(WcOption,
+        (*char_conv_st.ces_info->char_conv)(WcOption, (uint8_t)c, &char_conv_st),
         WC_CES_WTF, char_conv_t_ces);
 }

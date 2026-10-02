@@ -1,6 +1,6 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "backend.h"
-
+#include "w3m.h"
 #include "charset.h"
 #include "indep.h"
 #include "config.h"
@@ -115,7 +115,7 @@ internal_get(char *url, int flag, FormList *request)
 	    pStr first, last;
 	    int len = 0;
 	    for (p = backend_halfdump_buf->first; p; p = p->next) {
-		p->ptr->line = Str_conv_to_halfdump(p->ptr->line);
+		p->ptr->line = Str_conv_to_halfdump(&WcOption, p->ptr->line);
 		len += p->ptr->line->len + 1;
 	    }
 	    first = Strnew_charp("<pre>\n");

@@ -2,8 +2,9 @@
 #include "ccs_types.h"
 
 extern uint8_t* wc_jisx0212_jisx02132_map;
+struct wc_option;
 extern wc_wchar_t wc_jisx0201k_to_jisx0208(wc_wchar_t cc);
-extern wc_wchar_t wc_jisx0212_to_jisx0213(wc_wchar_t cc);
-extern wc_wchar_t wc_jisx0213_to_jisx0212(wc_wchar_t cc);
+extern wc_wchar_t wc_jisx0212_to_jisx0213(struct wc_option *WcOption, wc_wchar_t cc);
+extern wc_wchar_t wc_jisx0213_to_jisx0212(struct wc_option *WcOption, wc_wchar_t cc);
 extern wc_ccs wc_jisx0208_or_jisx02131(uint16_t code);
 extern wc_ccs wc_jisx0212_or_jisx02132(uint16_t code);

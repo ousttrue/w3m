@@ -1,4 +1,5 @@
 #include "str_gc.h"
+#include "w3m.h"
 #include "str_const.h"
 #include "config.h"
 #include "indep.h"
@@ -459,7 +460,7 @@ void cleanup_line(pStr s, enum LineMode mode)
  */
 pStr convertLine(bool do_chop, pStr line, int mode, wc_ces* charset, wc_ces doc_charset)
 {
-    line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
+    line = wc_Str_conv_with_detect(&WcOption, line, charset, doc_charset, InnerCharset);
     if (mode != RAW_MODE)
         cleanup_line(line, mode);
     // if (uf && uf->scheme == SCM_NEWS)
