@@ -5957,7 +5957,7 @@ setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, const void* dat
 
 DEFUN(reinit, REINIT, "Reload configuration file")
 {
-    char* resource = searchKeyData();
+    const char* resource = searchKeyData();
 
     if (resource == NULL) {
         init_rc();
@@ -6025,7 +6025,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
 
 DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and a command")
 {
-    char* data;
+    const char* data;
 
     data = searchKeyData();
     if (data == NULL || *data == '\0') {
@@ -6343,9 +6343,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar")
 
 void addDownloadList(pid_t pid, const char* url, const char* save, const char* lock, size_t size)
 {
-    DownloadList* d;
-
-    d = New(DownloadList);
+    DownloadList* d = New(DownloadList);
     d->pid = pid;
     d->url = url;
     if (save[0] != '/' && save[0] != '~')
@@ -6669,10 +6667,9 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen")
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
 {
-    int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = Currentbuf->LINES - 1;
+    int offsety = Currentbuf->LINES - 1;
     Currentbuf->currentLine = currentLineSkip(Currentbuf, Currentbuf->topLine,
         offsety, false);
     arrangeLine(Currentbuf);
@@ -6681,9 +6678,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen")
 
 DEFUN(userMessage, MESSAGE, "Display a message")
 {
-    char* msg;
-
-    msg = CurrentCmdData;
+    const char* msg = CurrentCmdData;
     if (msg == NULL || *msg == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -6694,10 +6689,9 @@ DEFUN(userMessage, MESSAGE, "Display a message")
 
 DEFUN(lineTop, LINE_TOP, "Redraw screen with current line at top")
 {
-    int offsety;
     if (Currentbuf->firstLine == NULL)
         return;
-    offsety = Currentbuf->cursorY;
+    int offsety = Currentbuf->cursorY;
     Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
         offsety, false);
     arrangeLine(Currentbuf);
