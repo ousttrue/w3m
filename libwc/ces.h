@@ -14,6 +14,7 @@ typedef struct {
     void (*push_to)(pStr, wc_wchar_t, wc_status*);
     pStr (*char_conv)(uint8_t, wc_status*);
 } wc_ces_info;
+extern wc_ces_info WcCesInfo[];
 
 typedef struct {
     wc_ces id;
@@ -216,8 +217,7 @@ enum {
 
 #define WC_CES_END WC_CES_N_UTF_7
 
-extern pStr  wc_conv_from_iso2022(pStr is, wc_ces ces);
+extern pStr wc_conv_from_iso2022(pStr is, wc_ces ces);
 
-extern pStr  wc_conv_from_priv1(pStr is, wc_ces ces);
-extern pStr  wc_conv_from_ascii(pStr is, wc_ces ces);
-
+extern pStr wc_conv_from_priv1(pStr is, wc_ces ces);
+extern pStr wc_conv_from_ascii(pStr is, wc_ces ces);

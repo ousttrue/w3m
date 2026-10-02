@@ -1,6 +1,5 @@
 #pragma once
 #include "Str.h"
-#include "libwc/wc.h"
 #include "libwc/ces.h"
 
 extern const wc_ces InnerCharset;

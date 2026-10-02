@@ -1,16 +1,6 @@
 #pragma once
-#include "../Str.h"
 #include "ces.h"
 
-#define WC_LOCALE_JA_JP 1
-#define WC_LOCALE_ZH_CN 2
-#define WC_LOCALE_ZH_TW 3
-#define WC_LOCALE_ZH_HK 4
-#define WC_LOCALE_KO_KR 5
-
-extern uint8_t WC_DETECT_MAP[];
-
-extern wc_ces_info WcCesInfo[];
 extern char* WcReplace;
 extern char* WcReplaceW;
 #define WC_REPLACE WcReplace
@@ -46,31 +36,6 @@ static inline pStr wc_conv_n_with_detect(const char* is, int n, wc_ces* f_ces, w
     return wc_Str_conv_with_detect(Strnew_charp_n(is, n), f_ces, hint, t_ces);
 }
 
-extern void wc_input_init(wc_ces ces, struct wc_status* st);
-extern void wc_output_init(wc_ces ces, wc_status* st);
-extern void wc_push_end(pStr os, wc_status* st);
-extern bool wc_ces_has_ccs(wc_ccs ccs, wc_status* st);
-
 extern void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces);
 extern pStr wc_char_conv(char c);
-
-extern void wc_putc_init(wc_ces f_ces, wc_ces t_ces);
-extern void wc_putc(const char* c, FILE* f);
-extern void wc_putc_end(FILE* f);
-extern void wc_putc_clear_status(void);
-
-extern void wc_create_detect_map(wc_ces ces, bool esc);
-extern wc_ces wc_auto_detect(char* is, size_t len, wc_ces hint);
-
-extern wc_ces wc_guess_charset(const char* charset, wc_ces orig);
-extern wc_ces wc_guess_charset_short(const char* charset, wc_ces orig);
-extern wc_ces wc_guess_locale_charset(char* locale, wc_ces orig);
-extern wc_ces wc_charset_to_ces(const char* charset);
-extern wc_ces wc_charset_short_to_ces(const char* charset);
-extern wc_ces wc_locale_to_ces(char* locale);
-extern wc_ces wc_guess_8bit_charset(wc_ces orig);
-extern char* wc_ces_to_charset(wc_ces ces);
-extern char* wc_ces_to_charset_desc(wc_ces ces);
-extern bool wc_check_ces(wc_ces ces);
-extern wc_ces_list* wc_get_ces_list(void);
-
+extern void wc_push_end(pStr os, wc_status* st);

@@ -1,4 +1,4 @@
-#include "wc.h"
+#include "conv.h"
 #include "status.h"
 #include "ucs.h"
 #include "utf8.h"

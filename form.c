@@ -21,6 +21,7 @@
 #include "regex.h"
 #include "util.h"
 #include "libwc/status.h"
+#include "libwc/charset.h"
 
 #ifdef USE_MENU
 extern FormSelectOption* select_option;

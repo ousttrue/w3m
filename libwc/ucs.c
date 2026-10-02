@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include "wc.h"
 #include "status.h"
 #include "ucs.h"
 #include "search.h"

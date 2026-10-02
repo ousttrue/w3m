@@ -1,5 +1,4 @@
 #pragma once
-#include "libwc/wc.h"
 #include "libwc/ces.h"
 
 extern const char* HostName;

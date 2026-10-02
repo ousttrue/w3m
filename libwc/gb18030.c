@@ -1,4 +1,4 @@
-#include "wc.h"
+#include "conv.h"
 #include "status.h"
 #include "gb18030.h"
 #include "search.h"

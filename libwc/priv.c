@@ -1,4 +1,3 @@
-#include "wc.h"
 #include "status.h"
 #include "wtf.h"
 

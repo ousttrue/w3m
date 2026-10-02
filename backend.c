@@ -11,6 +11,7 @@
 #include "rc.h"
 #include "terms.h"
 #include "http_request.h"
+#include "libwc/charset.h"
 
 #include <gc/gc.h>
 #include <stdio.h>

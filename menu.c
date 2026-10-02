@@ -20,6 +20,7 @@
 #include "tab.h"
 #include "terms.h"
 #include "libwc/status.h"
+#include "libwc/charset.h"
 
 #include <stdio.h>
 

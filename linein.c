@@ -14,6 +14,7 @@
 #include "search.h"
 #include "tab.h"
 #include "terms.h"
+#include "libwc/charset.h"
 
 #include <dirent.h>
 #include <stdlib.h>

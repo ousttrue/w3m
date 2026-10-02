@@ -1,5 +1,4 @@
 #include "ces.h"
-// #include "wc.h"
 #include "status.h"
 #include "iso2022.h"
 #include "sjis.h"

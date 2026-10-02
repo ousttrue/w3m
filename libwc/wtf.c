@@ -1,4 +1,4 @@
-#include "wc.h"
+#include "charset.h"
 #include "status.h"
 #include "wtf.h"
 #include "sjis.h"

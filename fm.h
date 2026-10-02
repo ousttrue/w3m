@@ -31,7 +31,6 @@
 #include <unistd.h>
 
 #ifdef USE_M17N
-#include "libwc/wc.h"
 #include "libwc/wtf.h"
 #endif
 

@@ -18,6 +18,7 @@
 #include "rc.h"
 #include "signal.h"
 #include "tab.h"
+#include "libwc/putc.h"
 
 #include <errno.h>
 #include <fcntl.h>

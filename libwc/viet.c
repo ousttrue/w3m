@@ -1,5 +1,6 @@
-#include "wc.h"
+#include "conv.h"
 #include "status.h"
+#include "detect.h"
 #include "viet.h"
 #include "wtf.h"
 #include "search.h"

@@ -15,6 +15,7 @@
 #include "rc.h"
 #include "symbol.h"
 #include "terms.h"
+#include "libwc/charset.h"
 
 #include <strings.h>
 

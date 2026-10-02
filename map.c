@@ -8,6 +8,7 @@
 #include "proto.h"
 #include "menu.h"
 #include "rc.h"
+#include "libwc/charset.h"
 
 #include <math.h>
 

@@ -1,4 +1,4 @@
-#include "wc.h"
+#include "detect.h"
 #include "status.h"
 #include "iso2022.h"
 #include "sjis.h"

@@ -1,12 +1,16 @@
 #include "charset.h"
 #include <stdlib.h>
-#include <ctype.h>
 #include "../alloc.h"
 
-#include "wc.h"
 
 #include <langinfo.h>
 #include <string.h>
+
+#define WC_LOCALE_JA_JP 1
+#define WC_LOCALE_ZH_CN 2
+#define WC_LOCALE_ZH_TW 3
+#define WC_LOCALE_ZH_HK 4
+#define WC_LOCALE_KO_KR 5
 
 wc_locale WcLocale = 0;
 

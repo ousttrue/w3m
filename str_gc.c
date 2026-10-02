@@ -4,6 +4,7 @@
 #include "indep.h"
 #include "myctype.h"
 #include "textlist.h"
+#include "libwc/conv.h"
 #include <pwd.h>
 #include <libgen.h>
 #include <stdlib.h>

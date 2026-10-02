@@ -1,7 +1,6 @@
 #include "search.h"
 
 #include <stdlib.h>
-#include "wc.h"
 
 static int
 map_cmp(const void *a, const void *b)

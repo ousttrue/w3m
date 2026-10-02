@@ -34,6 +34,7 @@
 #include "http_request.h"
 #include "version.h"
 #include "libwc/status.h"
+#include "libwc/charset.h"
 
 #include <errno.h>
 #include <setjmp.h>

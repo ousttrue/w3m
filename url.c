@@ -4,6 +4,7 @@
 #include "str_gc.h"
 #include "w3m.h"
 #include "libwc/status.h"
+#include "libwc/conv.h"
 #include <stdlib.h>
 #include <string.h>
 

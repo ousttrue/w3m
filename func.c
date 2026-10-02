@@ -18,6 +18,7 @@
 #include "rc.h"
 #include "regex.h"
 #include "symbol.h"
+#include "libwc/charset.h"
 
 #include <stdio.h>
 

@@ -30,6 +30,7 @@
 #include "table.h"
 #include "terms.h"
 #include "http_request.h"
+#include "libwc/charset.h"
 #include "libwc/status.h"
 
 #include <dirent.h>

@@ -9,6 +9,7 @@
 #include "proto.h"
 #include "myctype.h"
 #include "growbuf.h"
+#include "libwc/charset.h"
 #define MIME_ENCODED_LINE_LIMIT	80
 #define MIME_ENCODED_WORD_LENGTH_OFFSET 18
 #define MIME_ENCODED_WORD_LENGTH_ESTIMATION(x) \

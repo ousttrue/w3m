@@ -1,4 +1,5 @@
-#include "wc.h"
+#include "conv.h"
+#include "putc.h"
 #include "status.h"
 #include "wtf.h"
 

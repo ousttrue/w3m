@@ -1,6 +1,5 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 
-#include "wc.h"
 #include "ucs.h"
 #include "map/iso88596_combining.map"
 #include "map/iso885911_combining.map"
