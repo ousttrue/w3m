@@ -1,6 +1,6 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
-#include "wc.h"
+#include "ces.h"
+// #include "wc.h"
+#include "status.h"
 #include "iso2022.h"
 #include "sjis.h"
 #include "hz.h"

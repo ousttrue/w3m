@@ -1,5 +1,5 @@
 #pragma once
-#include "wc_types.h"
+#include "ces.h"
 
 enum WC_OPT_DETECT {
     WC_OPT_DETECT_OFF = 0,
@@ -47,3 +47,17 @@ struct wc_status {
     uint32_t base;
     int shift;
 };
+
+extern void wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st);
+extern void wc_push_to_euc(pStr os, wc_wchar_t cc, wc_status *st);
+extern void wc_push_to_eucjp(pStr os, wc_wchar_t cc, wc_status *st);
+extern void wc_push_to_euctw(pStr os, wc_wchar_t cc, wc_status *st);
+extern void wc_push_to_iso8859(pStr os, wc_wchar_t cc, wc_status *st);
+extern void wc_push_to_iso2022_end(pStr os, wc_status *st);
+extern int  wc_parse_iso2022_esc(uint8_t **ptr, wc_status *st);
+extern void wc_push_iso2022_esc(pStr os, wc_ccs ccs, uint8_t g, uint8_t invoke, wc_status *st);
+extern void wc_create_gmap(wc_status *st);
+extern pStr  wc_char_conv_from_iso2022(uint8_t c, wc_status *st);
+
+extern pStr  wc_char_conv_from_priv1(uint8_t c, wc_status *st);
+extern void wc_push_to_raw(pStr os, wc_wchar_t cc, wc_status *st);

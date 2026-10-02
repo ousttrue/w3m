@@ -1,4 +1,6 @@
 #pragma once
+#include "ces.h"
+
 #define WTF_C_CS94 0x80
 #define WTF_C_CS94W 0x81
 #define WTF_C_CS96 0x82

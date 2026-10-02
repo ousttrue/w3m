@@ -1,10 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
-#ifndef _WC_WC_H
-#define _WC_WC_H
-
+#pragma once
 #include "../Str.h"
-#include "wc_types.h"
 #include "ces.h"
 
 #define WC_FALSE 0
@@ -19,7 +14,6 @@
 extern uint8_t WC_DETECT_MAP[];
 
 extern wc_ces_info WcCesInfo[];
-extern wc_locale WcLocale;
 extern char* WcReplace;
 extern char* WcReplaceW;
 #define WC_REPLACE WcReplace
@@ -83,4 +77,3 @@ extern char* wc_ces_to_charset_desc(wc_ces ces);
 extern bool wc_check_ces(wc_ces ces);
 extern wc_ces_list* wc_get_ces_list(void);
 
-#endif

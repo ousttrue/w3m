@@ -87,9 +87,4 @@
 
 #define WC_F_C1			0x01
 
-extern pStr  wc_conv_from_priv1(pStr is, wc_ces ces);
-extern pStr  wc_char_conv_from_priv1(uint8_t c, wc_status *st);
-extern pStr  wc_conv_from_ascii(pStr is, wc_ces ces);
-extern void wc_push_to_raw(pStr os, wc_wchar_t cc, wc_status *st);
-
 #endif

@@ -16,7 +16,6 @@ int backwardSearch(Buffer *buf, const char *str);
 int forwardSearch(Buffer *buf, const char *str);
 
 #ifdef USE_M17N
-#include "libwc/wc_types.h"
 const char *conv_search_string(const char *str, wc_ces f_ces);
 #else
 #define conv_search_string(str, f_ces)	str

@@ -2,7 +2,6 @@
 #include "config.h"
 #include "str_gc.h"
 #include "libwc/wc.h"
-#include "libwc/wc_types.h"
 #include "libwc/wtf.h"
 
 extern wc_ces DisplayCharset;

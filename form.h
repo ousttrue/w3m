@@ -8,9 +8,6 @@
 #include "Str.h"
 #include "config.h"
 
-#ifdef USE_M17N
-#include "libwc/wc_types.h"
-#endif
 
 #define FORM_UNKNOWN        -1
 #define FORM_INPUT_TEXT     0

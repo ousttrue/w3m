@@ -1,5 +1,4 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-
+#include "charset.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include "../alloc.h"

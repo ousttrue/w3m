@@ -1,4 +1,3 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #ifndef W3M_REGEX_H
 #define W3M_REGEX_H
 
@@ -6,16 +5,11 @@
 #define STORAGE_MAX	256
 
 #include "config.h"
-
-#ifdef USE_M17N
-#include "libwc/wc_types.h"
-#endif
+#include "libwc/ccs.h"
 
 typedef struct {
     char type;
-#ifdef USE_M17N
     wc_wchar_t wch;
-#endif
     unsigned char ch;
 } longchar;
 
