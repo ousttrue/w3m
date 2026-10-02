@@ -1242,12 +1242,12 @@ getAuthCookie(struct http_auth* hauth, char* auth_header,
             char* pp;
             term_raw();
             if ((pp = inputStr(Sprintf(_("Username for %s: "), realm)->ptr,
-                     NULL))
+                     NULL).ptr)
                 == NULL)
                 return;
             *uname = Str_conv_to_system(Strnew_charp(pp));
             if ((pp = inputLine(Sprintf(_("Password for %s: "), realm)->ptr, NULL,
-                     IN_PASSWORD))
+                     IN_PASSWORD).ptr)
                 == NULL) {
                 *uname = NULL;
                 return;
@@ -7491,7 +7491,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             q = inputLineHist(_("(Download)Save file to: "),
-                defstr, IN_COMMAND, SaveHist);
+                defstr, IN_COMMAND, SaveHist).ptr;
             if (q == NULL || *q == '\0')
                 return false;
             p = conv_to_system(q);
@@ -7598,7 +7598,7 @@ int doFileSave(URLFile uf, const char* defstr)
         p = searchKeyData();
         if (p == NULL || *p == '\0') {
             p = inputLineHist(_("(Download)Save file to: "),
-                defstr, IN_FILENAME, SaveHist);
+                defstr, IN_FILENAME, SaveHist).ptr;
             if (p == NULL || *p == '\0')
                 return -1;
             p = conv_to_system(p);
@@ -7711,7 +7711,7 @@ char confirm_multi(const char* prompt)
         return 'n';
     if (fmInitialized) {
         term_raw();
-        ans = inputChar(prompt);
+        ans = inputChar(prompt).ptr;
     } else {
         printf("%s", prompt);
         fflush(stdout);

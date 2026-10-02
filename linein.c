@@ -112,7 +112,7 @@ static Hist* CurrentHist;
 static pStr strCurrentBuf;
 static void ins_char(pStr str);
 
-char* inputLineHistSearch(const char* prompt, const char* def_str,
+struct Str inputLineHistSearch(const char* prompt, const char* def_str,
     enum InputLineFlag flag, Hist* hist,
     IncrFunc incrfunc)
 {
@@ -242,7 +242,7 @@ char* inputLineHistSearch(const char* prompt, const char* def_str,
     }
 
     if (i_broken)
-        return NULL;
+        return (struct Str){};
 
     move(LASTLINE, 0);
     refresh();
@@ -256,9 +256,9 @@ char* inputLineHistSearch(const char* prompt, const char* def_str,
             pushHist(hist, p);
     }
     if (flag & IN_FILENAME)
-        return expandPath(p)->ptr;
+        return *expandPath(p);
     else
-        return allocStr(p).ptr;
+        return allocStr(p);
 }
 
 void addPasswd(char* p, Lineprop* pr, int len, int offset, int limit)

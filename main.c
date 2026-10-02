@@ -1823,13 +1823,12 @@ done:
 static void
 isrch(int (*func)(Buffer*, const char*), const char* prompt)
 {
-    char* str;
     Buffer sbuf;
     SAVE_BUFPOSITION(&sbuf);
     dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
     searchRoutine = func;
-    str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+    char* str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch).ptr;
     if (str == NULL) {
         RESTORE_BUFPOSITION(&sbuf);
     }
@@ -1846,7 +1845,7 @@ srch(int (*func)(Buffer*, const char*), const char* prompt)
 
     str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist(prompt, NULL, TextHist);
+        str = inputStrHist(prompt, NULL, TextHist).ptr;
         if (str != NULL && *str == '\0')
             str = SearchString;
         if (str == NULL) {
@@ -2014,7 +2013,7 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
 
 DEFUN(cd, CD, "Change working directory")
 {
-    char* dir = inputFilename(_("cd to? "), NULL);
+    char* dir = inputFilename(_("cd to? "), NULL).ptr;
     if (chdir(dir) == -1)
         disp_err_message(strerror(errno), false);
     CurrentDir = currentdir();
@@ -2026,7 +2025,7 @@ DEFUN(setEnv, SETENV, "Set environment variable")
     if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
         if (env != NULL && *env != '\0')
             env = Sprintf("%s=", env)->ptr;
-        env = inputStrHist("Set environ: ", env, TextHist);
+        env = inputStrHist("Set environ: ", env, TextHist).ptr;
         if (env == NULL || *env == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -2045,7 +2044,7 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
 {
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist(_("Pipe buffer to: "), "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist(_("Pipe buffer to: "), "", IN_COMMAND, ShellHist).ptr;
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -2084,7 +2083,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
 {
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist).ptr;
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -2110,7 +2109,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
 {
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist).ptr;
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -2140,7 +2139,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
 {
     const char* cmd = searchKeyData();
     if (cmd == NULL || *cmd == '\0') {
-        cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
+        cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist).ptr;
     }
     if (cmd != NULL)
         cmd = conv_to_system(cmd);
@@ -2161,7 +2160,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
 {
     const char* fn = searchKeyData();
     if (fn == NULL || *fn == '\0') {
-        fn = inputFilenameHist(_("(Load)Filename? "), NULL, LoadHist);
+        fn = inputFilenameHist(_("(Load)Filename? "), NULL, LoadHist).ptr;
     }
     if (fn != NULL)
         fn = conv_to_system(fn);
@@ -2590,7 +2589,7 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line")
     else if (str)
         _goLine(str);
     else
-        _goLine(inputStr(_("Goto line: "), ""));
+        _goLine(inputStr(_("Goto line: "), "").ptr);
 }
 
 DEFUN(goLineF, BEGIN, "Go to the first line")
@@ -2782,7 +2781,7 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
         return;
     str = searchKeyData();
     if (str == NULL || *str == '\0') {
-        str = inputStrHist("(Mark)Regexp: ", MarkString, TextHist);
+        str = inputStrHist("(Mark)Regexp: ", MarkString, TextHist).ptr;
         if (str == NULL || *str == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -3296,7 +3295,7 @@ _followForm(int submit)
         if (fi->readonly)
             /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", false, 1, true, false);
-        p = inputStrHist(_("TEXT:"), fi->value ? fi->value->ptr : NULL, TextHist);
+        p = inputStrHist(_("TEXT:"), fi->value ? fi->value->ptr : NULL, TextHist).ptr;
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -3311,7 +3310,8 @@ _followForm(int submit)
             /* FIXME: gettextize? */
             disp_message_nsec("Read only field!", false, 1, true, false);
         p = inputFilenameHist(_("Filename:"), fi->value ? fi->value->ptr : NULL,
-            NULL);
+            NULL)
+                .ptr;
         if (p == NULL || fi->readonly)
             break;
         fi->value = Strnew_charp(p);
@@ -3328,7 +3328,8 @@ _followForm(int submit)
             break;
         }
         p = inputLine(_("Password:"), fi->value ? fi->value->ptr : NULL,
-            IN_PASSWORD);
+            IN_PASSWORD)
+                .ptr;
         if (p == NULL)
             break;
         fi->value = Strnew_charp(p);
@@ -4173,7 +4174,7 @@ goURL0(const char* prompt, int relative)
             else
                 pushHist(hist, a_url);
         }
-        url = inputLineHist(prompt, url, IN_URL, hist);
+        url = inputLineHist(prompt, url, IN_URL, hist).ptr;
         if (url != NULL)
             SKIP_BLANKS(url);
     }
@@ -4306,7 +4307,8 @@ int _strSession(char* sf)
         if (confirm(msg))
             break;
         sf = inputFilenameHist(_("Session file (empty: Don't store)? "), sf,
-            LoadHist);
+            LoadHist)
+                 .ptr;
         if (!*sf)
             return 0;
     }
@@ -4353,7 +4355,8 @@ DEFUN(strSession, STORE, "Store session")
                                      def,
                                      "]? ", NULL)
                                      ->ptr,
-              NULL, LoadHist)))
+              NULL, LoadHist)
+                .ptr))
         return;
     if (!*sf)
         sf = def;
@@ -4376,7 +4379,7 @@ DEFUN(setOpt, SET_OPTION, "Set option")
             const char* v = get_param_option(opt);
             opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
         }
-        opt = inputStrHist("Set option: ", opt, TextHist);
+        opt = inputStrHist("Set option: ", opt, TextHist).ptr;
         if (opt == NULL || *opt == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -4580,7 +4583,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
 
     const char* file = searchKeyData();
     if (file == NULL || *file == '\0') {
-        qfile = inputLineHist(_("Save buffer to: "), NULL, IN_COMMAND, SaveHist);
+        qfile = inputLineHist(_("Save buffer to: "), NULL, IN_COMMAND, SaveHist).ptr;
         if (qfile == NULL || *qfile == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -5010,7 +5013,7 @@ DEFUN(docCSet, CHARSET, "Change the character encoding for the current document"
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         cs = inputStr(_("Document charset: "),
-            wc_ces_to_charset(Currentbuf->document_charset));
+            wc_ces_to_charset(Currentbuf->document_charset)).ptr;
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset == 0) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -5024,7 +5027,7 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
     const char* cs = searchKeyData();
     if (cs == NULL || *cs == '\0')
         cs = inputStr(_("Default document charset: "),
-            wc_ces_to_charset(DocumentCharset));
+            wc_ces_to_charset(DocumentCharset)).ptr;
     wc_ces charset = wc_guess_charset_short(cs, 0);
     if (charset != 0)
         DocumentCharset = charset;
@@ -5131,7 +5134,7 @@ invoke_browser(const char* url)
             break;
         }
         if (browser == NULL || *browser == '\0') {
-            browser = inputStr("Browse command: ", NULL);
+            browser = inputStr("Browse command: ", NULL).ptr;
             if (browser != NULL)
                 browser = conv_to_system(browser);
         }
@@ -5673,7 +5676,7 @@ execdict(char* word)
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)")
 {
-    execdict(inputStrHist(DictPrompt, "", DictHist));
+    execdict(inputStrHist(DictPrompt, "", DictHist).ptr);
 }
 
 DEFUN(dictwordat, DICT_WORD_AT,
@@ -5836,7 +5839,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 {
     char* data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("command [; ...]: ", "", TextHist);
+        data = inputStrHist("command [; ...]: ", "", TextHist).ptr;
         if (data == NULL) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -5916,7 +5919,7 @@ DEFUN(setAlarm, ALARM, "Set alarm")
 
     data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("(Alarm)sec command: ", "", TextHist);
+        data = inputStrHist("(Alarm)sec command: ", "", TextHist).ptr;
         if (data == NULL) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
@@ -6027,7 +6030,7 @@ DEFUN(defKey, DEFINE_KEY, "Define a binding between a key stroke combination and
 
     data = searchKeyData();
     if (data == NULL || *data == '\0') {
-        data = inputStrHist("Key definition: ", "", TextHist);
+        data = inputStrHist("Key definition: ", "", TextHist).ptr;
         if (data == NULL || *data == '\0') {
             displayBuffer(Currentbuf, B_NORMAL);
             return;

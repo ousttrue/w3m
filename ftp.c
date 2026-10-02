@@ -416,7 +416,7 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
         if (pwd == NULL) {
             if (fmInitialized) {
                 term_raw();
-                pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
+                pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD).ptr);
                 pwd = Str_conv_to_system(pwd);
                 term_cbreak();
             } else {

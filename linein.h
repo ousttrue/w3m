@@ -13,40 +13,40 @@ enum InputLineFlag {
 
 typedef int (*IncrFunc)(int ch, pStr buf, Lineprop* prop);
 
-char* inputLineHistSearch(const char* prompt, const char* def_str,
+struct Str inputLineHistSearch(const char* prompt, const char* def_str,
     enum InputLineFlag flag, Hist* hist, IncrFunc incfunc);
 
-static inline char* inputLineHist(const char* p, const char* d, enum InputLineFlag f, Hist* h)
+static inline struct Str inputLineHist(const char* p, const char* d, enum InputLineFlag f, Hist* h)
 {
     return inputLineHistSearch(p, d, f, h, NULL);
 }
 
-static inline char* inputLine(const char* p, const char* d, enum InputLineFlag f)
+static inline struct Str inputLine(const char* p, const char* d, enum InputLineFlag f)
 {
     return inputLineHist(p, d, f, NULL);
 }
 
-static inline char* inputStr(const char* p, const char* d)
+static inline struct Str inputStr(const char* p, const char* d)
 {
     return inputLine(p, d, IN_STRING);
 }
 
-static inline char* inputStrHist(const char* p, const char* d, Hist* h)
+static inline struct Str inputStrHist(const char* p, const char* d, Hist* h)
 {
     return inputLineHist(p, d, IN_STRING, h);
 }
 
-static inline char* inputFilename(const char* p, const char* d)
+static inline struct Str inputFilename(const char* p, const char* d)
 {
     return inputLine(p, d, IN_FILENAME);
 }
 
-static inline char* inputFilenameHist(const char* p, const char* d, Hist* h)
+static inline struct Str inputFilenameHist(const char* p, const char* d, Hist* h)
 {
     return inputLineHist(p, d, IN_FILENAME, h);
 }
 
-static inline char* inputChar(const char* p)
+static inline struct Str inputChar(const char* p)
 {
     return inputLine(p, "", IN_CHAR);
 }

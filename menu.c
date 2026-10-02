@@ -978,9 +978,8 @@ menuForwardSearch(Menu *menu, const char *str, int from)
 static int
 menu_search_forward(Menu *menu, int from)
 {
-    const char *str;
     int found;
-    str = inputStrHist("Forward: ", NULL, TextHist);
+    const char *str = inputStrHist("Forward: ", NULL, TextHist).ptr;
     if (str != NULL && *str == '\0')
 	str = prev_search;
     if (str == NULL || *str == '\0')
@@ -1010,7 +1009,6 @@ mSrchF(char c)
 static int
 menuBackwardSearch(Menu *menu, const char *str, int from)
 {
-    int i;
     const char *p;
     if ((p = regexCompile(str, IgnoreCase)) != NULL) {
 	message(p, 0, 0);
@@ -1018,7 +1016,7 @@ menuBackwardSearch(Menu *menu, const char *str, int from)
     }
     if (from >= menu->nitem)
 	from = menu->nitem - 1;
-    for (i = from; i >= 0; i--)
+    for (int i = from; i >= 0; i--)
 	if (menu->item[i].type != MENU_NOP &&
 	    regexMatch(menu->item[i].label, -1, 1) == 1)
 	    return i;
@@ -1028,9 +1026,7 @@ menuBackwardSearch(Menu *menu, const char *str, int from)
 static int
 menu_search_backward(Menu *menu, int from)
 {
-    const char *str;
-    int found;
-    str = inputStrHist("Backward: ", NULL, TextHist);
+    const char *str = inputStrHist("Backward: ", NULL, TextHist).ptr;
     if (str != NULL && *str == '\0')
 	str = prev_search;
     if (str == NULL || *str == '\0')
@@ -1038,7 +1034,7 @@ menu_search_backward(Menu *menu, int from)
     prev_search = str;
     str = conv_search_string(str, DisplayCharset);
     menuSearchRoutine = menuBackwardSearch;
-    found = menuBackwardSearch(menu, str, from - 1);
+    int found = menuBackwardSearch(menu, str, from - 1);
     if (WrapSearch && found == -1)
 	found = menuBackwardSearch(menu, str, menu->nitem);
     if (found >= 0)
