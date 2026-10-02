@@ -6,9 +6,7 @@
 #include "big5.h"
 #include "johab.h"
 #include "wtf.h"
-#ifdef USE_UNICODE
 #include "ucs.h"
-#endif
 
 #define C0  WC_ISO_MAP_C0
 #define C1  WC_ISO_MAP_C1
@@ -412,7 +410,6 @@ wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
     case WC_CCS_A_CS94W:
 	is_wide = 1;
 	switch (cc.ccs) {
-#ifdef USE_UNICODE
 	case WC_CCS_JIS_X_0212:
 	    if (!WcOption.use_jisx0212 && WcOption.use_jisx0213 &&
 		WcOption.ucs_conv) {
@@ -435,7 +432,6 @@ wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
 		}
 	    }
 	    break;
-#endif
 	}
 	if (WC_CCS_INDEX(cc.ccs) >= WC_F_ISO_BASE)
 	    g = cs94w_gmap[WC_CCS_INDEX(cc.ccs) - WC_F_ISO_BASE];
@@ -480,20 +476,16 @@ wc_push_to_iso2022(pStr os, wc_wchar_t cc, wc_status *st)
 		continue;
 	    }
 	}
-#ifdef USE_UNICODE
 	if (WcOption.ucs_conv)
 	    cc = wc_any_to_iso2022(cc, st);
 	else
-#endif
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	continue;
     }
     if (! g) {
-#ifdef USE_UNICODE
 	if (WcOption.ucs_conv && ! retry)
 	    cc = wc_any_to_any_ces(cc, st);
 	else
-#endif
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	retry = WC_TRUE;
 	continue;
@@ -599,11 +591,9 @@ wc_push_to_euc(pStr os, wc_wchar_t cc, wc_status *st)
 	    continue;
 	}
     default:
-#ifdef USE_UNICODE
 	if (WcOption.ucs_conv)
 	    cc = wc_any_to_any_ces(cc, st);
 	else
-#endif
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	continue;
     }
@@ -633,10 +623,8 @@ wc_push_to_eucjp(pStr os, wc_wchar_t cc, wc_status *st)
     case WC_CCS_JIS_X_0213_1:
 	if (WcOption.use_jisx0213)
 	    break;
-#ifdef USE_UNICODE
 	else if (WcOption.ucs_conv && WcOption.use_jisx0212)
 	    cc = wc_jisx0213_to_jisx0212(cc);
-#endif
 	else
 	    cc.ccs = WC_CCS_UNKNOWN_W;
 	continue;
@@ -645,10 +633,8 @@ wc_push_to_eucjp(pStr os, wc_wchar_t cc, wc_status *st)
 	    Strcat_char(os, WC_C_SS3R);
 	    break;
 	}
-#ifdef USE_UNICODE
 	else if (WcOption.ucs_conv && WcOption.use_jisx0213)
 	    cc = wc_jisx0212_to_jisx0213(cc);
-#endif
 	else
 	    cc.ccs = WC_CCS_UNKNOWN_W;
 	continue;
@@ -657,10 +643,8 @@ wc_push_to_eucjp(pStr os, wc_wchar_t cc, wc_status *st)
 	    Strcat_char(os, WC_C_SS3R);
 	    break;
 	}
-#ifdef USE_UNICODE
 	else if (WcOption.ucs_conv && WcOption.use_jisx0212)
 	    cc = wc_jisx0213_to_jisx0212(cc);
-#endif
 	else
 	    cc.ccs = WC_CCS_UNKNOWN_W;
 	continue;
@@ -676,11 +660,9 @@ wc_push_to_eucjp(pStr os, wc_wchar_t cc, wc_status *st)
 	    Strcat_charp(os, WC_REPLACE);
 	return;
     default:
-#ifdef USE_UNICODE
 	if (WcOption.ucs_conv)
 	    cc = wc_any_to_any_ces(cc, st);
 	else
-#endif
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	continue;
     }
@@ -733,11 +715,9 @@ wc_push_to_euctw(pStr os, wc_wchar_t cc, wc_status *st)
 	    Strcat_charp(os, WC_REPLACE);
 	return;
     default:
-#ifdef USE_UNICODE
 	if (WcOption.ucs_conv)
 	    cc = wc_any_to_any_ces(cc, st);
 	else
-#endif
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	continue;
     }
@@ -773,11 +753,9 @@ wc_push_to_iso8859(pStr os, wc_wchar_t cc, wc_status *st)
 	    Strcat_charp(os, WC_REPLACE);
 	return;
     default:
-#ifdef USE_UNICODE
 	if (WcOption.ucs_conv)
 	    cc = wc_any_to_any_ces(cc, st);
 	else
-#endif
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	continue;
     }

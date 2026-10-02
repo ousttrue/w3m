@@ -1,6 +1,5 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 
-#ifdef USE_UNICODE
 
 #include <stdlib.h>
 #include "wc.h"
@@ -736,4 +735,3 @@ wtf_push_ucs(pStr os, wc_uint32 ucs, wc_status *st)
     }
 }
 
-#endif

@@ -4,9 +4,7 @@
 #include "iso2022.h"
 #include "hz.h"
 #include "wtf.h"
-#ifdef USE_UNICODE
 #include "ucs.h"
-#endif
 
 pStr
 wc_conv_from_hz(pStr is, wc_ces ces)
@@ -140,11 +138,9 @@ wc_push_to_hz(pStr os, wc_wchar_t cc, wc_status *st)
 	Strcat_charp(os, WC_REPLACE);
 	return;
     default:
-#ifdef USE_UNICODE
 	if (WcOption.ucs_conv)
 	    cc = wc_any_to_any_ces(cc, st);
 	else
-#endif
 	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
 	continue;
     }

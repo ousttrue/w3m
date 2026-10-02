@@ -1,5 +1,4 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
-#ifdef USE_UNICODE
 
 #include "wc.h"
 #include "ucs.h"
@@ -364,6 +363,5 @@ wc_char_conv_from_utf7(wc_uchar c, wc_status *st)
     return os;
 }
 
-#endif
 
 
