@@ -5,7 +5,6 @@
 #include "alloc.h"
 #include "buffer.h"
 #include "charset.h"
-#include "config.h"
 #include "ctrlcode.h"
 #include "fm.h"
 #include "proto.h"
@@ -33,11 +32,12 @@ static void wc_char_conv_init()
     char_conv_st.state = -1;
 }
 
-static void wc_char_conv(struct wc_option* WcOption, pStr os, char c)
+static void wc_char_conv(struct wc_option* WcOption, struct Writer* w, char c)
 {
     pStr tmp = Strnew_size(8);
-    (*char_conv_st.ces_info->char_conv)(WcOption, tmp, (uint8_t)c, &char_conv_st);
-    wc_Str_conv(WcOption, os,
+    struct Writer ww = makeWriter(tmp);
+    (*char_conv_st.ces_info->char_conv)(WcOption, &ww, (uint8_t)c, &char_conv_st);
+    wc_Str_conv(WcOption, w,
         (const uint8_t*)tmp->ptr, (const uint8_t*)tmp->ptr + tmp->len, WC_CES_WTF, InnerCharset);
 }
 
@@ -238,8 +238,9 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
                 cm_disp_next = -1;
         } else {
             pStr tmp = Strnew_size(8);
-            wc_char_conv(&WcOption, tmp, c);
-            if (tmp == NULL) {
+            struct Writer w = makeWriter(tmp);
+            wc_char_conv(&WcOption, &w, c);
+            if (tmp->len == 0) {
                 i_quote = TRUE;
                 goto next_char;
             }
@@ -415,10 +416,12 @@ void _esc(void)
         break;
     default: {
         pStr tmp = Strnew_size(8);
-        wc_char_conv(&WcOption, tmp, ESC_CODE);
+        struct Writer w = makeWriter(tmp);
+        wc_char_conv(&WcOption, &w, ESC_CODE);
         if (tmp->len == 0) {
             Strclear(tmp);
-            wc_char_conv(&WcOption, tmp, c);
+            w = makeWriter(tmp);
+            wc_char_conv(&WcOption, &w, c);
             if (tmp->len == 0)
                 i_quote = TRUE;
         }
@@ -784,7 +787,8 @@ disp_next:
             f = Strdup(d);
             Strcat_charp(f, CFileBuf[n]);
             pStr os = Strnew_size(strlen(CFileBuf[n]));
-            conv_from_system(&WcOption, os, CFileBuf[n]);
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, CFileBuf[n]);
             addstr(os->ptr);
             if (stat(expandPath(f->ptr)->ptr, &st) != -1 && S_ISDIR(st.st_mode))
                 addstr("/");

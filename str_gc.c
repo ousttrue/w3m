@@ -1,8 +1,8 @@
 #include "str_gc.h"
 #include "w3m.h"
 #include "str_const.h"
+#include "StrWriter.h"
 #include "config.h"
-#include "indep.h"
 #include "myctype.h"
 #include "textlist.h"
 #include "libwc/conv.h"
@@ -461,7 +461,8 @@ void cleanup_line(pStr s, enum LineMode mode)
 pStr convertLine(bool do_chop, pStr line, int mode, wc_ces* charset, wc_ces doc_charset)
 {
     pStr os = Strnew_size(line->len);
-    wc_Str_conv_with_detect(&WcOption, os,
+    struct Writer w = makeWriter(os);
+    wc_Str_conv_with_detect(&WcOption, &w,
         (const uint8_t*)line->ptr, (const uint8_t*)line->ptr + line->len, charset, doc_charset, InnerCharset);
     Strcopy(line, os);
     if (mode != RAW_MODE)

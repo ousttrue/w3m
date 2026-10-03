@@ -1,5 +1,4 @@
 #pragma once
-#include "../Str.h"
 #include "ccs.h"
 
 #define WC_C_UCS2_NBSP 0xA0
@@ -60,6 +59,6 @@ extern uint32_t wc_ucs_tolower(uint32_t ucs);
 extern uint32_t wc_ucs_totitle(uint32_t ucs);
 extern uint32_t wc_ucs_precompose(struct wc_option *WcOption, uint32_t ucs1, uint32_t ucs2);
 extern uint32_t wc_ucs_to_fullwidth(uint32_t ucs);
-extern int wc_ucs_put_tag(char* tag);
-extern char* wc_ucs_get_tag(int ntag);
-extern void wtf_push_ucs(struct wc_option *WcOption, pStr os, uint32_t ucs, struct wc_status* st);
+extern int wc_ucs_put_tag(const uint8_t* tag);
+extern const char* wc_ucs_get_tag(int ntag);
+extern void wtf_push_ucs(struct wc_option *WcOption, struct Writer *w, uint32_t ucs, struct wc_status* st);

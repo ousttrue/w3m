@@ -173,14 +173,14 @@ wtf_type(uint8_t *p)
 #define wtf_to_wcs32(p) \
     ((p)[0] == 0 || (p)[1] == 0 || (p)[2] == 0 || (p)[3] == 0 || (p)[4] == 0 ? 0 : ((uint32_t)((p)[0] & 0x0f) << 28) | ((uint32_t)((p)[1] & 0x7f) << 21) | ((uint32_t)((p)[2] & 0x7f) << 14) | ((uint32_t)((p)[3] & 0x7f) << 7) | ((uint32_t)((p)[4] & 0x7f)))
 
-void wtf_push(struct wc_option *WcOption, pStr os, wc_ccs ccs, uint32_t code)
+void wtf_push(struct wc_option* WcOption, struct Writer* w, wc_ccs ccs, uint32_t code)
 {
     uint8_t s[8];
     wc_wchar_t cc, cc2;
     size_t n;
 
     if (ccs == WC_CCS_US_ASCII) {
-        Strcat_char(os, (char)(code & 0x7f));
+        CALL1(w, pushChar, (char)(code & 0x7f));
         return;
     }
     cc.ccs = ccs;
@@ -201,7 +201,7 @@ void wtf_push(struct wc_option *WcOption, pStr os, wc_ccs ccs, uint32_t code)
             if (!wc_ces_has_ccs(WC_CCS_SET(ccs), &wtf_major_st)) {
                 cc2 = wc_any_to_any_ces(WcOption, cc, &wtf_major_st);
                 if (cc2.ccs == WC_CCS_US_ASCII) {
-                    Strcat_char(os, (char)(cc2.code & 0x7f));
+                    CALL1(w, pushChar, (char)(cc2.code & 0x7f));
                     return;
                 }
                 if (!WC_CCS_IS_UNKNOWN(cc2.ccs) && cc2.ccs != WC_CCS_CP1258_2 && cc2.ccs != WC_CCS_TCVN_5712_3)
@@ -221,7 +221,7 @@ void wtf_push(struct wc_option *WcOption, pStr os, wc_ccs ccs, uint32_t code)
         if (cc.ccs == WC_CCS_JIS_X_0201K && !WcOption->use_jisx0201k) {
             cc2 = wc_jisx0201k_to_jisx0208(cc);
             if (!WC_CCS_IS_UNKNOWN(cc2.ccs)) {
-                wtf_push(WcOption, os, cc2.ccs, cc2.code);
+                wtf_push(WcOption, w, cc2.ccs, cc2.code);
                 return;
             }
         }
@@ -350,16 +350,16 @@ void wtf_push(struct wc_option *WcOption, pStr os, wc_ccs ccs, uint32_t code)
         n = 3;
         break;
     }
-    Strcat_charp_n(os, (char*)s, n);
+    CALL2(w, pushStrLen, s, n);
 }
 
-void wtf_push_unknown(struct wc_option *WcOption, pStr os, const uint8_t* p, size_t len)
+void wtf_push_unknown(struct wc_option* WcOption, struct Writer* w, const uint8_t* p, size_t len)
 {
     for (; len--; p++) {
         if (*p & 0x80)
-            wtf_push(WcOption, os, WC_CCS_UNKNOWN, *p);
+            wtf_push(WcOption, w, WC_CCS_UNKNOWN, *p);
         else
-            Strcat_char(os, (char)*p);
+            CALL1(w, pushChar, (char)*p);
     }
 }
 
@@ -466,7 +466,7 @@ wtf_parse1(const uint8_t** p)
 }
 
 wc_wchar_t
-wtf_parse(struct wc_option *WcOption, const uint8_t** p)
+wtf_parse(struct wc_option* WcOption, const uint8_t** p)
 {
     const uint8_t* q;
     wc_wchar_t cc, cc2;
@@ -557,25 +557,27 @@ bool wtf_is_hangul(const uint8_t* p)
     return false;
 }
 
-const char*
-wtf_conv_fit(struct wc_option *WcOption, const char* s, wc_ces ces)
+void wtf_conv_fit(struct wc_option* WcOption, struct Writer* w, const uint8_t* s, wc_ces ces)
 {
     const uint8_t* p;
     wc_wchar_t cc;
     wc_ces major_ces;
     bool pre_conv, ucs_conv;
 
-    if (ces == WC_CES_WTF || ces == WC_CES_US_ASCII)
-        return s;
+    if (ces == WC_CES_WTF || ces == WC_CES_US_ASCII) {
+        CALL2(w, setBeginEnd, s, s + strlen((const char*)s));
+        return;
+    }
 
     for (p = (const uint8_t*)s; *p && *p < 0x80; p++)
         ;
-    if (!*p)
-        return s;
+    if (!*p) {
+        CALL2(w, setBeginEnd, s, s + strlen((const char*)s));
+        return;
+    }
 
-    pStr os = Strnew_size(strlen(s));
-    if (p > (const uint8_t*)s)
-        Strcopy_charp_n(os, s, (int)(p - (const uint8_t*)s));
+    if (p > s)
+        CALL2(w, pushStrLen, s, (int)(p - (const uint8_t*)s));
 
     major_ces = wtf_major_ces;
     pre_conv = WcOption->pre_conv;
@@ -585,10 +587,9 @@ wtf_conv_fit(struct wc_option *WcOption, const char* s, wc_ces ces)
     WcOption->ucs_conv = true;
     while (*p) {
         cc = wtf_parse1(&p);
-        wtf_push(WcOption, os, cc.ccs, cc.code);
+        wtf_push(WcOption, w, cc.ccs, cc.code);
     }
     wtf_major_ces = major_ces;
     WcOption->pre_conv = pre_conv;
     WcOption->ucs_conv = ucs_conv;
-    return os->ptr;
 }

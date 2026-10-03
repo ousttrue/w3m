@@ -1,5 +1,4 @@
 #pragma once
-#include "../Str.h"
 #include "ces.h"
 
 enum WC_OPT_DETECT {
@@ -64,7 +63,7 @@ struct wc_status {
     wc_table** tlist;
     wc_table** tlistw;
     int state;
-    pStr tag;
+    struct Writer tag;
     int ntag;
     uint32_t base;
     int shift;

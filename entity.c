@@ -2209,7 +2209,8 @@ const char* conv_entity(unsigned int c)
             return alt_latin1[c - 0xa0];
 #ifdef USE_M17N
         pStr os = Strnew();
-        wc_Str_conv(&WcOption, os,
+        struct Writer w = makeWriter(os);
+        wc_Str_conv(&WcOption, &w,
             &b, &b + 1, WC_CES_ISO_8859_1, InnerCharset);
         return os->ptr;
 #else
@@ -2223,13 +2224,15 @@ const char* conv_entity(unsigned int c)
         wc_ucs_to_utf8(c, utf8);
         /* we eventually need to display it so check DisplayCharset */
         pStr os = Strnew();
-        wc_Str_conv(&WcOption, os,
+        struct Writer w = makeWriter(os);
+        wc_Str_conv(&WcOption, &w,
             utf8, utf8 + strlen((const char*)utf8), WC_CES_UTF_8,
             DisplayCharset ? DisplayCharset : WC_CES_US_ASCII);
         char* chk = os->ptr;
         if (strcmp(chk, "?") != 0) {
             pStr os = Strnew();
-            wc_Str_conv(&WcOption, os,
+            struct Writer w = makeWriter(os);
+            wc_Str_conv(&WcOption, &w,
                 utf8, utf8 + strlen((const char*)utf8), WC_CES_UTF_8, InnerCharset);
             return os->ptr;
         }

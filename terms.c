@@ -46,22 +46,26 @@ static void wc_putc(struct wc_option* WcOption, const char* c, FILE* f)
 
     if (putc_f_ces != WC_CES_WTF) {
         pStr os = Strnew();
-        wc_Str_conv(WcOption, os,
+        struct Writer w = makeWriter(os);
+        wc_Str_conv(WcOption, &w,
             (const uint8_t*)c, (const uint8_t*)c + strlen(c), putc_f_ces, WC_CES_WTF);
         p = (const uint8_t*)os->ptr;
     } else
         p = (const uint8_t*)c;
 
     Strclear(putc_str);
-    while (*p)
-        (*putc_st.ces_info->push_to)(WcOption, putc_str, wtf_parse(WcOption, &p), &putc_st);
+    struct Writer w = makeWriter(putc_str);
+    while (*p) {
+        (*putc_st.ces_info->push_to)(WcOption, &w, wtf_parse(WcOption, &p), &putc_st);
+    }
     fwrite(putc_str->ptr, 1, putc_str->len, f);
 }
 
 static void wc_putc_end(struct wc_option* WcOption, FILE* f)
 {
     Strclear(putc_str);
-    wc_push_end(WcOption, putc_str, &putc_st);
+    struct Writer w = makeWriter(putc_str);
+    wc_push_end(WcOption, &w, &putc_st);
     if (putc_str->len)
         fwrite(putc_str->ptr, 1, putc_str->len, f);
 }

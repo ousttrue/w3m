@@ -224,7 +224,8 @@ writeBufferName(Buffer* buf, int n)
         case SCM_LOCAL:
         case SCM_LOCAL_CGI: {
             pStr os = Strnew_size(strlen(buf->currentURL.real_file));
-            conv_from_system(&WcOption, os, buf->currentURL.real_file);
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, buf->currentURL.real_file);
             if (strcmp(buf->currentURL.file, "-")) {
                 Strcat_char(msg, ' ');
                 Strcat(msg, os);

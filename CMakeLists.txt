@@ -33,6 +33,7 @@ add_library(
   indep
   STATIC
     Str.c
+    StrWriter.c
     indep.c
     regex.c
     textlist.c

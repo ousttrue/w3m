@@ -565,7 +565,8 @@ form_fputs_decode(pStr s, FILE* f)
     }
 
     pStr os = Strnew_size(z->len);
-    wc_Str_conv_strict(&WcOption, os,
+    struct Writer w = makeWriter(os);
+    wc_Str_conv_strict(&WcOption, &w,
         (const uint8_t*)z->ptr, (const uint8_t*)z->ptr + z->len, InnerCharset, DisplayCharset);
     Strcopy(z, os);
 

@@ -89,7 +89,7 @@ wc_gbk_to_N(uint32_t c)
     return WC_GBK_N(c) - ((c >> 8) - 0xA1) * 0x5E + 0x0A + 0x16 + 0x06;
 }
 
-void wc_conv_from_gbk(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
+void wc_conv_from_gbk(struct wc_option* WcOption, struct Writer *w, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
     int state = WC_GBK_NOSTATE;
     uint32_t gbk;
@@ -98,12 +98,12 @@ void wc_conv_from_gbk(struct wc_option* WcOption, pStr os, const uint8_t *sp, co
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy_begin_end(os, sp, ep);
+        CALL2(w, setBeginEnd, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, (char*)sp, (int)(p - sp));
+        CALL2(w, pushStrLen, sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {
@@ -113,13 +113,13 @@ void wc_conv_from_gbk(struct wc_option* WcOption, pStr os, const uint8_t *sp, co
                 state = WC_GBK_MBYTE1;
                 break;
             case C80:
-                wtf_push(WcOption, os, WC_CCS_GBK_80, *p);
+                wtf_push(WcOption, w, WC_CCS_GBK_80, *p);
                 break;
             case C1:
-                wtf_push_unknown(WcOption, os, p, 1);
+                wtf_push_unknown(WcOption, w, p, 1);
                 break;
             default:
-                Strcat_char(os, (char)*p);
+                CALL1(w, pushChar, *p);
                 break;
             }
             break;
@@ -127,50 +127,50 @@ void wc_conv_from_gbk(struct wc_option* WcOption, pStr os, const uint8_t *sp, co
             if (WC_GBK_MAP[*p] & LB) {
                 gbk = ((uint32_t)*(p - 1) << 8) | *p;
                 if (*(p - 1) >= 0xA1 && *p >= 0xA1)
-                    wtf_push(WcOption, os, wc_gb2312_or_gbk(gbk), gbk);
+                    wtf_push(WcOption, w, wc_gb2312_or_gbk(gbk), gbk);
                 else
-                    wtf_push(WcOption, os, WC_CCS_GBK, gbk);
+                    wtf_push(WcOption, w, WC_CCS_GBK, gbk);
             } else
-                wtf_push_unknown(WcOption, os, p - 1, 2);
+                wtf_push_unknown(WcOption, w, p - 1, 2);
             state = WC_GBK_NOSTATE;
             break;
         }
     }
     switch (state) {
     case WC_GBK_MBYTE1:
-        wtf_push_unknown(WcOption, os, p - 1, 1);
+        wtf_push_unknown(WcOption, w, p - 1, 1);
         break;
     }
 }
 
-void wc_push_to_gbk(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_gbk(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc, struct wc_status* st)
 {
     while (1) {
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
-            Strcat_char(os, (char)cc.code);
+            CALL1(w, pushChar, cc.code);
             return;
         case WC_CCS_GB_2312:
-            Strcat_char(os, (char)((cc.code >> 8) | 0x80));
-            Strcat_char(os, (char)((cc.code & 0xff) | 0x80));
+            CALL1(w, pushChar, ((cc.code >> 8) | 0x80));
+            CALL1(w, pushChar, ((cc.code & 0xff) | 0x80));
             return;
         case WC_CCS_GBK_80:
-            Strcat_char(os, (char)(cc.code | 0x80));
+            CALL1(w, pushChar, (cc.code | 0x80));
             return;
         case WC_CCS_GBK_1:
         case WC_CCS_GBK_2:
             cc = wc_cs128w_to_gbk(cc);
         case WC_CCS_GBK:
-            Strcat_char(os, (char)(cc.code >> 8));
-            Strcat_char(os, (char)(cc.code & 0xff));
+            CALL1(w, pushChar, (cc.code >> 8));
+            CALL1(w, pushChar, (cc.code & 0xff));
             return;
         case WC_CCS_UNKNOWN_W:
             if (!WcOption->no_replace)
-                Strcat_charp(os, WC_REPLACE_W);
+                CALL1(w, pushStr, WC_REPLACE_W);
             return;
         case WC_CCS_UNKNOWN:
             if (!WcOption->no_replace)
-                Strcat_charp(os, WC_REPLACE);
+                CALL1(w, pushStr, WC_REPLACE);
             return;
         default:
             if (WcOption->ucs_conv)
@@ -182,7 +182,7 @@ void wc_push_to_gbk(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct w
     }
 }
 
-void wc_char_conv_from_gbk(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_gbk(struct wc_option* WcOption, struct Writer *w, uint8_t c, struct wc_status* st)
 {
     static uint8_t gbku;
     uint32_t gbk;
@@ -199,12 +199,12 @@ void wc_char_conv_from_gbk(struct wc_option* WcOption, pStr os, uint8_t c, struc
             st->state = WC_GBK_MBYTE1;
             return;
         case C80:
-            wtf_push(WcOption, os, WC_CCS_GBK_80, c);
+            wtf_push(WcOption, w, WC_CCS_GBK_80, c);
             break;
         case C1:
             break;
         default:
-            Strcat_char(os, (char)c);
+            CALL1(w, pushChar, c);
             break;
         }
         break;
@@ -212,9 +212,9 @@ void wc_char_conv_from_gbk(struct wc_option* WcOption, pStr os, uint8_t c, struc
         if (WC_GBK_MAP[c] & LB) {
             gbk = ((uint32_t)gbku << 8) | c;
             if (gbku >= 0xA1 && c >= 0xA1)
-                wtf_push(WcOption, os, wc_gb2312_or_gbk(gbk), gbk);
+                wtf_push(WcOption, w, wc_gb2312_or_gbk(gbk), gbk);
             else
-                wtf_push(WcOption, os, WC_CCS_GBK, gbk);
+                wtf_push(WcOption, w, WC_CCS_GBK, gbk);
         }
         break;
     }

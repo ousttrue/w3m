@@ -5,7 +5,7 @@
 #include "wtf.h"
 #include "ucs.h"
 
-void wc_conv_from_hz(struct wc_option *WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
+void wc_conv_from_hz(struct wc_option *WcOption, struct Writer *w, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
     int state = WC_HZ_NOSTATE;
 
@@ -13,12 +13,12 @@ void wc_conv_from_hz(struct wc_option *WcOption, pStr os, const uint8_t *sp, con
     for (p = sp; p < ep && *p < 0x80 && *p != WC_C_HZ_TILDA; p++)
         ;
     if (p == ep){
-        Strcopy_begin_end(os, sp, ep);
+        CALL2(w, setBeginEnd, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
+        CALL2(w, pushStrLen, sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {
@@ -28,20 +28,20 @@ void wc_conv_from_hz(struct wc_option *WcOption, pStr os, const uint8_t *sp, con
             else if (WC_ISO_MAP[*p] == WC_ISO_MAP_GR)
                 state = WC_HZ_MBYTE1_GR; /* GB 2312 ? */
             else if (*p & 0x80)
-                wtf_push_unknown(WcOption, os, p, 1);
+                wtf_push_unknown(WcOption, w, p, 1);
             else
-                Strcat_char(os, (char)*p);
+                CALL1(w, pushChar, *p);
             break;
         case WC_HZ_TILDA:
             if (*p == WC_C_HZ_SI) {
                 state = WC_HZ_MBYTE;
                 break;
             } else if (*p == WC_C_HZ_TILDA)
-                Strcat_char(os, (char)*p);
+                CALL1(w, pushChar, *p);
             else if (*p == '\n')
                 break;
             else
-                wtf_push_unknown(WcOption, os, p - 1, 2);
+                wtf_push_unknown(WcOption, w, p - 1, 2);
             state = WC_HZ_NOSTATE;
             break;
         case WC_HZ_TILDA_MB:
@@ -49,9 +49,9 @@ void wc_conv_from_hz(struct wc_option *WcOption, pStr os, const uint8_t *sp, con
                 state = WC_HZ_NOSTATE;
                 break;
             } else if (WC_ISO_MAP[*p & 0x7f] == WC_ISO_MAP_GL)
-                wtf_push(WcOption, os, WC_CCS_GB_2312, ((uint32_t)*(p - 1) << 8) | *p);
+                wtf_push(WcOption, w, WC_CCS_GB_2312, ((uint32_t)*(p - 1) << 8) | *p);
             else
-                wtf_push_unknown(WcOption, os, p - 1, 2);
+                wtf_push_unknown(WcOption, w, p - 1, 2);
             state = WC_HZ_MBYTE;
             break;
         case WC_HZ_MBYTE:
@@ -60,20 +60,20 @@ void wc_conv_from_hz(struct wc_option *WcOption, pStr os, const uint8_t *sp, con
             else if (WC_ISO_MAP[*p & 0x7f] == WC_ISO_MAP_GL)
                 state = WC_HZ_MBYTE1;
             else
-                wtf_push_unknown(WcOption, os, p, 1);
+                wtf_push_unknown(WcOption, w, p, 1);
             break;
         case WC_HZ_MBYTE1:
             if (WC_ISO_MAP[*p & 0x7f] == WC_ISO_MAP_GL)
-                wtf_push(WcOption, os, WC_CCS_GB_2312, ((uint32_t)*(p - 1) << 8) | *p);
+                wtf_push(WcOption, w, WC_CCS_GB_2312, ((uint32_t)*(p - 1) << 8) | *p);
             else
-                wtf_push_unknown(WcOption, os, p - 1, 2);
+                wtf_push_unknown(WcOption, w, p - 1, 2);
             state = WC_HZ_MBYTE;
             break;
         case WC_HZ_MBYTE1_GR:
             if (WC_ISO_MAP[*p] == WC_ISO_MAP_GR)
-                wtf_push(WcOption, os, WC_CCS_GB_2312, ((uint32_t)*(p - 1) << 8) | *p);
+                wtf_push(WcOption, w, WC_CCS_GB_2312, ((uint32_t)*(p - 1) << 8) | *p);
             else
-                wtf_push_unknown(WcOption, os, p - 1, 2);
+                wtf_push_unknown(WcOption, w, p - 1, 2);
             state = WC_HZ_NOSTATE;
             break;
         }
@@ -83,53 +83,53 @@ void wc_conv_from_hz(struct wc_option *WcOption, pStr os, const uint8_t *sp, con
     case WC_HZ_TILDA_MB:
     case WC_HZ_MBYTE1:
     case WC_HZ_MBYTE1_GR:
-        wtf_push_unknown(WcOption, os, p - 1, 1);
+        wtf_push_unknown(WcOption, w, p - 1, 1);
         break;
     }
 }
 
-void wc_push_to_hz(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_hz(struct wc_option *WcOption, struct Writer *w, wc_wchar_t cc, struct wc_status* st)
 {
     while (1) {
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
             if (st->gl) {
-                Strcat_char(os, WC_C_HZ_TILDA);
-                Strcat_char(os, WC_C_HZ_SO);
+                CALL1(w, pushChar, WC_C_HZ_TILDA);
+                CALL1(w, pushChar, WC_C_HZ_SO);
                 st->gl = 0;
             }
             if ((char)cc.code == WC_C_HZ_TILDA)
-                Strcat_char(os, WC_C_HZ_TILDA);
-            Strcat_char(os, (char)cc.code);
+                CALL1(w, pushChar, WC_C_HZ_TILDA);
+            CALL1(w, pushChar, cc.code);
             return;
         case WC_CCS_GB_2312:
             if (!st->gl) {
-                Strcat_char(os, WC_C_HZ_TILDA);
-                Strcat_char(os, WC_C_HZ_SI);
+                CALL1(w, pushChar, WC_C_HZ_TILDA);
+                CALL1(w, pushChar, WC_C_HZ_SI);
                 st->gl = 1;
             }
-            Strcat_char(os, (char)((cc.code >> 8) & 0x7f));
-            Strcat_char(os, (char)(cc.code & 0x7f));
+            CALL1(w, pushChar, ((cc.code >> 8) & 0x7f));
+            CALL1(w, pushChar, (cc.code & 0x7f));
             return;
         case WC_CCS_UNKNOWN_W:
             if (WcOption->no_replace)
                 return;
             if (st->gl) {
-                Strcat_char(os, WC_C_HZ_TILDA);
-                Strcat_char(os, WC_C_HZ_SO);
+                CALL1(w, pushChar, WC_C_HZ_TILDA);
+                CALL1(w, pushChar, WC_C_HZ_SO);
                 st->gl = 0;
             }
-            Strcat_charp(os, WC_REPLACE_W);
+            CALL1(w, pushStr, WC_REPLACE_W);
             return;
         case WC_CCS_UNKNOWN:
             if (WcOption->no_replace)
                 return;
             if (st->gl) {
-                Strcat_char(os, WC_C_HZ_TILDA);
-                Strcat_char(os, WC_C_HZ_SO);
+                CALL1(w, pushChar, WC_C_HZ_TILDA);
+                CALL1(w, pushChar, WC_C_HZ_SO);
                 st->gl = 0;
             }
-            Strcat_charp(os, WC_REPLACE);
+            CALL1(w, pushStr, WC_REPLACE);
             return;
         default:
             if (WcOption->ucs_conv)
@@ -141,11 +141,11 @@ void wc_push_to_hz(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc
     }
 }
 
-void wc_push_to_hz_end(struct wc_option* WcOption, pStr os, struct wc_status* st)
+void wc_push_to_hz_end(struct wc_option* WcOption, struct Writer *w, struct wc_status* st)
 {
     if (st->gl) {
-        Strcat_char(os, WC_C_HZ_TILDA);
-        Strcat_char(os, WC_C_HZ_SO);
+        CALL1(w, pushChar, WC_C_HZ_TILDA);
+        CALL1(w, pushChar, WC_C_HZ_SO);
         st->gl = 0;
     }
 }

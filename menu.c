@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "menu.h"
 #include "w3m.h"
+#include "StrWriter.h"
 #include "alloc.h"
 #include "buffer.h"
 #include "charset.h"
@@ -1831,7 +1832,8 @@ initSelectMenu(void)
                 if (strcmp(buf->currentURL.file, "-")) {
                     Strcat_char(str, ' ');
                     pStr os = Strnew();
-                    conv_from_system(&WcOption, os, buf->currentURL.real_file);
+                    struct Writer w = makeWriter(os);
+                    conv_from_system(&WcOption, &w, buf->currentURL.real_file);
                     Strcat(str, os);
                 }
                 break;
@@ -2058,7 +2060,8 @@ initSelTabMenu(void)
                 if (strcmp(buf->currentURL.file, "-")) {
                     Strcat_char(str, ' ');
                     pStr os = Strnew();
-                    conv_from_system(&WcOption, os, buf->currentURL.real_file);
+                    struct Writer w = makeWriter(os);
+                    conv_from_system(&WcOption, &w, buf->currentURL.real_file);
                     Strcat(str, os);
                 }
                 break;
@@ -2291,7 +2294,8 @@ interpret_menu(FILE* mf)
         if (_line->len == 0)
             continue;
         pStr line = Strnew_size(_line->len);
-        wc_Str_conv(&WcOption, line,
+        struct Writer w = makeWriter(line);
+        wc_Str_conv(&WcOption, &w,
             (const uint8_t*)_line->ptr, (const uint8_t*)_line->ptr + _line->len, charset, InnerCharset);
         const char* p = line->ptr;
         char* s = getWord(&p).ptr;
@@ -2356,8 +2360,9 @@ void initMenu(void)
         MainMenuCharset = SystemCharset;
         for (item = MainMenuItem; item->type != MENU_END; item++) {
             pStr os = Strnew();
+            struct Writer w = makeWriter(os);
             const char* p = _(item->label);
-            wc_Str_conv(&WcOption, os,
+            wc_Str_conv(&WcOption, &w,
                 (const uint8_t*)p, (const uint8_t*)p + strlen(p), MainMenuCharset, InnerCharset);
             item->label = os->ptr;
         }

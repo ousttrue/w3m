@@ -57,7 +57,7 @@ wc_cs94w_to_big5(wc_wchar_t cc)
     return cc;
 }
 
-void wc_conv_from_big5(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
+void wc_conv_from_big5(struct wc_option* WcOption, struct Writer *w, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
     int state = WC_BIG5_NOSTATE;
 
@@ -65,12 +65,12 @@ void wc_conv_from_big5(struct wc_option* WcOption, pStr os, const uint8_t *sp, c
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy_begin_end(os, sp, ep);
+        CALL2(w, setBeginEnd, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
+        CALL2(w, pushStrLen, sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {
@@ -80,50 +80,50 @@ void wc_conv_from_big5(struct wc_option* WcOption, pStr os, const uint8_t *sp, c
                 state = WC_BIG5_MBYTE1;
                 break;
             case C1:
-                wtf_push_unknown(WcOption, os, p, 1);
+                wtf_push_unknown(WcOption, w, p, 1);
                 break;
             default:
-                Strcat_char(os, (char)*p);
+                CALL1(w, pushChar, *p);
                 break;
             }
             break;
         case WC_BIG5_MBYTE1:
             if (WC_BIG5_MAP[*p] & LB)
-                wtf_push(WcOption, os, WC_CCS_BIG5, ((uint32_t)*(p - 1) << 8) | *p);
+                wtf_push(WcOption, w, WC_CCS_BIG5, ((uint32_t)*(p - 1) << 8) | *p);
             else
-                wtf_push_unknown(WcOption, os, p - 1, 2);
+                wtf_push_unknown(WcOption, w, p - 1, 2);
             state = WC_BIG5_NOSTATE;
             break;
         }
     }
     switch (state) {
     case WC_BIG5_MBYTE1:
-        wtf_push_unknown(WcOption, os, p - 1, 1);
+        wtf_push_unknown(WcOption, w, p - 1, 1);
         break;
     }
 }
 
-void wc_push_to_big5(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_big5(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc, struct wc_status* st)
 {
     while (1) {
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
-            Strcat_char(os, (char)cc.code);
+            CALL1(w, pushChar, cc.code);
             return;
         case WC_CCS_BIG5_1:
         case WC_CCS_BIG5_2:
             cc = wc_cs94w_to_big5(cc);
         case WC_CCS_BIG5:
-            Strcat_char(os, (char)(cc.code >> 8));
-            Strcat_char(os, (char)(cc.code & 0xff));
+            CALL1(w, pushChar, (cc.code >> 8));
+            CALL1(w, pushChar, (cc.code & 0xff));
             return;
         case WC_CCS_UNKNOWN_W:
             if (!WcOption->no_replace)
-                Strcat_charp(os, WC_REPLACE_W);
+                CALL1(w, pushStr, WC_REPLACE_W);
             return;
         case WC_CCS_UNKNOWN:
             if (!WcOption->no_replace)
-                Strcat_charp(os, WC_REPLACE);
+                CALL1(w, pushStr, WC_REPLACE);
             return;
         default:
             if (WcOption->ucs_conv)
@@ -135,7 +135,7 @@ void wc_push_to_big5(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct 
     }
 }
 
-void wc_char_conv_from_big5(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_big5(struct wc_option* WcOption, struct Writer *w, uint8_t c, struct wc_status* st)
 {
     static uint8_t big5u;
 
@@ -153,13 +153,13 @@ void wc_char_conv_from_big5(struct wc_option* WcOption, pStr os, uint8_t c, stru
         case C1:
             break;
         default:
-            Strcat_char(os, (char)c);
+            CALL1(w, pushChar, c);
             break;
         }
         break;
     case WC_BIG5_MBYTE1:
         if (WC_BIG5_MAP[c] & LB)
-            wtf_push(WcOption, os, WC_CCS_BIG5, ((uint32_t)big5u << 8) | c);
+            wtf_push(WcOption, w, WC_CCS_BIG5, ((uint32_t)big5u << 8) | c);
         break;
     }
     st->state = -1;

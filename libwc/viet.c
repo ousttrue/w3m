@@ -108,7 +108,7 @@ wc_cp1258_precompose(uint8_t c1, uint8_t c2)
         return 0;
 }
 
-void wc_conv_from_viet(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
+void wc_conv_from_viet(struct wc_option* WcOption, struct Writer *w, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
     wc_ccs ccs1 = WcCesInfo[WC_CCS_INDEX(ces)].gset[1].ccs;
     wc_ccs ccs2 = WcCesInfo[WC_CCS_INDEX(ces)].gset[2].ccs;
@@ -131,24 +131,24 @@ void wc_conv_from_viet(struct wc_option* WcOption, pStr os, const uint8_t *sp, c
     for (p = sp; p < ep && !WC_DETECT_MAP[*p]; p++)
         ;
     if (p == ep) {
-        Strcopy_begin_end(os, sp, ep);
+        CALL2(w, setBeginEnd, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
+        CALL2(w, pushStrLen, sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         if (*p & 0x80)
-            wtf_push(WcOption, os, ccs1, (uint32_t)*p);
+            wtf_push(WcOption, w, ccs1, (uint32_t)*p);
         else if (*p < 0x20 && map[*p])
-            wtf_push(WcOption, os, ccs2, (uint32_t)*p);
+            wtf_push(WcOption, w, ccs2, (uint32_t)*p);
         else
-            Strcat_char(os, (char)*p);
+            CALL1(w, pushChar, *p);
     }
 }
 
-void wc_push_to_viet(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_viet(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc, struct wc_status* st)
 {
     wc_ccs ccs1 = st->ces_info->gset[1].ccs;
     wc_ccs ccs2 = 0, ccs3 = 0;
@@ -175,30 +175,30 @@ void wc_push_to_viet(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct 
 
     while (1) {
         if (cc.ccs == ccs1) {
-            Strcat_char(os, (char)(cc.code | 0x80));
+            CALL1(w, pushChar, (char)(cc.code | 0x80));
             return;
         } else if (cc.ccs == ccs2) {
-            Strcat_char(os, (char)(cc.code & 0x7f));
+            CALL1(w, pushChar, (char)(cc.code & 0x7f));
             return;
         } else if (cc.ccs == ccs3) {
-            Strcat_char(os, (char)((cc.code >> 8) & 0xff));
-            Strcat_char(os, (char)(cc.code & 0xff));
+            CALL1(w, pushChar, (char)((cc.code >> 8) & 0xff));
+            CALL1(w, pushChar, (char)(cc.code & 0xff));
             return;
         }
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
             if (cc.code < 0x20 && map && map[cc.code])
-                Strcat_char(os, ' ');
+                CALL1(w, pushChar, ' ');
             else
-                Strcat_char(os, (char)cc.code);
+                CALL1(w, pushChar, (char)cc.code);
             return;
         case WC_CCS_UNKNOWN_W:
             if (!WcOption->no_replace)
-                Strcat_charp(os, WC_REPLACE_W);
+                CALL1(w, pushStr, WC_REPLACE_W);
             return;
         case WC_CCS_UNKNOWN:
             if (!WcOption->no_replace)
-                Strcat_charp(os, WC_REPLACE);
+                CALL1(w, pushStr, WC_REPLACE);
             return;
         default:
             if (WcOption->ucs_conv)
@@ -210,7 +210,7 @@ void wc_push_to_viet(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct 
     }
 }
 
-void wc_char_conv_from_viet(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_viet(struct wc_option* WcOption, struct Writer *w, uint8_t c, struct wc_status* st)
 {
     uint8_t* map = NULL;
 
@@ -227,9 +227,9 @@ void wc_char_conv_from_viet(struct wc_option* WcOption, pStr os, uint8_t c, stru
     }
 
     if (c & 0x80)
-        wtf_push(WcOption, os, st->ces_info->gset[1].ccs, (uint32_t)c);
+        wtf_push(WcOption, w, st->ces_info->gset[1].ccs, (uint32_t)c);
     else if (c < 0x20 && map[c])
-        wtf_push(WcOption, os, st->ces_info->gset[2].ccs, (uint32_t)c);
+        wtf_push(WcOption, w, st->ces_info->gset[2].ccs, (uint32_t)c);
     else
-        Strcat_char(os, (char)c);
+        CALL1(w, pushChar, (char)c);
 }

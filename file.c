@@ -190,7 +190,8 @@ loadSomething(URLFile* f,
         buf->buffername = checkHeader(buf, "Subject:");
         if (buf->buffername == NULL && buf->filename != NULL) {
             pStr os = Strnew_size(strlen(buf->filename));
-            conv_from_system(&WcOption, os, mybasename(buf->filename));
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, mybasename(buf->filename));
             buf->buffername = os->ptr;
         }
     }
@@ -1410,7 +1411,8 @@ static pStr loadLocalDir(const char* dname)
         if (S_ISDIR(st.st_mode))
             Strcat_char(tmp, '/');
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, p);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, p);
         Strcat_m_charp(tmp, "\">", html_quote(os->ptr), NULL);
         if (S_ISDIR(st.st_mode))
             Strcat_char(tmp, '/');
@@ -1427,7 +1429,8 @@ static pStr loadLocalDir(const char* dname)
                 if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
                     lbuf[l] = '\0';
                     pStr os = Strnew();
-                    conv_from_system(&WcOption, os, lbuf);
+                    struct Writer w = makeWriter(os);
+                    conv_from_system(&WcOption, &w, lbuf);
                     Strcat_m_charp(tmp, " -> ",
                         html_quote(os->ptr), NULL);
                     if (S_ISDIR(st.st_mode))
@@ -1804,7 +1807,8 @@ page_loaded:
         src = fopen(tmp->ptr, "w");
         if (src) {
             pStr s = Strnew();
-            wc_Str_conv_strict(&WcOption, s,
+            struct Writer w = makeWriter(s);
+            wc_Str_conv_strict(&WcOption, &w,
                 (const uint8_t*)page->ptr, (const uint8_t*)page->ptr + page->len, InnerCharset, charset);
             Strfputs(s, src);
             fclose(src);
@@ -1850,7 +1854,8 @@ page_loaded:
             if (PreserveTimestamp && !stat(pu.real_file, &st))
                 f.modtime = st.st_mtime;
             pStr os = Strnew();
-            conv_from_system(&WcOption, os, guess_save_name(NULL, pu.real_file)->ptr);
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, guess_save_name(NULL, pu.real_file)->ptr);
             file = os->ptr;
         } else
             file = guess_save_name(t_buf, pu.file)->ptr;
@@ -1905,7 +1910,8 @@ page_loaded:
             if (pu.scheme == SCM_LOCAL) {
                 UFclose(&f);
                 pStr os = Strnew();
-                conv_from_system(&WcOption, os, guess_save_name(NULL, pu.real_file)->ptr);
+                struct Writer w = makeWriter(os);
+                conv_from_system(&WcOption, &w, guess_save_name(NULL, pu.real_file)->ptr);
                 _doFileCopy(pu.real_file, os->ptr, true);
             } else {
                 if (DecodeCTE && f.stream->type != IST_ENCODED)
@@ -1924,7 +1930,8 @@ page_loaded:
         t_buf = newBuffer(INIT_BUFFER_WIDTH);
     t_buf->currentURL = copyParsedURL(&pu);
     pStr os = Strnew();
-    conv_to_system(&WcOption, os, pu.file);
+    struct Writer w = makeWriter(os);
+    conv_to_system(&WcOption, &w, pu.file);
     t_buf->filename = pu.real_file ? pu.real_file : pu.file ? os->ptr
                                                             : NULL;
     if (flag & RG_FRAME) {
@@ -7020,7 +7027,8 @@ pager_next:
         else
             _tmp = Strnew_charp_n(l->lineBuf, l->len);
         pStr tmp = Strnew_size(_tmp->len);
-        wc_Str_conv(&WcOption, tmp,
+        struct Writer w = makeWriter(tmp);
+        wc_Str_conv(&WcOption, &w,
             (const uint8_t*)_tmp->ptr, (const uint8_t*)_tmp->ptr + _tmp->len, InnerCharset, charset);
         Strfputs(tmp, f);
         if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
@@ -7076,7 +7084,8 @@ getshell(const char* cmd)
         return NULL;
     buf->filename = cmd;
     pStr os = Strnew();
-    conv_from_system(&WcOption, os, cmd);
+    struct Writer w = makeWriter(os);
+    conv_from_system(&WcOption, &w, cmd);
     buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, os->ptr)->ptr;
     return buf;
 }
@@ -7099,7 +7108,8 @@ getpipe(const char* cmd)
     buf->pagerSource = newFileStream(f, pclose);
     buf->filename = cmd;
     pStr os = Strnew();
-    conv_from_system(&WcOption, os, cmd);
+    struct Writer w = makeWriter(os);
+    conv_from_system(&WcOption, &w, cmd);
     buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, os->ptr)->ptr;
     buf->bufferprop |= BP_PIPE;
     buf->document_charset = WC_CES_US_ASCII;
@@ -7121,7 +7131,8 @@ openPagerBuffer(struct input_stream* stream, Buffer* buf)
         buf->buffername = PIPEBUFFERNAME;
     else {
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, buf->buffername);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, buf->buffername);
         buf->buffername = os->ptr;
     }
     buf->bufferprop |= BP_PIPE;
@@ -7242,7 +7253,8 @@ Line* getNextPage(Buffer* buf, int plen)
             /* Assume that `cmd == buf->filename' */
             if (buf->filename) {
                 pStr os = Strnew();
-                conv_from_system(&WcOption, os, buf->filename);
+                struct Writer w = makeWriter(os);
+                conv_from_system(&WcOption, &w, buf->filename);
                 buf->buffername = Sprintf("%s %s", CPIPEBUFFERNAME, os->ptr)
                                       ->ptr;
             } else if (getenv("MAN_PN") == NULL)
@@ -7390,7 +7402,8 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
     header = checkHeader(defaultbuf, "Content-Type:");
     if (header) {
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, header);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, header);
         header = os->ptr;
     }
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
@@ -7456,7 +7469,8 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
     if (buf && buf != NO_BUFFER) {
         if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->filename) {
             pStr os = Strnew();
-            conv_from_system(&WcOption, os, mybasename(buf->filename));
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, mybasename(buf->filename));
             buf->buffername = os->ptr;
         }
         buf->edit = mcap->edit;
@@ -7525,7 +7539,8 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
             if (q == NULL || *q == '\0')
                 return false;
             pStr os = Strnew();
-            conv_to_system(&WcOption, os, q);
+            struct Writer w = makeWriter(os);
+            conv_to_system(&WcOption, &w, q);
             p = os->ptr;
         }
         if (*p == '|' && PermitSaveToPipe)
@@ -7534,7 +7549,8 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
             if (q) {
                 p = unescape_spaces(Strnew_charp(q))->ptr;
                 pStr os = Strnew();
-                conv_to_system(&WcOption, os, p);
+                struct Writer w = makeWriter(os);
+                conv_to_system(&WcOption, &w, p);
                 p = os->ptr;
             }
             p = expandPath(p)->ptr;
@@ -7543,9 +7559,11 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         }
         if (checkCopyFile(tmpf, p) < 0) {
             pStr os = Strnew();
-            conv_from_system(&WcOption, os, tmpf);
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, tmpf);
             pStr x = Strnew();
-            conv_from_system(&WcOption, x, p);
+            struct Writer xw = makeWriter(x);
+            conv_from_system(&WcOption, &xw, p);
             msg = Sprintf(_("Can't copy. %s and %s are identical."),
                 os->ptr, x->ptr);
             disp_err_message(msg->ptr, false);
@@ -7554,7 +7572,8 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         if (!download) {
             if (_MoveFile(tmpf, p) < 0) {
                 pStr os = Strnew();
-                conv_from_system(&WcOption, os, p);
+                struct Writer w = makeWriter(os);
+                conv_from_system(&WcOption, &w, p);
                 msg = Sprintf(_("Can't save to %s"), os->ptr);
                 disp_err_message(msg->ptr, false);
             }
@@ -7574,7 +7593,8 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         if (!stat(tmpf, &st))
             size = st.st_size;
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, tmpf);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, tmpf);
         addDownloadList(pid, os->ptr, p, lock, size);
     } else {
         char* q = allocStr(searchKeyData()).ptr;
@@ -7640,14 +7660,16 @@ int doFileSave(URLFile uf, const char* defstr)
             if (p == NULL || *p == '\0')
                 return -1;
             pStr os = Strnew();
-            conv_to_system(&WcOption, os, p);
+            struct Writer w = makeWriter(os);
+            conv_to_system(&WcOption, &w, p);
             p = os->ptr;
         }
         if (!checkOverWrite(p))
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
             pStr os = Strnew();
-            conv_from_system(&WcOption, os, p);
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, p);
             pStr msg = Sprintf(_("Can't save. Load file and %s are identical."),
                 os->ptr);
             disp_err_message(msg->ptr, false);

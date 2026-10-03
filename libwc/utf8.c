@@ -77,7 +77,7 @@ wc_ucs_to_utf8(uint32_t ucs, uint8_t* utf8)
 }
 
 uint32_t
-wc_utf8_to_ucs(uint8_t* utf8)
+wc_utf8_to_ucs(const uint8_t* utf8)
 {
     uint32_t ucs;
 
@@ -133,7 +133,7 @@ wc_utf8_to_ucs(uint8_t* utf8)
     return WC_C_UCS4_ERROR;
 }
 
-void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
+void wc_conv_from_utf8(struct wc_option* WcOption, struct Writer* w, const uint8_t* sp, const uint8_t* ep, wc_ces ces)
 {
     const uint8_t* q = NULL;
     int state = WC_UTF8_NOSTATE;
@@ -145,14 +145,14 @@ void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, const uint8_t *sp, c
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy_begin_end(os, sp, ep);
+        CALL2(w, setBeginEnd, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
+        CALL2(w, pushStrLen, sp, (int)(p - sp));
 
-    st.tag = NULL;
+    st.tag = (struct Writer) { 0 };
     st.ntag = 0;
     for (; p < ep; p++) {
         switch (state) {
@@ -160,14 +160,14 @@ void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, const uint8_t *sp, c
             next = WC_UTF8_MAP[*p];
             switch (next) {
             case 1:
-                wtf_push_ucs(WcOption, os, (uint32_t)*p, &st);
+                wtf_push_ucs(WcOption, w, (uint32_t)*p, &st);
                 break;
             case 8:
-                Strcat_char(os, (char)*p);
+                CALL1(w, pushChar, *p);
                 break;
             case 0:
             case 7:
-                wtf_push_unknown(WcOption, os, p, 1);
+                wtf_push_unknown(WcOption, w, p, 1);
                 break;
             default:
                 q = p;
@@ -178,7 +178,7 @@ void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, const uint8_t *sp, c
             break;
         case WC_UTF8_NEXT:
             if (WC_UTF8_MAP[*p]) {
-                wtf_push_unknown(WcOption, os, q, p - q + 1);
+                wtf_push_unknown(WcOption, w, q, p - q + 1);
                 state = WC_UTF8_NOSTATE;
                 break;
             }
@@ -187,23 +187,23 @@ void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, const uint8_t *sp, c
             state = WC_UTF8_NOSTATE;
             ucs = wc_utf8_to_ucs(q);
             if (ucs == WC_C_UCS4_ERROR || (ucs >= WC_C_UCS2_SURROGATE && ucs <= WC_C_UCS2_SURROGATE_END))
-                wtf_push_unknown(WcOption, os, q, p - q + 1);
+                wtf_push_unknown(WcOption, w, q, p - q + 1);
             else if (ucs != WC_C_UCS2_BOM)
-                wtf_push_ucs(WcOption, os, ucs, &st);
+                wtf_push_ucs(WcOption, w, ucs, &st);
             break;
         }
     }
     switch (state) {
     case WC_UTF8_NEXT:
-        wtf_push_unknown(WcOption, os, q, p - q);
+        wtf_push_unknown(WcOption, w, q, p - q);
         break;
     }
 }
 
 static int
-wc_push_tag_to_utf8(pStr os, int ntag)
+wc_push_tag_to_utf8(struct Writer* w, int ntag)
 {
-    char* p;
+    const char* p;
 
     if (ntag) {
         p = wc_ucs_get_tag(ntag);
@@ -212,58 +212,58 @@ wc_push_tag_to_utf8(pStr os, int ntag)
     }
     if (ntag) {
         wc_ucs_to_utf8(WC_C_LANGUAGE_TAG, utf8_buf);
-        Strcat_charp(os, (char*)utf8_buf);
+        CALL1(w, pushStr, utf8_buf);
         for (; *p; p++) {
             wc_ucs_to_utf8(WC_C_LANGUAGE_TAG0 | *p, utf8_buf);
-            Strcat_charp(os, (char*)utf8_buf);
+            CALL1(w, pushStr, utf8_buf);
         }
     } else {
         wc_ucs_to_utf8(WC_C_CANCEL_TAG, utf8_buf);
-        Strcat_charp(os, (char*)utf8_buf);
+        CALL1(w, pushStr, utf8_buf);
     }
     return ntag;
 }
 
-void wc_push_to_utf8(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_utf8(struct wc_option* WcOption, struct Writer* w, wc_wchar_t cc, struct wc_status* st)
 {
     while (1) {
         switch (WC_CCS_SET(cc.ccs)) {
         case WC_CCS_US_ASCII:
             if (st->ntag)
-                st->ntag = wc_push_tag_to_utf8(os, 0);
-            Strcat_char(os, (char)(cc.code & 0x7f));
+                st->ntag = wc_push_tag_to_utf8(w, 0);
+            CALL1(w, pushChar, (cc.code & 0x7f));
             return;
         case WC_CCS_UCS2:
         case WC_CCS_UCS4:
             if (st->ntag)
-                st->ntag = wc_push_tag_to_utf8(os, 0);
+                st->ntag = wc_push_tag_to_utf8(w, 0);
             wc_ucs_to_utf8(cc.code, utf8_buf);
-            Strcat_charp(os, (char*)utf8_buf);
+            CALL1(w, pushStr, utf8_buf);
             return;
         case WC_CCS_UCS_TAG:
             if (WcOption->use_language_tag && wc_ucs_tag_to_tag(cc.code) != st->ntag)
-                st->ntag = wc_push_tag_to_utf8(os, wc_ucs_tag_to_tag(cc.code));
+                st->ntag = wc_push_tag_to_utf8(w, wc_ucs_tag_to_tag(cc.code));
             wc_ucs_to_utf8(wc_ucs_tag_to_ucs(cc.code), utf8_buf);
-            Strcat_charp(os, (char*)utf8_buf);
+            CALL1(w, pushStr, utf8_buf);
             return;
         case WC_CCS_ISO_8859_1:
             if (st->ntag)
-                st->ntag = wc_push_tag_to_utf8(os, 0);
+                st->ntag = wc_push_tag_to_utf8(w, 0);
             wc_ucs_to_utf8((cc.code | 0x80), utf8_buf);
-            Strcat_charp(os, (char*)utf8_buf);
+            CALL1(w, pushStr, utf8_buf);
             return;
         case WC_CCS_UNKNOWN_W:
             if (!WcOption->no_replace) {
                 if (st->ntag)
-                    st->ntag = wc_push_tag_to_utf8(os, 0);
-                Strcat_charp(os, WC_REPLACE_W);
+                    st->ntag = wc_push_tag_to_utf8(w, 0);
+                CALL1(w, pushStr, WC_REPLACE_W);
             }
             return;
         case WC_CCS_UNKNOWN:
             if (!WcOption->no_replace) {
                 if (st->ntag)
-                    st->ntag = wc_push_tag_to_utf8(os, 0);
-                Strcat_charp(os, WC_REPLACE);
+                    st->ntag = wc_push_tag_to_utf8(w, 0);
+                CALL1(w, pushStr, WC_REPLACE);
             }
             return;
         default:
@@ -276,14 +276,14 @@ void wc_push_to_utf8(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct 
     }
 }
 
-void wc_push_to_utf8_end(struct wc_option* WcOption, pStr os, struct wc_status* st)
+void wc_push_to_utf8_end(struct wc_option* WcOption, struct Writer* w, struct wc_status* st)
 {
     if (st->ntag)
-        st->ntag = wc_push_tag_to_utf8(os, 0);
+        st->ntag = wc_push_tag_to_utf8(w, 0);
     return;
 }
 
-void wc_char_conv_from_utf8(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_utf8(struct wc_option* WcOption, struct Writer* w, uint8_t c, struct wc_status* st)
 {
     static uint8_t buf[6];
     static size_t nbuf, next;
@@ -291,7 +291,7 @@ void wc_char_conv_from_utf8(struct wc_option* WcOption, pStr os, uint8_t c, stru
 
     if (st->state == -1) {
         st->state = WC_UTF8_NOSTATE;
-        st->tag = NULL;
+        st->tag = (struct Writer) { 0 };
         st->ntag = 0;
         nbuf = 0;
     }
@@ -300,10 +300,10 @@ void wc_char_conv_from_utf8(struct wc_option* WcOption, pStr os, uint8_t c, stru
     case WC_UTF8_NOSTATE:
         switch (next = WC_UTF8_MAP[c]) {
         case 1:
-            wtf_push_ucs(WcOption, os, (uint32_t)c, st);
+            wtf_push_ucs(WcOption, w, (uint32_t)c, st);
             break;
         case 8:
-            Strcat_char(os, (char)c);
+            CALL1(w, pushChar, (char)c);
             break;
         case 0:
         case 7:
@@ -325,7 +325,7 @@ void wc_char_conv_from_utf8(struct wc_option* WcOption, pStr os, uint8_t c, stru
         if (ucs == WC_C_UCS4_ERROR || (ucs >= WC_C_UCS2_SURROGATE && ucs <= WC_C_UCS2_SURROGATE_END))
             break;
         if (ucs != WC_C_UCS2_BOM)
-            wtf_push_ucs(WcOption, os, ucs, st);
+            wtf_push_ucs(WcOption, w, ucs, st);
         break;
     }
     st->state = -1;

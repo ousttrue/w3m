@@ -1,7 +1,7 @@
 // character encoding set ?
 #pragma once
-#include "../Str.h"
 #include "ccs_types.h"
+#include "writer.h"
 
 enum WC_CES_N {
     WC_CES_N_US_ASCII,
@@ -213,9 +213,9 @@ wc_ces wc_guess_8bit_charset(wc_ces orig);
 
 struct wc_status;
 struct wc_option;
-typedef void (*ConvFromFunc)(struct wc_option*, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces);
-typedef void (*PushToFunc)(struct wc_option*, pStr os, wc_wchar_t, struct wc_status*);
-typedef void (*CharConvFunc)(struct wc_option*, pStr os, uint8_t, struct wc_status*);
+typedef void (*ConvFromFunc)(struct wc_option*, struct Writer *w, const uint8_t *sp, const uint8_t *ep, wc_ces);
+typedef void (*PushToFunc)(struct wc_option*, struct Writer *w, wc_wchar_t, struct wc_status*);
+typedef void (*CharConvFunc)(struct wc_option*, struct Writer *w, uint8_t, struct wc_status*);
 
 typedef struct wc_ces_info {
     wc_ces id;

@@ -1150,14 +1150,17 @@ void show_params(FILE* fp)
         const char* cmt;
         if (!OptionEncode) {
             pStr os = Strnew();
+            struct Writer w = makeWriter(os);
             const char* p = _(sections[j].name);
-            wc_Str_conv(&WcOption, os,
+            wc_Str_conv(&WcOption, &w,
                 (const uint8_t*)p, (const uint8_t*)p + strlen(p), OptionCharset, InnerCharset);
             cmt = os->ptr;
         } else
             cmt = sections[j].name;
+
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, cmt);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, cmt);
         fprintf(fp, "  section[%d]: %s\n", j, os->ptr);
         i = 0;
         while (sections[j].params[i].name) {
@@ -1198,8 +1201,9 @@ void show_params(FILE* fp)
             }
             if (!OptionEncode) {
                 pStr os = Strnew();
+                struct Writer w = makeWriter(os);
                 const char* sp = _(sections[j].params[i].comment);
-                wc_Str_conv(&WcOption, os,
+                wc_Str_conv(&WcOption, &w,
                     (const uint8_t*)sp, (const uint8_t*)sp + strlen(sp),
                     OptionCharset, InnerCharset);
                 cmt = os->ptr;
@@ -1209,7 +1213,8 @@ void show_params(FILE* fp)
             if (l < 0)
                 l = 1;
             pStr os = Strnew();
-            conv_to_system(&WcOption, os, cmt);
+            struct Writer w = makeWriter(os);
+            conv_to_system(&WcOption, &w, cmt);
             fprintf(fp, "    -o %s=<%s>%*s%s\n",
                 sections[j].params[i].name, t, l, " ", os->ptr);
             i++;
@@ -1700,7 +1705,8 @@ to_str(struct param_ptr* p)
 #endif
         /*  SystemCharset -> InnerCharset */
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, *(char**)p->varptr);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, *(char**)p->varptr);
         return os;
     }
     case P_PIXELS:
@@ -1729,20 +1735,23 @@ load_option_panel(void)
     OptionCharset = SystemCharset; /* FIXME */
     if (!OptionEncode) {
         pStr tmp = Strdup(optionpanel_str);
-        wc_Str_conv(&WcOption, optionpanel_str,
+        struct Writer w = makeWriter(optionpanel_str);
+        wc_Str_conv(&WcOption, &w,
             (const uint8_t*)tmp->ptr, (const uint8_t*)tmp->ptr + tmp->len, OptionCharset, InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
             pStr os = Strnew();
+            struct Writer w = makeWriter(os);
             const char* x = _(sections[i].name);
-            wc_Str_conv(&WcOption, os,
+            wc_Str_conv(&WcOption, &w,
                 (const uint8_t*)x,
                 (const uint8_t*)x + strlen(x), OptionCharset,
                 InnerCharset);
             sections[i].name = os->ptr;
             for (p = sections[i].params; p->name; p++) {
                 pStr os = Strnew();
+                struct Writer w = makeWriter(os);
                 const char* x = _(p->comment);
-                wc_Str_conv(&WcOption, os,
+                wc_Str_conv(&WcOption, &w,
                     (const uint8_t*)x, (const uint8_t*)x + strlen(x), OptionCharset, InnerCharset);
                 p->comment = os->ptr;
                 if (p->inputtype == PI_SEL_C
@@ -1752,8 +1761,9 @@ load_option_panel(void)
                 ) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
                         pStr os = Strnew();
+                        struct Writer w = makeWriter(os);
                         const char* x = _(s->text);
-                        wc_Str_conv(&WcOption, os,
+                        wc_Str_conv(&WcOption, &w,
                             (const uint8_t*)x, (const uint8_t*)x + strlen(x), OptionCharset, InnerCharset);
                         s->text = os->ptr;
                     }
@@ -1763,8 +1773,9 @@ load_option_panel(void)
 
         for (s = colorstr; s->text; s++) {
             pStr os = Strnew();
+            struct Writer w = makeWriter(os);
             const char* x = _(s->text);
-            wc_Str_conv(&WcOption, os,
+            wc_Str_conv(&WcOption, &w,
                 (const uint8_t*)x,
                 (const uint8_t*)x + strlen(x), OptionCharset, InnerCharset);
             s->text = os->ptr;
@@ -1863,7 +1874,8 @@ void panel_set_option(struct parsed_tagarg* arg)
         /*  InnerCharset -> SystemCharset */
         if (arg->value) {
             pStr os = Strnew();
-            conv_to_system(&WcOption, os, arg->value);
+            struct Writer w = makeWriter(os);
+            conv_to_system(&WcOption, &w, arg->value);
             p = os->ptr;
             if (set_param(arg->arg, p)) {
                 tmp = Sprintf("%s %s\n", arg->arg, p);

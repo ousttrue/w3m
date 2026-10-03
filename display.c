@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "display.h"
 #include "w3m.h"
+#include "StrWriter.h"
 #include "buffer.h"
 #include "indep.h"
 #include "charset.h"
@@ -533,7 +534,8 @@ void displayBuffer(Buffer* buf, int mode)
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
     standend();
     pStr os = Strnew();
-    conv_to_system(&WcOption, os, buf->buffername);
+    struct Writer w = makeWriter(os);
+    conv_to_system(&WcOption, &w, buf->buffername);
     term_title(os->ptr);
     refresh();
 
@@ -1271,7 +1273,8 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
         return;
     if (!fmInitialized) {
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, s);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, s);
         fprintf(stderr, "%s\n", os->ptr);
         return;
     }

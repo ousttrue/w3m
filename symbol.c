@@ -87,8 +87,9 @@ encode_symbol(symbol_set* s)
     for (i = 0; s->item[i]; i++) {
         if (*(s->item[i])) {
             pStr os = Strnew();
-            wc_Str_conv(&WcOption, os,
-                s->item[i], s->item[i] + strlen(s->item[i]), s->ces, InnerCharset);
+            struct Writer w = makeWriter(os);
+            wc_Str_conv(&WcOption, &w,
+                (const uint8_t*)s->item[i], (const uint8_t*)s->item[i] + strlen(s->item[i]), s->ces, InnerCharset);
             s->conved_item[i] = os->ptr;
         }
     }
@@ -135,7 +136,6 @@ set_symbol(int width)
     static int save_width = -1;
     symbol_set* s = &alt_symbol_set;
     int i;
-    pStr tmp;
 
     if (width == save_width)
         return symbol_buf;
@@ -145,11 +145,12 @@ set_symbol(int width)
         symbol_buf = New_N(char*, i);
     }
     for (i = 0; s->item[i]; i++) {
-        tmp = Strnew_size(4);
+        pStr tmp = Strnew_size(4);
+        struct Writer w = makeWriter(tmp);
         if (width == 2)
-            wtf_push(&WcOption, tmp, WC_CCS_SPECIAL_W, (uint32_t)(SYMBOL_BASE + i));
+            wtf_push(&WcOption, &w, WC_CCS_SPECIAL_W, (uint32_t)(SYMBOL_BASE + i));
         else
-            wtf_push(&WcOption, tmp, WC_CCS_SPECIAL, (uint32_t)(SYMBOL_BASE + i));
+            wtf_push(&WcOption, &w, WC_CCS_SPECIAL, (uint32_t)(SYMBOL_BASE + i));
         symbol_buf[i] = tmp->ptr;
     }
     save_width = width;

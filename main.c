@@ -2,6 +2,7 @@
 #include "alloc.h"
 #define MAINPROGRAM
 #include "backend.h"
+#include "StrWriter.h"
 #include "indep.h"
 #include "input_stream.h"
 #include "entity.h"
@@ -749,7 +750,8 @@ int main(int argc, char** argv)
             url = file_to_url(load_argv[i], CurrentDir)->ptr;
         else {
             pStr os = Strnew();
-            conv_from_system(&WcOption, os, load_argv[i]);
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, load_argv[i]);
             url = url_encode(os->ptr, NULL, 0);
         }
         if (w3m_dump == DUMP_HEAD) {
@@ -1322,7 +1324,8 @@ dump_head(Buffer* buf)
     }
     for (ti = buf->document_header->first; ti; ti = ti->next) {
         pStr os = Strnew();
-        wc_Str_conv_strict(&WcOption, os,
+        struct Writer w = makeWriter(os);
+        wc_Str_conv_strict(&WcOption, &w,
             (const uint8_t*)ti->ptr, (const uint8_t*)ti->ptr + strlen(ti->ptr), InnerCharset,
             buf->document_charset);
         printf("%s", os->ptr);
@@ -2052,7 +2055,8 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     }
     if (cmd != NULL) {
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, cmd);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, cmd);
         cmd = os->ptr;
     }
     if (cmd == NULL || *cmd == '\0') {
@@ -2074,7 +2078,8 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     } else {
         buf->filename = cmd;
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, cmd);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, cmd);
         buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, os->ptr)->ptr;
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         if (buf->type == NULL)
@@ -2094,7 +2099,8 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
     }
     if (cmd != NULL) {
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, cmd);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, cmd);
         cmd = os->ptr;
     }
     if (cmd == NULL || *cmd == '\0') {
@@ -2123,7 +2129,8 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     }
     if (cmd != NULL) {
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, cmd);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, cmd);
         cmd = os->ptr;
     }
     if (cmd == NULL || *cmd == '\0') {
@@ -2156,7 +2163,8 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     }
     if (cmd != NULL) {
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, cmd);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, cmd);
         cmd = os->ptr;
     }
     if (cmd != NULL && *cmd != '\0') {
@@ -2180,7 +2188,8 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     }
     if (fn != NULL) {
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, fn);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, fn);
         fn = os->ptr;
     }
     if (fn == NULL || *fn == '\0') {
@@ -2215,7 +2224,8 @@ cmd_loadfile(const char* fn)
     Buffer* buf = loadGeneralFile(file_to_url(fn, CurrentDir)->ptr, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, fn);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, fn);
         char* emsg = Sprintf(_("%s not found"), os->ptr)->ptr;
         disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
@@ -3169,7 +3179,8 @@ conv_form_encoding(pStr is, FormItemList* fi, Buffer* buf)
     else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
         charset = buf->document_charset;
     pStr os = Strnew();
-    wc_Str_conv_strict(&WcOption, os,
+    struct Writer w = makeWriter(os);
+    wc_Str_conv_strict(&WcOption, &w,
         (const uint8_t*)is->ptr, (const uint8_t*)is->ptr + is->len, InnerCharset, charset);
     return os;
 }
@@ -4153,7 +4164,8 @@ cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* 
     Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, url);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, url);
         char* emsg = Sprintf(_("Can't load %s"), os->ptr)->ptr;
         disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
@@ -4290,7 +4302,8 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     FormList* request;
 
     pStr os = Strnew();
-    wc_Str_conv_strict(&WcOption, os,
+    struct Writer w = makeWriter(os);
+    wc_Str_conv_strict(&WcOption, &w,
         (const uint8_t*)Currentbuf->buffername,
         (const uint8_t*)Currentbuf->buffername + strlen(Currentbuf->buffername),
         InnerCharset,
@@ -4616,7 +4629,8 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
         }
     }
     pStr os = Strnew();
-    conv_to_system(&WcOption, os, qfile ? qfile : file);
+    struct Writer w = makeWriter(os);
+    conv_to_system(&WcOption, &w, qfile ? qfile : file);
     file = os->ptr;
     if (*file == '|') {
         is_pipe = true;
@@ -4625,7 +4639,8 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
         if (qfile) {
             file = unescape_spaces(Strnew_charp(qfile))->ptr;
             pStr os = Strnew();
-            conv_to_system(&WcOption, os, file);
+            struct Writer w = makeWriter(os);
+            conv_to_system(&WcOption, &w, file);
             file = os->ptr;
         }
         file = expandPath(file)->ptr;
@@ -4638,7 +4653,8 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
     }
     if (f == NULL) {
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, file);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, file);
         char* emsg = Sprintf(_("Can't open %s"), os->ptr)->ptr;
         disp_err_message(emsg, true);
         return;
@@ -4661,7 +4677,8 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL) {
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, guess_save_name(NULL, Currentbuf->currentURL.real_file)->ptr);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, guess_save_name(NULL, Currentbuf->currentURL.real_file)->ptr);
         file = os->ptr;
     } else
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file)->ptr;
@@ -5171,13 +5188,15 @@ invoke_browser(const char* url)
             browser = inputStr("Browse command: ", NULL).ptr;
             if (browser != NULL) {
                 pStr os = Strnew();
-                conv_to_system(&WcOption, os, browser);
+                struct Writer w = makeWriter(os);
+                conv_to_system(&WcOption, &w, browser);
                 browser = os->ptr;
             }
         }
     } else {
         pStr os = Strnew();
-        conv_to_system(&WcOption, os, browser);
+        struct Writer w = makeWriter(os);
+        conv_to_system(&WcOption, &w, browser);
         browser = os->ptr;
     }
     if (browser == NULL || *browser == '\0') {
@@ -5692,7 +5711,8 @@ execdict(char* word)
         return;
     }
     pStr os = Strnew();
-    conv_to_system(&WcOption, os, word);
+    struct Writer ww = makeWriter(os);
+    conv_to_system(&WcOption, &ww, word);
     w = os->ptr;
     if (*w == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -6453,7 +6473,8 @@ DownloadListBuffer(void)
             d->running = false;
         Strcat_charp(src, "<pre>\n");
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, d->save);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, d->save);
         Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url), html_quote(os->ptr)));
         duration = cur_time - d->time;
         if (!stat(d->save, &st)) {

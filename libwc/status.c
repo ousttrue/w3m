@@ -34,7 +34,7 @@ void wc_input_init(wc_ces ces, struct wc_status* st)
         }
     }
 
-    st->tag = NULL;
+    st->tag = (struct Writer) { 0 };
     st->ntag = 0;
 }
 
@@ -69,7 +69,7 @@ void wc_output_init(struct wc_option* WcOption, wc_ces ces, struct wc_status* st
     if (ces & WC_CES_T_ISO_2022)
         wc_create_gmap(WcOption, st);
 
-    st->tag = NULL;
+    st->tag = (struct Writer) { 0 };
     st->ntag = 0;
 
     if (!WcOption->ucs_conv) {

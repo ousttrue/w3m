@@ -145,7 +145,8 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
         if (_line->len == 0)
             continue;
         pStr line = Strdup(_line);
-        wc_Str_conv(&WcOption, line,
+        struct Writer w = makeWriter(line);
+        wc_Str_conv(&WcOption, &w,
             (const uint8_t*)_line->ptr, (const uint8_t*)_line->ptr + _line->len, charset, InnerCharset);
         const char* p = line->ptr;
         char* s = getWord(&p).ptr;
@@ -594,7 +595,8 @@ interpret_mouse_action(FILE* mf)
         if (line->len == 0)
             continue;
         pStr os = Strnew();
-        conv_from_system(&WcOption, os, line->ptr);
+        struct Writer w = makeWriter(os);
+        conv_from_system(&WcOption, &w, line->ptr);
         const char* p = os->ptr;
         const char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */

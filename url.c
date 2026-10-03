@@ -1,5 +1,5 @@
 #include "url.h"
-#include "Str.h"
+#include "StrWriter.h"
 #include "myctype.h"
 #include "str_gc.h"
 #include "w3m.h"
@@ -148,7 +148,8 @@ pStr url_quote_conv(const char* x, wc_ces c)
 {
     int len = strlen(x);
     pStr os = Strnew_size(len);
-    wc_Str_conv_strict(&WcOption, os, (const uint8_t*)x, (const uint8_t*)x + len, InnerCharset, c);
+    struct Writer w = makeWriter(os);
+    wc_Str_conv_strict(&WcOption, &w, (const uint8_t*)x, (const uint8_t*)x + len, InnerCharset, c);
     return url_quote(os->ptr);
 }
 
