@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
-#include "search.h"
+// #include "search.h"
 
 typedef uint32_t wc_ccs;
 
@@ -13,7 +13,7 @@ typedef struct {
 typedef struct {
     wc_ccs ccs;
     size_t n;
-    wc_map* map;
+    struct wc_map* map;
     wc_wchar_t (*conv)(wc_ccs, uint16_t);
 } wc_table;
 

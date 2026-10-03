@@ -1,6 +1,7 @@
 #pragma once
 #include "../Str.h"
 #include "ccs_types.h"
+#include "ces.h"
 
 #define WC_C_ESC 0x1B /* '\033' */
 #define WC_C_SS2 0x4E /* ESC 'N' */
@@ -124,4 +125,4 @@ extern int wc_parse_iso2022_esc(uint8_t** ptr, struct wc_status* st);
 extern void wc_push_iso2022_esc(pStr os, wc_ccs ccs, uint8_t g, uint8_t invoke, struct wc_status* st);
 extern void wc_create_gmap(struct wc_option* WcOption, struct wc_status* st);
 extern pStr wc_char_conv_from_iso2022(struct wc_option* WcOption, uint8_t c, struct wc_status* st);
-
+pStr wc_conv_from_iso2022(struct wc_option* WcOption, pStr is, wc_ces ces);

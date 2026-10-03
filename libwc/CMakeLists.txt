@@ -29,4 +29,5 @@ add_library(
     wtf.c)
 target_compile_definitions(${TARGET_NAME} PRIVATE _GNU_SOURCE USE_UNICODE)
 
+target_compile_options(${TARGET_NAME} PRIVATE -Wno-switch)
 

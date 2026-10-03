@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef struct {
+typedef struct wc_map {
     uint16_t code;
     uint16_t code2;
 } wc_map;

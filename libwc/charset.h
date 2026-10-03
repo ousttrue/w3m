@@ -5,6 +5,12 @@ typedef uint32_t wc_locale;
 
 extern wc_locale WcLocale;
 
+typedef struct {
+    wc_ces id;
+    const char* name;
+    const char* desc;
+} wc_ces_list;
+
 extern wc_ces wc_guess_charset(const char* charset, wc_ces orig);
 extern wc_ces wc_guess_charset_short(const char* charset, wc_ces orig);
 extern wc_ces wc_guess_locale_charset(char* locale, wc_ces orig);
