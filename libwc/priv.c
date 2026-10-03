@@ -21,7 +21,7 @@ void wc_conv_from_priv1(struct wc_option* WcOption, struct Writer *w, const uint
         if (*p & 0x80)
             wtf_push(WcOption, w, ccs, (uint32_t)*p);
         else
-            CALL1(w, pushChar, *p);
+            WRITER_PUSH_CH(w,*p);
     }
 }
 
@@ -30,7 +30,7 @@ void wc_char_conv_from_priv1(struct wc_option* WcOption, struct Writer *w, uint8
     if (c & 0x80)
         wtf_push(WcOption, w, st->ces_info->gset[1].ccs, (uint32_t)c);
     else
-        CALL1(w, pushChar, c);
+        WRITER_PUSH_CH(w,c);
 }
 
 void wc_conv_from_ascii(struct wc_option* WcOption, struct Writer *w, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
@@ -50,7 +50,7 @@ void wc_conv_from_ascii(struct wc_option* WcOption, struct Writer *w, const uint
         if (*p & 0x80)
             wtf_push_unknown(WcOption, w, p, 1);
         else
-            CALL1(w, pushChar, *p);
+            WRITER_PUSH_CH(w,*p);
     }
 }
 
@@ -60,7 +60,7 @@ void wc_push_to_raw(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc,
     switch (cc.ccs) {
     case WC_CCS_US_ASCII:
     case WC_CCS_RAW:
-        CALL1(w, pushChar, cc.code);
+        WRITER_PUSH_CH(w,cc.code);
     }
     return;
 }

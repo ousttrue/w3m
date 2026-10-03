@@ -83,7 +83,7 @@ void wc_conv_from_big5(struct wc_option* WcOption, struct Writer *w, const uint8
                 wtf_push_unknown(WcOption, w, p, 1);
                 break;
             default:
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w, *p);
                 break;
             }
             break;
@@ -108,14 +108,14 @@ void wc_push_to_big5(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc
     while (1) {
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
-            CALL1(w, pushChar, cc.code);
+            WRITER_PUSH_CH(w, cc.code);
             return;
         case WC_CCS_BIG5_1:
         case WC_CCS_BIG5_2:
             cc = wc_cs94w_to_big5(cc);
         case WC_CCS_BIG5:
-            CALL1(w, pushChar, (cc.code >> 8));
-            CALL1(w, pushChar, (cc.code & 0xff));
+            WRITER_PUSH_CH(w, (cc.code >> 8));
+            WRITER_PUSH_CH(w, (cc.code & 0xff));
             return;
         case WC_CCS_UNKNOWN_W:
             if (!WcOption->no_replace)
@@ -153,7 +153,7 @@ void wc_char_conv_from_big5(struct wc_option* WcOption, struct Writer *w, uint8_
         case C1:
             break;
         default:
-            CALL1(w, pushChar, c);
+            WRITER_PUSH_CH(w, c);
             break;
         }
         break;

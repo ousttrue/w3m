@@ -1,18 +1,18 @@
 #include "StrWriter.h"
 
-static struct Writer new_writer(struct Writer* src)
-{
-    // copy interface
-    struct Writer w = *src;
-    // new data
-    w.data = Strnew();
-    return w;
-}
+// static struct Writer new_writer(struct Writer* src)
+// {
+//     // copy interface
+//     struct Writer w = *src;
+//     // new data
+//     w.data = Strnew();
+//     return w;
+// }
 
-static void str_delete(void* self)
-{
-    Strfree((pStr)self);
-}
+// static void str_delete(void* self)
+// {
+//     Strfree((pStr)self);
+// }
 
 static void str_clear(void* self)
 {
@@ -44,25 +44,20 @@ static void str_push_str(void* self, const uint8_t* p)
     Strcat_charp((pStr)self, (const char*)p);
 }
 
-static void str_push_ch(void* self, uint8_t ch)
-{
-    Strcat_char((pStr)self, (char)ch);
-}
-
 struct Writer makeWriter(pStr str)
 {
     return (struct Writer) {
         .data = str,
         // static
-        .newWriter = new_writer,
+        // .newWriter = new_writer,
         // member
-        .delete = str_delete,
+        // .delete = str_delete,
         .clear = str_clear,
         .begin = str_begin,
         .end = str_end,
         .setBeginEnd = str_begin_end,
         .pushStrLen = str_push_str_len,
         .pushStr = str_push_str,
-        .pushChar = str_push_ch,
+        // .pushChar = str_push_ch,
     };
 }

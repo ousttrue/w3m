@@ -6,25 +6,32 @@ typedef struct Writer (*NewWriterFunc)(struct Writer* interface);
 typedef void (*Writer_SetBeginEndFunc)(void* self, const uint8_t* sp, const uint8_t* ep);
 typedef void (*Writer_PushStrN)(void* self, const uint8_t* sp, int len);
 typedef void (*Writer_PushStr)(void* self, const uint8_t* sp);
-typedef void (*Writer_PushChar)(void* self, uint8_t ch);
 typedef uint8_t* (*Writer_Ptr)(void* self);
 typedef void (*Writer_Clear)(void* self);
 
 struct Writer {
     void* data;
     // static
-    NewWriterFunc newWriter;
+    // NewWriterFunc newWriter;
     // member
-    Writer_Clear delete;
+    // Writer_Clear delete;
     Writer_Clear clear;
     Writer_Ptr begin;
     Writer_Ptr end;
     Writer_SetBeginEndFunc setBeginEnd;
     Writer_PushStrN pushStrLen;
     Writer_PushStr pushStr;
-    Writer_PushChar pushChar;
+    // Writer_PushChar pushChar;
 };
 
 #define CALL0(w, method) (w)->method((w)->data)
 #define CALL1(w, method, arg0) (w)->method((w)->data, arg0)
 #define CALL2(w, method, arg0, arg1) (w)->method((w)->data, arg0, arg1)
+static inline int WRITER_LEN(struct Writer* w)
+{
+    return CALL0(w, end) - CALL0(w, begin);
+}
+static inline void WRITER_PUSH_CH(struct Writer* w, uint8_t ch)
+{
+    CALL2(w, pushStrLen, &ch, 1);
+}

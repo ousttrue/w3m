@@ -119,7 +119,7 @@ void wc_conv_from_gbk(struct wc_option* WcOption, struct Writer *w, const uint8_
                 wtf_push_unknown(WcOption, w, p, 1);
                 break;
             default:
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w,*p);
                 break;
             }
             break;
@@ -148,21 +148,21 @@ void wc_push_to_gbk(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc,
     while (1) {
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
-            CALL1(w, pushChar, cc.code);
+            WRITER_PUSH_CH(w,cc.code);
             return;
         case WC_CCS_GB_2312:
-            CALL1(w, pushChar, ((cc.code >> 8) | 0x80));
-            CALL1(w, pushChar, ((cc.code & 0xff) | 0x80));
+            WRITER_PUSH_CH(w,((cc.code >> 8) | 0x80));
+            WRITER_PUSH_CH(w,((cc.code & 0xff) | 0x80));
             return;
         case WC_CCS_GBK_80:
-            CALL1(w, pushChar, (cc.code | 0x80));
+            WRITER_PUSH_CH(w,(cc.code | 0x80));
             return;
         case WC_CCS_GBK_1:
         case WC_CCS_GBK_2:
             cc = wc_cs128w_to_gbk(cc);
         case WC_CCS_GBK:
-            CALL1(w, pushChar, (cc.code >> 8));
-            CALL1(w, pushChar, (cc.code & 0xff));
+            WRITER_PUSH_CH(w,(cc.code >> 8));
+            WRITER_PUSH_CH(w,(cc.code & 0xff));
             return;
         case WC_CCS_UNKNOWN_W:
             if (!WcOption->no_replace)
@@ -204,7 +204,7 @@ void wc_char_conv_from_gbk(struct wc_option* WcOption, struct Writer *w, uint8_t
         case C1:
             break;
         default:
-            CALL1(w, pushChar, c);
+            WRITER_PUSH_CH(w,c);
             break;
         }
         break;

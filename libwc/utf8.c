@@ -139,7 +139,6 @@ void wc_conv_from_utf8(struct wc_option* WcOption, struct Writer* w, const uint8
     int state = WC_UTF8_NOSTATE;
     size_t next = 0;
     uint32_t ucs;
-    struct wc_status st;
 
     const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80; p++)
@@ -152,7 +151,14 @@ void wc_conv_from_utf8(struct wc_option* WcOption, struct Writer* w, const uint8
     if (p > sp)
         CALL2(w, pushStrLen, sp, (int)(p - sp));
 
-    st.tag = (struct Writer) { 0 };
+    struct wc_status st;
+    st.tag_data = (struct ArrayData) {
+        .buf = st.tag_buf,
+        .len = 0,
+        .capacity = sizeof(st.tag_buf),
+    };
+    st.tag = arrayWriter(&st.tag_data);
+
     st.ntag = 0;
     for (; p < ep; p++) {
         switch (state) {
@@ -163,7 +169,7 @@ void wc_conv_from_utf8(struct wc_option* WcOption, struct Writer* w, const uint8
                 wtf_push_ucs(WcOption, w, (uint32_t)*p, &st);
                 break;
             case 8:
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w,*p);
                 break;
             case 0:
             case 7:
@@ -231,7 +237,7 @@ void wc_push_to_utf8(struct wc_option* WcOption, struct Writer* w, wc_wchar_t cc
         case WC_CCS_US_ASCII:
             if (st->ntag)
                 st->ntag = wc_push_tag_to_utf8(w, 0);
-            CALL1(w, pushChar, (cc.code & 0x7f));
+            WRITER_PUSH_CH(w,(cc.code & 0x7f));
             return;
         case WC_CCS_UCS2:
         case WC_CCS_UCS4:
@@ -291,7 +297,7 @@ void wc_char_conv_from_utf8(struct wc_option* WcOption, struct Writer* w, uint8_
 
     if (st->state == -1) {
         st->state = WC_UTF8_NOSTATE;
-        st->tag = (struct Writer) { 0 };
+        CALL0(&st->tag, clear);
         st->ntag = 0;
         nbuf = 0;
     }
@@ -303,7 +309,7 @@ void wc_char_conv_from_utf8(struct wc_option* WcOption, struct Writer* w, uint8_
             wtf_push_ucs(WcOption, w, (uint32_t)c, st);
             break;
         case 8:
-            CALL1(w, pushChar, (char)c);
+            WRITER_PUSH_CH(w,(char)c);
             break;
         case 0:
         case 7:

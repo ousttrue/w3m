@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <strings.h>
 #include "status.h"
 #include "ucs.h"
@@ -669,28 +668,24 @@ void wtf_push_ucs(struct wc_option* WcOption, struct Writer* w, uint32_t ucs, st
         if (!WcOption->use_language_tag)
             return;
         if (ucs == WC_C_LANGUAGE_TAG)
-            if (st->tag.data)
-                CALL0(&st->tag, clear);
-            else
-                st->tag = w->newWriter(w);
+            CALL0(&st->tag, clear);
         else if (ucs == WC_C_CANCEL_TAG) {
-            if (st->tag.data)
-                CALL0(&st->tag, delete);
-            st->tag = (struct Writer) { 0 };
+            CALL0(&st->tag, clear);
             st->ntag = 0;
-        } else if (st->tag.data && (CALL0(&st->tag, end) - CALL0(&st->tag, begin)) < MAX_TAG_LEN && ucs >= WC_C_TAG_SPACE)
-            CALL1(&st->tag, pushChar, (ucs & 0x7f));
+        } else if (WRITER_LEN(&st->tag)
+            && (CALL0(&st->tag, end) - CALL0(&st->tag, begin)) < MAX_TAG_LEN && ucs >= WC_C_TAG_SPACE)
+            WRITER_PUSH_CH(&st->tag, (ucs & 0x7f));
         return;
     }
-    if (st->tag.data) {
+    if (WRITER_LEN(&st->tag)) {
         st->ntag = wc_ucs_put_tag(CALL0(&st->tag, begin));
-        st->tag = (struct Writer) { 0 };
+        CALL0(&st->tag, clear);
     }
     if (ucs < 0x80) {
         if (st->ntag)
             wtf_push(WcOption, w, WC_CCS_UCS_TAG, wc_ucs_to_ucs_tag(ucs, st->ntag));
         else
-            CALL1(w, pushChar, (char)ucs);
+            WRITER_PUSH_CH(w, (char)ucs);
     } else {
         ccs = wc_ucs_to_ccs(WcOption, ucs);
         if (st->ntag && ucs <= WC_C_UNICODE_END) {

@@ -30,14 +30,14 @@ void wc_conv_from_hz(struct wc_option *WcOption, struct Writer *w, const uint8_t
             else if (*p & 0x80)
                 wtf_push_unknown(WcOption, w, p, 1);
             else
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w,*p);
             break;
         case WC_HZ_TILDA:
             if (*p == WC_C_HZ_SI) {
                 state = WC_HZ_MBYTE;
                 break;
             } else if (*p == WC_C_HZ_TILDA)
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w,*p);
             else if (*p == '\n')
                 break;
             else
@@ -94,29 +94,29 @@ void wc_push_to_hz(struct wc_option *WcOption, struct Writer *w, wc_wchar_t cc, 
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
             if (st->gl) {
-                CALL1(w, pushChar, WC_C_HZ_TILDA);
-                CALL1(w, pushChar, WC_C_HZ_SO);
+                WRITER_PUSH_CH(w,WC_C_HZ_TILDA);
+                WRITER_PUSH_CH(w,WC_C_HZ_SO);
                 st->gl = 0;
             }
             if ((char)cc.code == WC_C_HZ_TILDA)
-                CALL1(w, pushChar, WC_C_HZ_TILDA);
-            CALL1(w, pushChar, cc.code);
+                WRITER_PUSH_CH(w,WC_C_HZ_TILDA);
+            WRITER_PUSH_CH(w,cc.code);
             return;
         case WC_CCS_GB_2312:
             if (!st->gl) {
-                CALL1(w, pushChar, WC_C_HZ_TILDA);
-                CALL1(w, pushChar, WC_C_HZ_SI);
+                WRITER_PUSH_CH(w,WC_C_HZ_TILDA);
+                WRITER_PUSH_CH(w,WC_C_HZ_SI);
                 st->gl = 1;
             }
-            CALL1(w, pushChar, ((cc.code >> 8) & 0x7f));
-            CALL1(w, pushChar, (cc.code & 0x7f));
+            WRITER_PUSH_CH(w,((cc.code >> 8) & 0x7f));
+            WRITER_PUSH_CH(w,(cc.code & 0x7f));
             return;
         case WC_CCS_UNKNOWN_W:
             if (WcOption->no_replace)
                 return;
             if (st->gl) {
-                CALL1(w, pushChar, WC_C_HZ_TILDA);
-                CALL1(w, pushChar, WC_C_HZ_SO);
+                WRITER_PUSH_CH(w,WC_C_HZ_TILDA);
+                WRITER_PUSH_CH(w,WC_C_HZ_SO);
                 st->gl = 0;
             }
             CALL1(w, pushStr, WC_REPLACE_W);
@@ -125,8 +125,8 @@ void wc_push_to_hz(struct wc_option *WcOption, struct Writer *w, wc_wchar_t cc, 
             if (WcOption->no_replace)
                 return;
             if (st->gl) {
-                CALL1(w, pushChar, WC_C_HZ_TILDA);
-                CALL1(w, pushChar, WC_C_HZ_SO);
+                WRITER_PUSH_CH(w,WC_C_HZ_TILDA);
+                WRITER_PUSH_CH(w,WC_C_HZ_SO);
                 st->gl = 0;
             }
             CALL1(w, pushStr, WC_REPLACE);
@@ -144,8 +144,8 @@ void wc_push_to_hz(struct wc_option *WcOption, struct Writer *w, wc_wchar_t cc, 
 void wc_push_to_hz_end(struct wc_option* WcOption, struct Writer *w, struct wc_status* st)
 {
     if (st->gl) {
-        CALL1(w, pushChar, WC_C_HZ_TILDA);
-        CALL1(w, pushChar, WC_C_HZ_SO);
+        WRITER_PUSH_CH(w,WC_C_HZ_TILDA);
+        WRITER_PUSH_CH(w,WC_C_HZ_SO);
         st->gl = 0;
     }
 }

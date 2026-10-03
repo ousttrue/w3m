@@ -230,7 +230,7 @@ void wc_conv_from_sjis(struct wc_option* WcOption, struct Writer *w, const uint8
                 wtf_push_unknown(WcOption, w, p, 1);
                 break;
             default:
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w,*p);
                 break;
             }
             break;
@@ -307,7 +307,7 @@ void wc_conv_from_sjisx0213(struct wc_option* WcOption, struct Writer *w, const 
                 wtf_push_unknown(WcOption, w, p, 1);
                 break;
             default:
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w,*p);
                 break;
             }
             break;
@@ -352,11 +352,11 @@ void wc_push_to_sjis(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc
     while (1) {
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
-            CALL1(w, pushChar, cc.code);
+            WRITER_PUSH_CH(w,cc.code);
             return;
         case WC_CCS_JIS_X_0201K:
             if (WcOption->use_jisx0201k) {
-                CALL1(w, pushChar, cc.code | 0x80);
+                WRITER_PUSH_CH(w,cc.code | 0x80);
                 return;
             } else if (WcOption->fix_width_conv)
                 cc.ccs = WC_CCS_UNKNOWN;
@@ -367,15 +367,15 @@ void wc_push_to_sjis(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc
             ub = (cc.code >> 8) & 0x7f;
             lb = cc.code & 0x7f;
             jisx0208_to_sjis(ub, lb);
-            CALL1(w, pushChar, ub);
-            CALL1(w, pushChar, lb);
+            WRITER_PUSH_CH(w,ub);
+            WRITER_PUSH_CH(w,lb);
             return;
         case WC_CCS_SJIS_EXT_1:
         case WC_CCS_SJIS_EXT_2:
             cc = wc_cs94w_to_sjis_ext(cc);
         case WC_CCS_SJIS_EXT:
-            CALL1(w, pushChar, (cc.code >> 8));
-            CALL1(w, pushChar, (cc.code & 0xff));
+            WRITER_PUSH_CH(w,(cc.code >> 8));
+            WRITER_PUSH_CH(w,(cc.code & 0xff));
             return;
         case WC_CCS_UNKNOWN_W:
             if (!WcOption->no_replace)
@@ -402,11 +402,11 @@ void wc_push_to_sjisx0213(struct wc_option* WcOption, struct Writer *w, wc_wchar
     while (1) {
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
-            CALL1(w, pushChar, cc.code);
+            WRITER_PUSH_CH(w,cc.code);
             return;
         case WC_CCS_JIS_X_0201K:
             if (WcOption->use_jisx0201k) {
-                CALL1(w, pushChar, cc.code | 0x80);
+                WRITER_PUSH_CH(w,cc.code | 0x80);
                 return;
             } else if (WcOption->fix_width_conv)
                 cc.ccs = WC_CCS_UNKNOWN;
@@ -422,8 +422,8 @@ void wc_push_to_sjisx0213(struct wc_option* WcOption, struct Writer *w, wc_wchar
             ub = (cc.code >> 8) & 0x7f;
             lb = cc.code & 0x7f;
             jisx0208_to_sjis(ub, lb);
-            CALL1(w, pushChar, ub);
-            CALL1(w, pushChar, lb);
+            WRITER_PUSH_CH(w,ub);
+            WRITER_PUSH_CH(w,lb);
             return;
         case WC_CCS_JIS_X_0213_2:
             if (!WcOption->use_jisx0213) {
@@ -434,8 +434,8 @@ void wc_push_to_sjisx0213(struct wc_option* WcOption, struct Writer *w, wc_wchar
             lb = cc.code & 0x7f;
             jisx02132_to_sjis(ub, lb);
             if (ub) {
-                CALL1(w, pushChar, ub);
-                CALL1(w, pushChar, lb);
+                WRITER_PUSH_CH(w,ub);
+                WRITER_PUSH_CH(w,lb);
                 return;
             }
         case WC_CCS_UNKNOWN_W:
@@ -488,7 +488,7 @@ void wc_char_conv_from_sjis(struct wc_option* WcOption, struct Writer *w, uint8_
         case C1:
             break;
         default:
-            CALL1(w, pushChar, c);
+            WRITER_PUSH_CH(w,c);
             break;
         }
         break;
@@ -549,7 +549,7 @@ void wc_char_conv_from_sjisx0213(struct wc_option* WcOption, struct Writer *w, u
         case C1:
             break;
         default:
-            CALL1(w, pushChar, c);
+            WRITER_PUSH_CH(w,c);
             break;
         }
         break;

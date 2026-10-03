@@ -180,7 +180,7 @@ void wtf_push(struct wc_option* WcOption, struct Writer* w, wc_ccs ccs, uint32_t
     size_t n;
 
     if (ccs == WC_CCS_US_ASCII) {
-        CALL1(w, pushChar, (char)(code & 0x7f));
+        WRITER_PUSH_CH(w,(char)(code & 0x7f));
         return;
     }
     cc.ccs = ccs;
@@ -201,7 +201,7 @@ void wtf_push(struct wc_option* WcOption, struct Writer* w, wc_ccs ccs, uint32_t
             if (!wc_ces_has_ccs(WC_CCS_SET(ccs), &wtf_major_st)) {
                 cc2 = wc_any_to_any_ces(WcOption, cc, &wtf_major_st);
                 if (cc2.ccs == WC_CCS_US_ASCII) {
-                    CALL1(w, pushChar, (char)(cc2.code & 0x7f));
+                    WRITER_PUSH_CH(w,(char)(cc2.code & 0x7f));
                     return;
                 }
                 if (!WC_CCS_IS_UNKNOWN(cc2.ccs) && cc2.ccs != WC_CCS_CP1258_2 && cc2.ccs != WC_CCS_TCVN_5712_3)
@@ -359,7 +359,7 @@ void wtf_push_unknown(struct wc_option* WcOption, struct Writer* w, const uint8_
         if (*p & 0x80)
             wtf_push(WcOption, w, WC_CCS_UNKNOWN, *p);
         else
-            CALL1(w, pushChar, (char)*p);
+            WRITER_PUSH_CH(w,(char)*p);
     }
 }
 

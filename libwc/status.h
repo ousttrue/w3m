@@ -1,5 +1,6 @@
 #pragma once
 #include "ces.h"
+#include "arraywriter.h"
 
 enum WC_OPT_DETECT {
     WC_OPT_DETECT_OFF = 0,
@@ -63,6 +64,8 @@ struct wc_status {
     wc_table** tlist;
     wc_table** tlistw;
     int state;
+    uint8_t tag_buf[256];
+    struct ArrayData tag_data;
     struct Writer tag;
     int ntag;
     uint32_t base;

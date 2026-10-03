@@ -97,7 +97,7 @@ void wc_conv_from_uhc(struct wc_option* WcOption, struct Writer *w, const uint8_
                 wtf_push_unknown(WcOption, w, p, 1);
                 break;
             default:
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w,*p);
                 break;
             }
             break;
@@ -126,18 +126,18 @@ void wc_push_to_uhc(struct wc_option* WcOption, struct Writer *w, wc_wchar_t cc,
     while (1) {
         switch (cc.ccs) {
         case WC_CCS_US_ASCII:
-            CALL1(w, pushChar, (char)cc.code);
+            WRITER_PUSH_CH(w,(char)cc.code);
             return;
         case WC_CCS_KS_X_1001:
-            CALL1(w, pushChar, (char)((cc.code >> 8) | 0x80));
-            CALL1(w, pushChar, (char)((cc.code & 0xff) | 0x80));
+            WRITER_PUSH_CH(w,(char)((cc.code >> 8) | 0x80));
+            WRITER_PUSH_CH(w,(char)((cc.code & 0xff) | 0x80));
             return;
         case WC_CCS_UHC_1:
         case WC_CCS_UHC_2:
             cc = wc_cs128w_to_uhc(cc);
         case WC_CCS_UHC:
-            CALL1(w, pushChar, (char)(cc.code >> 8));
-            CALL1(w, pushChar, (char)(cc.code & 0xff));
+            WRITER_PUSH_CH(w,(char)(cc.code >> 8));
+            WRITER_PUSH_CH(w,(char)(cc.code & 0xff));
             return;
         case WC_CCS_UNKNOWN_W:
             if (!WcOption->no_replace)
@@ -176,7 +176,7 @@ void wc_char_conv_from_uhc(struct wc_option* WcOption, struct Writer *w, uint8_t
         case C1:
             break;
         default:
-            CALL1(w, pushChar, (char)c);
+            WRITER_PUSH_CH(w,(char)c);
             break;
         }
         break;

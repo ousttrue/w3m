@@ -2,6 +2,7 @@
 #include <string.h>
 #include "../alloc.h"
 #include "ucs.h"
+#include "arraywriter.h"
 
 static struct wc_status output_st;
 static struct wc_option output_option;
@@ -34,7 +35,12 @@ void wc_input_init(wc_ces ces, struct wc_status* st)
         }
     }
 
-    st->tag = (struct Writer) { 0 };
+    st->tag_data = (struct ArrayData) {
+        .buf = st->tag_buf,
+        .len = 0,
+        .capacity = sizeof(st->tag_buf),
+    };
+    st->tag = arrayWriter(&st->tag_data);
     st->ntag = 0;
 }
 
@@ -69,7 +75,12 @@ void wc_output_init(struct wc_option* WcOption, wc_ces ces, struct wc_status* st
     if (ces & WC_CES_T_ISO_2022)
         wc_create_gmap(WcOption, st);
 
-    st->tag = (struct Writer) { 0 };
+    st->tag_data = (struct ArrayData) {
+        .buf = st->tag_buf,
+        .len = 0,
+        .capacity = sizeof(st->tag_buf),
+    };
+    st->tag = arrayWriter(&st->tag_data);
     st->ntag = 0;
 
     if (!WcOption->ucs_conv) {

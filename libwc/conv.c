@@ -8,6 +8,8 @@
 #include "utf8.h"
 #include "utf7.h"
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 const uint8_t* WcReplace = (const uint8_t*)"?";
 const uint8_t* WcReplaceW = (const uint8_t*)"??";
@@ -63,7 +65,7 @@ wc_conv_to_ces(struct wc_option* WcOption, struct Writer* w, const uint8_t* sp, 
     default:
         while (p < ep) {
             if (*p < 0x80 && wtf_width(WcOption, p + 1)) {
-                CALL1(w, pushChar, *p);
+                WRITER_PUSH_CH(w, *p);
                 p++;
             } else
                 (*st.ces_info->push_to)(WcOption, w, wtf_parse(WcOption, &p), &st);
@@ -90,10 +92,17 @@ void wc_Str_conv(struct wc_option* WcOption, struct Writer* w, const uint8_t* sp
             // f_ces => wtf
             (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, w, sp, ep, f_ces);
         } else {
-            // f_ces => wtf => t_ces
-            struct Writer tmp = w->newWriter(w); // Strnew_size(ep - sp);
-            (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, &tmp, sp, ep, f_ces);
-            wc_conv_to_ces(WcOption, w, CALL0(&tmp, begin), CALL0(&tmp, end), t_ces);
+            // f_ces => wtf 
+            (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, w, sp, ep, f_ces);
+
+            int buf_len = WRITER_LEN(w);
+            uint8_t* buf = malloc(buf_len);
+            memcpy(buf, CALL0(w, begin), buf_len);
+
+            // wtf => t_ces
+            CALL0(w, clear);
+            wc_conv_to_ces(WcOption, w, buf, buf + buf_len, t_ces);
+            free(buf);
         }
     }
 }
