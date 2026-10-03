@@ -25,7 +25,7 @@ extern uint8_t WC_BIG5_MAP[];
 extern wc_wchar_t wc_big5_to_cs94w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs94w_to_big5(wc_wchar_t cc);
 struct wc_option;
-extern void wc_conv_from_big5(struct wc_option *WcOption, pStr os, pStr is, wc_ces ces);
+extern void wc_conv_from_big5(struct wc_option *WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces);
 struct wc_option;
 struct wc_status;
 extern void wc_push_to_big5(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);

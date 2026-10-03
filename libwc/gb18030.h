@@ -38,6 +38,6 @@ extern wc_wchar_t wc_cs128w_to_gbk_ext(wc_wchar_t cc);
 extern uint32_t wc_gb18030_to_ucs(struct wc_option *WcOption, wc_wchar_t cc);
 struct wc_option;
 extern wc_wchar_t wc_ucs_to_gb18030(struct wc_option *WcOption, uint32_t ucs);
-extern void wc_conv_from_gb18030(struct wc_option *WcOption, pStr os, pStr is, wc_ces ces);
+extern void wc_conv_from_gb18030(struct wc_option *WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces);
 extern void wc_push_to_gb18030(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);
 extern void wc_char_conv_from_gb18030(struct wc_option *WcOption, pStr os, uint8_t c, struct wc_status* st);

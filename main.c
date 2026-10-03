@@ -3142,9 +3142,8 @@ save_submit_formlist(FormItemList* src)
     return ret;
 }
 
-#ifdef USE_M17N
 static pStr
-conv_form_encoding(pStr val, FormItemList* fi, Buffer* buf)
+conv_form_encoding(pStr is, FormItemList* fi, Buffer* buf)
 {
     wc_ces charset = SystemCharset;
 
@@ -3152,11 +3151,9 @@ conv_form_encoding(pStr val, FormItemList* fi, Buffer* buf)
         charset = fi->parent->charset;
     else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
         charset = buf->document_charset;
-    return wc_Str_conv_strict(&WcOption, val, InnerCharset, charset);
+    return wc_Str_conv_strict(&WcOption,
+        (const uint8_t*)is->ptr, (const uint8_t*)is->ptr + is->len, InnerCharset, charset);
 }
-#else
-#define conv_form_encoding(val, fi, buf) (val)
-#endif
 
 static void
 query_from_followform(pStr* query, FormItemList* fi, int multipart)
@@ -4632,9 +4629,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
 
     char* file;
     if (Currentbuf->real_scheme == SCM_LOCAL)
-        file = conv_from_system(&WcOption, guess_save_name(NULL,
-            Currentbuf->currentURL.real_file)
-                ->ptr);
+        file = conv_from_system(&WcOption, guess_save_name(NULL, Currentbuf->currentURL.real_file)->ptr);
     else
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file)->ptr;
 

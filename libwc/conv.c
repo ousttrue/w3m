@@ -13,12 +13,8 @@ char* WcReplace = "?";
 char* WcReplaceW = "??";
 
 static void
-wc_conv_to_ces(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+wc_conv_to_ces(struct wc_option* WcOption, pStr os, const uint8_t* sp, const uint8_t* ep, wc_ces ces)
 {
-    assert(os->len == 0);
-    const uint8_t* sp = (const uint8_t*)is->ptr;
-    const uint8_t* ep = sp + is->len;
-
     const uint8_t* p;
     switch (ces) {
     case WC_CES_HZ_GB_2312:
@@ -37,14 +33,14 @@ wc_conv_to_ces(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
         break;
     }
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
         p--; /* for precompose */
     if (p > sp)
-        Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     struct wc_status st;
     wc_output_init(WcOption, ces, &st);
@@ -78,42 +74,42 @@ wc_conv_to_ces(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
     wc_push_end(WcOption, os, &st);
 }
 
-void wc_Str_conv(struct wc_option* WcOption, pStr os, pStr is, wc_ces f_ces, wc_ces t_ces)
+void wc_Str_conv(struct wc_option* WcOption, pStr os, const uint8_t* sp, const uint8_t* ep, wc_ces f_ces, wc_ces t_ces)
 {
 
     if (f_ces == WC_CES_WTF) {
         if (t_ces == WC_CES_WTF) {
             // nop
-            Strcopy(os, is);
+            Strcopy_begin_end(os, sp, ep);
         } else {
             // wtf => t_ces
-            wc_conv_to_ces(WcOption, os, is, t_ces);
+            wc_conv_to_ces(WcOption, os, sp, ep, t_ces);
         }
     } else {
         if (t_ces == WC_CES_WTF) {
             // f_ces => wtf
-            (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, os, is, f_ces);
+            (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, os, sp, ep, f_ces);
         } else {
             // f_ces => wtf => t_ces
-            pStr tmp = Strnew_size(is->len);
-            (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, tmp, is, f_ces);
-            wc_conv_to_ces(WcOption, os, tmp, t_ces);
+            pStr tmp = Strnew_size(ep - sp);
+            (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, tmp, sp, ep, f_ces);
+            wc_conv_to_ces(WcOption, os, (const uint8_t*)tmp->ptr, (const uint8_t*)tmp->ptr + tmp->len, t_ces);
         }
     }
 }
 
-pStr wc_Str_conv_strict(struct wc_option* _WcOption, pStr is, wc_ces f_ces, wc_ces t_ces)
+pStr wc_Str_conv_strict(struct wc_option* _WcOption, const uint8_t* sp, const uint8_t* ep, wc_ces f_ces, wc_ces t_ces)
 {
     struct wc_option WcOption = *_WcOption;
     WcOption.strict_iso2022 = true;
     WcOption.no_replace = true;
     WcOption.fix_width_conv = false;
-    pStr os = Strnew_size(is->len);
-    wc_Str_conv(&WcOption, os, is, f_ces, t_ces);
+    pStr os = Strnew_size(ep-sp);
+    wc_Str_conv(&WcOption, os, sp, ep, f_ces, t_ces);
     return os;
 }
 
-pStr wc_Str_conv_with_detect(struct wc_option* WcOption, pStr is, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
+pStr wc_Str_conv_with_detect(struct wc_option* WcOption, const uint8_t* sp, const uint8_t* ep, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
 {
     wc_ces detect;
     if (*f_ces == WC_CES_WTF || hint == WC_CES_WTF) {
@@ -125,7 +121,7 @@ pStr wc_Str_conv_with_detect(struct wc_option* WcOption, pStr is, wc_ces* f_ces,
     } else {
         if (*f_ces & WC_CES_T_8BIT)
             hint = *f_ces;
-        detect = wc_auto_detect(WcOption, is->ptr, is->len, hint);
+        detect = wc_auto_detect(WcOption, (const char*)sp, ep-sp, hint);
         if (WcOption->auto_detect == WC_OPT_DETECT_ON) {
             if ((detect & WC_CES_T_8BIT) || ((detect & WC_CES_T_NASCII) && !(*f_ces & WC_CES_T_8BIT)))
                 *f_ces = detect;
@@ -134,8 +130,8 @@ pStr wc_Str_conv_with_detect(struct wc_option* WcOption, pStr is, wc_ces* f_ces,
                 *f_ces = detect;
         }
     }
-    pStr os = Strnew_size(is->len);
-    wc_Str_conv(WcOption, os, is, detect, t_ces);
+    pStr os = Strnew_size(ep-sp);
+    wc_Str_conv(WcOption, os, sp, ep, detect, t_ces);
     return os;
 }
 

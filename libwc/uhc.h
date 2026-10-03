@@ -30,7 +30,7 @@ extern uint8_t WC_UHC_MAP[];
 extern wc_wchar_t wc_uhc_to_cs128w(wc_wchar_t cc);
 extern wc_wchar_t wc_cs128w_to_uhc(wc_wchar_t cc);
 extern uint32_t wc_uhc_to_N(uint32_t c);
-extern void wc_conv_from_uhc(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces);
+extern void wc_conv_from_uhc(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces);
 struct wc_option;
 extern void wc_push_to_uhc(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);
 extern void wc_char_conv_from_uhc(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st);

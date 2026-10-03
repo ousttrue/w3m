@@ -145,7 +145,8 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
         if (_line->len == 0)
             continue;
         pStr line = Strdup(_line);
-        wc_Str_conv(&WcOption, line, _line, charset, InnerCharset);
+        wc_Str_conv(&WcOption, line,
+            (const uint8_t*)_line->ptr, (const uint8_t*)_line->ptr + _line->len, charset, InnerCharset);
         const char* p = line->ptr;
         char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */

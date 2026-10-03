@@ -563,9 +563,10 @@ form_fputs_decode(pStr s, FILE* f)
             break;
         }
     }
-#ifdef USE_M17N
-    z = wc_Str_conv_strict(&WcOption, z, InnerCharset, DisplayCharset);
-#endif
+
+    z = wc_Str_conv_strict(&WcOption,
+        (const uint8_t*)z->ptr, (const uint8_t*)z->ptr + z->len, InnerCharset, DisplayCharset);
+
     Strfputs(z, f);
 }
 

@@ -37,20 +37,27 @@ inline static pStr Strnew_size(int n)
     return x;
 }
 
-pStr Strcopy_charp_n(pStr, const char*, int);
-pStr Strnew_charp_n(const char*, int);
-pStr Strnew_charp(const char*);
-
-pStr Strnew_m_charp(const char*, ...);
 pStr Strdup(pStr);
 pStr Strclear(pStr);
 void Strfree(pStr);
+
+pStr Strnew_charp_n(const char*, int);
+pStr Strnew_charp(const char*);
+pStr Strnew_m_charp(const char*, ...);
+
 pStr Strcopy(pStr dst, pStr src);
+pStr Strcopy_charp_n(pStr, const char*, int);
+inline static void Strcopy_begin_end(pStr p, const uint8_t* sp, const uint8_t* ep)
+{
+    Strcopy_charp_n(p, (const char*)sp, ep - sp);
+}
 pStr Strcopy_charp(pStr, const char*);
+
 pStr Strcat_charp_n(pStr, const char*, int);
 pStr Strcat(pStr, pStr);
 pStr Strcat_charp(pStr, const char*);
 pStr Strcat_m_charp(pStr, ...);
+
 pStr Strsubstr(pStr, int, int);
 pStr Strinsert_char(pStr, int, char);
 pStr Strinsert_charp(pStr, int, const char*);

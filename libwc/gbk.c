@@ -89,23 +89,21 @@ wc_gbk_to_N(uint32_t c)
     return WC_GBK_N(c) - ((c >> 8) - 0xA1) * 0x5E + 0x0A + 0x16 + 0x06;
 }
 
-void wc_conv_from_gbk(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_gbk(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     int state = WC_GBK_NOSTATE;
     uint32_t gbk;
 
+    const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (char*)sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {

@@ -2289,7 +2289,8 @@ interpret_menu(FILE* mf)
         if (_line->len == 0)
             continue;
         pStr line = Strnew_size(_line->len);
-        wc_Str_conv(&WcOption, line, _line, charset, InnerCharset);
+        wc_Str_conv(&WcOption, line,
+            (const uint8_t*)_line->ptr, (const uint8_t*)_line->ptr + _line->len, charset, InnerCharset);
         const char* p = line->ptr;
         char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */

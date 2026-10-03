@@ -71,11 +71,11 @@ wc_create_detect_map(wc_ces ces, bool esc)
 }
 
 wc_ces
-wc_auto_detect(struct wc_option *WcOption, char *is, size_t len, wc_ces hint)
+wc_auto_detect(struct wc_option *WcOption, const char *is, size_t len, wc_ces hint)
 {
     uint8_t *p = (uint8_t *)is;
     uint8_t *ep = p + len;
-    uint8_t *q;
+    const uint8_t *q;
     wc_ces euc = 0, priv = 0;
     struct wc_status st;
     int euc_state = 0, sjis_state = 0, big5_state = 0, hz_state = 0;

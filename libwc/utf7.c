@@ -58,24 +58,22 @@ static char base64_c_map[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwx
 #define BASE64_C(x) base64_c_map[(x)]
 #define C_BASE64(x) c_base64_map[(x) - 0x20]
 
-void wc_conv_from_utf7(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_utf7(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     int state = WC_UTF7_NOSTATE;
     uint32_t b, high = 0;
     struct wc_status st;
 
+    const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80 && *p != WC_C_UTF7_PLUS; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     st.tag = NULL;
     st.ntag = 0;

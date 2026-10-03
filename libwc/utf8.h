@@ -15,7 +15,7 @@ extern uint8_t WC_UTF8_MAP[];
 struct wc_option;
 extern size_t wc_ucs_to_utf8(uint32_t ucs, uint8_t* utf8);
 extern uint32_t wc_utf8_to_ucs(uint8_t* utf8);
-extern void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces);
+extern void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces);
 extern void wc_push_to_utf8(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);
 extern void wc_push_to_utf8_end(struct wc_option* WcOption, pStr os, struct wc_status* st);
 extern void wc_char_conv_from_utf8(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st);

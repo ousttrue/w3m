@@ -37,7 +37,8 @@ static void wc_char_conv(struct wc_option* WcOption, pStr os, char c)
 {
     pStr tmp = Strnew_size(8);
     (*char_conv_st.ces_info->char_conv)(WcOption, tmp, (uint8_t)c, &char_conv_st);
-    wc_Str_conv(WcOption, os, tmp, WC_CES_WTF, InnerCharset);
+    wc_Str_conv(WcOption, os,
+        (const uint8_t*)tmp->ptr, (const uint8_t*)tmp->ptr + tmp->len, WC_CES_WTF, InnerCharset);
 }
 
 // Completion status.

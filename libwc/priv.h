@@ -90,5 +90,5 @@
 struct wc_status;
 extern void wc_char_conv_from_priv1(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st);
 extern void wc_push_to_raw(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);
-extern void wc_conv_from_priv1(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces);
-extern void wc_conv_from_ascii(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces);
+extern void wc_conv_from_priv1(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces);
+extern void wc_conv_from_ascii(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces);

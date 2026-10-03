@@ -213,7 +213,7 @@ wc_ces wc_guess_8bit_charset(wc_ces orig);
 
 struct wc_status;
 struct wc_option;
-typedef void (*ConvFromFunc)(struct wc_option*, pStr os, pStr is, wc_ces);
+typedef void (*ConvFromFunc)(struct wc_option*, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces);
 typedef void (*PushToFunc)(struct wc_option*, pStr os, wc_wchar_t, struct wc_status*);
 typedef void (*CharConvFunc)(struct wc_option*, pStr os, uint8_t, struct wc_status*);
 

@@ -1720,7 +1720,8 @@ load_option_panel(void)
     OptionCharset = SystemCharset; /* FIXME */
     if (!OptionEncode) {
         pStr tmp = Strdup(optionpanel_str);
-        wc_Str_conv(&WcOption, optionpanel_str, tmp, OptionCharset, InnerCharset);
+        wc_Str_conv(&WcOption, optionpanel_str,
+            (const uint8_t*)tmp->ptr, (const uint8_t*)tmp->ptr + tmp->len, OptionCharset, InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
             sections[i].name = wc_conv(&WcOption, _(sections[i].name), OptionCharset,
                 InnerCharset)

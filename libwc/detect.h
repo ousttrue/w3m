@@ -6,5 +6,5 @@ extern uint8_t WC_DETECT_MAP[];
 
 extern void wc_create_detect_map(wc_ces ces, bool esc);
 struct wc_option;
-extern wc_ces wc_auto_detect(struct wc_option *WcOption, char* is, size_t len, wc_ces hint);
+extern wc_ces wc_auto_detect(struct wc_option *WcOption, const char* is, size_t len, wc_ces hint);
 

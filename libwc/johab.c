@@ -237,22 +237,20 @@ wc_cs128w_to_johab(wc_wchar_t cc)
     return cc;
 }
 
-void wc_conv_from_johab(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_johab(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     int state = WC_JOHAB_NOSTATE;
 
+    const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {

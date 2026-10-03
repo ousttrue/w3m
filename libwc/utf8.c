@@ -133,26 +133,24 @@ wc_utf8_to_ucs(uint8_t* utf8)
     return WC_C_UCS4_ERROR;
 }
 
-void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     uint8_t* q = NULL;
     int state = WC_UTF8_NOSTATE;
     size_t next = 0;
     uint32_t ucs;
     struct wc_status st;
 
+    const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     st.tag = NULL;
     st.ntag = 0;

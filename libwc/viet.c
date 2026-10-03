@@ -108,11 +108,8 @@ wc_cp1258_precompose(uint8_t c1, uint8_t c2)
         return 0;
 }
 
-void wc_conv_from_viet(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_viet(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     wc_ccs ccs1 = WcCesInfo[WC_CCS_INDEX(ces)].gset[1].ccs;
     wc_ccs ccs2 = WcCesInfo[WC_CCS_INDEX(ces)].gset[2].ccs;
     uint8_t* map = NULL;
@@ -130,15 +127,16 @@ void wc_conv_from_viet(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
     }
 
     wc_create_detect_map(ces, false);
+    const uint8_t* p;
     for (p = sp; p < ep && !WC_DETECT_MAP[*p]; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         if (*p & 0x80)

@@ -62,7 +62,7 @@ extern size_t wtf_len(const uint8_t* p);
 #define wtf_type(p) WTF_TYPE_MAP[(uint8_t)*(p)]
 
 extern void wtf_push(struct wc_option *WcOption, pStr os, wc_ccs ccs, uint32_t code);
-extern void wtf_push_unknown(struct wc_option *WcOption, pStr os, uint8_t* p, size_t len);
+extern void wtf_push_unknown(struct wc_option *WcOption, pStr os, const uint8_t* p, size_t len);
 extern wc_wchar_t wtf_parse(struct wc_option *WcOption, const uint8_t** p);
 extern wc_wchar_t wtf_parse1(const uint8_t** p);
 

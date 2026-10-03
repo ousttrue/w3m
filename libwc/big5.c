@@ -1,7 +1,6 @@
 #include "big5.h"
 #include "conv.h"
 #include "status.h"
-#include "search.h"
 #include "wtf.h"
 #include "ucs.h"
 
@@ -58,22 +57,20 @@ wc_cs94w_to_big5(wc_wchar_t cc)
     return cc;
 }
 
-void wc_conv_from_big5(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_big5(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     int state = WC_BIG5_NOSTATE;
 
+    const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {

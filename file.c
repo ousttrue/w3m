@@ -1797,7 +1797,8 @@ page_loaded:
         src = fopen(tmp->ptr, "w");
         if (src) {
             pStr s;
-            s = wc_Str_conv_strict(&WcOption, page, InnerCharset, charset);
+            s = wc_Str_conv_strict(&WcOption,
+                (const uint8_t*)page->ptr, (const uint8_t*)page->ptr + page->len, InnerCharset, charset);
             Strfputs(s, src);
             fclose(src);
         }
@@ -7007,7 +7008,8 @@ pager_next:
         else
             _tmp = Strnew_charp_n(l->lineBuf, l->len);
         pStr tmp = Strnew_size(_tmp->len);
-        wc_Str_conv(&WcOption, tmp, _tmp, InnerCharset, charset);
+        wc_Str_conv(&WcOption, tmp,
+            _tmp->ptr, _tmp->ptr + _tmp->len, InnerCharset, charset);
         Strfputs(tmp, f);
         if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
             putc('\n', f);

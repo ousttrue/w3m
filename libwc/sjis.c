@@ -191,24 +191,22 @@ wc_sjis_ext2_to_N(uint32_t c)
     return ub * 0x5e + (c & 0x7f) - 0x21;
 }
 
-void wc_conv_from_sjis(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_sjis(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     uint8_t jis[2];
     int state = WC_SJIS_NOSTATE;
     wc_wchar_t cc;
 
+    const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {
@@ -270,24 +268,22 @@ void wc_conv_from_sjis(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
     }
 }
 
-void wc_conv_from_sjisx0213(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_sjisx0213(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     uint8_t jis[2];
     int state = WC_SJIS_NOSTATE;
     wc_wchar_t cc;
 
+    const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {

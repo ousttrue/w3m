@@ -353,7 +353,7 @@ void wtf_push(struct wc_option *WcOption, pStr os, wc_ccs ccs, uint32_t code)
     Strcat_charp_n(os, (char*)s, n);
 }
 
-void wtf_push_unknown(struct wc_option *WcOption, pStr os, uint8_t* p, size_t len)
+void wtf_push_unknown(struct wc_option *WcOption, pStr os, const uint8_t* p, size_t len)
 {
     for (; len--; p++) {
         if (*p & 0x80)

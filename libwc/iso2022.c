@@ -68,11 +68,9 @@ wtf_push_iso2022(struct wc_option* WcOption, pStr os, wc_ccs ccs, uint32_t code)
     wtf_push(WcOption, os, ccs, code);
 }
 
-void wc_conv_from_iso2022(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_iso2022(struct wc_option* WcOption, pStr os, const uint8_t* sp, const uint8_t* ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t *p, *q = NULL;
+    const uint8_t *p, *q = NULL;
     int state = WC_ISO_NOSTATE;
     struct wc_status st;
     wc_ccs gl_ccs, gr_ccs;
@@ -80,12 +78,12 @@ void wc_conv_from_iso2022(struct wc_option* WcOption, pStr os, pStr is, wc_ces c
     for (p = sp; p < ep && !(WC_ISO_MAP[*p] & WC_ISO_MAP_DETECT); p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     wc_input_init(ces, &st);
     gl_ccs = st.design[st.gl];
@@ -250,9 +248,10 @@ void wc_conv_from_iso2022(struct wc_option* WcOption, pStr os, pStr is, wc_ces c
     }
 }
 
-int wc_parse_iso2022_esc(uint8_t** ptr, struct wc_status* st)
+int wc_parse_iso2022_esc(const uint8_t** ptr, struct wc_status* st)
 {
-    uint8_t *p = *ptr, state, f = 0, g = 0, cs = 0;
+    const uint8_t *p = *ptr;
+    uint8_t state, f = 0, g = 0, cs = 0;
 
     if (*p != WC_C_ESC)
         return 0;
@@ -824,7 +823,7 @@ void wc_char_conv_from_iso2022(struct wc_option* WcOption, pStr os, uint8_t c, s
 {
     static uint8_t buf[4];
     static size_t nbuf;
-    uint8_t* p;
+    const uint8_t* p;
     wc_ccs gl_ccs, gr_ccs;
 
     if (st->state == -1) {

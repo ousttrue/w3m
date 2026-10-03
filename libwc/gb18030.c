@@ -156,25 +156,23 @@ wc_ucs_to_gb18030(struct wc_option* WcOption, uint32_t ucs)
     return cc;
 }
 
-void wc_conv_from_gb18030(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
+void wc_conv_from_gb18030(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* sp = (uint8_t*)is->ptr;
-    uint8_t* ep = sp + is->len;
-    uint8_t* p;
     int state = WC_GB18030_NOSTATE;
     uint32_t gbk;
     wc_wchar_t cc;
     uint32_t ucs;
 
+    const uint8_t* p;
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
     if (p == ep) {
-        Strcopy(os, is);
+        Strcopy_begin_end(os, sp, ep);
         return;
     }
 
     if (p > sp)
-        Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (char*)sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {

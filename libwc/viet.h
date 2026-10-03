@@ -5,7 +5,7 @@ extern uint8_t wc_c0_tcvn57122_map[];
 extern uint8_t wc_c0_viscii112_map[];
 extern uint8_t wc_c0_vps2_map[];
 
-extern void wc_conv_from_viet(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces);
+extern void wc_conv_from_viet(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces);
 struct wc_option;
 extern void wc_push_to_viet(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);
 extern void wc_push_to_cp1258(pStr os, wc_wchar_t cc, struct wc_status* st);
