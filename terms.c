@@ -40,13 +40,16 @@ static void wc_putc_init(struct wc_option* WcOption, wc_ces f_ces, wc_ces t_ces)
     putc_f_ces = f_ces;
 }
 
-static void wc_putc(struct wc_option *WcOption, const char* c, FILE* f)
+static void wc_putc(struct wc_option* WcOption, const char* c, FILE* f)
 {
     const uint8_t* p;
 
-    if (putc_f_ces != WC_CES_WTF)
-        p = (const uint8_t*)wc_conv(WcOption, c, putc_f_ces, WC_CES_WTF)->ptr;
-    else
+    if (putc_f_ces != WC_CES_WTF) {
+        pStr os = Strnew();
+        wc_Str_conv(WcOption, os,
+            (const uint8_t*)c, (const uint8_t*)c + strlen(c), putc_f_ces, WC_CES_WTF);
+        p = (const uint8_t*)os->ptr;
+    } else
         p = (const uint8_t*)c;
 
     Strclear(putc_str);
@@ -55,7 +58,7 @@ static void wc_putc(struct wc_option *WcOption, const char* c, FILE* f)
     fwrite(putc_str->ptr, 1, putc_str->len, f);
 }
 
-static void wc_putc_end(struct wc_option *WcOption, FILE* f)
+static void wc_putc_end(struct wc_option* WcOption, FILE* f)
 {
     Strclear(putc_str);
     wc_push_end(WcOption, putc_str, &putc_st);
@@ -1030,13 +1033,13 @@ setgraphchar(void)
 }
 
 #define graphchar(c) (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c))
-#define GETSTR(v, s)                   \
-    {                                  \
-        v = pt;                        \
-        suc = tgetstr(s, &pt);         \
-        if (!suc)                      \
-            v = "";                    \
-        else                           \
+#define GETSTR(v, s)               \
+    {                              \
+        v = pt;                    \
+        suc = tgetstr(s, &pt);     \
+        if (!suc)                  \
+            v = "";                \
+        else                       \
             v = allocStr(suc).ptr; \
     }
 

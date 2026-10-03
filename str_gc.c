@@ -460,8 +460,10 @@ void cleanup_line(pStr s, enum LineMode mode)
  */
 pStr convertLine(bool do_chop, pStr line, int mode, wc_ces* charset, wc_ces doc_charset)
 {
-    line = wc_Str_conv_with_detect(&WcOption,
+    pStr os = Strnew_size(line->len);
+    wc_Str_conv_with_detect(&WcOption, os,
         (const uint8_t*)line->ptr, (const uint8_t*)line->ptr + line->len, charset, doc_charset, InnerCharset);
+    Strcopy(line, os);
     if (mode != RAW_MODE)
         cleanup_line(line, mode);
     // if (uf && uf->scheme == SCM_NEWS)

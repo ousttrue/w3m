@@ -747,8 +747,11 @@ int main(int argc, char** argv)
         if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
         retry_as_local_file:
             url = file_to_url(load_argv[i], CurrentDir)->ptr;
-        else
-            url = url_encode(conv_from_system(&WcOption, load_argv[i]), NULL, 0);
+        else {
+            pStr os = Strnew();
+            conv_from_system(&WcOption, os, load_argv[i]);
+            url = url_encode(os->ptr, NULL, 0);
+        }
         if (w3m_dump == DUMP_HEAD) {
             request = New(FormList);
             request->method = FORM_METHOD_HEAD;
@@ -1318,14 +1321,11 @@ dump_head(Buffer* buf)
         return;
     }
     for (ti = buf->document_header->first; ti; ti = ti->next) {
-#ifdef USE_M17N
-        printf("%s",
-            wc_conv_strict(&WcOption, ti->ptr, InnerCharset,
-                buf->document_charset)
-                ->ptr);
-#else
-        printf("%s", ti->ptr);
-#endif
+        pStr os = Strnew();
+        wc_Str_conv_strict(&WcOption, os,
+            (const uint8_t*)ti->ptr, (const uint8_t*)ti->ptr + strlen(ti->ptr), InnerCharset,
+            buf->document_charset);
+        printf("%s", os->ptr);
     }
     puts("");
 }
@@ -2050,8 +2050,11 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist(_("Pipe buffer to: "), "", IN_COMMAND, ShellHist).ptr;
     }
-    if (cmd != NULL)
-        cmd = conv_to_system(&WcOption, cmd);
+    if (cmd != NULL) {
+        pStr os = Strnew();
+        conv_to_system(&WcOption, os, cmd);
+        cmd = os->ptr;
+    }
     if (cmd == NULL || *cmd == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -2070,9 +2073,9 @@ DEFUN(pipeBuf, PIPE_BUF, "Pipe current buffer through a shell command and displa
         return;
     } else {
         buf->filename = cmd;
-        buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
-            conv_from_system(&WcOption, cmd))
-                              ->ptr;
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, cmd);
+        buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, os->ptr)->ptr;
         buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
         if (buf->type == NULL)
             buf->type = "text/plain";
@@ -2089,8 +2092,11 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output")
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist).ptr;
     }
-    if (cmd != NULL)
-        cmd = conv_to_system(&WcOption, cmd);
+    if (cmd != NULL) {
+        pStr os = Strnew();
+        conv_to_system(&WcOption, os, cmd);
+        cmd = os->ptr;
+    }
     if (cmd == NULL || *cmd == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -2115,8 +2121,11 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist).ptr;
     }
-    if (cmd != NULL)
-        cmd = conv_to_system(&WcOption, cmd);
+    if (cmd != NULL) {
+        pStr os = Strnew();
+        conv_to_system(&WcOption, os, cmd);
+        cmd = os->ptr;
+    }
     if (cmd == NULL || *cmd == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -2145,8 +2154,11 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
     if (cmd == NULL || *cmd == '\0') {
         cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist).ptr;
     }
-    if (cmd != NULL)
-        cmd = conv_to_system(&WcOption, cmd);
+    if (cmd != NULL) {
+        pStr os = Strnew();
+        conv_to_system(&WcOption, os, cmd);
+        cmd = os->ptr;
+    }
     if (cmd != NULL && *cmd != '\0') {
         fmTerm();
         printf("\n");
@@ -2166,8 +2178,11 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
     if (fn == NULL || *fn == '\0') {
         fn = inputFilenameHist(_("(Load)Filename? "), NULL, LoadHist).ptr;
     }
-    if (fn != NULL)
-        fn = conv_to_system(&WcOption, fn);
+    if (fn != NULL) {
+        pStr os = Strnew();
+        conv_to_system(&WcOption, os, fn);
+        fn = os->ptr;
+    }
     if (fn == NULL || *fn == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -2199,7 +2214,9 @@ cmd_loadfile(const char* fn)
 {
     Buffer* buf = loadGeneralFile(file_to_url(fn, CurrentDir)->ptr, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
-        char* emsg = Sprintf(_("%s not found"), conv_from_system(&WcOption, fn))->ptr;
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, fn);
+        char* emsg = Sprintf(_("%s not found"), os->ptr)->ptr;
         disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
@@ -3151,8 +3168,10 @@ conv_form_encoding(pStr is, FormItemList* fi, Buffer* buf)
         charset = fi->parent->charset;
     else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
         charset = buf->document_charset;
-    return wc_Str_conv_strict(&WcOption,
+    pStr os = Strnew();
+    wc_Str_conv_strict(&WcOption, os,
         (const uint8_t*)is->ptr, (const uint8_t*)is->ptr + is->len, InnerCharset, charset);
+    return os;
 }
 
 static void
@@ -4133,7 +4152,9 @@ cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* 
     refresh();
     Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
-        char* emsg = Sprintf(_("Can't load %s"), conv_from_system(&WcOption, url))->ptr;
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, url);
+        char* emsg = Sprintf(_("Can't load %s"), os->ptr)->ptr;
         disp_err_message(emsg, false);
     } else if (buf != NO_BUFFER) {
         pushBuffer(buf);
@@ -4268,6 +4289,13 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     pStr tmp;
     FormList* request;
 
+    pStr os = Strnew();
+    wc_Str_conv_strict(&WcOption, os,
+        (const uint8_t*)Currentbuf->buffername,
+        (const uint8_t*)Currentbuf->buffername + strlen(Currentbuf->buffername),
+        InnerCharset,
+        BookmarkCharset);
+
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
 #ifdef USE_M17N
                   "&charset=%s"
@@ -4277,10 +4305,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
 #ifdef USE_M17N
-        (Str_form_quote(wc_conv_strict(&WcOption, Currentbuf->buffername,
-             InnerCharset,
-             BookmarkCharset)))
-            ->ptr,
+        (Str_form_quote(os))->ptr,
         wc_ces_to_charset(BookmarkCharset));
 #else
         (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
@@ -4590,14 +4615,18 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
             return;
         }
     }
-    file = conv_to_system(&WcOption, qfile ? qfile : file);
+    pStr os = Strnew();
+    conv_to_system(&WcOption, os, qfile ? qfile : file);
+    file = os->ptr;
     if (*file == '|') {
         is_pipe = true;
         f = popen(file + 1, "w");
     } else {
         if (qfile) {
             file = unescape_spaces(Strnew_charp(qfile))->ptr;
-            file = conv_to_system(&WcOption, file);
+            pStr os = Strnew();
+            conv_to_system(&WcOption, os, file);
+            file = os->ptr;
         }
         file = expandPath(file)->ptr;
         if (!checkOverWrite(file)) {
@@ -4608,7 +4637,9 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
         is_pipe = false;
     }
     if (f == NULL) {
-        char* emsg = Sprintf(_("Can't open %s"), conv_from_system(&WcOption, file))->ptr;
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, file);
+        char* emsg = Sprintf(_("Can't open %s"), os->ptr)->ptr;
         disp_err_message(emsg, true);
         return;
     }
@@ -4628,9 +4659,11 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source")
     PermitSaveToPipe = true;
 
     char* file;
-    if (Currentbuf->real_scheme == SCM_LOCAL)
-        file = conv_from_system(&WcOption, guess_save_name(NULL, Currentbuf->currentURL.real_file)->ptr);
-    else
+    if (Currentbuf->real_scheme == SCM_LOCAL) {
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, guess_save_name(NULL, Currentbuf->currentURL.real_file)->ptr);
+        file = os->ptr;
+    } else
         file = guess_save_name(Currentbuf, Currentbuf->currentURL.file)->ptr;
 
     pStr fn;
@@ -5136,11 +5169,16 @@ invoke_browser(const char* url)
         }
         if (browser == NULL || *browser == '\0') {
             browser = inputStr("Browse command: ", NULL).ptr;
-            if (browser != NULL)
-                browser = conv_to_system(&WcOption, browser);
+            if (browser != NULL) {
+                pStr os = Strnew();
+                conv_to_system(&WcOption, os, browser);
+                browser = os->ptr;
+            }
         }
     } else {
-        browser = conv_to_system(&WcOption, browser);
+        pStr os = Strnew();
+        conv_to_system(&WcOption, os, browser);
+        browser = os->ptr;
     }
     if (browser == NULL || *browser == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -5653,7 +5691,9 @@ execdict(char* word)
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    w = conv_to_system(&WcOption, word);
+    pStr os = Strnew();
+    conv_to_system(&WcOption, os, word);
+    w = os->ptr;
     if (*w == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
@@ -6412,7 +6452,9 @@ DownloadListBuffer(void)
         if (lstat(d->lock, &st))
             d->running = false;
         Strcat_charp(src, "<pre>\n");
-        Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url), html_quote(conv_from_system(&WcOption, d->save))));
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, d->save);
+        Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url), html_quote(os->ptr)));
         duration = cur_time - d->time;
         if (!stat(d->save, &st)) {
             size = st.st_size;

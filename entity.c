@@ -18,6 +18,7 @@
 #ifdef USE_UNICODE
 #include "libwc/ucs.h"
 #include "libwc/utf8.h"
+#include "libwc/conv.h"
 #endif
 #endif
 #endif /* DUMMY */
@@ -2191,12 +2192,12 @@ static char *alt_latin1[ 96 ] = {
 
 const char* conv_entity(unsigned int c)
 {
-    char b = c & 0xff;
+    uint8_t b = c & 0xff;
 
     if (c < 0x20) /* C0 */
         return " ";
     if (c < 0x7f) /* ASCII */
-        return Strnew_charp_n(&b, 1)->ptr;
+        return Strnew_charp_n((const char*)&b, 1)->ptr;
     if (c < 0xa0) /* DEL, C1 */
         return " ";
     if (c == 0xa0)
@@ -2207,21 +2208,31 @@ const char* conv_entity(unsigned int c)
         if (UseAltEntity)
             return alt_latin1[c - 0xa0];
 #ifdef USE_M17N
-        return wc_conv_n(&WcOption, &b, 1, WC_CES_ISO_8859_1, InnerCharset)->ptr;
+        pStr os = Strnew();
+        wc_Str_conv(&WcOption, os,
+            &b, &b + 1, WC_CES_ISO_8859_1, InnerCharset);
+        return os->ptr;
 #else
-        return Strnew_charp_n(&b, 1)->ptr;
+        return Strnew_charp_n((const char*)&b, 1)->ptr;
 #endif
     }
 #ifdef USE_M17N
 #ifdef USE_UNICODE
     if (c <= WC_C_UCS4_END) { /* Unicode */
-        char* chk;
         uint8_t utf8[7];
         wc_ucs_to_utf8(c, utf8);
         /* we eventually need to display it so check DisplayCharset */
-        chk = wc_conv(&WcOption, (char*)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII)->ptr;
-        if (strcmp(chk, "?") != 0)
-            return wc_conv(&WcOption, (char*)utf8, WC_CES_UTF_8, InnerCharset)->ptr;
+        pStr os = Strnew();
+        wc_Str_conv(&WcOption, os,
+            utf8, utf8 + strlen((const char*)utf8), WC_CES_UTF_8,
+            DisplayCharset ? DisplayCharset : WC_CES_US_ASCII);
+        char* chk = os->ptr;
+        if (strcmp(chk, "?") != 0) {
+            pStr os = Strnew();
+            wc_Str_conv(&WcOption, os,
+                utf8, utf8 + strlen((const char*)utf8), WC_CES_UTF_8, InnerCharset);
+            return os->ptr;
+        }
     }
 #endif
 #endif

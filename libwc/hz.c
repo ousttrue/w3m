@@ -18,7 +18,7 @@ void wc_conv_from_hz(struct wc_option *WcOption, pStr os, const uint8_t *sp, con
     }
 
     if (p > sp)
-        Strcat_charp_n(os, sp, (int)(p - sp));
+        Strcat_charp_n(os, (const char*)sp, (int)(p - sp));
 
     for (; p < ep; p++) {
         switch (state) {

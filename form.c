@@ -564,8 +564,10 @@ form_fputs_decode(pStr s, FILE* f)
         }
     }
 
-    z = wc_Str_conv_strict(&WcOption,
+    pStr os = Strnew_size(z->len);
+    wc_Str_conv_strict(&WcOption, os,
         (const uint8_t*)z->ptr, (const uint8_t*)z->ptr + z->len, InnerCharset, DisplayCharset);
+    Strcopy(z, os);
 
     Strfputs(z, f);
 }

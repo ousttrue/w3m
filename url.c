@@ -146,7 +146,10 @@ pStr url_quote(const char* str)
 
 pStr url_quote_conv(const char* x, wc_ces c)
 {
-    return url_quote(wc_conv_strict(&WcOption, x, InnerCharset, c)->ptr);
+    int len = strlen(x);
+    pStr os = Strnew_size(len);
+    wc_Str_conv_strict(&WcOption, os, (const uint8_t*)x, (const uint8_t*)x + len, InnerCharset, c);
+    return url_quote(os->ptr);
 }
 
 enum CopyPathOption {
@@ -658,8 +661,7 @@ pStr file_to_url(const char* file, const char* CurrentDir)
     if (IS_ALPHA(file[0]) && file[1] == ':') {
         drive = allocStr(file).ptr;
         file += 2;
-    } else
-        if (file[0] != '/') {
+    } else if (file[0] != '/') {
         tmp = Strnew_charp(CurrentDir);
         if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');
@@ -684,4 +686,3 @@ pStr url_unquote_conv(const char* url, wc_ces charset)
     WcOption.auto_detect = old_auto_detect;
     return tmp;
 }
-

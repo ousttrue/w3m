@@ -593,7 +593,9 @@ interpret_mouse_action(FILE* mf)
         Strremovefirstspaces(line);
         if (line->len == 0)
             continue;
-        const char* p = conv_from_system(&WcOption, line->ptr);
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, line->ptr);
+        const char* p = os->ptr;
         const char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */
             continue;

@@ -1830,8 +1830,9 @@ initSelectMenu(void)
             case SCM_LOCAL:
                 if (strcmp(buf->currentURL.file, "-")) {
                     Strcat_char(str, ' ');
-                    Strcat_charp(str,
-                        conv_from_system(&WcOption, buf->currentURL.real_file));
+                    pStr os = Strnew();
+                    conv_from_system(&WcOption, os, buf->currentURL.real_file);
+                    Strcat(str, os);
                 }
                 break;
                 /* case SCM_UNKNOWN: */
@@ -2056,8 +2057,9 @@ initSelTabMenu(void)
             case SCM_LOCAL:
                 if (strcmp(buf->currentURL.file, "-")) {
                     Strcat_char(str, ' ');
-                    Strcat_charp(str,
-                        conv_from_system(&WcOption, buf->currentURL.real_file));
+                    pStr os = Strnew();
+                    conv_from_system(&WcOption, os, buf->currentURL.real_file);
+                    Strcat(str, os);
                 }
                 break;
                 /* case SCM_UNKNOWN: */
@@ -2348,20 +2350,20 @@ void initMenu(void)
     w3mMenuList[2].item = NULL;
     w3mMenuList[3].id = NULL;
 
-#ifdef USE_M17N
     if (!MainMenuEncode) {
         MenuItem* item;
-#ifdef ENABLE_NLS
         /* FIXME: charset that gettext(3) returns */
         MainMenuCharset = SystemCharset;
-#endif
-        for (item = MainMenuItem; item->type != MENU_END; item++)
-            item->label = wc_conv(&WcOption, _(item->label), MainMenuCharset,
-                InnerCharset)
-                              ->ptr;
+        for (item = MainMenuItem; item->type != MENU_END; item++) {
+            pStr os = Strnew();
+            const char* p = _(item->label);
+            wc_Str_conv(&WcOption, os,
+                (const uint8_t*)p, (const uint8_t*)p + strlen(p), MainMenuCharset, InnerCharset);
+            item->label = os->ptr;
+        }
         MainMenuEncode = true;
     }
-#endif
+
     if ((mf = fopen(confFile(MENU_FILE)->ptr, "rt")) != NULL) {
         interpret_menu(mf);
         fclose(mf);

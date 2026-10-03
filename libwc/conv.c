@@ -98,18 +98,16 @@ void wc_Str_conv(struct wc_option* WcOption, pStr os, const uint8_t* sp, const u
     }
 }
 
-pStr wc_Str_conv_strict(struct wc_option* _WcOption, const uint8_t* sp, const uint8_t* ep, wc_ces f_ces, wc_ces t_ces)
+void wc_Str_conv_strict(struct wc_option* _WcOption, pStr os, const uint8_t* sp, const uint8_t* ep, wc_ces f_ces, wc_ces t_ces)
 {
     struct wc_option WcOption = *_WcOption;
     WcOption.strict_iso2022 = true;
     WcOption.no_replace = true;
     WcOption.fix_width_conv = false;
-    pStr os = Strnew_size(ep-sp);
     wc_Str_conv(&WcOption, os, sp, ep, f_ces, t_ces);
-    return os;
 }
 
-pStr wc_Str_conv_with_detect(struct wc_option* WcOption, const uint8_t* sp, const uint8_t* ep, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
+void wc_Str_conv_with_detect(struct wc_option* WcOption, pStr os, const uint8_t* sp, const uint8_t* ep, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
 {
     wc_ces detect;
     if (*f_ces == WC_CES_WTF || hint == WC_CES_WTF) {
@@ -130,9 +128,7 @@ pStr wc_Str_conv_with_detect(struct wc_option* WcOption, const uint8_t* sp, cons
                 *f_ces = detect;
         }
     }
-    pStr os = Strnew_size(ep-sp);
     wc_Str_conv(WcOption, os, sp, ep, detect, t_ces);
-    return os;
 }
 
 void wc_push_end(struct wc_option* WcOption, pStr os, struct wc_status* st)

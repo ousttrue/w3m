@@ -222,12 +222,15 @@ writeBufferName(Buffer* buf, int n)
     if (buf->filename != NULL) {
         switch (buf->currentURL.scheme) {
         case SCM_LOCAL:
-        case SCM_LOCAL_CGI:
+        case SCM_LOCAL_CGI: {
+            pStr os = Strnew_size(strlen(buf->currentURL.real_file));
+            conv_from_system(&WcOption, os, buf->currentURL.real_file);
             if (strcmp(buf->currentURL.file, "-")) {
                 Strcat_char(msg, ' ');
-                Strcat_charp(msg, conv_from_system(&WcOption, buf->currentURL.real_file));
+                Strcat(msg, os);
             }
             break;
+        }
         case SCM_UNKNOWN:
         case SCM_MISSING:
             break;

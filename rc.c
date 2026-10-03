@@ -1148,13 +1148,17 @@ void show_params(FILE* fp)
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
         const char* cmt;
-        if (!OptionEncode)
-            cmt = wc_conv(&WcOption, _(sections[j].name), OptionCharset,
-                InnerCharset)
-                      ->ptr;
-        else
+        if (!OptionEncode) {
+            pStr os = Strnew();
+            const char* p = _(sections[j].name);
+            wc_Str_conv(&WcOption, os,
+                (const uint8_t*)p, (const uint8_t*)p + strlen(p), OptionCharset, InnerCharset);
+            cmt = os->ptr;
+        } else
             cmt = sections[j].name;
-        fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(&WcOption, cmt));
+        pStr os = Strnew();
+        conv_to_system(&WcOption, os, cmt);
+        fprintf(fp, "  section[%d]: %s\n", j, os->ptr);
         i = 0;
         while (sections[j].params[i].name) {
             switch (sections[j].params[i].type) {
@@ -1192,20 +1196,22 @@ void show_params(FILE* fp)
                 t = "percent";
                 break;
             }
-#ifdef USE_M17N
-            if (!OptionEncode)
-                cmt = wc_conv(&WcOption, _(sections[j].params[i].comment),
-                    OptionCharset, InnerCharset)
-                          ->ptr;
-            else
-#endif
+            if (!OptionEncode) {
+                pStr os = Strnew();
+                const char* sp = _(sections[j].params[i].comment);
+                wc_Str_conv(&WcOption, os,
+                    (const uint8_t*)sp, (const uint8_t*)sp + strlen(sp),
+                    OptionCharset, InnerCharset);
+                cmt = os->ptr;
+            } else
                 cmt = sections[j].params[i].comment;
             l = 30 - (strlen(sections[j].params[i].name) + strlen(t));
             if (l < 0)
                 l = 1;
+            pStr os = Strnew();
+            conv_to_system(&WcOption, os, cmt);
             fprintf(fp, "    -o %s=<%s>%*s%s\n",
-                sections[j].params[i].name, t, l, " ",
-                conv_to_system(&WcOption, cmt));
+                sections[j].params[i].name, t, l, " ", os->ptr);
             i++;
         }
     }
@@ -1690,10 +1696,13 @@ to_str(struct param_ptr* p)
         return Sprintf("%c", *(char*)p->varptr);
     case P_STRING:
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-    case P_SSLPATH:
+    case P_SSLPATH: {
 #endif
         /*  SystemCharset -> InnerCharset */
-        return Strnew_charp(conv_from_system(&WcOption, *(char**)p->varptr));
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, *(char**)p->varptr);
+        return os;
+    }
     case P_PIXELS:
     case P_SCALE:
         return Sprintf("%g", *(double*)p->varptr);
@@ -1723,32 +1732,44 @@ load_option_panel(void)
         wc_Str_conv(&WcOption, optionpanel_str,
             (const uint8_t*)tmp->ptr, (const uint8_t*)tmp->ptr + tmp->len, OptionCharset, InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
-            sections[i].name = wc_conv(&WcOption, _(sections[i].name), OptionCharset,
-                InnerCharset)
-                                   ->ptr;
+            pStr os = Strnew();
+            const char* x = _(sections[i].name);
+            wc_Str_conv(&WcOption, os,
+                (const uint8_t*)x,
+                (const uint8_t*)x + strlen(x), OptionCharset,
+                InnerCharset);
+            sections[i].name = os->ptr;
             for (p = sections[i].params; p->name; p++) {
-                p->comment = wc_conv(&WcOption, _(p->comment), OptionCharset,
-                    InnerCharset)
-                                 ->ptr;
+                pStr os = Strnew();
+                const char* x = _(p->comment);
+                wc_Str_conv(&WcOption, os,
+                    (const uint8_t*)x, (const uint8_t*)x + strlen(x), OptionCharset, InnerCharset);
+                p->comment = os->ptr;
                 if (p->inputtype == PI_SEL_C
 #ifdef USE_COLOR
                     && p->select != colorstr
 #endif
                 ) {
                     for (s = (struct sel_c*)p->select; s->text != NULL; s++) {
-                        s->text = wc_conv(&WcOption, _(s->text), OptionCharset,
-                            InnerCharset)
-                                      ->ptr;
+                        pStr os = Strnew();
+                        const char* x = _(s->text);
+                        wc_Str_conv(&WcOption, os,
+                            (const uint8_t*)x, (const uint8_t*)x + strlen(x), OptionCharset, InnerCharset);
+                        s->text = os->ptr;
                     }
                 }
             }
         }
-#ifdef USE_COLOR
-        for (s = colorstr; s->text; s++)
-            s->text = wc_conv(&WcOption, _(s->text), OptionCharset,
-                InnerCharset)
-                          ->ptr;
-#endif
+
+        for (s = colorstr; s->text; s++) {
+            pStr os = Strnew();
+            const char* x = _(s->text);
+            wc_Str_conv(&WcOption, os,
+                (const uint8_t*)x,
+                (const uint8_t*)x + strlen(x), OptionCharset, InnerCharset);
+            s->text = os->ptr;
+        }
+
         OptionEncode = true;
     }
 
@@ -1841,7 +1862,9 @@ void panel_set_option(struct parsed_tagarg* arg)
     while (arg) {
         /*  InnerCharset -> SystemCharset */
         if (arg->value) {
-            p = conv_to_system(&WcOption, arg->value);
+            pStr os = Strnew();
+            conv_to_system(&WcOption, os, arg->value);
+            p = os->ptr;
             if (set_param(arg->arg, p)) {
                 tmp = Sprintf("%s %s\n", arg->arg, p);
                 Strcat(tmp, s);

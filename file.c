@@ -188,8 +188,11 @@ loadSomething(URLFile* f,
 
     if (buf->buffername == NULL || buf->buffername[0] == '\0') {
         buf->buffername = checkHeader(buf, "Subject:");
-        if (buf->buffername == NULL && buf->filename != NULL)
-            buf->buffername = conv_from_system(&WcOption, mybasename(buf->filename));
+        if (buf->buffername == NULL && buf->filename != NULL) {
+            pStr os = Strnew_size(strlen(buf->filename));
+            conv_from_system(&WcOption, os, mybasename(buf->filename));
+            buf->buffername = os->ptr;
+        }
     }
     if (buf->currentURL.scheme == SCM_UNKNOWN)
         buf->currentURL.scheme = f->scheme;
@@ -1406,7 +1409,9 @@ static pStr loadLocalDir(const char* dname)
         Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)->ptr), NULL);
         if (S_ISDIR(st.st_mode))
             Strcat_char(tmp, '/');
-        Strcat_m_charp(tmp, "\">", html_quote(conv_from_system(&WcOption, p)), NULL);
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, p);
+        Strcat_m_charp(tmp, "\">", html_quote(os->ptr), NULL);
         if (S_ISDIR(st.st_mode))
             Strcat_char(tmp, '/');
         Strcat_charp(tmp, "</A>");
@@ -1421,8 +1426,10 @@ static pStr loadLocalDir(const char* dname)
             if (S_ISLNK(lst.st_mode)) {
                 if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
                     lbuf[l] = '\0';
+                    pStr os = Strnew();
+                    conv_from_system(&WcOption, os, lbuf);
                     Strcat_m_charp(tmp, " -> ",
-                        html_quote(conv_from_system(&WcOption, lbuf)), NULL);
+                        html_quote(os->ptr), NULL);
                     if (S_ISDIR(st.st_mode))
                         Strcat_char(tmp, '/');
                 }
@@ -1796,8 +1803,8 @@ page_loaded:
         tmp = tmpfname(CurrentPid, TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
         if (src) {
-            pStr s;
-            s = wc_Str_conv_strict(&WcOption,
+            pStr s = Strnew();
+            wc_Str_conv_strict(&WcOption, s,
                 (const uint8_t*)page->ptr, (const uint8_t*)page->ptr + page->len, InnerCharset, charset);
             Strfputs(s, src);
             fclose(src);
@@ -1842,7 +1849,9 @@ page_loaded:
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
                 f.modtime = st.st_mtime;
-            file = conv_from_system(&WcOption, guess_save_name(NULL, pu.real_file)->ptr);
+            pStr os = Strnew();
+            conv_from_system(&WcOption, os, guess_save_name(NULL, pu.real_file)->ptr);
+            file = os->ptr;
         } else
             file = guess_save_name(t_buf, pu.file)->ptr;
         if (doFileSave(f, file) == 0)
@@ -1895,8 +1904,9 @@ page_loaded:
             TRAP_OFF;
             if (pu.scheme == SCM_LOCAL) {
                 UFclose(&f);
-                _doFileCopy(pu.real_file,
-                    conv_from_system(&WcOption, guess_save_name(NULL, pu.real_file)->ptr), true);
+                pStr os = Strnew();
+                conv_from_system(&WcOption, os, guess_save_name(NULL, pu.real_file)->ptr);
+                _doFileCopy(pu.real_file, os->ptr, true);
             } else {
                 if (DecodeCTE && f.stream->type != IST_ENCODED)
                     f.stream = newEncodedStream(f.stream, f.encoding);
@@ -1913,7 +1923,9 @@ page_loaded:
     if (t_buf == NULL)
         t_buf = newBuffer(INIT_BUFFER_WIDTH);
     t_buf->currentURL = copyParsedURL(&pu);
-    t_buf->filename = pu.real_file ? pu.real_file : pu.file ? conv_to_system(&WcOption, pu.file)
+    pStr os = Strnew();
+    conv_to_system(&WcOption, os, pu.file);
+    t_buf->filename = pu.real_file ? pu.real_file : pu.file ? os->ptr
                                                             : NULL;
     if (flag & RG_FRAME) {
         t_buf->bufferprop |= BP_FRAME;
@@ -7009,7 +7021,7 @@ pager_next:
             _tmp = Strnew_charp_n(l->lineBuf, l->len);
         pStr tmp = Strnew_size(_tmp->len);
         wc_Str_conv(&WcOption, tmp,
-            _tmp->ptr, _tmp->ptr + _tmp->len, InnerCharset, charset);
+            (const uint8_t*)_tmp->ptr, (const uint8_t*)_tmp->ptr + _tmp->len, InnerCharset, charset);
         Strfputs(tmp, f);
         if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
             putc('\n', f);
@@ -7063,9 +7075,9 @@ getshell(const char* cmd)
     if (buf == NULL)
         return NULL;
     buf->filename = cmd;
-    buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME,
-        conv_from_system(&WcOption, cmd))
-                          ->ptr;
+    pStr os = Strnew();
+    conv_from_system(&WcOption, os, cmd);
+    buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, os->ptr)->ptr;
     return buf;
 }
 
@@ -7086,9 +7098,9 @@ getpipe(const char* cmd)
     buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->pagerSource = newFileStream(f, pclose);
     buf->filename = cmd;
-    buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
-        conv_from_system(&WcOption, cmd))
-                          ->ptr;
+    pStr os = Strnew();
+    conv_from_system(&WcOption, os, cmd);
+    buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, os->ptr)->ptr;
     buf->bufferprop |= BP_PIPE;
     buf->document_charset = WC_CES_US_ASCII;
     return buf;
@@ -7107,8 +7119,11 @@ openPagerBuffer(struct input_stream* stream, Buffer* buf)
     buf->buffername = getenv("MAN_PN");
     if (buf->buffername == NULL)
         buf->buffername = PIPEBUFFERNAME;
-    else
-        buf->buffername = conv_from_system(&WcOption, buf->buffername);
+    else {
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, buf->buffername);
+        buf->buffername = os->ptr;
+    }
     buf->bufferprop |= BP_PIPE;
     if (content_charset && UseContentCharset)
         buf->document_charset = content_charset;
@@ -7225,12 +7240,12 @@ Line* getNextPage(Buffer* buf, int plen)
             return NULL;
         if (lineBuf2->len == 0) {
             /* Assume that `cmd == buf->filename' */
-            if (buf->filename)
-                buf->buffername = Sprintf("%s %s",
-                    CPIPEBUFFERNAME,
-                    conv_from_system(&WcOption, buf->filename))
+            if (buf->filename) {
+                pStr os = Strnew();
+                conv_from_system(&WcOption, os, buf->filename);
+                buf->buffername = Sprintf("%s %s", CPIPEBUFFERNAME, os->ptr)
                                       ->ptr;
-            else if (getenv("MAN_PN") == NULL)
+            } else if (getenv("MAN_PN") == NULL)
                 buf->buffername = CPIPEBUFFERNAME;
             buf->bufferprop |= BP_CLOSE;
             break;
@@ -7373,8 +7388,11 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
     if (uf.stream->type != IST_ENCODED)
         uf.stream = newEncodedStream(uf.stream, uf.encoding);
     header = checkHeader(defaultbuf, "Content-Type:");
-    if (header)
-        header = conv_to_system(&WcOption, header);
+    if (header) {
+        pStr os = Strnew();
+        conv_to_system(&WcOption, os, header);
+        header = os->ptr;
+    }
     command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
     if (!(mc_stat & MCSTAT_REPNAME)) {
         pStr tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr)->ptr);
@@ -7436,8 +7454,11 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
         buf = NO_BUFFER;
     }
     if (buf && buf != NO_BUFFER) {
-        if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->filename)
-            buf->buffername = conv_from_system(&WcOption, mybasename(buf->filename));
+        if ((buf->buffername == NULL || buf->buffername[0] == '\0') && buf->filename) {
+            pStr os = Strnew();
+            conv_from_system(&WcOption, os, mybasename(buf->filename));
+            buf->buffername = os->ptr;
+        }
         buf->edit = mcap->edit;
         buf->mailcap = mcap;
     }
@@ -7503,28 +7524,38 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
                     .ptr;
             if (q == NULL || *q == '\0')
                 return false;
-            p = conv_to_system(&WcOption, q);
+            pStr os = Strnew();
+            conv_to_system(&WcOption, os, q);
+            p = os->ptr;
         }
         if (*p == '|' && PermitSaveToPipe)
             is_pipe = true;
         else {
             if (q) {
                 p = unescape_spaces(Strnew_charp(q))->ptr;
-                p = conv_to_system(&WcOption, p);
+                pStr os = Strnew();
+                conv_to_system(&WcOption, os, p);
+                p = os->ptr;
             }
             p = expandPath(p)->ptr;
             if (!checkOverWrite(p))
                 return -1;
         }
         if (checkCopyFile(tmpf, p) < 0) {
+            pStr os = Strnew();
+            conv_from_system(&WcOption, os, tmpf);
+            pStr x = Strnew();
+            conv_from_system(&WcOption, x, p);
             msg = Sprintf(_("Can't copy. %s and %s are identical."),
-                conv_from_system(&WcOption, tmpf), conv_from_system(&WcOption, p));
+                os->ptr, x->ptr);
             disp_err_message(msg->ptr, false);
             return -1;
         }
         if (!download) {
             if (_MoveFile(tmpf, p) < 0) {
-                msg = Sprintf(_("Can't save to %s"), conv_from_system(&WcOption, p));
+                pStr os = Strnew();
+                conv_from_system(&WcOption, os, p);
+                msg = Sprintf(_("Can't save to %s"), os->ptr);
                 disp_err_message(msg->ptr, false);
             }
             return -1;
@@ -7542,7 +7573,9 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         }
         if (!stat(tmpf, &st))
             size = st.st_size;
-        addDownloadList(pid, conv_from_system(&WcOption, tmpf), p, lock, size);
+        pStr os = Strnew();
+        conv_from_system(&WcOption, os, tmpf);
+        addDownloadList(pid, os->ptr, p, lock, size);
     } else {
         char* q = allocStr(searchKeyData()).ptr;
         if (q == NULL || *q == '\0') {
@@ -7606,13 +7639,17 @@ int doFileSave(URLFile uf, const char* defstr)
                     .ptr;
             if (p == NULL || *p == '\0')
                 return -1;
-            p = conv_to_system(&WcOption, p);
+            pStr os = Strnew();
+            conv_to_system(&WcOption, os, p);
+            p = os->ptr;
         }
         if (!checkOverWrite(p))
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
+            pStr os = Strnew();
+            conv_from_system(&WcOption, os, p);
             pStr msg = Sprintf(_("Can't save. Load file and %s are identical."),
-                conv_from_system(&WcOption, p));
+                os->ptr);
             disp_err_message(msg->ptr, false);
             return -1;
         }

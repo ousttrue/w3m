@@ -783,7 +783,9 @@ disp_next:
             clrtoeolx();
             f = Strdup(d);
             Strcat_charp(f, CFileBuf[n]);
-            addstr(conv_from_system(&WcOption, CFileBuf[n]));
+            pStr os = Strnew_size(strlen(CFileBuf[n]));
+            conv_from_system(&WcOption, os, CFileBuf[n]);
+            addstr(os->ptr);
             if (stat(expandPath(f->ptr)->ptr, &st) != -1 && S_ISDIR(st.st_mode))
                 addstr("/");
         }

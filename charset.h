@@ -1,8 +1,6 @@
 #pragma once
-#include "config.h"
 #include "str_gc.h"
 #include "libwc/conv.h"
-#include "libwc/wtf.h"
 
 extern wc_ces DisplayCharset;
 extern wc_ces DocumentCharset;
@@ -22,8 +20,10 @@ static inline pStr Str_conv_from_system(struct wc_option* WcOption, pStr x)
 }
 static inline pStr Str_conv_to_system(struct wc_option* WcOption, pStr x)
 {
-    return wc_Str_conv_strict(WcOption,
+    pStr os = Strnew_size(x->len);
+    wc_Str_conv_strict(WcOption, os,
         (const uint8_t*)x->ptr, (const uint8_t*)x->ptr + x->len, InnerCharset, SystemCharset);
+    return os;
 }
 static inline pStr Str_conv_to_halfdump(struct wc_option* WcOption, pStr x)
 {
@@ -35,11 +35,13 @@ static inline pStr Str_conv_to_halfdump(struct wc_option* WcOption, pStr x)
         Strcopy(os, x);
     return os;
 }
-static inline char* conv_from_system(struct wc_option* WcOption, const char* x)
+static inline void conv_from_system(struct wc_option* WcOption, pStr os, const char* is)
 {
-    return wc_conv(WcOption, (x), SystemCharset, InnerCharset)->ptr;
+    wc_Str_conv(WcOption, os, (const uint8_t*)is, (const uint8_t*)is + strlen(is), SystemCharset, InnerCharset);
 }
-static inline char* conv_to_system(struct wc_option* WcOption, const char* x)
+static inline void conv_to_system(struct wc_option* WcOption, pStr os, const char* is)
 {
-    return wc_conv_strict(WcOption, (x), InnerCharset, SystemCharset)->ptr;
+    wc_Str_conv_strict(WcOption, os,
+        (const uint8_t*)is,
+        (const uint8_t*)is + strlen(is), InnerCharset, SystemCharset);
 }

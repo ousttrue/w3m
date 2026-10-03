@@ -135,7 +135,7 @@ wc_utf8_to_ucs(uint8_t* utf8)
 
 void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, const uint8_t *sp, const uint8_t *ep, wc_ces ces)
 {
-    uint8_t* q = NULL;
+    const uint8_t* q = NULL;
     int state = WC_UTF8_NOSTATE;
     size_t next = 0;
     uint32_t ucs;
