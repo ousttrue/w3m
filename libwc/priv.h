@@ -88,7 +88,7 @@
 #define WC_F_C1 0x01
 
 struct wc_status;
-extern pStr wc_char_conv_from_priv1(struct wc_option *WcOption, uint8_t c, struct wc_status* st);
-extern void wc_push_to_raw(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);
-extern pStr wc_conv_from_priv1(struct wc_option* WcOption, pStr is, wc_ces ces);
-extern pStr wc_conv_from_ascii(struct wc_option* WcOption, pStr is, wc_ces ces);
+extern void wc_char_conv_from_priv1(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st);
+extern void wc_push_to_raw(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);
+extern void wc_conv_from_priv1(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces);
+extern void wc_conv_from_ascii(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces);

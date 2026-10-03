@@ -124,5 +124,5 @@ extern void wc_push_to_iso2022_end(struct wc_option *WcOption, pStr os, struct w
 extern int wc_parse_iso2022_esc(uint8_t** ptr, struct wc_status* st);
 extern void wc_push_iso2022_esc(pStr os, wc_ccs ccs, uint8_t g, uint8_t invoke, struct wc_status* st);
 extern void wc_create_gmap(struct wc_option* WcOption, struct wc_status* st);
-extern pStr wc_char_conv_from_iso2022(struct wc_option* WcOption, uint8_t c, struct wc_status* st);
-pStr wc_conv_from_iso2022(struct wc_option* WcOption, pStr is, wc_ces ces);
+extern void wc_char_conv_from_iso2022(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st);
+void wc_conv_from_iso2022(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces);

@@ -211,9 +211,9 @@ inline static enum WC_CES_N WC_CES_INDEX(wc_ces c)
 
 struct wc_status;
 struct wc_option;
-typedef pStr (*ConvFromFunc)(struct wc_option*, pStr, wc_ces);
-typedef void (*PushToFunc)(struct wc_option*, pStr, wc_wchar_t, struct wc_status*);
-typedef pStr (*CharConvFunc)(struct wc_option*, uint8_t, struct wc_status*);
+typedef void (*ConvFromFunc)(struct wc_option*, pStr os, pStr is, wc_ces);
+typedef void (*PushToFunc)(struct wc_option*, pStr os, wc_wchar_t, struct wc_status*);
+typedef void (*CharConvFunc)(struct wc_option*, pStr os, uint8_t, struct wc_status*);
 
 typedef struct wc_ces_info {
     wc_ces id;
@@ -227,4 +227,3 @@ typedef struct wc_ces_info {
 } wc_ces_info;
 // indexed by WC_CES_INDEX
 extern wc_ces_info WcCesInfo[];
-

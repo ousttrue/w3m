@@ -561,7 +561,6 @@ const char*
 wtf_conv_fit(struct wc_option *WcOption, const char* s, wc_ces ces)
 {
     const uint8_t* p;
-    pStr os;
     wc_wchar_t cc;
     wc_ces major_ces;
     bool pre_conv, ucs_conv;
@@ -574,7 +573,7 @@ wtf_conv_fit(struct wc_option *WcOption, const char* s, wc_ces ces)
     if (!*p)
         return s;
 
-    os = Strnew_size(strlen(s));
+    pStr os = Strnew_size(strlen(s));
     if (p > (const uint8_t*)s)
         Strcopy_charp_n(os, s, (int)(p - (const uint8_t*)s));
 

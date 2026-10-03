@@ -11,6 +11,7 @@
 #define LB WC_BIG5_MAP_LB
 #define UB WC_BIG5_MAP_UB
 
+// clang-format off
 uint8_t WC_BIG5_MAP[ 0x100 ] = {
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
     C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
@@ -30,16 +31,17 @@ uint8_t WC_BIG5_MAP[ 0x100 ] = {
     UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
     UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, C1,
 };
+// clang-format on
 
 wc_wchar_t
 wc_big5_to_cs94w(wc_wchar_t cc)
 {
     cc.code = WC_BIG5_N(cc.code);
     if (cc.code < WC_C_BIG5_2_BASE)
-	cc.ccs = WC_CCS_BIG5_1;
+        cc.ccs = WC_CCS_BIG5_1;
     else {
-	cc.ccs = WC_CCS_BIG5_2;
-	cc.code -= WC_C_BIG5_2_BASE;
+        cc.ccs = WC_CCS_BIG5_2;
+        cc.code -= WC_C_BIG5_2_BASE;
     }
     cc.code = WC_N_CS94W(cc.code);
     return cc;
@@ -50,124 +52,118 @@ wc_cs94w_to_big5(wc_wchar_t cc)
 {
     cc.code = WC_CS94W_N(cc.code);
     if (cc.ccs == WC_CCS_BIG5_2)
-	cc.code += WC_C_BIG5_2_BASE;
+        cc.code += WC_C_BIG5_2_BASE;
     cc.code = WC_N_BIG5(cc.code);
     cc.ccs = WC_CCS_BIG5;
     return cc;
 }
 
-pStr
-wc_conv_from_big5(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_big5(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
-    uint8_t *sp = (uint8_t *)is->ptr;
-    uint8_t *ep = sp + is->len;
-    uint8_t *p;
+    uint8_t* sp = (uint8_t*)is->ptr;
+    uint8_t* ep = sp + is->len;
+    uint8_t* p;
     int state = WC_BIG5_NOSTATE;
 
-    for (p = sp; p < ep && *p < 0x80; p++) 
-	;
-    if (p == ep)
-	return is;
-    os = Strnew_size(is->len);
+    for (p = sp; p < ep && *p < 0x80; p++)
+        ;
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
-	Strcat_charp_n(os, (char *)is->ptr, (int)(p - sp));
+        Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
 
     for (; p < ep; p++) {
-	switch (state) {
-	case WC_BIG5_NOSTATE:
-	    switch (WC_BIG5_MAP[*p]) {
-	    case UB:
-		state = WC_BIG5_MBYTE1;
-		break;
-	    case C1:
-		wtf_push_unknown(WcOption, os, p, 1);
-		break;
-	    default:
-		Strcat_char(os, (char)*p);
-		break;
-	    }
-	    break;
-	case WC_BIG5_MBYTE1:
-	    if (WC_BIG5_MAP[*p] & LB)
-		wtf_push(WcOption, os, WC_CCS_BIG5, ((uint32_t)*(p-1) << 8) | *p);
-	    else
-		wtf_push_unknown(WcOption, os, p-1, 2);
-	    state = WC_BIG5_NOSTATE;
-	    break;
-	}
+        switch (state) {
+        case WC_BIG5_NOSTATE:
+            switch (WC_BIG5_MAP[*p]) {
+            case UB:
+                state = WC_BIG5_MBYTE1;
+                break;
+            case C1:
+                wtf_push_unknown(WcOption, os, p, 1);
+                break;
+            default:
+                Strcat_char(os, (char)*p);
+                break;
+            }
+            break;
+        case WC_BIG5_MBYTE1:
+            if (WC_BIG5_MAP[*p] & LB)
+                wtf_push(WcOption, os, WC_CCS_BIG5, ((uint32_t)*(p - 1) << 8) | *p);
+            else
+                wtf_push_unknown(WcOption, os, p - 1, 2);
+            state = WC_BIG5_NOSTATE;
+            break;
+        }
     }
     switch (state) {
     case WC_BIG5_MBYTE1:
-	wtf_push_unknown(WcOption, os, p-1, 1);
-	break;
+        wtf_push_unknown(WcOption, os, p - 1, 1);
+        break;
     }
-    return os;
 }
 
-void
-wc_push_to_big5(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status *st)
+void wc_push_to_big5(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
-  while (1) {
-    switch (cc.ccs) {
-    case WC_CCS_US_ASCII:
-	Strcat_char(os, (char)cc.code);
-	return;
-    case WC_CCS_BIG5_1:
-    case WC_CCS_BIG5_2:
-	cc = wc_cs94w_to_big5(cc);
-    case WC_CCS_BIG5:
-	Strcat_char(os, (char)(cc.code >> 8));
-	Strcat_char(os, (char)(cc.code & 0xff));
-	return;
-    case WC_CCS_UNKNOWN_W:
-	if (!WcOption->no_replace)
-	    Strcat_charp(os, WC_REPLACE_W);
-	return;
-    case WC_CCS_UNKNOWN:
-	if (!WcOption->no_replace)
-	    Strcat_charp(os, WC_REPLACE);
-	return;
-    default:
-	if (WcOption->ucs_conv)
-	    cc = wc_any_to_any_ces(WcOption, cc, st);
-	else
-	    cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
-	continue;
+    while (1) {
+        switch (cc.ccs) {
+        case WC_CCS_US_ASCII:
+            Strcat_char(os, (char)cc.code);
+            return;
+        case WC_CCS_BIG5_1:
+        case WC_CCS_BIG5_2:
+            cc = wc_cs94w_to_big5(cc);
+        case WC_CCS_BIG5:
+            Strcat_char(os, (char)(cc.code >> 8));
+            Strcat_char(os, (char)(cc.code & 0xff));
+            return;
+        case WC_CCS_UNKNOWN_W:
+            if (!WcOption->no_replace)
+                Strcat_charp(os, WC_REPLACE_W);
+            return;
+        case WC_CCS_UNKNOWN:
+            if (!WcOption->no_replace)
+                Strcat_charp(os, WC_REPLACE);
+            return;
+        default:
+            if (WcOption->ucs_conv)
+                cc = wc_any_to_any_ces(WcOption, cc, st);
+            else
+                cc.ccs = WC_CCS_IS_WIDE(cc.ccs) ? WC_CCS_UNKNOWN_W : WC_CCS_UNKNOWN;
+            continue;
+        }
     }
-  }
 }
 
-pStr
-wc_char_conv_from_big5(struct wc_option *WcOption, uint8_t c, struct wc_status *st)
+void wc_char_conv_from_big5(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t big5u;
 
     if (st->state == -1) {
-	st->state = WC_BIG5_NOSTATE;
-	os = Strnew_size(8);
+        st->state = WC_BIG5_NOSTATE;
     }
 
     switch (st->state) {
     case WC_BIG5_NOSTATE:
-	switch (WC_BIG5_MAP[c]) {
-	case UB:
-	    big5u = c;
-	    st->state = WC_BIG5_MBYTE1;
-	    return NULL;
-	case C1:
-	    break;
-	default:
-	    Strcat_char(os, (char)c);
-	    break;
-	}
-	break;
+        switch (WC_BIG5_MAP[c]) {
+        case UB:
+            big5u = c;
+            st->state = WC_BIG5_MBYTE1;
+            return;
+        case C1:
+            break;
+        default:
+            Strcat_char(os, (char)c);
+            break;
+        }
+        break;
     case WC_BIG5_MBYTE1:
-	if (WC_BIG5_MAP[c] & LB)
-	    wtf_push(WcOption, os, WC_CCS_BIG5, ((uint32_t)big5u << 8) | c);
-	break;
+        if (WC_BIG5_MAP[c] & LB)
+            wtf_push(WcOption, os, WC_CCS_BIG5, ((uint32_t)big5u << 8) | c);
+        break;
     }
     st->state = -1;
-    return os;
 }

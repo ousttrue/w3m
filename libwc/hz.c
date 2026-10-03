@@ -5,9 +5,8 @@
 #include "wtf.h"
 #include "ucs.h"
 
-pStr wc_conv_from_hz(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_hz(struct wc_option *WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -15,9 +14,11 @@ pStr wc_conv_from_hz(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80 && *p != WC_C_HZ_TILDA; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep){
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
@@ -87,7 +88,6 @@ pStr wc_conv_from_hz(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 1, 1);
         break;
     }
-    return os;
 }
 
 void wc_push_to_hz(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)

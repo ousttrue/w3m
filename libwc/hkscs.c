@@ -69,9 +69,8 @@ wc_hkscs_to_N(uint32_t c)
     return WC_HKSCS_N(c) - 0x59 * 0x9D;
 }
 
-pStr wc_conv_from_hkscs(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_hkscs(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -80,9 +79,11 @@ pStr wc_conv_from_hkscs(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
 
@@ -120,7 +121,6 @@ pStr wc_conv_from_hkscs(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 1, 1);
         break;
     }
-    return os;
 }
 
 void wc_push_to_hkscs(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
@@ -162,15 +162,13 @@ void wc_push_to_hkscs(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct
     }
 }
 
-pStr wc_char_conv_from_hkscs(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_hkscs(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t hkscsu;
     uint32_t hkscs;
 
     if (st->state == -1) {
         st->state = WC_HKSCS_NOSTATE;
-        os = Strnew_size(8);
     }
 
     switch (st->state) {
@@ -180,7 +178,7 @@ pStr wc_char_conv_from_hkscs(struct wc_option *WcOption, uint8_t c, struct wc_st
         case UH:
             hkscsu = c;
             st->state = WC_HKSCS_MBYTE1;
-            return NULL;
+            return;
         case C1:
             break;
         default:
@@ -199,5 +197,4 @@ pStr wc_char_conv_from_hkscs(struct wc_option *WcOption, uint8_t c, struct wc_st
         break;
     }
     st->state = -1;
-    return os;
 }

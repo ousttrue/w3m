@@ -68,9 +68,8 @@ wtf_push_iso2022(struct wc_option* WcOption, pStr os, wc_ccs ccs, uint32_t code)
     wtf_push(WcOption, os, ccs, code);
 }
 
-pStr wc_conv_from_iso2022(struct wc_option* WcOption, pStr is, wc_ces ces)
+void wc_conv_from_iso2022(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t *p, *q = NULL;
@@ -80,9 +79,11 @@ pStr wc_conv_from_iso2022(struct wc_option* WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && !(WC_ISO_MAP[*p] & WC_ISO_MAP_DETECT); p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
@@ -232,7 +233,7 @@ pStr wc_conv_from_iso2022(struct wc_option* WcOption, pStr is, wc_ces ces)
             continue;
         case WC_ISO_CSWOSR:
             wtf_push_unknown(WcOption, os, p, ep - p);
-            return os;
+            return;
             break;
         }
         st.ss = 0;
@@ -247,7 +248,6 @@ pStr wc_conv_from_iso2022(struct wc_option* WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 2, 2);
         break;
     }
-    return os;
 }
 
 int wc_parse_iso2022_esc(uint8_t** ptr, struct wc_status* st)
@@ -506,7 +506,7 @@ void wc_push_to_iso2022(struct wc_option* WcOption, pStr os, wc_wchar_t cc, stru
     }
 }
 
-void wc_push_to_iso2022_end(struct wc_option *WcOption, pStr os, struct wc_status* st)
+void wc_push_to_iso2022_end(struct wc_option* WcOption, pStr os, struct wc_status* st)
 {
     if (st->design[1] != 0 && st->design[1] != st->g1_ccs)
         wc_push_iso2022_esc(os, st->g1_ccs, WC_C_G1_CS94, 0, st);
@@ -820,9 +820,8 @@ void wc_create_gmap(struct wc_option* WcOption, struct wc_status* st)
     }
 }
 
-pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_iso2022(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t buf[4];
     static size_t nbuf;
     uint8_t* p;
@@ -830,7 +829,6 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
 
     if (st->state == -1) {
         st->state = WC_ISO_NOSTATE;
-        os = Strnew_size(8);
         nbuf = 0;
     }
 
@@ -849,7 +847,7 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
             if (WC_CCS_IS_WIDE(gl_ccs)) {
                 buf[nbuf++] = c;
                 st->state = WC_ISO_MBYTE1;
-                return NULL;
+                return;
             } else if (gl_ccs == WC_CES_US_ASCII)
                 Strcat_char(os, (char)c);
             else
@@ -862,7 +860,7 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
             if (WC_CCS_IS_WIDE(gr_ccs)) {
                 buf[nbuf++] = c;
                 st->state = WC_EUC_MBYTE1;
-                return NULL;
+                return;
             } else if (gr_ccs)
                 wtf_push_iso2022(WcOption, os, gr_ccs, (uint32_t)c);
             break;
@@ -874,7 +872,7 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
         case ESC:
             buf[nbuf++] = c;
             st->state = WC_C_ESC;
-            return NULL;
+            return;
         case SI:
             st->gl = 0;
             break;
@@ -883,14 +881,14 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
             break;
         case SS2:
             if (!st->design[2])
-                return os;
+                return;
             st->ss = 2;
-            return NULL;
+            return;
         case SS3:
             if (!st->design[3])
-                return os;
+                return;
             st->ss = 3;
-            return NULL;
+            return;
         }
         break;
     case WC_ISO_MBYTE1:
@@ -914,7 +912,7 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
             if (gr_ccs == WC_CCS_CNS_11643_X) {
                 buf[nbuf++] = c;
                 st->state = WC_EUC_TW_MBYTE2;
-                return NULL;
+                return;
             }
             buf[nbuf++] = c;
             wtf_push_iso2022(WcOption, os, gr_ccs, ((uint32_t)buf[0] << 8) | buf[1]);
@@ -947,7 +945,7 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
         case WC_C_G3_CS94:
             buf[nbuf++] = c;
             st->state = WC_C_G0_CS94;
-            return NULL;
+            return;
         case WC_C_G0_CS96:
         case WC_C_G1_CS96:
         case WC_C_G2_CS96:
@@ -957,20 +955,20 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
         case WC_C_REP:
             buf[nbuf++] = c;
             st->state = WC_C_G0_CS96;
-            return NULL;
+            return;
         case WC_C_MBCS:
         case WC_C_CSWSR:
             buf[nbuf++] = c;
             st->state = c;
-            return NULL;
+            return;
         case WC_C_SS2:
             st->ss = 2;
             st->state = WC_ISO_NOSTATE;
-            return NULL;
+            return;
         case WC_C_SS3:
             st->ss = 3;
             st->state = WC_ISO_NOSTATE;
-            return NULL;
+            return;
         case WC_C_LS2:
             st->gl = 2;
             break;
@@ -1006,7 +1004,7 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
         case WC_C_G3_CS96:
             buf[nbuf++] = c;
             st->state = WC_C_G0_CS96;
-            return NULL;
+            return;
         }
         break;
     case WC_C_CSWSR:
@@ -1014,7 +1012,7 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
         case WC_C_CSWOSR:
             buf[nbuf++] = c;
             st->state = WC_C_G1_CS94;
-            return NULL;
+            return;
         }
         buf[nbuf++] = c;
         p = buf;
@@ -1025,7 +1023,7 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
         case WC_C_CS942:
             buf[nbuf++] = c;
             st->state = WC_C_G0_CS96;
-            return NULL;
+            return;
         }
     case WC_C_G0_CS96:
         buf[nbuf++] = c;
@@ -1035,5 +1033,4 @@ pStr wc_char_conv_from_iso2022(struct wc_option *WcOption, uint8_t c, struct wc_
     }
     st->ss = 0;
     st->state = -1;
-    return os;
 }

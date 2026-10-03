@@ -133,9 +133,8 @@ wc_utf8_to_ucs(uint8_t* utf8)
     return WC_C_UCS4_ERROR;
 }
 
-pStr wc_conv_from_utf8(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_utf8(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -147,9 +146,11 @@ pStr wc_conv_from_utf8(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len + is->len / 3);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
@@ -199,7 +200,6 @@ pStr wc_conv_from_utf8(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, q, p - q);
         break;
     }
-    return os;
 }
 
 static int
@@ -226,7 +226,7 @@ wc_push_tag_to_utf8(pStr os, int ntag)
     return ntag;
 }
 
-void wc_push_to_utf8(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_utf8(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
     while (1) {
         switch (WC_CCS_SET(cc.ccs)) {
@@ -285,16 +285,14 @@ void wc_push_to_utf8_end(struct wc_option* WcOption, pStr os, struct wc_status* 
     return;
 }
 
-pStr wc_char_conv_from_utf8(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_utf8(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t buf[6];
     static size_t nbuf, next;
     uint32_t ucs;
 
     if (st->state == -1) {
         st->state = WC_UTF8_NOSTATE;
-        os = Strnew_size(8);
         st->tag = NULL;
         st->ntag = 0;
         nbuf = 0;
@@ -316,7 +314,7 @@ pStr wc_char_conv_from_utf8(struct wc_option *WcOption, uint8_t c, struct wc_sta
             buf[nbuf++] = c;
             next--;
             st->state = WC_UTF8_NEXT;
-            return NULL;
+            return;
         }
         break;
     case WC_UTF8_NEXT:
@@ -324,7 +322,7 @@ pStr wc_char_conv_from_utf8(struct wc_option *WcOption, uint8_t c, struct wc_sta
             break;
         buf[nbuf++] = c;
         if (--next)
-            return NULL;
+            return;
         ucs = wc_utf8_to_ucs(buf);
         if (ucs == WC_C_UCS4_ERROR || (ucs >= WC_C_UCS2_SURROGATE && ucs <= WC_C_UCS2_SURROGATE_END))
             break;
@@ -333,5 +331,4 @@ pStr wc_char_conv_from_utf8(struct wc_option *WcOption, uint8_t c, struct wc_sta
         break;
     }
     st->state = -1;
-    return os;
 }

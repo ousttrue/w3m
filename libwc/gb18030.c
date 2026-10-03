@@ -70,7 +70,7 @@ wc_gbk_or_gbk_ext(uint16_t code)
 }
 
 uint32_t
-wc_gb18030_to_ucs(struct wc_option *WcOption, wc_wchar_t cc)
+wc_gb18030_to_ucs(struct wc_option* WcOption, wc_wchar_t cc)
 {
     wc_map3* map;
 
@@ -156,9 +156,8 @@ wc_ucs_to_gb18030(struct wc_option* WcOption, uint32_t ucs)
     return cc;
 }
 
-pStr wc_conv_from_gb18030(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_gb18030(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -169,9 +168,11 @@ pStr wc_conv_from_gb18030(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
 
@@ -242,10 +243,9 @@ pStr wc_conv_from_gb18030(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 3, 3);
         break;
     }
-    return os;
 }
 
-void wc_push_to_gb18030(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_gb18030(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
     while (1) {
         switch (WC_CCS_SET(cc.ccs)) {
@@ -294,9 +294,8 @@ void wc_push_to_gb18030(struct wc_option *WcOption, pStr os, wc_wchar_t cc, stru
     }
 }
 
-pStr wc_char_conv_from_gb18030(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_gb18030(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t gb[4];
     uint32_t gbk;
     wc_wchar_t cc;
@@ -304,7 +303,6 @@ pStr wc_char_conv_from_gb18030(struct wc_option *WcOption, uint8_t c, struct wc_
 
     if (st->state == -1) {
         st->state = WC_GB18030_NOSTATE;
-        os = Strnew_size(8);
     }
 
     switch (st->state) {
@@ -313,7 +311,7 @@ pStr wc_char_conv_from_gb18030(struct wc_option *WcOption, uint8_t c, struct wc_
         case UB:
             gb[0] = c;
             st->state = WC_GB18030_MBYTE1;
-            return NULL;
+            return;
         case C1:
             break;
         default:
@@ -333,14 +331,14 @@ pStr wc_char_conv_from_gb18030(struct wc_option *WcOption, uint8_t c, struct wc_
         } else if (WC_GB18030_MAP[c] == L4) {
             gb[1] = c;
             st->state = WC_GB18030_MBYTE2;
-            return NULL;
+            return;
         }
         break;
     case WC_GB18030_MBYTE2:
         if (WC_GB18030_MAP[c] == UB) {
             gb[2] = c;
             st->state = WC_GB18030_MBYTE3;
-            return NULL;
+            return;
         }
         break;
     case WC_GB18030_MBYTE3:
@@ -358,5 +356,4 @@ pStr wc_char_conv_from_gb18030(struct wc_option *WcOption, uint8_t c, struct wc_
         break;
     }
     st->state = -1;
-    return os;
 }

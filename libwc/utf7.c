@@ -58,9 +58,8 @@ static char base64_c_map[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwx
 #define BASE64_C(x) base64_c_map[(x)]
 #define C_BASE64(x) c_base64_map[(x) - 0x20]
 
-pStr wc_conv_from_utf7(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_utf7(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -70,9 +69,11 @@ pStr wc_conv_from_utf7(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80 && *p != WC_C_UTF7_PLUS; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len + is->len / 3);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
@@ -136,7 +137,6 @@ pStr wc_conv_from_utf7(struct wc_option *WcOption, pStr is, wc_ces ces)
             break;
         }
     }
-    return os;
 }
 
 static void
@@ -216,7 +216,7 @@ wc_push_tag_to_utf7(pStr os, int ntag, struct wc_status* st)
     return ntag;
 }
 
-void wc_push_to_utf7(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_utf7(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
     char* p;
 
@@ -281,15 +281,13 @@ void wc_push_to_utf7_end(struct wc_option* WcOption, pStr os, struct wc_status* 
     return;
 }
 
-pStr wc_char_conv_from_utf7(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_utf7(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint32_t high;
     uint32_t b;
 
     if (st->state == -1) {
         st->state = WC_UTF7_NOSTATE;
-        os = Strnew_size(8);
     }
 
     switch (st->state) {
@@ -299,14 +297,14 @@ pStr wc_char_conv_from_utf7(struct wc_option *WcOption, uint8_t c, struct wc_sta
             st->shift = 16;
             st->base = 0;
             high = 0;
-            return NULL;
+            return;
         }
         break;
     case WC_UTF7_PLUS:
         if (c == WC_C_UTF7_MINUS) {
             wtf_push_ucs(WcOption, os, (uint32_t)WC_C_UTF7_PLUS, st);
             st->state = -1;
-            return os;
+            return;
         }
     case WC_UTF7_BASE64:
         switch (WC_UTF7_MAP[c]) {
@@ -333,10 +331,10 @@ pStr wc_char_conv_from_utf7(struct wc_option *WcOption, uint8_t c, struct wc_sta
             }
             st->base |= (b << st->shift) & 0xffff;
             st->state = WC_UTF7_BASE64;
-            return os;
+            return;
         case BM: /* '-' */
             st->state = -1;
-            return NULL;
+            return;
         }
     }
     switch (WC_UTF7_MAP[c]) {
@@ -351,5 +349,4 @@ pStr wc_char_conv_from_utf7(struct wc_option *WcOption, uint8_t c, struct wc_sta
         break;
     }
     st->state = -1;
-    return os;
 }

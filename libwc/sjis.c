@@ -191,9 +191,8 @@ wc_sjis_ext2_to_N(uint32_t c)
     return ub * 0x5e + (c & 0x7f) - 0x21;
 }
 
-pStr wc_conv_from_sjis(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_sjis(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -203,9 +202,11 @@ pStr wc_conv_from_sjis(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
@@ -267,12 +268,10 @@ pStr wc_conv_from_sjis(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 1, 1);
         break;
     }
-    return os;
 }
 
-pStr wc_conv_from_sjisx0213(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_sjisx0213(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -282,9 +281,11 @@ pStr wc_conv_from_sjisx0213(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
@@ -346,10 +347,9 @@ pStr wc_conv_from_sjisx0213(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 1, 1);
         break;
     }
-    return os;
 }
 
-void wc_push_to_sjis(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_sjis(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
     uint8_t ub, lb;
 
@@ -399,7 +399,7 @@ void wc_push_to_sjis(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct 
     }
 }
 
-void wc_push_to_sjisx0213(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_sjisx0213(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
     uint8_t ub, lb;
 
@@ -460,15 +460,13 @@ void wc_push_to_sjisx0213(struct wc_option *WcOption, pStr os, wc_wchar_t cc, st
     }
 }
 
-pStr wc_char_conv_from_sjis(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_sjis(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t jis[2];
     wc_wchar_t cc;
 
     if (st->state == -1) {
         st->state = WC_SJIS_NOSTATE;
-        os = Strnew_size(8);
     }
 
     switch (st->state) {
@@ -477,15 +475,15 @@ pStr wc_char_conv_from_sjis(struct wc_option *WcOption, uint8_t c, struct wc_sta
         case SL:
             jis[0] = c;
             st->state = WC_SJIS_SHIFT_L;
-            return NULL;
+            return;
         case SH:
             jis[0] = c;
             st->state = WC_SJIS_SHIFT_H;
-            return NULL;
+            return;
         case SX:
             jis[0] = c;
             st->state = WC_SJIS_SHIFT_X;
-            return NULL;
+            return;
         case SK:
             wtf_push(WcOption, os, WC_CCS_JIS_X_0201K, (uint32_t)c);
             break;
@@ -521,18 +519,15 @@ pStr wc_char_conv_from_sjis(struct wc_option *WcOption, uint8_t c, struct wc_sta
         break;
     }
     st->state = -1;
-    return os;
 }
 
-pStr wc_char_conv_from_sjisx0213(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_sjisx0213(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t jis[2];
     wc_wchar_t cc;
 
     if (st->state == -1) {
         st->state = WC_SJIS_NOSTATE;
-        os = Strnew_size(8);
     }
 
     switch (st->state) {
@@ -541,15 +536,15 @@ pStr wc_char_conv_from_sjisx0213(struct wc_option *WcOption, uint8_t c, struct w
         case SL:
             jis[0] = c;
             st->state = WC_SJIS_SHIFT_L;
-            return NULL;
+            return;
         case SH:
             jis[0] = c;
             st->state = WC_SJIS_SHIFT_H;
-            return NULL;
+            return;
         case SX:
             jis[0] = c;
             st->state = WC_SJIS_SHIFT_X;
-            return NULL;
+            return;
         case SK:
             wtf_push(WcOption, os, WC_CCS_JIS_X_0201K, (uint32_t)c);
             break;
@@ -583,5 +578,4 @@ pStr wc_char_conv_from_sjisx0213(struct wc_option *WcOption, uint8_t c, struct w
         break;
     }
     st->state = -1;
-    return os;
 }

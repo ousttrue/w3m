@@ -70,9 +70,8 @@ wc_uhc_to_N(uint32_t c)
     return WC_UHC_N(c) - ((c >> 8) - 0xA1) * 0x5E + 2;
 }
 
-pStr wc_conv_from_uhc(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_uhc(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -81,9 +80,11 @@ pStr wc_conv_from_uhc(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
 
@@ -120,10 +121,9 @@ pStr wc_conv_from_uhc(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 1, 1);
         break;
     }
-    return os;
 }
 
-void wc_push_to_uhc(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_uhc(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
     while (1) {
         switch (cc.ccs) {
@@ -159,15 +159,13 @@ void wc_push_to_uhc(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct w
     }
 }
 
-pStr wc_char_conv_from_uhc(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_uhc(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t uhcu;
     uint32_t uhc;
 
     if (st->state == -1) {
         st->state = WC_UHC_NOSTATE;
-        os = Strnew_size(8);
     }
 
     switch (st->state) {
@@ -176,7 +174,7 @@ pStr wc_char_conv_from_uhc(struct wc_option *WcOption, uint8_t c, struct wc_stat
         case UB:
             uhcu = c;
             st->state = WC_UHC_MBYTE1;
-            return NULL;
+            return;
         case C1:
             break;
         default:
@@ -195,5 +193,4 @@ pStr wc_char_conv_from_uhc(struct wc_option *WcOption, uint8_t c, struct wc_stat
         break;
     }
     st->state = -1;
-    return os;
 }

@@ -1708,9 +1708,7 @@ load_option_panel(void)
     pStr src;
     struct param_ptr* p;
     struct sel_c* s;
-#ifdef USE_M17N
     wc_ces_list* c;
-#endif
     int x, i;
     pStr tmp;
     Buffer* buf;
@@ -1718,12 +1716,11 @@ load_option_panel(void)
     if (optionpanel_str == NULL)
         optionpanel_str = Sprintf(optionpanel_src1, W3M_VERSION,
             html_quote(localCookie()->ptr), _(CMT_HELPER));
-#ifdef USE_M17N
-#ifdef ENABLE_NLS
+
     OptionCharset = SystemCharset; /* FIXME */
-#endif
     if (!OptionEncode) {
-        optionpanel_str = wc_Str_conv(&WcOption, optionpanel_str, OptionCharset, InnerCharset);
+        pStr tmp = Strdup(optionpanel_str);
+        wc_Str_conv(&WcOption, optionpanel_str, tmp, OptionCharset, InnerCharset);
         for (i = 0; sections[i].name != NULL; i++) {
             sections[i].name = wc_conv(&WcOption, _(sections[i].name), OptionCharset,
                 InnerCharset)
@@ -1753,7 +1750,7 @@ load_option_panel(void)
 #endif
         OptionEncode = true;
     }
-#endif
+
     src = Strdup(optionpanel_str);
 
     Strcat_charp(src, "<table><tr><td>");

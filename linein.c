@@ -122,7 +122,6 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
     int opos, x, y, lpos, rpos, epos;
     unsigned char c;
     char* p;
-    pStr tmp;
 
     is_passwd = FALSE;
 
@@ -220,7 +219,8 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
             if (cm_disp_clear)
                 cm_disp_next = -1;
         } else {
-            tmp = wc_char_conv(&WcOption, c);
+            pStr tmp = Strnew_size(8);
+            wc_char_conv(&WcOption, tmp, c);
             if (tmp == NULL) {
                 i_quote = TRUE;
                 goto next_char;
@@ -395,9 +395,16 @@ void _esc(void)
         if (emacs_like_lineedit)
             _bsw();
         break;
-    default:
-        if (wc_char_conv(&WcOption, ESC_CODE) == NULL && wc_char_conv(&WcOption, c) == NULL)
-            i_quote = TRUE;
+    default: {
+        pStr tmp = Strnew_size(8);
+        wc_char_conv(&WcOption, tmp, ESC_CODE);
+        if (tmp->len == 0) {
+            Strclear(tmp);
+            wc_char_conv(&WcOption, tmp, c);
+            if (tmp->len == 0)
+                i_quote = TRUE;
+        }
+    }
     }
 }
 

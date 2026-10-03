@@ -71,7 +71,7 @@ static uint8_t N_johab1_map[ 3 ][ 32 ] = {
 // clang-format on
 
 wc_wchar_t
-wc_johab_to_ksx1001(struct wc_option *WcOption, wc_wchar_t cc)
+wc_johab_to_ksx1001(struct wc_option* WcOption, wc_wchar_t cc)
 {
     static wc_table* t = NULL;
 
@@ -98,7 +98,7 @@ wc_johab_to_ksx1001(struct wc_option *WcOption, wc_wchar_t cc)
 }
 
 wc_wchar_t
-wc_ksx1001_to_johab(struct wc_option *WcOption, wc_wchar_t cc)
+wc_ksx1001_to_johab(struct wc_option* WcOption, wc_wchar_t cc)
 {
     cc.code &= 0x7f7f;
     if ((cc.code >= 0x2121 && cc.code < 0x2421) || (cc.code > 0x2453 && cc.code <= 0x2C7E) || (cc.code >= 0x4A21 && cc.code <= 0x7D7E)) {
@@ -237,9 +237,8 @@ wc_cs128w_to_johab(wc_wchar_t cc)
     return cc;
 }
 
-pStr wc_conv_from_johab(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_johab(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -247,9 +246,11 @@ pStr wc_conv_from_johab(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
@@ -293,10 +294,9 @@ pStr wc_conv_from_johab(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 1, 1);
         break;
     }
-    return os;
 }
 
-void wc_push_to_johab(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
+void wc_push_to_johab(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
 {
     while (1) {
         switch (cc.ccs) {
@@ -332,14 +332,12 @@ void wc_push_to_johab(struct wc_option *WcOption, pStr os, wc_wchar_t cc, struct
     }
 }
 
-pStr wc_char_conv_from_johab(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_johab(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t johabu;
 
     if (st->state == -1) {
         st->state = WC_JOHAB_NOSTATE;
-        os = Strnew_size(8);
     }
 
     switch (st->state) {
@@ -348,11 +346,11 @@ pStr wc_char_conv_from_johab(struct wc_option *WcOption, uint8_t c, struct wc_st
         case WC_JOHAB_MAP_UJ:
             johabu = c;
             st->state = WC_JOHAB_HANGUL1;
-            return NULL;
+            return;
         case WC_JOHAB_MAP_UH:
             johabu = c;
             st->state = WC_JOHAB_HANJA1;
-            return NULL;
+            return;
         case WC_JOHAB_MAP_C1:
             break;
         default:
@@ -370,5 +368,4 @@ pStr wc_char_conv_from_johab(struct wc_option *WcOption, uint8_t c, struct wc_st
         break;
     }
     st->state = -1;
-    return os;
 }

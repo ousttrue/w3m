@@ -15,7 +15,9 @@ extern char SimplePreserveSpace;
 
 static inline pStr Str_conv_from_system(struct wc_option* WcOption, pStr x)
 {
-    return wc_Str_conv(WcOption, x, SystemCharset, InnerCharset);
+    pStr os = Strnew_size(x->len);
+    wc_Str_conv(WcOption, os, x, SystemCharset, InnerCharset);
+    return os;
 }
 static inline pStr Str_conv_to_system(struct wc_option* WcOption, pStr x)
 {
@@ -23,13 +25,18 @@ static inline pStr Str_conv_to_system(struct wc_option* WcOption, pStr x)
 }
 static inline pStr Str_conv_to_halfdump(struct wc_option* WcOption, pStr x)
 {
-    return (ExtHalfdump ? wc_Str_conv(WcOption, x, InnerCharset, DisplayCharset) : x);
+    pStr os = Strnew_size(x->len);
+    if (ExtHalfdump)
+        wc_Str_conv(WcOption, os, x, InnerCharset, DisplayCharset);
+    else
+        Strcopy(os, x);
+    return os;
 }
 static inline char* conv_from_system(struct wc_option* WcOption, const char* x)
 {
     return wc_conv(WcOption, (x), SystemCharset, InnerCharset)->ptr;
 }
-static inline char* conv_to_system(struct wc_option *WcOption, const char* x)
+static inline char* conv_to_system(struct wc_option* WcOption, const char* x)
 {
     return wc_conv_strict(WcOption, (x), InnerCharset, SystemCharset)->ptr;
 }

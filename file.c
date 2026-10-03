@@ -6993,7 +6993,6 @@ conv_symbol(Line* l)
 static void
 _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
 {
-    pStr tmp;
     int is_html = false;
     int set_charset = !DisplayCharset;
     wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
@@ -7002,11 +7001,13 @@ _saveBuffer(Buffer* buf, Line* l, FILE* f, int cont)
 
 pager_next:
     for (; l != NULL; l = l->next) {
+        pStr _tmp;
         if (is_html)
-            tmp = conv_symbol(l);
+            _tmp = conv_symbol(l);
         else
-            tmp = Strnew_charp_n(l->lineBuf, l->len);
-        tmp = wc_Str_conv(&WcOption, tmp, InnerCharset, charset);
+            _tmp = Strnew_charp_n(l->lineBuf, l->len);
+        pStr tmp = Strnew_size(_tmp->len);
+        wc_Str_conv(&WcOption, tmp, _tmp, InnerCharset, charset);
         Strfputs(tmp, f);
         if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
             putc('\n', f);

@@ -7,19 +7,19 @@
 #include "ucs.h"
 #include "utf8.h"
 #include "utf7.h"
+#include <assert.h>
 
 char* WcReplace = "?";
 char* WcReplaceW = "??";
 
-static pStr
-wc_conv_to_ces(struct wc_option* WcOption, pStr is, wc_ces ces)
+static void
+wc_conv_to_ces(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
+    assert(os->len == 0);
     const uint8_t* sp = (const uint8_t*)is->ptr;
     const uint8_t* ep = sp + is->len;
-    const uint8_t* p;
-    struct wc_status st;
 
+    const uint8_t* p;
     switch (ces) {
     case WC_CES_HZ_GB_2312:
         for (p = sp; p < ep && *p != '~' && *p < 0x80; p++)
@@ -36,15 +36,17 @@ wc_conv_to_ces(struct wc_option* WcOption, pStr is, wc_ces ces)
             ;
         break;
     }
-    if (p == ep)
-        return is;
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
 
-    os = Strnew_size(is->len);
     if (p > sp)
         p--; /* for precompose */
     if (p > sp)
         Strcat_charp_n(os, is->ptr, (int)(p - sp));
 
+    struct wc_status st;
     wc_output_init(WcOption, ces, &st);
 
     switch (ces) {
@@ -74,27 +76,41 @@ wc_conv_to_ces(struct wc_option* WcOption, pStr is, wc_ces ces)
     }
 
     wc_push_end(WcOption, os, &st);
-
-    return os;
 }
 
-pStr wc_Str_conv(struct wc_option* WcOption, pStr is, wc_ces f_ces, wc_ces t_ces)
+void wc_Str_conv(struct wc_option* WcOption, pStr os, pStr is, wc_ces f_ces, wc_ces t_ces)
 {
-    if (f_ces != WC_CES_WTF)
-        is = (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, is, f_ces);
-    if (t_ces != WC_CES_WTF)
-        return wc_conv_to_ces(WcOption, is, t_ces);
-    else
-        return is;
+
+    if (f_ces == WC_CES_WTF) {
+        if (t_ces == WC_CES_WTF) {
+            // nop
+            Strcopy(os, is);
+        } else {
+            // wtf => t_ces
+            wc_conv_to_ces(WcOption, os, is, t_ces);
+        }
+    } else {
+        if (t_ces == WC_CES_WTF) {
+            // f_ces => wtf
+            (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, os, is, f_ces);
+        } else {
+            // f_ces => wtf => t_ces
+            pStr tmp = Strnew_size(is->len);
+            (*WcCesInfo[WC_CES_INDEX(f_ces)].conv_from)(WcOption, tmp, is, f_ces);
+            wc_conv_to_ces(WcOption, os, tmp, t_ces);
+        }
+    }
 }
 
-pStr wc_Str_conv_strict(struct wc_option *_WcOption, pStr is, wc_ces f_ces, wc_ces t_ces)
+pStr wc_Str_conv_strict(struct wc_option* _WcOption, pStr is, wc_ces f_ces, wc_ces t_ces)
 {
     struct wc_option WcOption = *_WcOption;
     WcOption.strict_iso2022 = true;
     WcOption.no_replace = true;
     WcOption.fix_width_conv = false;
-    return wc_Str_conv(&WcOption, is, f_ces, t_ces);
+    pStr os = Strnew_size(is->len);
+    wc_Str_conv(&WcOption, os, is, f_ces, t_ces);
+    return os;
 }
 
 pStr wc_Str_conv_with_detect(struct wc_option* WcOption, pStr is, wc_ces* f_ces, wc_ces hint, wc_ces t_ces)
@@ -118,7 +134,9 @@ pStr wc_Str_conv_with_detect(struct wc_option* WcOption, pStr is, wc_ces* f_ces,
                 *f_ces = detect;
         }
     }
-    return wc_Str_conv(WcOption, is, detect, t_ces);
+    pStr os = Strnew_size(is->len);
+    wc_Str_conv(WcOption, os, is, detect, t_ces);
+    return os;
 }
 
 void wc_push_end(struct wc_option* WcOption, pStr os, struct wc_status* st)

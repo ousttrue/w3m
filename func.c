@@ -138,13 +138,14 @@ interpret_keymap(FILE* kf, struct stat* current, int force)
     int verbose = 1;
     int lineno = 0;
     while (!feof(kf)) {
-        pStr line = Strfgets(kf);
+        pStr _line = Strfgets(kf);
         lineno++;
-        Strchop(line);
-        Strremovefirstspaces(line);
-        if (line->len == 0)
+        Strchop(_line);
+        Strremovefirstspaces(_line);
+        if (_line->len == 0)
             continue;
-        line = wc_Str_conv(&WcOption, line, charset, InnerCharset);
+        pStr line = Strdup(_line);
+        wc_Str_conv(&WcOption, line, _line, charset, InnerCharset);
         const char* p = line->ptr;
         char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */

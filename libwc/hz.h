@@ -12,7 +12,7 @@
 #define WC_HZ_MBYTE1 4
 #define WC_HZ_MBYTE1_GR 5
 
-extern pStr wc_conv_from_hz(struct wc_option *WcOption, pStr is, wc_ces ces);
+extern void wc_conv_from_hz(struct wc_option *WcOption, pStr os, pStr is, wc_ces ces);
 struct wc_option;
 extern void wc_push_to_hz(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st);
 extern void wc_push_to_hz_end(struct wc_option* WcOption, pStr os, struct wc_status* st);

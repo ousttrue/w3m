@@ -2283,12 +2283,13 @@ interpret_menu(FILE* mf)
     MenuItem* item = NULL;
     wc_ces charset = SystemCharset;
     while (!feof(mf)) {
-        pStr line = Strfgets(mf);
-        Strchop(line);
-        Strremovefirstspaces(line);
-        if (line->len == 0)
+        pStr _line = Strfgets(mf);
+        Strchop(_line);
+        Strremovefirstspaces(_line);
+        if (_line->len == 0)
             continue;
-        line = wc_Str_conv(&WcOption, line, charset, InnerCharset);
+        pStr line = Strnew_size(_line->len);
+        wc_Str_conv(&WcOption, line, _line, charset, InnerCharset);
         const char* p = line->ptr;
         char* s = getWord(&p).ptr;
         if (*s == '#') /* comment */

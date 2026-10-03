@@ -14,265 +14,27 @@
 #define UB WC_GBK_MAP_UB
 #define C80 WC_GBK_MAP_80
 
+// clang-format off
 uint8_t WC_GBK_MAP[0x100] = {
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    C0,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    GL,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    LB,
-    C0,
+    C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
+    C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0, C0,
+    GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL,
+    GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL, GL,
+    LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB,
+    LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB,
+    LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB,
+    LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, LB, C0,
 
-    C80,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    UB,
-    C1,
+    C80, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
+    UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
+    UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
+    UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
+    UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
+    UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
+    UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB,
+    UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, UB, C1,
 };
+// clang-format on
 
 wc_ccs
 wc_gb2312_or_gbk(uint16_t code)
@@ -327,9 +89,8 @@ wc_gbk_to_N(uint32_t c)
     return WC_GBK_N(c) - ((c >> 8) - 0xA1) * 0x5E + 0x0A + 0x16 + 0x06;
 }
 
-pStr wc_conv_from_gbk(struct wc_option *WcOption, pStr is, wc_ces ces)
+void wc_conv_from_gbk(struct wc_option* WcOption, pStr os, pStr is, wc_ces ces)
 {
-    pStr os;
     uint8_t* sp = (uint8_t*)is->ptr;
     uint8_t* ep = sp + is->len;
     uint8_t* p;
@@ -338,9 +99,11 @@ pStr wc_conv_from_gbk(struct wc_option *WcOption, pStr is, wc_ces ces)
 
     for (p = sp; p < ep && *p < 0x80; p++)
         ;
-    if (p == ep)
-        return is;
-    os = Strnew_size(is->len);
+    if (p == ep) {
+        Strcopy(os, is);
+        return;
+    }
+
     if (p > sp)
         Strcat_charp_n(os, (char*)is->ptr, (int)(p - sp));
 
@@ -380,7 +143,6 @@ pStr wc_conv_from_gbk(struct wc_option *WcOption, pStr is, wc_ces ces)
         wtf_push_unknown(WcOption, os, p - 1, 1);
         break;
     }
-    return os;
 }
 
 void wc_push_to_gbk(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct wc_status* st)
@@ -422,15 +184,13 @@ void wc_push_to_gbk(struct wc_option* WcOption, pStr os, wc_wchar_t cc, struct w
     }
 }
 
-pStr wc_char_conv_from_gbk(struct wc_option *WcOption, uint8_t c, struct wc_status* st)
+void wc_char_conv_from_gbk(struct wc_option* WcOption, pStr os, uint8_t c, struct wc_status* st)
 {
-    static pStr os;
     static uint8_t gbku;
     uint32_t gbk;
 
     if (st->state == -1) {
         st->state = WC_GBK_NOSTATE;
-        os = Strnew_size(8);
     }
 
     switch (st->state) {
@@ -439,7 +199,7 @@ pStr wc_char_conv_from_gbk(struct wc_option *WcOption, uint8_t c, struct wc_stat
         case UB:
             gbku = c;
             st->state = WC_GBK_MBYTE1;
-            return NULL;
+            return;
         case C80:
             wtf_push(WcOption, os, WC_CCS_GBK_80, c);
             break;
@@ -461,5 +221,4 @@ pStr wc_char_conv_from_gbk(struct wc_option *WcOption, uint8_t c, struct wc_stat
         break;
     }
     st->state = -1;
-    return os;
 }
