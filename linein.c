@@ -23,10 +23,11 @@
 
 #include "libwc/status.h"
 static struct wc_status char_conv_st;
+static wc_ces f_ces;
 
 static void wc_char_conv_init()
 {
-    wc_ces f_ces = wc_guess_8bit_charset(DisplayCharset);
+    f_ces = wc_guess_8bit_charset(DisplayCharset);
     wc_input_init(f_ces, &char_conv_st);
     // st->ces_info = &WcCesInfo[WC_CES_INDEX(ces)];
     char_conv_st.state = -1;

@@ -12,13 +12,11 @@
 #include "charset.h"
 #include "config.h"
 #include "display.h"
-#include "fm.h"
 #include "proto.h"
 #include "myctype.h"
 #include "rc.h"
 #include "signal.h"
 #include "tab.h"
-#include "libwc/putc.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -29,6 +27,54 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include "libwc/status.h"
+static struct wc_status putc_st;
+static wc_ces putc_f_ces;
+static pStr putc_str;
+
+static void wc_putc_init(struct wc_option* WcOption, wc_ces f_ces, wc_ces t_ces)
+{
+    wc_output_init(WcOption, t_ces, &putc_st);
+    putc_str = Strnew_size(8);
+    putc_f_ces = f_ces;
+}
+
+static void wc_putc(struct wc_option *WcOption, const char* c, FILE* f)
+{
+    const uint8_t* p;
+
+    if (putc_f_ces != WC_CES_WTF)
+        p = (const uint8_t*)wc_conv(WcOption, c, putc_f_ces, WC_CES_WTF)->ptr;
+    else
+        p = (const uint8_t*)c;
+
+    Strclear(putc_str);
+    while (*p)
+        (*putc_st.ces_info->push_to)(WcOption, putc_str, wtf_parse(WcOption, &p), &putc_st);
+    fwrite(putc_str->ptr, 1, putc_str->len, f);
+}
+
+static void wc_putc_end(struct wc_option *WcOption, FILE* f)
+{
+    Strclear(putc_str);
+    wc_push_end(WcOption, putc_str, &putc_st);
+    if (putc_str->len)
+        fwrite(putc_str->ptr, 1, putc_str->len, f);
+}
+
+static void wc_putc_clear_status(void)
+{
+    if (putc_st.ces_info->id & WC_CES_T_ISO_2022) {
+        putc_st.gl = 0;
+        putc_st.gr = 0;
+        putc_st.ss = 0;
+        putc_st.design[0] = 0;
+        putc_st.design[1] = 0;
+        putc_st.design[2] = 0;
+        putc_st.design[3] = 0;
+    }
+}
 
 #ifndef __MINGW32_VERSION
 #include <sys/ioctl.h>

@@ -16,7 +16,6 @@ add_library(
     jis.c
     johab.c
     priv.c
-    putc.c
     search.c
     sjis.c
     status.c
