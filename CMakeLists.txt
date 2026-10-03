@@ -26,8 +26,8 @@ add_compile_options(
   -Wuninitialized
   -Wunused
   -Wno-unused-result
-  -g
-  -O2)
+  "$<$<NOT:$<CONFIG:Debug>>:-O2>"
+  "$<$<CONFIG:Debug>:-g>")
 
 add_library(
   indep
