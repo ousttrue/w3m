@@ -14,6 +14,24 @@
 #include "utf8.h"
 #include "utf7.h"
 
+wc_ces wc_guess_8bit_charset(wc_ces orig)
+{
+    switch (orig) {
+    case WC_CES_ISO_2022_JP:
+    case WC_CES_ISO_2022_JP_2:
+    case WC_CES_ISO_2022_JP_3:
+        return WC_CES_EUC_JP;
+    case WC_CES_ISO_2022_KR:
+        return WC_CES_EUC_KR;
+    case WC_CES_ISO_2022_CN:
+    case WC_CES_HZ_GB_2312:
+        return WC_CES_EUC_CN;
+    case WC_CES_US_ASCII:
+        return WC_CES_ISO_8859_1;
+    }
+    return orig;
+}
+
 // clang-format off
 static wc_gset gset_usascii[] = {
     { WC_CCS_US_ASCII, WC_C_G0_CS94, 1 },

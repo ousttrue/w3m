@@ -12,11 +12,8 @@ static bool output_set = false;
 
 void wc_input_init(wc_ces ces, struct wc_status* st)
 {
-    wc_gset* gset;
-    int i, g;
-
     st->ces_info = &WcCesInfo[WC_CES_INDEX(ces)];
-    gset = st->ces_info->gset;
+    wc_gset* gset = st->ces_info->gset;
 
     st->state = 0;
     st->g0_ccs = 0;
@@ -29,9 +26,9 @@ void wc_input_init(wc_ces ces, struct wc_status* st)
     st->gr = 1;
     st->ss = 0;
 
-    for (i = 0; gset[i].ccs; i++) {
+    for (int i = 0; gset[i].ccs; i++) {
         if (gset[i].init) {
-            g = gset[i].g & 0x03;
+            int g = gset[i].g & 0x03;
             if (!st->design[g])
                 st->design[g] = gset[i].ccs;
         }
@@ -41,7 +38,7 @@ void wc_input_init(wc_ces ces, struct wc_status* st)
     st->ntag = 0;
 }
 
-void wc_output_init(struct wc_option *WcOption, wc_ces ces, struct wc_status* st)
+void wc_output_init(struct wc_option* WcOption, wc_ces ces, struct wc_status* st)
 {
     wc_gset* gset;
     size_t i, n, nw;

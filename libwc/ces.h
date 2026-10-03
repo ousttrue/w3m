@@ -209,6 +209,8 @@ inline static enum WC_CES_N WC_CES_INDEX(wc_ces c)
 //     return (enum WC_CES_T)((c)&WC_CES_T_TYPE);
 // }
 
+wc_ces wc_guess_8bit_charset(wc_ces orig);
+
 struct wc_status;
 struct wc_option;
 typedef void (*ConvFromFunc)(struct wc_option*, pStr os, pStr is, wc_ces);

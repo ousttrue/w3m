@@ -4,7 +4,6 @@ add_library(
   STATIC
     big5.c
     ces.c
-    char_conv.c
     charset.c
     combining.c
     conv.c
@@ -30,4 +29,5 @@ add_library(
 target_compile_definitions(${TARGET_NAME} PRIVATE _GNU_SOURCE USE_UNICODE)
 
 target_compile_options(${TARGET_NAME} PRIVATE -Wno-switch)
+
 

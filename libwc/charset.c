@@ -475,25 +475,6 @@ char* wc_ces_to_charset_desc(wc_ces ces)
     return WcCesInfo[WC_CES_INDEX(ces)].desc;
 }
 
-wc_ces
-wc_guess_8bit_charset(wc_ces orig)
-{
-    switch (orig) {
-    case WC_CES_ISO_2022_JP:
-    case WC_CES_ISO_2022_JP_2:
-    case WC_CES_ISO_2022_JP_3:
-        return WC_CES_EUC_JP;
-    case WC_CES_ISO_2022_KR:
-        return WC_CES_EUC_KR;
-    case WC_CES_ISO_2022_CN:
-    case WC_CES_HZ_GB_2312:
-        return WC_CES_EUC_CN;
-    case WC_CES_US_ASCII:
-        return WC_CES_ISO_8859_1;
-    }
-    return orig;
-}
-
 bool wc_check_ces(wc_ces ces)
 {
     size_t i = WC_CES_INDEX(ces);

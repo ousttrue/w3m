@@ -15,13 +15,29 @@
 #include "search.h"
 #include "tab.h"
 #include "terms.h"
-#include "libwc/charset.h"
-#include "libwc/char_conv.h"
 
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
+#include "libwc/status.h"
+static struct wc_status char_conv_st;
+
+static void wc_char_conv_init()
+{
+    wc_ces f_ces = wc_guess_8bit_charset(DisplayCharset);
+    wc_input_init(f_ces, &char_conv_st);
+    // st->ces_info = &WcCesInfo[WC_CES_INDEX(ces)];
+    char_conv_st.state = -1;
+}
+
+static void wc_char_conv(struct wc_option* WcOption, pStr os, char c)
+{
+    pStr tmp = Strnew_size(8);
+    (*char_conv_st.ces_info->char_conv)(WcOption, tmp, (uint8_t)c, &char_conv_st);
+    wc_Str_conv(WcOption, os, tmp, WC_CES_WTF, InnerCharset);
+}
 
 // Completion status.
 #define CPL_OK 0
@@ -162,7 +178,7 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
     cm_disp_next = -1;
     need_redraw = FALSE;
 
-    wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
+    wc_char_conv_init();
     do {
         x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
         if (x - rpos > offset) {
