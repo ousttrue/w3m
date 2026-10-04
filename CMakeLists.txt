@@ -39,7 +39,15 @@ add_library(
     textlist.c
     parsetag.c
     myctype.c
-    hash.c)
+    hash.c
+    w3m.c
+    entity.c
+    Str.c
+    hash.c
+    myctype.c
+    str_gc.c
+    str_const.c
+    url.c)
 
 subdirs(libwc)
 
@@ -48,9 +56,7 @@ set(TARGET_NAME ${PROJECT_NAME})
 add_executable(
   ${TARGET_NAME}
   main.c
-  w3m.c
   keybind.c
-  url.c
   url_stream.c
   growbuf.c
   alloc.c
@@ -60,8 +66,6 @@ add_executable(
   buffer.c
   display.c
   mymktime.c
-  str_const.c
-  str_gc.c
   auth.c
   html_parser.c
   search.c
@@ -75,7 +79,6 @@ add_executable(
   mailcap.c
   image.c
   symbol.c
-  entity.c
   terms.c
   http_request.c
   ftp.c
@@ -92,45 +95,20 @@ add_executable(
   tagtable.c
   input_stream.c)
 target_link_libraries(${TARGET_NAME} PRIVATE indep wc gc ssl crypto tinfo m)
-
 target_compile_definitions(${TARGET_NAME} PRIVATE _GNU_SOURCE)
 
 # mktable
-add_executable(
-  mktable
-  mktable.c
-  w3m.c
-  entity.c
-  Str.c
-  hash.c
-  myctype.c
-  str_gc.c
-  str_const.c
-  url.c)
+add_executable(mktable mktable.c)
 target_compile_definitions(mktable PRIVATE DUMMY)
 target_link_libraries(mktable PRIVATE indep wc gc)
 
 # w3mbookmark
-add_executable(
-  w3mbookmark
-  w3mbookmark.c
-  w3m.c
-  entity.c
-  str_gc.c
-  str_const.c
-  url.c)
+add_executable(w3mbookmark w3mbookmark.c)
 target_compile_definitions(w3mbookmark PRIVATE DUMMY)
 target_link_libraries(w3mbookmark PRIVATE indep wc gc)
 
 # w3mhelperpanel
-add_executable(
-  w3mhelperpanel
-  w3mhelperpanel.c
-  w3m.c
-  entity.c
-  str_gc.c
-  str_const.c
-  url.c)
+add_executable(w3mhelperpanel w3mhelperpanel.c)
 target_compile_definitions(w3mhelperpanel PRIVATE DUMMY)
 target_link_libraries(w3mhelperpanel PRIVATE indep wc gc)
 
