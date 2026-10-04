@@ -1,13 +1,10 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef W3M_FRAME_H
-#define W3M_FRAME_H
-
+#pragma once
 #include "anchor.h"
 #include "buffer.h"
-#include "config.h"
 #include "form.h"
-#include "html.h"
 #include "parsetagx.h"
+
+extern bool is_redisplay;
 
 struct frame_element {
     char attr;
@@ -80,5 +77,3 @@ extern Buffer* renderFrame(Buffer* Cbuf, int force_reload);
 extern union frameset_element* search_frame(struct frameset* fset, const char* name);
 
 extern struct frameset* renderFrameSet;
-
-#endif

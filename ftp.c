@@ -13,6 +13,8 @@
 #include "myctype.h"
 #include "rc.h"
 #include "terms.h"
+#include "input_stream.h"
+#include "http_request.h"
 
 #include <stdio.h>
 #include <time.h>

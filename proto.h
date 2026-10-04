@@ -156,8 +156,8 @@ extern pStr searchURIMethods(ParsedURL* pu);
 extern void chkExternalURIBuffer(Buffer* buf);
 #endif
 extern ParsedURL* schemeToProxy(int scheme);
-
-extern void examineFile(const char* path, URLFile* uf);
+struct UrlStream;
+extern void examineFile(const char* path, struct UrlStream* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
@@ -203,7 +203,7 @@ extern void HTMLlineproc2(Buffer* buf, TextLineList* tl);
 extern void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env,
     int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
-extern Buffer* loadHTMLBuffer(URLFile* f, Buffer* newBuf);
+extern Buffer* loadHTMLBuffer(struct UrlStream* f, Buffer* newBuf);
 extern char* convert_size(size_t size, int usefloat);
 extern char* convert_size2(size_t size1, size_t size2, int usefloat);
 extern void showProgress(size_t* linelen, size_t* trbyte);
@@ -211,23 +211,23 @@ extern void init_henv(struct html_feed_environ*, struct readbuffer*,
     struct environment*, int, TextLineList*, int, int);
 extern void completeHTMLstream(struct html_feed_environ*,
     struct readbuffer*);
-extern void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src,
+extern void loadHTMLstream(struct UrlStream* f, Buffer* newBuf, FILE* src,
     int internal);
 extern Buffer* loadHTMLString(pStr page);
 #ifdef USE_GOPHER
 #ifdef USE_M17N
-extern pStr loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset);
+extern pStr loadGopherDir(struct UrlStream* uf, ParsedURL* pu, wc_ces* charset);
 extern pStr loadGopherSearch(ParsedURL* pu, wc_ces* charset);
 #else
-extern pStr loadGopherDir0(URLFile* uf, ParsedURL* pu);
+extern pStr loadGopherDir0(struct UrlStream* uf, ParsedURL* pu);
 extern pStr loadGopherSearch0(ParsedURL* pu);
 #define loadGopherDir(uf, pu, charset) loadGopherDir0(uf, pu)
 #define loadGopherSearch(pu, charset) loadGopherSearch0(pu)
 #endif
 #endif /* USE_GOPHER */
-extern Buffer* loadBuffer(URLFile* uf, Buffer* newBuf);
+extern Buffer* loadBuffer(struct UrlStream* uf, Buffer* newBuf);
 #ifdef USE_IMAGE
-extern Buffer* loadImageBuffer(URLFile* uf, Buffer* newBuf);
+extern Buffer* loadImageBuffer(struct UrlStream* uf, Buffer* newBuf);
 #endif
 extern void saveBuffer(Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(Buffer* buf, FILE* f, int cont);
@@ -236,22 +236,22 @@ extern Buffer* getpipe(const char* cmd);
 extern Buffer* openPagerBuffer(struct input_stream* stream, Buffer* buf);
 extern Buffer* openGeneralPagerBuffer(struct input_stream* stream);
 extern Line* getNextPage(Buffer* buf, int plen);
-extern int save2tmp(URLFile uf, const char* tmpf);
-extern Buffer* doExternal(URLFile uf, const char* type, Buffer* defaultbuf);
+extern int save2tmp(struct UrlStream uf, const char* tmpf);
+extern Buffer* doExternal(struct UrlStream uf, const char* type, Buffer* defaultbuf);
 extern int _doFileCopy(const char* tmpf, const char* defstr, int download);
 static inline int doFileCopy(const char* tmpf, const char* defstr)
 {
     return _doFileCopy(tmpf, defstr, false);
 }
 extern int doFileMove(char* tmpf, char* defstr);
-extern int doFileSave(URLFile uf, const char* defstr);
+extern int doFileSave(struct UrlStream uf, const char* defstr);
 extern int checkCopyFile(const char* path1, const char* path2);
 extern int checkSaveFile(struct input_stream* stream, const char* path);
 extern int checkOverWrite(const char* path);
 extern int confirm(pStr prompt);
 extern char confirm_multi(const char* prompt);
 extern int matchattr(const char* p, const char* attr, int len, pStr* value);
-extern void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu);
+extern void readHeader(struct UrlStream* uf, Buffer* newBuf, int thru, ParsedURL* pu);
 extern char* checkHeader(Buffer* buf, const char* field);
 extern void displayBuffer(Buffer* buf, int mode);
 extern void addChar(char c, Lineprop mode);

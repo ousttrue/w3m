@@ -1,4 +1,3 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 /*
  * w3m: WWW wo Miru utility
  *
@@ -6,10 +5,7 @@
  *
  * You can use,copy,modify and distribute this program without any permission.
  */
-
-#ifndef W3M_FM_H
-#define W3M_FM_H
-
+#pragma once
 #include "config.h" /* At top for defines below */
 
 #include <gc/gc.h>
@@ -74,7 +70,6 @@ extern int REV_LB[];
 #define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
 #define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
-
 /*
  * Globals.
  */
@@ -82,14 +77,3 @@ extern int REV_LB[];
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char* MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-#ifdef USE_IMAGE
-global int activeImage init(false);
-#endif
-
-global int is_redisplay init(false);
-
-/*
- * Externals
- */
-
-#endif /* not W3M_FM_H */

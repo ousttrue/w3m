@@ -1,5 +1,6 @@
 #include "alloc.h"
 #include "w3m.h"
+#include "http_request.h"
 #include "tab.h"
 #include "gettext_helper.h"
 #include "entity.h"
@@ -19,6 +20,8 @@
 #include "libwc/charset.h"
 
 #include <strings.h>
+
+bool is_redisplay = false;
 
 static JMP_BUF AbortLoading;
 struct frameset* renderFrameSet = NULL;

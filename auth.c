@@ -7,6 +7,8 @@
 #include "rc.h"
 #include "proto.h"
 #include "linein.h"
+#include "http_request.h"
+#include "charset.h"
 #include <sys/stat.h>
 
 struct auth_pass {
@@ -298,7 +300,7 @@ pStr get_auth_param(struct auth_param* auth, const char* name)
 }
 
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, ParsedURL* pu, HRequest* hr,
+    TextList* extra_header, ParsedURL* pu, struct http_request* hr,
     FormList* request,
     pStr* uname, pStr* pwd)
 {

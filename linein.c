@@ -2,6 +2,7 @@
 #include "w3m.h"
 #include "str_gc.h"
 #include "gettext_helper.h"
+#include "http_request.h"
 #include "str_const.h"
 #include "alloc.h"
 #include "buffer.h"

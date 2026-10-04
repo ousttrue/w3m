@@ -1,6 +1,8 @@
 #include "news.h"
 #include "buffer.h"
+#include "http_request.h"
 #include "w3m.h"
+#include "input_stream.h"
 #include "mymktime.h"
 #include "indep.h"
 #include "charset.h"

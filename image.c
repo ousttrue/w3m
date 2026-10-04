@@ -17,6 +17,8 @@
 #include <strings.h>
 #include <unistd.h>
 
+bool activeImage = false;
+
 const char* image_source = (NULL);
 
 #ifdef USE_IMAGE

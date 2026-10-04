@@ -9,6 +9,8 @@
 #include "proto.h"
 #include "menu.h"
 #include "rc.h"
+#include "http_request.h"
+#include "charset.h"
 #include "libwc/charset.h"
 
 #include <math.h>
@@ -556,7 +558,7 @@ page_info_panel(Buffer* buf)
         buf->real_type ? html_quote(buf->real_type) : "unknown",
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
-#ifdef USE_M17N
+
     if (buf->document_charset != InnerCharset) {
         list = wc_get_ces_list();
         Strcat_charp(tmp,
@@ -571,7 +573,7 @@ page_info_panel(Buffer* buf)
         Strcat_charp(tmp, "</select>");
         Strcat_charp(tmp, "<tr><td><td><input type=submit value=Change>");
     }
-#endif
+
     Strcat_m_charp(tmp,
         "<tr valign=top><td nowrap>Number of lines<td>",
         Sprintf("%d", all)->ptr,

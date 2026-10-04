@@ -1,11 +1,13 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "symbol.h"
 #include "w3m.h"
+#include "StrWriter.h"
+#include "charset.h"
 #include "alloc.h"
 #include "ctrlcode.h"
 #include "config.h"
 #include "libwc/status.h"
 #include "libwc/ccs.h"
+#include "libwc/conv.h"
 
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

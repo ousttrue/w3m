@@ -21,7 +21,7 @@ typedef struct Anchor {
     Image* image;
 
     const char* url;
-    FormItemList* formitem;
+    struct form_item_list* formitem;
 } Anchor;
 
 typedef struct {
@@ -38,7 +38,7 @@ typedef struct {
     int prevhseq;
 } HmarkerList;
 
-AnchorList* putAnchor(AnchorList* al, const char* url, FormItemList *formitem,
+AnchorList* putAnchor(AnchorList* al, const char* url, struct form_item_list* formitem,
     const char* target,
     Anchor** anchor_return, const char* referer,
     const char* title, unsigned char key, int line,
@@ -51,7 +51,8 @@ Anchor* registerName(struct _Buffer* buf, const char* url, int line, int pos);
 Anchor* registerImg(struct _Buffer* buf, const char* url, const char* title, int line,
     int pos);
 struct parsed_tag;
-Anchor* registerForm(struct _Buffer* buf, FormList* flist,
+struct form_list;
+Anchor* registerForm(struct _Buffer* buf, struct form_list* flist,
     struct parsed_tag* tag, int line, int pos);
 int onAnchor(Anchor* a, int line, int pos);
 Anchor* retrieveAnchor(AnchorList* al, int line, int pos);

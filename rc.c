@@ -1706,8 +1706,11 @@ to_str(struct param_ptr* p)
 #endif
         /*  SystemCharset -> InnerCharset */
         pStr os = Strnew();
-        struct Writer w = makeWriter(os);
-        conv_from_system(&WcOption, &w, *(char**)p->varptr);
+        char **pp=(char**)p->varptr;
+        if(pp && *pp){
+            struct Writer w = makeWriter(os);
+            conv_from_system(&WcOption, &w, *pp);
+        }
         return os;
     }
     case P_PIXELS:

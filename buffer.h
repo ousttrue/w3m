@@ -1,10 +1,10 @@
 #pragma once
 #include "line.h"
 #include "anchor.h"
-#include "charset.h"
 #include "config.h"
 #include "form.h"
 #include "map.h"
+#include "url.h"
 
 /* Flags for displayBuffer() */
 #define B_NORMAL 0
@@ -91,8 +91,8 @@ typedef struct _Buffer {
     struct MapList* maplist;
     HmarkerList* hmarklist;
     HmarkerList* imarklist;
-    ParsedURL currentURL;
-    ParsedURL* baseURL;
+    struct Url currentURL;
+    struct Url* baseURL;
     char* baseTarget;
     int real_scheme;
     const char* sourcefile;
