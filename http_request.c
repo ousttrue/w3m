@@ -1403,8 +1403,8 @@ make_domain_list(char* domain_list)
             Strcat_char(tmp, *p++);
         if (tmp->len > 0) {
             if (domains == NULL)
-                domains = newTextList();
-            pushText(domains, tmp->ptr);
+                domains = TextList_new();
+            TextList_push(domains, tmp->ptr);
         }
         while (*p && IS_SPACE(*p))
             p++;

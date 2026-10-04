@@ -314,9 +314,9 @@ void pushdata(struct table* t, int row, int col, const char* data)
 {
     check_row(t, row);
     if (t->tabdata[row][col] == NULL)
-        t->tabdata[row][col] = newGeneralList();
+        t->tabdata[row][col] = GeneralList_new();
 
-    pushText((struct TextList*)t->tabdata[row][col], data ? data : "");
+    TextList_push((struct TextList*)t->tabdata[row][col], data ? data : "");
 }
 
 static void
@@ -326,8 +326,8 @@ suspend_or_pushdata(struct table* tbl, const char* line)
         pushdata(tbl, tbl->row, tbl->col, line);
     else {
         if (!tbl->suspended_data)
-            tbl->suspended_data = newTextList();
-        pushText(tbl->suspended_data, line ? line : "");
+            tbl->suspended_data = TextList_new();
+        TextList_push(tbl->suspended_data, line ? line : "");
     }
 }
 
@@ -500,7 +500,7 @@ void print_item(struct table* t, int row, int col, int width, pStr buf)
     struct TextLine* lbuf;
 
     if (t->tabdata[row])
-        lbuf = popTextLine((struct TextLineList*)t->tabdata[row][col]);
+        lbuf = TextLineList_unshift((struct TextLineList*)t->tabdata[row][col]);
     else
         lbuf = NULL;
 
@@ -518,7 +518,7 @@ void print_item(struct table* t, int row, int col, int width, pStr buf)
         align(lbuf, width, alignment);
         Strcat(buf, lbuf->line);
     } else {
-        lbuf = newTextLine(NULL, 0);
+        lbuf = TextLine_new(NULL, 0);
         if (DisableCenter)
             align(lbuf, width, ALIGN_LEFT);
         else
@@ -645,7 +645,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
     if (tbl->tabdata[row] == NULL || tbl->tabdata[row][col] == NULL)
         return;
     orgdata = (struct TextList*)tbl->tabdata[row][col];
-    tbl->tabdata[row][col] = newGeneralList();
+    tbl->tabdata[row][col] = GeneralList_new();
 
     init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL,
         (struct TextLineList*)tbl->tabdata[row][col],
@@ -684,7 +684,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
                         ti != NULL; ti = ti->next)
                         align(ti->ptr, h_env.limit, alignment);
                 }
-                appendTextLineList(h_env.buf, tbl->tables[id].buf);
+                TextLineList_concat(h_env.buf, tbl->tables[id].buf);
                 if (h_env.maxlimit < limit)
                     h_env.maxlimit = limit;
                 restore_fonteffect(&h_env, h_env.obuf);
@@ -1460,7 +1460,7 @@ make_caption(struct table* t, struct html_feed_environ* h_env)
         limit = t->total_width;
     else
         limit = h_env->limit;
-    init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(),
+    init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, TextLineList_new(),
         limit, h_env->envs[h_env->envc].indent);
     HTMLlineproc1("<center>", &henv);
     HTMLlineproc0(t->caption->ptr, &henv, false);
@@ -1618,10 +1618,10 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
                 h /= 2;
             if (h <= 0)
                 continue;
-            l = newTextLineList();
+            l = TextLineList_new();
             for (k = 0; k < h; k++)
-                pushTextLine(l, newTextLine(NULL, 0));
-            t->tabdata[j][i] = appendGeneralList(
+                TextLineList_push(l, TextLine_new(NULL, 0));
+            t->tabdata[j][i] = GeneralList_concat(
                 (struct GeneralList*)l,
                 (struct GeneralList*)t->tabdata[j][i]);
         }
@@ -1946,8 +1946,8 @@ begin_cell(struct table* t, struct table_mode* mode)
     if (t->suspended_data) {
         check_row(t, t->row);
         if (t->tabdata[t->row][t->col] == NULL)
-            t->tabdata[t->row][t->col] = newGeneralList();
-        appendGeneralList(
+            t->tabdata[t->row][t->col] = GeneralList_new();
+        GeneralList_concat(
             (struct GeneralList*)t->tabdata[t->row][t->col],
             (struct GeneralList*)t->suspended_data);
         t->suspended_data = NULL;
@@ -3050,7 +3050,7 @@ void pushTable(struct table* tbl, struct table* tbl1)
     tbl->tables[tbl->ntable].col = col;
     tbl->tables[tbl->ntable].row = row;
     tbl->tables[tbl->ntable].indent = tbl->indent;
-    tbl->tables[tbl->ntable].buf = newTextLineList();
+    tbl->tables[tbl->ntable].buf = TextLineList_new();
     check_row(tbl, row);
     if (col + 1 <= tbl->maxcol && tbl->tabattr[row][col + 1] & HTT_X)
         tbl->tables[tbl->ntable].cell = tbl->cell.icell;

@@ -404,17 +404,17 @@ struct TextList* fileToDelete;
 
 void initFileToDelete()
 {
-    fileToDelete = newTextList();
+    fileToDelete = TextList_new();
 }
 
 void pushTmpFile(const char* tmpf)
 {
-    pushText(fileToDelete, tmpf);
+    TextList_push(fileToDelete, tmpf);
 }
 
 const char* popFileToDelete()
 {
-    return popText(fileToDelete);
+    return TextList_unshift(fileToDelete);
 }
 
 static const char* tmpf_base[MAX_TMPF_TYPE] = {
@@ -433,7 +433,7 @@ pStr tmpfname(int CurrentPid, enum TmpFileType type, const char* ext)
         type == TMPF_HIST ? rc_dir : tmp_dir,
         tmpf_base[type],
         CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
-    pushText(fileToDelete, tmpf->ptr);
+    TextList_push(fileToDelete, tmpf->ptr);
     return tmpf;
 }
 

@@ -12,9 +12,9 @@
 
 #if LANG == JA
 /* FIXME: gettextize here */
-#define BKMARK_TITLE "¥Ö¥Ã¥¯¥Þ¡¼¥¯¤ÎÅÐÏ¿"
-#define BKMARK_ADD "ÅÐÏ¿"
-#define DEFAULT_SECTION "Ì¤Ê¬Îà"
+#define BKMARK_TITLE "ï¿½Ö¥Ã¥ï¿½ï¿½Þ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿"
+#define BKMARK_ADD "ï¿½ï¿½Ï¿"
+#define DEFAULT_SECTION "Ì¤Ê¬ï¿½ï¿½"
 #else
 #define BKMARK_TITLE "Register to my bookmark"
 #define BKMARK_ADD "ADD"
@@ -117,7 +117,7 @@ insert_bookmark(char *bmark, struct parsed_tagarg *data)
     char *url;
     char *section, *title;
     FILE *f;
-    struct TextList *tl = newTextList();
+    struct TextList *tl = TextList_new();
     int section_found = 0;
     int bmark_added = 0;
     pStr tmp, section_tmp;
@@ -152,21 +152,21 @@ insert_bookmark(char *bmark, struct parsed_tagarg *data)
 	if (section_found && !bmark_added) {
 	    Strremovefirstspaces(tmp);
 	    if (Strcmp_charp(tmp, end_section) == 0) {
-		pushText(tl,
+		TextList_push(tl,
 			 Sprintf("<li><a href=\"%s\">%s</a>\n", url,
 				 title)->ptr);
 		bmark_added = 1;
 	    }
 	}
 	if (!bmark_added && Strcasecmp_charp(tmp, "</body>\n") == 0) {
-	    pushText(tl, Sprintf("<h2>%s</h2>\n<ul>\n", section)->ptr);
-	    pushText(tl,
+	    TextList_push(tl, Sprintf("<h2>%s</h2>\n<ul>\n", section)->ptr);
+	    TextList_push(tl,
 		     Sprintf("<li><a href=\"%s\">%s</a>\n", url, title)->ptr);
-	    pushText(tl, end_section);
-	    pushText(tl, "</ul>\n");
+	    TextList_push(tl, end_section);
+	    TextList_push(tl, "</ul>\n");
 	    bmark_added = 1;
 	}
-	pushText(tl, tmp->ptr);
+	TextList_push(tl, tmp->ptr);
     }
     fclose(f);
     if (!bmark_added) {
@@ -179,7 +179,7 @@ insert_bookmark(char *bmark, struct parsed_tagarg *data)
 	return FALSE;
     }
     while (tl->nitem) {
-	fputs(popText(tl), f);
+	fputs(TextList_unshift(tl), f);
     }
     fclose(f);
     return TRUE;

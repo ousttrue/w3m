@@ -125,7 +125,7 @@ printMailcapPanel(char* mailcap)
 static void
 editMailcap(const char* mailcap, struct parsed_tagarg* args)
 {
-    struct TextList* t = newTextList();
+    struct TextList* t = TextList_new();
     struct TextListItem* ti;
     FILE* f;
     pStr tmp;
@@ -149,12 +149,12 @@ editMailcap(const char* mailcap, struct parsed_tagarg* args)
             }
         }
         if (!delete_it)
-            pushText(t, Sprintf("%s;\t%s\n", type, viewer)->ptr);
+            TextList_push(t, Sprintf("%s;\t%s\n", type, viewer)->ptr);
     }
     type = tag_get_value(args, "newtype");
     viewer = tag_get_value(args, "newcmd");
     if (type != NULL && *type != '\0' && viewer != NULL && *viewer != '\0')
-        pushText(t, Sprintf("%s;\t%s\n", type, viewer)->ptr);
+        TextList_push(t, Sprintf("%s;\t%s\n", type, viewer)->ptr);
     fclose(f);
     if ((f = fopen(mailcap, "w")) == NULL)
         bye("Can't write to", mailcap);

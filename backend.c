@@ -145,7 +145,7 @@ get(struct TextList* argv)
 {
     const char *p, *url = NULL;
     int flag = false;
-    while ((p = popText(argv))) {
+    while ((p = TextList_unshift(argv))) {
         if (!strcasecmp(p, "-download_only"))
             flag = true;
         else
@@ -165,21 +165,21 @@ post(struct TextList* argv)
                    *enctype = NULL, *body = NULL, *boundary = NULL, *url = NULL;
     int flag = false, length = 0;
 
-    while ((p = popText(argv))) {
+    while ((p = TextList_unshift(argv))) {
         if (!strcasecmp(p, "-download_only"))
             flag = true;
         else if (!strcasecmp(p, "-target"))
-            target = popText(argv);
+            target = TextList_unshift(argv);
         else if (!strcasecmp(p, "-charset"))
-            charset = popText(argv);
+            charset = TextList_unshift(argv);
         else if (!strcasecmp(p, "-enctype"))
-            enctype = popText(argv);
+            enctype = TextList_unshift(argv);
         else if (!strcasecmp(p, "-body"))
-            body = popText(argv);
+            body = TextList_unshift(argv);
         else if (!strcasecmp(p, "-boundary"))
-            boundary = popText(argv);
+            boundary = TextList_unshift(argv);
         else if (!strcasecmp(p, "-length"))
-            length = atol(popText(argv));
+            length = atol(TextList_unshift(argv));
         else
             url = p;
     }
@@ -200,7 +200,7 @@ set(struct TextList* argv)
         int i;
         for (i = 0; variable_table[i].name; i++) {
             if (!strcasecmp(variable_table[i].name, argv->first->ptr)) {
-                popText(argv);
+                TextList_unshift(argv);
                 if (variable_table[i].set_func)
                     variable_table[i].set_func(argv);
                 break;
@@ -217,7 +217,7 @@ show(struct TextList* argv)
         int i;
         for (i = 0; variable_table[i].name; i++) {
             if (!strcasecmp(variable_table[i].name, argv->first->ptr)) {
-                popText(argv);
+                TextList_unshift(argv);
                 if (variable_table[i].show_func)
                     variable_table[i].show_func(argv);
                 break;
@@ -270,7 +270,7 @@ call_command_function(const char* str)
     if (argv->nitem > 0) {
         for (i = 0; command_table[i].name; i++) {
             if (!strcasecmp(command_table[i].name, argv->first->ptr)) {
-                popText(argv);
+                TextList_unshift(argv);
                 if (command_table[i].func)
                     command_table[i].func(argv);
                 break;
@@ -288,7 +288,7 @@ int backend(void)
 
     const char* str;
     if (backend_batch_commands) {
-        while ((str = popText(backend_batch_commands)))
+        while ((str = TextList_unshift(backend_batch_commands)))
             call_command_function(str);
     } else {
         while ((str = readline("w3m> ")))
@@ -320,7 +320,7 @@ split(const char* p)
 {
     int in_double_quote = false, in_single_quote = false;
     pStr s = Strnew();
-    struct TextList* tp = newTextList();
+    struct TextList* tp = TextList_new();
 
     for (; *p; p++) {
         switch (*p) {
@@ -371,7 +371,7 @@ split(const char* p)
             if (in_double_quote || in_single_quote) {
                 Strcat_char(s, *p);
             } else if (s->len > 0) {
-                pushText(tp, s->ptr);
+                TextList_push(tp, s->ptr);
                 s = Strnew();
             }
             break;
@@ -381,6 +381,6 @@ split(const char* p)
     }
 LAST:
     if (s->len > 0)
-        pushText(tp, s->ptr);
+        TextList_push(tp, s->ptr);
     return tp;
 }

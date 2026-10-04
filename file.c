@@ -336,7 +336,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
     FILE* src = NULL;
     Lineprop* propBuffer = NULL;
 
-    headerlist = newBuf->document_header = newTextList();
+    headerlist = newBuf->document_header = TextList_new();
     if (uf->scheme == SCM_HTTP
         || uf->scheme == SCM_HTTPS)
         http_response_code = -1;
@@ -604,7 +604,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             }
         }
         if (headerlist)
-            pushText(headerlist, lineBuf2->ptr);
+            TextList_push(headerlist, lineBuf2->ptr);
         Strfree(lineBuf2);
         lineBuf2 = NULL;
     }
@@ -814,7 +814,7 @@ loadGeneralFile(const char* path, ParsedURL* volatile current, const char* refer
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = true;
     SigActionFunc volatile prevtrap = NULL;
-    struct TextList* extra_header = newTextList();
+    struct TextList* extra_header = TextList_new();
     pStr uname = NULL;
     pStr pwd = NULL;
     pStr realm = NULL;
@@ -1849,7 +1849,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
     }
 
     if (force == 1 || obuf->flag & RB_NFLUSHED) {
-        struct TextLine* lbuf = newTextLine(line, obuf->pos);
+        struct TextLine* lbuf = TextLine_new(line, obuf->pos);
         if (RB_GET_ALIGN(obuf) == RB_CENTER) {
             align(lbuf, width, ALIGN_CENTER);
         } else if (RB_GET_ALIGN(obuf) == RB_RIGHT) {
@@ -1869,7 +1869,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         if (lbuf->pos > h_env->maxlimit)
             h_env->maxlimit = lbuf->pos;
         if (buf)
-            pushTextLine(buf, lbuf);
+            TextLineList_push(buf, lbuf);
         else if (f) {
             Strfputs(Str_conv_to_halfdump(&WcOption, lbuf->line), f);
             fputc('\n', f);
@@ -1884,7 +1884,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
 
 #define APPEND(str)                    \
     if (buf)                           \
-        appendTextLine(buf, (str), 0); \
+        TextLineList_append(buf, (str), 0); \
     else if (f)                        \
     Strfputs((str), f)
 
@@ -2021,7 +2021,7 @@ void purgeline(struct html_feed_environ* h_env)
     if (h_env->buf == NULL || h_env->blank_lines == 0)
         return;
 
-    if (!(tl = rpopTextLine(h_env->buf)))
+    if (!(tl = TextLineList_pop(h_env->buf)))
         return;
     p = tl->line->ptr;
     tmp = Strnew();
@@ -2031,7 +2031,7 @@ void purgeline(struct html_feed_environ* h_env)
             Strcat_charp_n(tmp, q, p - q);
         }
     }
-    appendTextLine(h_env->buf, tmp, 0);
+    TextLineList_append(h_env->buf, tmp, 0);
     h_env->blank_lines--;
 }
 
@@ -4793,7 +4793,7 @@ HTMLlineproc2body(Buffer* buf, pStr (*feed)(void), int llimit)
                     if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
                         struct MapList* m = New(struct MapList);
                         m->name = Strnew_charp(p);
-                        m->area = newGeneralList();
+                        m->area = GeneralList_new();
                         m->next = buf->maplist;
                         buf->maplist = m;
                     }
@@ -4817,7 +4817,7 @@ HTMLlineproc2body(Buffer* buf, pStr (*feed)(void), int llimit)
                         parsedtag_get_value(tag, ATTR_SHAPE, &r);
                         parsedtag_get_value(tag, ATTR_COORDS, &s);
                         a = newMapArea(p, t, q, r, s);
-                        pushValue(buf->maplist->area, (void*)a);
+                        GeneralList_push(buf->maplist->area, (void*)a);
                     }
                     break;
                 case HTML_FRAMESET:
@@ -5816,45 +5816,45 @@ print_internal_information(struct html_feed_environ* henv)
 {
     int i;
     pStr s;
-    struct TextLineList* tl = newTextLineList();
+    struct TextLineList* tl = TextLineList_new();
 
     s = Strnew_charp("<internal>");
-    pushTextLine(tl, newTextLine(s, 0));
+    TextLineList_push(tl, TextLine_new(s, 0));
     if (henv->title) {
         s = Strnew_m_charp("<title_alt title=\"",
             html_quote(henv->title), "\">", NULL);
-        pushTextLine(tl, newTextLine(s, 0));
+        TextLineList_push(tl, TextLine_new(s, 0));
     }
     if (n_select > 0) {
         FormSelectOptionItem* ip;
         for (i = 0; i < n_select; i++) {
             s = Sprintf("<select_int selectnumber=%d>", i);
-            pushTextLine(tl, newTextLine(s, 0));
+            TextLineList_push(tl, TextLine_new(s, 0));
             for (ip = select_option[i].first; ip; ip = ip->next) {
                 s = Sprintf("<option_int value=\"%s\" label=\"%s\"%s>",
                     html_quote(ip->value ? ip->value->ptr : ip->label->ptr),
                     html_quote(ip->label->ptr),
                     ip->checked ? " selected" : "");
-                pushTextLine(tl, newTextLine(s, 0));
+                TextLineList_push(tl, TextLine_new(s, 0));
             }
             s = Strnew_charp("</select_int>");
-            pushTextLine(tl, newTextLine(s, 0));
+            TextLineList_push(tl, TextLine_new(s, 0));
         }
     }
     if (n_textarea > 0) {
         for (i = 0; i < n_textarea; i++) {
             s = Sprintf("<textarea_int textareanumber=%d>", i);
-            pushTextLine(tl, newTextLine(s, 0));
+            TextLineList_push(tl, TextLine_new(s, 0));
             s = Strnew_charp(html_quote(textarea_str[i]->ptr));
             Strcat_charp(s, "</textarea_int>");
-            pushTextLine(tl, newTextLine(s, 0));
+            TextLineList_push(tl, TextLine_new(s, 0));
         }
     }
     s = Strnew_charp("</internal>");
-    pushTextLine(tl, newTextLine(s, 0));
+    TextLineList_push(tl, TextLine_new(s, 0));
 
     if (henv->buf)
-        appendTextLineList(henv->buf, tl);
+        TextLineList_concat(henv->buf, tl);
     else if (henv->f) {
         struct TextLineListItem* p;
         for (p = tl->first; p; p = p->next)
@@ -5921,7 +5921,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     if (w3m_halfdump)
         htmlenv1.f = stdout;
     else
-        htmlenv1.buf = newTextLineList();
+        htmlenv1.buf = TextLineList_new();
 #if defined(USE_M17N) || defined(USE_IMAGE)
     cur_baseURL = baseURL(newBuf);
 #endif

@@ -5418,8 +5418,8 @@ int main(int argc, char** argv)
         } else if (ISOPT("-backend_batch")) {
             w3m_backend = true;
             if (!backend_batch_commands)
-                backend_batch_commands = newTextList();
-            pushText(backend_batch_commands, NXTARG());
+                backend_batch_commands = TextList_new();
+            TextList_push(backend_batch_commands, NXTARG());
         } else if (ISOPT("-bookmark")) {
             BookmarkFile = NXTARG();
             if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {

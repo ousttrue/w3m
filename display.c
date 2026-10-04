@@ -1049,10 +1049,10 @@ void record_err_message(const char* s)
 {
     if (fmInitialized) {
         if (!message_list)
-            message_list = newGeneralList();
+            message_list = GeneralList_new();
         if (message_list->nitem >= LINES)
-            popValue(message_list);
-        pushValue(message_list, allocStr(s).ptr);
+            GeneralList_unshift(message_list);
+        GeneralList_push(message_list, allocStr(s).ptr);
     }
 }
 

@@ -3,7 +3,7 @@
 #include "alloc.h"
 
 struct ListItem*
-newListItem(void* s, struct ListItem* n, struct ListItem* p)
+GeneralList_newItem(void* s, struct ListItem* n, struct ListItem* p)
 {
     struct ListItem* it = New(struct ListItem);
     it->ptr = s;
@@ -13,7 +13,7 @@ newListItem(void* s, struct ListItem* n, struct ListItem* p)
 }
 
 struct GeneralList*
-newGeneralList(void)
+GeneralList_new(void)
 {
     struct GeneralList* tl = New(struct GeneralList);
     tl->first = tl->last = NULL;
@@ -21,11 +21,11 @@ newGeneralList(void)
     return tl;
 }
 
-void pushValue(struct GeneralList* tl, void* s)
+void GeneralList_push(struct GeneralList* tl, void* s)
 {
     if (s == NULL || tl == NULL || tl->nitem >= GENERAL_LIST_MAX)
         return;
-    struct ListItem* it = newListItem(s, NULL, tl->last);
+    struct ListItem* it = GeneralList_newItem(s, NULL, tl->last);
     if (tl->first == NULL) {
         tl->first = it;
         tl->last = it;
@@ -37,7 +37,7 @@ void pushValue(struct GeneralList* tl, void* s)
     }
 }
 
-void* popValue(struct GeneralList* tl)
+void* GeneralList_unshift(struct GeneralList* tl)
 {
     if (tl == NULL || tl->first == NULL)
         return NULL;
@@ -51,7 +51,7 @@ void* popValue(struct GeneralList* tl)
     return f->ptr;
 }
 
-void* rpopValue(struct GeneralList* tl)
+void* GeneralList_pop(struct GeneralList* tl)
 {
     if (tl == NULL || tl->last == NULL)
         return NULL;
@@ -65,7 +65,7 @@ void* rpopValue(struct GeneralList* tl)
     return f->ptr;
 }
 
-void delValue(struct GeneralList* tl, struct ListItem* it)
+void GeneralList_remove(struct GeneralList* tl, struct ListItem* it)
 {
     if (it->prev)
         it->prev->next = it->next;
@@ -79,7 +79,7 @@ void delValue(struct GeneralList* tl, struct ListItem* it)
 }
 
 struct GeneralList*
-appendGeneralList(struct GeneralList* tl, struct GeneralList* tl2)
+GeneralList_concat(struct GeneralList* tl, struct GeneralList* tl2)
 {
     if (tl && tl2) {
         if (tl2->first) {
@@ -107,7 +107,7 @@ appendGeneralList(struct GeneralList* tl, struct GeneralList* tl2)
 /* Line text list */
 
 struct TextLine*
-newTextLine(pStr line, int pos)
+TextLine_new(pStr line, int pos)
 {
     struct TextLine* lbuf = New(struct TextLine);
     if (line)
@@ -118,11 +118,11 @@ newTextLine(pStr line, int pos)
     return lbuf;
 }
 
-void appendTextLine(struct TextLineList* tl, pStr line, int pos)
+void TextLineList_append(struct TextLineList* tl, pStr line, int pos)
 {
 
     if (tl->last == NULL) {
-        pushTextLine(tl, newTextLine(Strdup(line), pos));
+        TextLineList_push(tl, TextLine_new(Strdup(line), pos));
     } else {
         struct TextLine* lbuf = tl->last->ptr;
         if (lbuf->line)

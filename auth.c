@@ -338,7 +338,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
             fprintf(stderr, "Wrong username or password\n");
         sleep(1);
         /* delete Authenticate: header from extra_header */
-        delText(extra_header, i);
+        TextList_remove(extra_header, i);
         invalidate_auth_user_passwd(pu, realm, *uname, *pwd, proxy);
     }
     *uname = NULL;
@@ -402,7 +402,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
     if (ss) {
         tmp = Strnew_charp(auth_header);
         Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
-        pushText(extra_header, tmp->ptr);
+        TextList_push(extra_header, tmp->ptr);
     } else {
         *uname = NULL;
         *pwd = NULL;

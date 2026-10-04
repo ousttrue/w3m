@@ -155,15 +155,15 @@ char* acceptableEncoding(void)
 
     if (encodings != NULL)
         return encodings->ptr;
-    struct TextList* l = newTextList();
+    struct TextList* l = TextList_new();
     for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
         if (check_command(d->cmd, d->auxbin_p)) {
-            pushText(l, d->encoding);
+            TextList_push(l, d->encoding);
         }
     }
     encodings = Strnew();
     const char* p;
-    while ((p = popText(l)) != NULL) {
+    while ((p = TextList_unshift(l)) != NULL) {
         if (encodings->len)
             Strcat_charp(encodings, ", ");
         Strcat_charp(encodings, p);

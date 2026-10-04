@@ -167,7 +167,7 @@ Hist* newHist(void)
     Hist* hist;
 
     hist = New(Hist);
-    hist->list = (HistList*)newGeneralList();
+    hist->list = (HistList*)GeneralList_new();
     hist->current = NULL;
     hist->hash = NULL;
     return hist;
@@ -193,7 +193,7 @@ unshiftHist(Hist* hist, const char* ptr)
 
     if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
         return NULL;
-    item = (HistItem*)newListItem(allocStr(ptr).ptr,
+    item = (HistItem*)GeneralList_newItem(allocStr(ptr).ptr,
         (struct ListItem*)hist->list->first, NULL);
     if (hist->list->first)
         hist->list->first->prev = item;
@@ -211,7 +211,7 @@ pushHist(Hist* hist, const char* ptr)
 
     if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
         return NULL;
-    item = (HistItem*)newListItem(allocStr(ptr).ptr,
+    item = (HistItem*)GeneralList_newItem(allocStr(ptr).ptr,
         NULL, (struct ListItem*)hist->list->last);
     if (hist->list->last)
         hist->list->last->next = item;

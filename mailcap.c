@@ -243,11 +243,11 @@ char* acceptableMimeTypes(void)
         return types->ptr;
 
     /* generate acceptable media types */
-    l = newTextList();
+    l = TextList_new();
     mhash = newHash_si(16); /* XXX */
     /* pushText(l, "text"); */
     putHash_si(mhash, "text", 1);
-    pushText(l, "image");
+    TextList_push(l, "image");
     putHash_si(mhash, "image", 1);
     for (int i = 0; i < mailcap_list->nitem; i++) {
         struct mailcap* mp = UserMailcap[i];
@@ -260,7 +260,7 @@ char* acceptableMimeTypes(void)
                 continue;
             mt = allocStr_n(mp->type, p - mp->type).ptr;
             if (getHash_si(mhash, mt, 0) == 0) {
-                pushText(l, mt);
+                TextList_push(l, mt);
                 putHash_si(mhash, mt, 1);
             }
         }
@@ -268,7 +268,7 @@ char* acceptableMimeTypes(void)
     types = Strnew();
     Strcat_charp(types, "text/html, text/*;q=0.5");
     const char* p;
-    while ((p = popText(l)) != NULL) {
+    while ((p = TextList_unshift(l)) != NULL) {
         Strcat_charp(types, ", ");
         Strcat_charp(types, p);
         Strcat_charp(types, "/*");

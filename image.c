@@ -470,7 +470,7 @@ void loadImage(Buffer* buf, int flag)
         if (image_cache[i])
             continue;
         while (1) {
-            cache = (ImageCache*)popValue(image_list);
+            cache = (ImageCache*)GeneralList_unshift(image_list);
             if (!cache) {
                 for (i = 0; i < n_load_image; i++) {
                     if (image_cache[i])
@@ -578,8 +578,8 @@ getImage(Image* image, ParsedURL* current, int flag)
             if (!getHash_sv(image_file, cache->file, NULL)) {
                 putHash_sv(image_file, cache->file, cache);
                 if (!image_list)
-                    image_list = newGeneralList();
-                pushValue(image_list, cache);
+                    image_list = GeneralList_new();
+                GeneralList_push(image_list, cache);
             }
         }
         if (!cache->index)
