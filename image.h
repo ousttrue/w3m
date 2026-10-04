@@ -5,6 +5,8 @@
 extern bool activeImage;
 extern const char* image_source;
 
+#define MAX_IMAGE_SIZE 2048
+
 #define IMG_FLAG_SKIP 1
 #define IMG_FLAG_AUTO 2
 

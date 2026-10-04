@@ -22,7 +22,6 @@
 #include "display.h"
 #include "download.h"
 #include "frame.h"
-#include "fm.h"
 #include "proto.h"
 #include "funcname1.h"
 #include "html.h"
@@ -6449,15 +6448,14 @@ getshell(const char* cmd)
 Buffer*
 getpipe(const char* cmd)
 {
-    FILE* f;
-    Buffer* buf;
-
     if (cmd == NULL || *cmd == '\0')
         return NULL;
-    f = popen(cmd, "r");
+
+    FILE* f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    buf = newBuffer(INIT_BUFFER_WIDTH);
+
+    Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
     buf->pagerSource = newFileStream(f, pclose);
     buf->filename = cmd;
     pStr os = Strnew();

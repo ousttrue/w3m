@@ -1,5 +1,7 @@
-#include "alloc.h"
 #define MAINPROGRAM
+#include "defun.h"
+
+#include "alloc.h"
 #include "backend.h"
 #include "gettext_helper.h"
 #include "tab.h"
@@ -18,7 +20,6 @@
 #include "cookie.h"
 #include "display.h"
 #include "download.h"
-#include "fm.h"
 #include "func.h"
 #include "proto.h"
 #include "frame.h"

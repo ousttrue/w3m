@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 
+#define PIPEBUFFERNAME "*stream*"
+
 enum {
     DEFAULT_URL_EMPTY,
     DEFAULT_URL_CURRENT,
@@ -111,6 +113,7 @@ extern char UseAltEntity;
 extern char UseGraphicChar;
 extern const char* DirBufferCommand;
 extern double pixel_per_char;
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 extern int BackgroundExtViewer;
 extern int CrossOriginReferer;
 extern int DecodeURL;

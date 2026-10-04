@@ -1,21 +1,20 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "image.h"
 #include "w3m.h"
 #include "str_const.h"
 #include "str_gc.h"
 #include "alloc.h"
 #include "config.h"
-#include "history.h"
-#include "fm.h"
 #include "proto.h"
 #include "rc.h"
 #include "terms.h"
-
+#include "hash.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
 #include <strings.h>
 #include <unistd.h>
+
+#define MAX_IMAGE 1000
 
 bool activeImage = false;
 

@@ -9,7 +9,6 @@
 #include "charset.h"
 #include "config.h"
 #include "display.h"
-#include "fm.h"
 #include "proto.h"
 #include "mouse.h"
 #include "rc.h"

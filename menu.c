@@ -1,5 +1,5 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "menu.h"
+#include "defun.h"
 #include "w3m.h"
 #include "gettext_helper.h"
 #include "StrWriter.h"
@@ -7,7 +7,6 @@
 #include "buffer.h"
 #include "charset.h"
 #include "config.h"
-#include "fm.h"
 #include "proto.h"
 #include "func.h"
 #include "funcname1.h"

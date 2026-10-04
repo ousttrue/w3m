@@ -12,7 +12,6 @@
 
 #include "alloc.h"
 #include "config.h"
-#include "fm.h"
 #include "proto.h"
 #include "html.h"
 #include "indep.h"

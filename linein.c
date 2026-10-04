@@ -8,7 +8,6 @@
 #include "buffer.h"
 #include "charset.h"
 #include "ctrlcode.h"
-#include "fm.h"
 #include "proto.h"
 #include "form.h"
 #include "indep.h"

@@ -9,8 +9,6 @@
 #include "Str.h"
 #include "charset.h"
 #include "config.h"
-#include "display.h"
-#include "fm.h"
 #include "proto.h"
 #include "html.h"
 #include "myctype.h"

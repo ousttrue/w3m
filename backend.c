@@ -6,7 +6,6 @@
 #include "config.h"
 #include "cookie.h"
 #include "download.h"
-#include "fm.h"
 #include "proto.h"
 #include "rc.h"
 #include "terms.h"
