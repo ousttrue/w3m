@@ -1,5 +1,6 @@
 #include "alloc.h"
 #include "w3m.h"
+#include "tab.h"
 #include "gettext_helper.h"
 #include "entity.h"
 #include "indep.h"

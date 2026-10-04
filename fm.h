@@ -64,51 +64,16 @@ extern int REV_LB[];
  * Macros.
  */
 
-#ifdef __EMX__
-#define strcasecmp stricmp
-#define strncasecmp strnicmp
-#endif /* __EMX__ */
-
-#define IS_ENDL(c) ((c) == '\0' || (c) == '\r' || (c) == '\n')
-#define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
-
-#define bpcmp(a, b) \
-    (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
-
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 #define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
-
-#define EOL(l) (&(l)->ptr[(l)->length])
-#define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])
 
 /*
  * Types.
  */
 
-#define COPY_BUFROOT(dstbuf, srcbuf)       \
-    {                                      \
-        (dstbuf)->rootX = (srcbuf)->rootX; \
-        (dstbuf)->rootY = (srcbuf)->rootY; \
-        (dstbuf)->COLS = (srcbuf)->COLS;   \
-        (dstbuf)->LINES = (srcbuf)->LINES; \
-    }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
-    {                                                      \
-        (dstbuf)->topLine = (srcbuf)->topLine;             \
-        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
-        (dstbuf)->pos = (srcbuf)->pos;                     \
-        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
-        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
-        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
-        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
-    }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
 #define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
 #define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
-#define NO_BUFFER ((Buffer*)1)
 
 /*
  * Globals.

@@ -26,6 +26,9 @@
 #define IS_XDIGIT(x) (GET_MYCTYPE(x) & MYCTYPE_XDIGIT)
 #define IS_INTSPACE(x) (MYCTYPE_MAP[(unsigned char)(x)] & MYCTYPE_INTSPACE)
 
+#define IS_ENDL(c) ((c) == '\0' || (c) == '\r' || (c) == '\n')
+#define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
+
 extern unsigned char MYCTYPE_MAP[];
 extern unsigned char MYCTYPE_DIGITMAP[];
 

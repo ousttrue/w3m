@@ -50,25 +50,30 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
 #include <time.h>
-#if defined(__CYGWIN__) && defined(USE_BINMODE_STREAM)
-#include <io.h>
-#endif
 
-#ifdef __MINGW32_VERSION
-#include <winsock.h>
-#endif
+#define COPY_BUFROOT(dstbuf, srcbuf)       \
+    {                                      \
+        (dstbuf)->rootX = (srcbuf)->rootX; \
+        (dstbuf)->rootY = (srcbuf)->rootY; \
+        (dstbuf)->COLS = (srcbuf)->COLS;   \
+        (dstbuf)->LINES = (srcbuf)->LINES; \
+    }
 
-#ifdef __MINGW32_VERSION
-WSADATA WSAData;
-#endif
+#define COPY_BUFPOSITION(dstbuf, srcbuf)                   \
+    {                                                      \
+        (dstbuf)->topLine = (srcbuf)->topLine;             \
+        (dstbuf)->currentLine = (srcbuf)->currentLine;     \
+        (dstbuf)->pos = (srcbuf)->pos;                     \
+        (dstbuf)->cursorX = (srcbuf)->cursorX;             \
+        (dstbuf)->cursorY = (srcbuf)->cursorY;             \
+        (dstbuf)->visualpos = (srcbuf)->visualpos;         \
+        (dstbuf)->currentColumn = (srcbuf)->currentColumn; \
+    }
+#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
+#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
 
-#ifndef __MINGW32_VERSION
 JMP_BUF IntReturn;
-#else
-_JBTYPE IntReturn[_JBLEN];
-#endif /* __MINGW32_VERSION */
 
 #ifdef SIGCHLD
 static void sig_chld(int signo);

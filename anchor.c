@@ -2,7 +2,6 @@
 #include "indep.h"
 #include "alloc.h"
 #include "config.h"
-#include "fm.h"
 #include "proto.h"
 #include "myctype.h"
 #include "rc.h"
@@ -13,6 +12,9 @@
 #include <strings.h>
 
 #define FIRST_ANCHOR_SIZE 30
+
+#define bpcmp(a, b) \
+    (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
 AnchorList*
 putAnchor(AnchorList* al, const char* url, FormItemList* formitem,
