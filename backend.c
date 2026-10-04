@@ -249,7 +249,7 @@ static void
 set_column(struct TextList* argv)
 {
     if (argv->nitem == 1) {
-        COLS = atol(argv->first->ptr);
+        // COLS = atol(argv->first->ptr);
     }
 }
 
@@ -282,8 +282,8 @@ call_command_function(const char* str)
 int backend(void)
 {
     w3m_dump = 0;
-    if (COLS == 0)
-        COLS = DEFAULT_COLS;
+    // if (COLS == 0)
+    //     COLS = DEFAULT_COLS;
 
     const char* str;
     if (backend_batch_commands) {

@@ -78,8 +78,8 @@ typedef struct _Buffer {
     int visualpos;
     short rootX;
     short rootY;
-    short COLS;
-    short LINES;
+    short cols;
+    short lines;
     struct input_stream* pagerSource;
     AnchorList* href;
     AnchorList* name;

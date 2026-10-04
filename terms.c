@@ -86,7 +86,6 @@ static void wc_putc_clear_status(void)
 
 #include <sys/ioctl.h>
 
-
 static const char* title_str;
 static int tty;
 
@@ -96,7 +95,6 @@ static void getTCstr(void);
 
 char* displayTitleTerm = NULL;
 int use_ti_te = true;
-
 
 #if defined(__CYGWIN__)
 #include <windows.h>
@@ -275,7 +273,6 @@ typedef struct termios TerminalMode;
 #define MODEFLAG(d) ((d).c_lflag)
 #define IMODEFLAG(d) ((d).c_iflag)
 
-
 /* Screen properties */
 #define S_SCREENPROP 0x0f
 #define S_NORMAL 0x00
@@ -359,11 +356,12 @@ char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
     *T_so, *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me,
     *T_ti, *T_te, *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
 
-int LINES, COLS;
+static struct TermSize TERM_SIZE = { 0, 0 };
+struct TermSize termSize()
+{
+    return TERM_SIZE;
+}
 int opt_cols;
-#if defined(__CYGWIN__)
-int LASTLINE;
-#endif /* defined(__CYGWIN__) */
 
 static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
@@ -735,7 +733,6 @@ int get_pixel_per_cell(int* ppc, int* ppl)
     int wp, hp, wc, hc;
     int i;
 
-
     fputs("\x1b[14t\x1b[18t", ttyf);
     flush_tty();
 
@@ -996,15 +993,7 @@ void getTCstr(void)
     GETSTR(T_ae, "ae"); /* alternative (graphic) charset end */
     GETSTR(T_ac, "ac"); /* graphics charset pairs */
     GETSTR(T_op, "op"); /* set default color pair to its original value */
-#if defined(CYGWIN) && CYGWIN < 1
-    /* for TERM=pcansi on MS-DOS prompt. */
-    T_eA = "";
-    T_as = "";
-    T_ae = "";
-    T_ac = "";
-#endif /* CYGWIN */
 
-    LINES = COLS = 0;
     setlinescols();
     setgraphchar();
 }
@@ -1017,22 +1006,22 @@ void setlinescols(void)
 
     i = ioctl(tty, TIOCGWINSZ, &wins);
     if (i >= 0 && wins.ws_row != 0 && wins.ws_col != 0) {
-        LINES = wins.ws_row;
-        COLS = wins.ws_col;
+        TERM_SIZE.lines = wins.ws_row;
+        TERM_SIZE.cols = wins.ws_col;
     }
 
     if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
-        LINES = i;
+        TERM_SIZE.lines = i;
     if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
-        COLS = i;
+        TERM_SIZE.cols = i;
     if (LINES <= 0)
-        LINES = tgetnum("li"); /* number of line */
+        TERM_SIZE.lines = tgetnum("li"); /* number of line */
     if (COLS <= 0)
-        COLS = tgetnum("co"); /* number of column */
+        TERM_SIZE.cols = tgetnum("co"); /* number of column */
     if (MaxCols && COLS > MaxCols)
-        COLS = MaxCols;
+        TERM_SIZE.cols = MaxCols;
     if (opt_cols && COLS > opt_cols)
-        COLS = opt_cols;
+        TERM_SIZE.cols = opt_cols;
 }
 
 void setupscreen(void)
@@ -1144,7 +1133,6 @@ void addmch(const char* pc, size_t len)
     p = ScreenImage[CurLine]->lineimage;
     pr = ScreenImage[CurLine]->lineprop;
 
-
     if (pr[CurColumn] & S_EOL) {
         if (c == ' ' && !(CurrentMode & M_SPACE)) {
             CurColumn++;
@@ -1176,8 +1164,7 @@ void addmch(const char* pc, size_t len)
             if (pr[i] & S_EOL) {
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
-            }
-            else {
+            } else {
                 for (i++; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
                     touch_column(i);
             }
@@ -1450,15 +1437,14 @@ void refresh(void)
                  * (COLS-1,LINES-1).
                  */
 #if !defined(USE_BG_COLOR) || defined(__CYGWIN__)
-                    if (line == LINES - 1 && col == COLS - 1)
-                        break;
+                if (line == LINES - 1 && col == COLS - 1)
+                    break;
 #endif /* !defined(USE_BG_COLOR) || defined(__CYGWIN__) */
                 if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
                     || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
                     || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED)
-                        || (mode & S_BCOLORED)
-                    )
+                        || (mode & S_BCOLORED))
                         writestr(T_op);
                     if (mode & S_GRAPHICS)
                         writestr(T_ae);
@@ -1519,9 +1505,7 @@ void refresh(void)
         }
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
-            if (mode & (S_COLORED
-                    | S_BCOLORED
-                    ))
+            if (mode & (S_COLORED | S_BCOLORED))
                 writestr(T_op);
             if (mode & S_GRAPHICS) {
                 writestr(T_ae);
@@ -1551,7 +1535,6 @@ void clear(void)
     }
     CurrentMode = C_ASCII;
 }
-
 
 /* XXX: conflicts with curses's clrtoeol(3) ? */
 void clrtoeol(void)
@@ -1703,13 +1686,13 @@ void term_title(const char* s)
     if (!fmInitialized)
         return;
     if (title_str != NULL) {
-/*
- * TODO(chimera lover):
- * broken, should rm once SUPPORT_WIN9X_CONSOLE_MBCS and
- * TERM=cygwin special handle announced deprecation and
- * no one complains
- */
-            fprintf(ttyf, title_str, s);
+        /*
+         * TODO(chimera lover):
+         * broken, should rm once SUPPORT_WIN9X_CONSOLE_MBCS and
+         * TERM=cygwin special handle announced deprecation and
+         * no one complains
+         */
+        fprintf(ttyf, title_str, s);
     }
 }
 
@@ -1729,7 +1712,6 @@ char getch(void)
     return c;
 }
 
-
 void bell(void)
 {
     write1(7);
@@ -1743,8 +1725,8 @@ skip_escseq(void)
     c = getch();
     if (c == '[' || c == 'O') {
         c = getch();
-            while (IS_DIGIT(c))
-                c = getch();
+        while (IS_DIGIT(c))
+            c = getch();
     }
 }
 
@@ -1778,7 +1760,6 @@ int sleep_till_anykey(int sec, int purge)
     return ret;
 }
 
-
 void flush_tty(void)
 {
     if (ttyf)
@@ -1800,4 +1781,3 @@ void touch_cursor(void)
         touch_column(i);
     }
 }
-

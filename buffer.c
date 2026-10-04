@@ -75,15 +75,11 @@ Lineprop NullProp[] = { 0 };
 Buffer*
 newBuffer(int width)
 {
-    Buffer* n;
-
-    n = New(Buffer);
+    Buffer* n = New(Buffer);
     if (n == NULL)
         exit(3);
     bzero(n, sizeof(Buffer));
     n->width = width;
-    n->COLS = COLS;
-    n->LINES = LASTLINE;
     n->currentURL.scheme = SCM_UNKNOWN;
     n->baseURL = NULL;
     n->baseTarget = NULL;
@@ -301,15 +297,15 @@ void gotoLine(Buffer* buf, int n)
         sprintf(msg, _("Last line is #%ld"), buf->lastLine->linenumber);
         set_delayed_message(msg);
         buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
+        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->lines - 1),
             false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->linenumber >= n) {
             buf->currentLine = l;
-            if (n < buf->topLine->linenumber || buf->topLine->linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
+            if (n < buf->topLine->linenumber || buf->topLine->linenumber + buf->lines <= n)
+                buf->topLine = lineSkip(buf, l, -(buf->lines + 1) / 2, false);
             break;
         }
     }
@@ -342,15 +338,15 @@ void gotoRealLine(Buffer* buf, int n)
         sprintf(msg, _("Last line is #%ld"), buf->lastLine->real_linenumber);
         set_delayed_message(msg);
         buf->currentLine = l;
-        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1),
+        buf->topLine = lineSkip(buf, buf->currentLine, -(buf->lines - 1),
             false);
         return;
     }
     for (; l != NULL; l = l->next) {
         if (l->real_linenumber >= n) {
             buf->currentLine = l;
-            if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + buf->LINES <= n)
-                buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
+            if (n < buf->topLine->real_linenumber || buf->topLine->real_linenumber + buf->lines <= n)
+                buf->topLine = lineSkip(buf, l, -(buf->lines + 1) / 2, false);
             break;
         }
     }
@@ -859,7 +855,7 @@ int columnSkip(Buffer* buf, int offset)
 {
     int i, maxColumn;
     int column = buf->currentColumn + offset;
-    int nlines = buf->LINES + 1;
+    int nlines = buf->lines + 1;
     Line* l;
 
     maxColumn = 0;
@@ -869,7 +865,7 @@ int columnSkip(Buffer* buf, int offset)
         if (l->width - 1 > maxColumn)
             maxColumn = l->width - 1;
     }
-    maxColumn -= buf->COLS - 1;
+    maxColumn -= buf->cols - 1;
     if (column < maxColumn)
         maxColumn = column;
     if (maxColumn < 0)
@@ -888,7 +884,7 @@ Line* lineSkip(Buffer* buf, Line* line, int offset, int last)
 
     l = currentLineSkip(buf, line, offset, last);
     if (!nextpage_topline)
-        for (i = buf->LINES - 1 - (buf->lastLine->linenumber - l->linenumber);
+        for (i = buf->lines - 1 - (buf->lastLine->linenumber - l->linenumber);
             i > 0 && l->prev != NULL; i--, l = l->prev)
             ;
     return l;
@@ -900,7 +896,7 @@ Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last)
     Line* l = line;
 
     if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-        n = line->linenumber + offset + buf->LINES;
+        n = line->linenumber + offset + buf->lines;
         if (buf->lastLine->linenumber < n)
             getNextPage(buf, n - buf->lastLine->linenumber);
         while ((last || (buf->lastLine->linenumber < n)) && (getNextPage(buf, 1) != NULL))

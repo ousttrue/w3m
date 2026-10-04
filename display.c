@@ -389,7 +389,7 @@ void displayBuffer(Buffer* buf, int mode)
             buf->rootX = COLS;
     } else
         buf->rootX = 0;
-    buf->COLS = COLS - buf->rootX;
+    buf->cols = COLS - buf->rootX;
     if (nTab > 1) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
@@ -397,9 +397,9 @@ void displayBuffer(Buffer* buf, int mode)
         if (ny > LASTLINE)
             ny = LASTLINE;
     }
-    if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
+    if (buf->rootY != ny || buf->lines != LASTLINE - ny) {
         buf->rootY = ny;
-        buf->LINES = LASTLINE - ny;
+        buf->lines = LASTLINE - ny;
         arrangeCursor(buf);
         mode = B_REDRAW_IMAGE;
     }
@@ -525,7 +525,7 @@ drawAnchorCursor(Buffer* buf)
     else
         hseq = -1;
     tline = buf->topLine->linenumber;
-    eline = tline + buf->LINES;
+    eline = tline + buf->lines;
     prevhseq = buf->hmarklist->prevhseq;
 
     if (buf->href) {
@@ -581,8 +581,8 @@ redrawNLine(Buffer* buf, int n)
         for (i = 0; i < COLS; i++)
             addch('~');
     }
-    for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
+    for (i = 0, l = buf->topLine; i < buf->lines; i++, l = l->next) {
+        if (i >= buf->lines - n || i < -n)
             l = redrawLine(buf, l, i + buf->rootY);
         if (l == NULL)
             break;
@@ -595,8 +595,8 @@ redrawNLine(Buffer* buf, int n)
     if (!(activeImage && displayImage && buf->img))
         return;
     move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
-    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
-        if (i >= buf->LINES - n || i < -n)
+    for (i = 0, l = buf->topLine; i < buf->lines && l; i++, l = l->next) {
+        if (i >= buf->lines - n || i < -n)
             redrawLineImage(buf, l, i + buf->rootY);
     }
     getAllImage(buf);
@@ -616,7 +616,7 @@ redrawLine(Buffer* buf, Line* l, int i)
 
     if (l == NULL) {
         if (buf->pagerSource) {
-            l = getNextPage(buf, buf->LINES + buf->rootY - i);
+            l = getNextPage(buf, buf->lines + buf->rootY - i);
             if (l == NULL)
                 return NULL;
         } else
@@ -634,7 +634,7 @@ redrawLine(Buffer* buf, Line* l, int i)
                 buf->rootX = 5;
             if (buf->rootX > COLS)
                 buf->rootX = COLS;
-            buf->COLS = COLS - buf->rootX;
+            buf->cols = COLS - buf->rootX;
         }
         if (l->real_linenumber && !l->bpos)
             sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
@@ -658,7 +658,7 @@ redrawLine(Buffer* buf, Line* l, int i)
         pc = NULL;
     rcol = COLPOS(l, pos);
 
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < buf->cols && pos + j < l->len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -672,7 +672,7 @@ redrawLine(Buffer* buf, Line* l, int i)
         }
         delta = wtf_len((uint8_t*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->COLS)
+        if (ncol - column > buf->cols)
             break;
         if (pc)
             do_color(pc[j]);
@@ -736,7 +736,7 @@ redrawLine(Buffer* buf, Line* l, int i)
     }
     if (color_mode)
         do_color(0);
-    if (rcol - column < buf->COLS)
+    if (rcol - column < buf->cols)
         clrtoeolx();
     return l;
 }
@@ -757,7 +757,7 @@ redrawLineImage(Buffer* buf, Line* l, int i)
         return l;
     pos = columnPos(l, column);
     rcol = COLPOS(l, pos);
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j++) {
+    for (j = 0; rcol - column < buf->cols && pos + j < l->len; j++) {
         if (rcol - column < 0) {
             rcol = COLPOS(l, pos + j + 1);
             continue;
@@ -797,8 +797,8 @@ redrawLineImage(Buffer* buf, Line* l, int i)
                     h = image->height - sy;
                 else
                     h = (int)(pixel_per_line - sy);
-                if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
-                    w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
+                if (w > (int)((buf->rootX + buf->cols) * pixel_per_char - x))
+                    w = (int)((buf->rootX + buf->cols) * pixel_per_char - x);
                 if (h > (int)(LASTLINE * pixel_per_line - y))
                     h = (int)(LASTLINE * pixel_per_line - y);
                 addImage(cache, x, y, sx, sy, w, h);
@@ -837,7 +837,7 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     bcol = bpos - pos;
     ecol = epos - pos;
 
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    for (j = 0; rcol - column < buf->cols && pos + j < l->len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -851,7 +851,7 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
         }
         delta = wtf_len((uint8_t*)&p[j]);
         ncol = COLPOS(l, pos + j + delta);
-        if (ncol - column > buf->COLS)
+        if (ncol - column > buf->cols)
             break;
         if (pc)
             do_color(pc[j]);
@@ -1156,7 +1156,7 @@ void cursorUp(Buffer* buf, int n)
 
 void cursorDown0(Buffer* buf, int n)
 {
-    if (buf->cursorY < buf->LINES - 1)
+    if (buf->cursorY < buf->lines - 1)
         cursorUpDown(buf, 1);
     else {
         buf->topLine = lineSkip(buf, buf->topLine, n, false);
@@ -1227,8 +1227,8 @@ void cursorRight(Buffer* buf, int n)
     while (buf->pos + delta < l->len && p[buf->pos + delta] & PC_WCHAR2)
         delta++;
     vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
-    if (vpos2 >= buf->COLS && n) {
-        columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
+    if (vpos2 >= buf->cols && n) {
+        columnSkip(buf, n + (vpos2 - buf->cols) - (vpos2 - buf->cols) % n);
         buf->visualpos = l->bwidth + cpos - buf->currentColumn;
     }
     buf->cursorX = buf->visualpos - l->bwidth;
@@ -1275,7 +1275,7 @@ void arrangeCursor(Buffer* buf)
     if (buf == NULL || buf->currentLine == NULL)
         return;
     /* Arrange line */
-    if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->LINES
+    if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->lines
         || buf->currentLine->linenumber < buf->topLine->linenumber) {
         buf->topLine = lineSkip(buf, buf->currentLine, 0, false);
     }
@@ -1300,9 +1300,9 @@ void arrangeCursor(Buffer* buf)
     while (buf->pos + delta < buf->currentLine->len && buf->currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
     col2 = COLPOS(buf->currentLine, buf->pos + delta);
-    if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
+    if (col < buf->currentColumn || col2 > buf->cols + buf->currentColumn) {
         buf->currentColumn = 0;
-        if (col2 > buf->COLS)
+        if (col2 > buf->cols)
             columnSkip(buf, col);
     }
     /* Arrange cursor */
@@ -1352,18 +1352,18 @@ void cursorXY(Buffer* buf, int x, int y)
 
     if (buf->cursorX > x) {
         while (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+            cursorLeft(buf, buf->cols / 2);
     } else if (buf->cursorX < x) {
         while (buf->cursorX < x) {
             oldX = buf->cursorX;
 
-            cursorRight(buf, buf->COLS / 2);
+            cursorRight(buf, buf->cols / 2);
 
             if (oldX == buf->cursorX)
                 break;
         }
         if (buf->cursorX > x)
-            cursorLeft(buf, buf->COLS / 2);
+            cursorLeft(buf, buf->cols / 2);
     }
 }
 

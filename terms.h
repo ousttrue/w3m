@@ -3,12 +3,16 @@
 #include "config.h"
 
 #define DEFAULT_COLS 80
-extern int LINES, COLS;
-#if defined(__CYGWIN__)
-extern int LASTLINE;
-#else
-#define LASTLINE (LINES - 1)
-#endif
+
+struct TermSize {
+    int lines;
+    int cols;
+};
+struct TermSize termSize();
+
+#define COLS termSize().cols
+#define LINES termSize().lines
+#define LASTLINE (termSize().lines - 1)
 
 #define TRAP_ON                                \
     if (TrapSignal) {                          \
