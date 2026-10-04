@@ -189,8 +189,6 @@ effect_visited_end(void)
     }
 }
 
-/* *INDENT-ON* */
-
 void fmTerm(void)
 {
     if (fmInitialized) {
@@ -394,8 +392,7 @@ void displayBuffer(Buffer* buf, int mode)
     } else
         buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
-    if (nTab > 1
-    ) {
+    if (nTab > 1) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
         ny = LastTab->y + 2;
@@ -554,8 +551,7 @@ redrawNLine(Buffer* buf, int n)
         EFFECT_ANCHOR_END_C;
         setbcolor(bg_color);
     }
-    if (nTab > 1
-    ) {
+    if (nTab > 1) {
         TabBuffer* t;
         int l;
 
@@ -1038,8 +1034,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
             addch(c + '@');
             break;
         }
-    }
-    else if (mode & PC_UNKNOWN) {
+    } else if (mode & PC_UNKNOWN) {
         char buf[5];
         sprintf(buf, "[%.2X]",
             (unsigned char)wtf_get_code((uint8_t*)p) | 0x80);
@@ -1391,7 +1386,6 @@ void calcTabPos(void)
     TabBuffer* tab;
     int lcol = 0, rcol = 0, col;
     int n1, n2, na, nx, ny, ix, iy;
-
 
     if (nTab <= 0)
         return;

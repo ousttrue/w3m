@@ -872,7 +872,6 @@ void reset_tty(void)
         close_tty();
 }
 
-extern void w3m_exit(int i);
 static void
 reset_exit_with_value(SIGNAL_ARG, int rval)
 {

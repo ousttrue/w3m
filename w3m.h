@@ -13,7 +13,15 @@ extern bool TrapSignal;
 extern const char* cgi_bin;
 extern const char* document_root;
 
+typedef void (*EventCallbackFunc)(void);
+enum W3M_EVENT {
+    W3M_EVENT_NONE,
+    W3M_EVENT_ON_EXIT,
+};
+void w3m_register_callback(enum W3M_EVENT event, EventCallbackFunc callback);
 void w3m_init();
+void w3m_exit(int i);
+
 void set_environ(const char* var, const char* value);
 const char* currentdir(void);
 typedef void (*SigActionFunc)(int);

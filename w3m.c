@@ -18,9 +18,35 @@
 
 struct wc_option WcOption;
 
+struct W3mEventCallback {
+    enum W3M_EVENT event;
+    EventCallbackFunc callback;
+};
+static struct W3mEventCallback event_callbacks[256] = { 0 };
+static int event_callback_count = 0;
+
+void w3m_register_callback(enum W3M_EVENT event, EventCallbackFunc callback)
+{
+    event_callbacks[event_callback_count++] = (struct W3mEventCallback) {
+        .event = event,
+        .callback = callback,
+    };
+}
+
 void w3m_init()
 {
     WcOption = makeDefaultOption();
+}
+
+void w3m_exit(int i)
+{
+    for (int i = 0;
+        i < sizeof(event_callbacks) / sizeof(struct W3mEventCallback); ++i) {
+        if (event_callbacks[i].event == W3M_EVENT_ON_EXIT) {
+            event_callbacks[i].callback();
+        }
+    }
+    exit(i);
 }
 
 const char* CurrentDir;
