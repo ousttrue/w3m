@@ -1,3 +1,4 @@
+#include "ftp.h"
 #include "Str.h"
 #include "w3m.h"
 #include "indep.h"
@@ -7,17 +8,12 @@
 #include "auth.h"
 #include "charset.h"
 #include "config.h"
-#include "display.h"
-#include "fm.h"
 #include "proto.h"
-#include "html.h"
 #include "linein.h"
 #include "myctype.h"
-#include "symbol.h"
 #include "rc.h"
 #include "terms.h"
 
-#include <signal.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>

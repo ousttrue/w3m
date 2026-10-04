@@ -381,15 +381,6 @@ extern void initMailcap(void);
 extern char* acceptableMimeTypes(void);
 extern struct mailcap* searchExtViewer(const char* type);
 extern TextList* make_domain_list(char* domain_list);
-extern struct input_stream* openFTPStream(ParsedURL* pu, URLFile* uf);
-#ifdef USE_M17N
-extern pStr loadFTPDir(ParsedURL* pu, wc_ces* charset);
-#else
-extern pStr loadFTPDir0(ParsedURL* pu);
-#define loadFTPDir(pu, charset) loadFTPDir0(pu)
-#endif
-extern void closeFTP(void);
-extern void disconnectFTP(void);
 
 
 extern void addMultirowsForm(Buffer* buf, AnchorList* al);

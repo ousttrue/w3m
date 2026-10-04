@@ -3,6 +3,7 @@
 #include "alloc.h"
 #include "str_gc.h"
 #include "news.h"
+#include "ftp.h"
 #include "Str.h"
 #include "charset.h"
 #include "config.h"

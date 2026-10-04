@@ -1,6 +1,6 @@
 #include "url_stream.h"
-#include "proto.h"
 #include "news.h"
+#include "ftp.h"
 
 struct UrlStream init_stream(enum UrlScheme scheme, struct input_stream* stream)
 {
