@@ -1,5 +1,6 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "display.h"
+#include "ctrlcode.h"
+#include "myctype.h"
 #include "w3m.h"
 #include "StrWriter.h"
 #include "buffer.h"
@@ -9,12 +10,12 @@
 #include "display.h"
 #include "fm.h"
 #include "proto.h"
-#include "linein.h"
 #include "mouse.h"
 #include "rc.h"
 #include "symbol.h"
 #include "tab.h"
 #include "terms.h"
+#include "history.h"
 #include "libwc/status.h"
 
 #include <math.h>

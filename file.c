@@ -1,5 +1,6 @@
 #include "file.h"
 #include "mymktime.h"
+#include "ctrlcode.h"
 #include "news.h"
 #include "ftp.h"
 #include "w3m.h"

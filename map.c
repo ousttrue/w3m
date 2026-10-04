@@ -1,6 +1,7 @@
 #include "map.h"
 
 #include "alloc.h"
+#include "myctype.h"
 #include "indep.h"
 #include "str_const.h"
 #include "config.h"

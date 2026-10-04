@@ -2,10 +2,8 @@
 #include "symbol.h"
 #include "w3m.h"
 #include "alloc.h"
-#include "charset.h"
+#include "ctrlcode.h"
 #include "config.h"
-#include "fm.h"
-#include "proto.h"
 #include "libwc/status.h"
 #include "libwc/ccs.h"
 

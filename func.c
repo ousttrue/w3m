@@ -4,16 +4,14 @@
  */
 #include "func.h"
 #include "w3m.h"
+#include "ctrlcode.h"
 #include "alloc.h"
 #include "charset.h"
 #include "config.h"
-#include "cookie.h" /* For funcname.c */
 #include "fm.h"
 #include "proto.h"
-#include "history.h"
 #include "keybind.h"
 #include "mouse.h"
-#include "menu.h"
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
@@ -26,6 +24,10 @@
 #define cooLst nulcmd
 #endif /* not USE_COOKIE */
 
+#include "menu.h"
+#include "history.h"
+#include "cookie.h" /* For funcname.c */
+#include "proto.h"
 #include "funcname.c"
 #include "functable.c"
 
