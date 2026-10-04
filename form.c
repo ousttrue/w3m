@@ -12,7 +12,6 @@
 #include "config.h"
 #include "cookie.h"
 #include "download.h"
-#include "fm.h"
 #include "proto.h"
 #include "menu.h"
 #include "myctype.h"
@@ -23,6 +22,7 @@
 #include "util.h"
 #include "libwc/status.h"
 #include "libwc/charset.h"
+#include <sys/stat.h>
 
 #ifdef USE_MENU
 extern FormSelectOption* select_option;

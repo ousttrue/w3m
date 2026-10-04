@@ -12,7 +12,7 @@
 #include "http_request.h"
 #include "charset.h"
 #include "libwc/charset.h"
-
+#include <sys/stat.h>
 #include <math.h>
 
 struct MapList*

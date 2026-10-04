@@ -1,4 +1,3 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 /*
  * w3m func.c
  */
@@ -9,7 +8,6 @@
 #include "alloc.h"
 #include "charset.h"
 #include "config.h"
-#include "fm.h"
 #include "proto.h"
 #include "keybind.h"
 #include "mouse.h"
@@ -18,7 +16,7 @@
 #include "regex.h"
 #include "symbol.h"
 #include "libwc/charset.h"
-
+#include <sys/stat.h>
 #include <stdio.h>
 
 #ifndef USE_COOKIE

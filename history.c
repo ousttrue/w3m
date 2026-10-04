@@ -8,7 +8,7 @@
 #include "proto.h"
 #include "rc.h"
 #include "http_request.h"
-
+#include <sys/stat.h>
 #include <errno.h>
 
 Buffer*
