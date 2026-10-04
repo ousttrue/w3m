@@ -119,9 +119,7 @@ typedef struct _Buffer {
     char need_reshape;
     Anchor* submit;
     struct _BufferPos* undo;
-#ifdef USE_ALARM
-    struct _AlarmEvent* event;
-#endif
+    struct AlarmEvent* event;
     int mainline;
 } Buffer;
 

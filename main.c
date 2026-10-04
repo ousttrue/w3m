@@ -1,7 +1,7 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "alloc.h"
 #define MAINPROGRAM
 #include "backend.h"
+#include "alarm.h"
 #include "news.h"
 #include "ftp.h"
 #include "StrWriter.h"
@@ -79,13 +79,7 @@ static int need_resize_screen = false;
 static void resize_hook(SIGNAL_ARG);
 static void resize_screen(void);
 
-#ifdef USE_ALARM
-static AlarmEvent DefaultAlarm = {
-    0, AL_UNSET, FUNCNAME_nulcmd, NULL
-};
-static AlarmEvent* CurrentAlarm = &DefaultAlarm;
 static void SigAlarm(SIGNAL_ARG);
-#endif
 
 #ifdef USE_MARK
 static const char* MarkString = NULL;
@@ -552,28 +546,6 @@ int main(int argc, char** argv)
 #undef CHKOPT
 #undef NXTARG
 
-#ifdef __WATT32__
-    if (w3m_debug)
-        dbug_init();
-    sock_init();
-#endif
-
-#ifdef __MINGW32_VERSION
-    {
-        int err;
-        WORD wVerReq;
-
-        wVerReq = MAKEWORD(1, 1);
-
-        err = WSAStartup(wVerReq, &WSAData);
-        if (err != 0) {
-            fprintf(stderr, "Can't find winsock\n");
-            return 1;
-        }
-        _fmode = _O_BINARY;
-    }
-#endif
-
     FirstTab = NULL;
     LastTab = NULL;
     nTab = 0;
@@ -581,10 +553,8 @@ int main(int argc, char** argv)
     CurrentKey = -1;
     if (BookmarkFile == NULL)
         BookmarkFile = rcFile(BOOKMARK)->ptr;
-#ifdef USE_COOKIE
     if (!CookieFile)
         CookieFile = rcFile(COOKIE_FILE)->ptr;
-#endif
 
     if (!isatty(1) && !w3m_dump) /* redirected output */
         w3m_dump = DUMP_BUFFER;
@@ -592,26 +562,16 @@ int main(int argc, char** argv)
         COLS = opt_cols ? opt_cols : MaxCols ? MaxCols
                                              : DEFAULT_COLS;
 
-#ifdef USE_BINMODE_STREAM
-    setmode(fileno(stdout), O_BINARY);
-#endif
     if (!w3m_dump && !w3m_backend) {
         fmInit();
         mySignal(SIGWINCH, resize_hook);
-    }
-#ifdef USE_IMAGE
-    else if (w3m_halfdump && displayImage)
+    } else if (w3m_halfdump && displayImage)
         activeImage = true;
-#endif
 
     sync_with_option();
-#ifdef USE_COOKIE
     initCookie();
-#endif /* USE_COOKIE */
-#ifdef USE_HISTORY
     if (UseHistory)
         loadUrlHistory();
-#endif /* not USE_HISTORY */
 
     /* Restore a previously saved session */
     if (opt_restore) {
@@ -685,12 +645,8 @@ int main(int argc, char** argv)
 
     if (w3m_dump)
         mySignal(SIGINT, SIG_IGN);
-#ifdef SIGCHLD
     mySignal(SIGCHLD, sig_chld);
-#endif
-#ifdef SIGPIPE
     mySignal(SIGPIPE, SigPipe);
-#endif
 
     orig_GC_warn_proc = GC_get_warn_proc();
     GC_set_warn_proc(wrap_GC_warn_proc);
@@ -812,9 +768,7 @@ int main(int argc, char** argv)
         open_new_tab = false;
     }
     if (w3m_dump) {
-#ifdef USE_COOKIE
         save_cookies();
-#endif /* USE_COOKIE */
         w3m_exit(!!err_msg);
     }
 
@@ -840,9 +794,7 @@ int main(int argc, char** argv)
                 inputChar(_("Hit any key to quit w3m:"));
         }
         if (newbuf == NO_BUFFER)
-#ifdef USE_COOKIE
             save_cookies();
-#endif /* USE_COOKIE */
         w3m_exit(!!err_msg);
     }
     if (err_msg)
@@ -850,10 +802,8 @@ int main(int argc, char** argv)
 
     SearchHeader = false;
     DefaultType = NULL;
-#ifdef USE_M17N
     UseContentCharset = true;
     WcOption.auto_detect = auto_detect;
-#endif
 
     Currentbuf = Firstbuf;
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -884,11 +834,11 @@ int main(int argc, char** argv)
             continue;
         }
         /* get keypress event */
-#ifdef USE_ALARM
+
         if (Currentbuf->event) {
             if (Currentbuf->event->status != AL_UNSET) {
-                CurrentAlarm = Currentbuf->event;
-                if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
+                setAlarmEventOrDefaultAlarm(Currentbuf->event);
+                if (Currentbuf->event->sec == 0) { /* refresh (0sec) */
                     Currentbuf->event = NULL;
                     CurrentKey = -1;
                     CurrentCmdData = CurrentAlarm->data;
@@ -900,13 +850,12 @@ int main(int argc, char** argv)
                 Currentbuf->event = NULL;
         }
         if (!Currentbuf->event)
-            CurrentAlarm = &DefaultAlarm;
-#endif
-#ifdef USE_MOUSE
+            setAlarmEventOrDefaultAlarm(0);
+
         mouse_action.in_action = false;
         if (use_mouse)
             mouse_active();
-#endif /* USE_MOUSE */
+
 #ifdef USE_ALARM
         if (CurrentAlarm->sec > 0) {
             mySignal(SIGALRM, SigAlarm);
@@ -5936,7 +5885,6 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-#ifdef USE_ALARM
 static void
 SigAlarm(SIGNAL_ARG)
 {
@@ -5964,7 +5912,7 @@ SigAlarm(SIGNAL_ARG)
                 Currentbuf->event = NULL;
         }
         if (!Currentbuf->event)
-            CurrentAlarm = &DefaultAlarm;
+            setAlarmEventOrDefaultAlarm(0);
         if (CurrentAlarm->sec > 0) {
             mySignal(SIGALRM, SigAlarm);
             alarm(CurrentAlarm->sec);
@@ -5992,29 +5940,16 @@ DEFUN(setAlarm, ALARM, "Set alarm")
     }
     if (cmd >= 0) {
         data = getQWord(&data).ptr;
-        setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
+        setAlarmEvent(getDefaultAlarm(), sec, AL_EXPLICIT, cmd, data);
         disp_message_nsec(Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id,
                               data)
                               ->ptr,
             false, 1, false, true);
     } else {
-        setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
+        setAlarmEvent(getDefaultAlarm(), 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
     }
     displayBuffer(Currentbuf, B_NORMAL);
 }
-
-AlarmEvent*
-setAlarmEvent(AlarmEvent* event, int sec, short status, int cmd, const void* data)
-{
-    if (event == NULL)
-        event = New(AlarmEvent);
-    event->sec = sec;
-    event->status = status;
-    event->cmd = cmd;
-    event->data = data;
-    return event;
-}
-#endif
 
 DEFUN(reinit, REINIT, "Reload configuration file")
 {

@@ -107,30 +107,15 @@ extern void reload(void);
 extern void reshape(void);
 extern void chkURL(void);
 extern void chkWORD(void);
-#ifdef USE_NNTP
 extern void chkNMID(void);
-#else
-#define chkNMID nulcmd
-#endif
 extern void rFrame(void);
 extern void extbrz(void);
 extern void linkbrz(void);
 extern void curlno(void);
 extern void execCmd(void);
-#ifdef USE_IMAGE
 extern void dispI(void);
 extern void stopI(void);
-#else
-#define dispI nulcmd
-#define stopI nulcmd
-#endif
-#ifdef USE_ALARM
 extern void setAlarm(void);
-extern AlarmEvent* setAlarmEvent(AlarmEvent* event, int sec, short status,
-    int cmd, const void* data);
-#else
-#define setAlarm nulcmd
-#endif
 extern void reinit(void);
 extern void defKey(void);
 extern void newT(void);

@@ -56,6 +56,7 @@ set(TARGET_NAME ${PROJECT_NAME})
 add_executable(
   ${TARGET_NAME}
   main.c
+  alarm.c
   keybind.c
   url_stream.c
   growbuf.c

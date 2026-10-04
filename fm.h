@@ -145,21 +145,7 @@ global int activeImage init(false);
 
 
 global int is_redisplay init(false);
-#ifdef USE_ALARM
-enum {
-    AL_UNSET,
-    AL_EXPLICIT,
-    AL_IMPLICIT,
-    AL_IMPLICIT_ONCE,
-};
 
-typedef struct _AlarmEvent {
-    int sec;
-    short status;
-    int cmd;
-    const void *data;
-} AlarmEvent;
-#endif
 
 /* 
  * Externals
