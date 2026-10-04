@@ -112,4 +112,9 @@ add_executable(w3mhelperpanel w3mhelperpanel.c)
 target_compile_definitions(w3mhelperpanel PRIVATE DUMMY)
 target_link_libraries(w3mhelperpanel PRIVATE indep wc gc)
 
+# w3mhelperpanel
+add_executable(w3mimgdisplay w3mimgdisplay.c w3mimg/w3mimg.c)
+target_compile_definitions(w3mimgdisplay PRIVATE DUMMY)
+target_link_libraries(w3mimgdisplay PRIVATE indep wc gc)
+
 
