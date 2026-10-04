@@ -1,8 +1,8 @@
 #include "input_stream.h"
 #include "alloc.h"
 #include "w3m.h"
+#include "w3m_tty.h"
 #include "gettext_helper.h"
-#include "terms.h"
 #include "proto.h"
 #include "http_request.h"
 #include <signal.h>

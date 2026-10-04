@@ -1,5 +1,6 @@
 #include "alloc.h"
 #include "w3m.h"
+#include "w3m_tty.h"
 #include "http_request.h"
 #include "tab.h"
 #include "gettext_helper.h"
@@ -15,7 +16,6 @@
 #include "proto.h"
 #include "parsetagx.h"
 #include "rc.h"
-#include "terms.h"
 #include "libwc/charset.h"
 
 #include <strings.h>

@@ -1,5 +1,7 @@
 #include "auth.h"
 #include "w3m.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "textlist.h"
 #include "gettext_helper.h"
 #include "str_gc.h"
@@ -258,7 +260,7 @@ FILE* openSecretFile(char* fname)
     else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
         if (fmInitialized) {
             message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
-            refresh();
+            refresh(tty_file());
         } else {
             fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
             fputc('\n', stderr);
@@ -334,7 +336,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
          */
         if (fmInitialized) {
             message("Wrong username or password", 0, 0);
-            refresh();
+            refresh(tty_file());
         } else
             fprintf(stderr, "Wrong username or password\n");
         sleep(1);
@@ -354,7 +356,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
         sleep(2);
         if (fmInitialized) {
             char* pp;
-            term_raw();
+            tty_raw();
             if ((pp = inputStr(Sprintf(_("Username for %s: "), realm)->ptr,
                      NULL)
                         .ptr)
@@ -369,7 +371,7 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
                 return;
             }
             *pwd = Str_conv_to_system(&WcOption, Strnew_charp(pp));
-            term_cbreak();
+            tty_cbreak();
         } else {
             /*
              * If post file is specified as '-', stdin is closed at this

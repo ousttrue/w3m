@@ -3,6 +3,8 @@
 #include "gettext_helper.h"
 #include "myctype.h"
 #include "w3m.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "StrWriter.h"
 #include "buffer.h"
 #include "indep.h"
@@ -12,12 +14,10 @@
 #include "rc.h"
 #include "symbol.h"
 #include "tab.h"
-#include "terms.h"
 #include "history.h"
 #include "textlist.h"
 #include "libwc/status.h"
 #include <math.h>
-#include <signal.h>
 
 int useColor = true;
 int highIntensityColors = false;
@@ -192,10 +192,10 @@ void fmTerm(void)
     if (fmInitialized) {
         move(LASTLINE, 0);
         clrtoeolx();
-        refresh();
+        refresh(tty_file());
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
-        reset_tty();
+        tty_reset();
         fmInitialized = false;
     }
 }
@@ -206,9 +206,10 @@ void fmTerm(void)
 void fmInit(void)
 {
     if (!fmInitialized) {
-        initscr();
-        term_raw();
-        term_noecho();
+        tty_init();
+        setupscreen();
+        tty_raw();
+        tty_noecho();
         if (displayImage)
             initImage();
     }
@@ -435,7 +436,7 @@ void displayBuffer(Buffer* buf, int mode)
     if (delayed_msg != NULL) {
         disp_message(delayed_msg, false);
         delayed_msg = NULL;
-        refresh();
+        refresh(tty_file());
     }
     standout();
     message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
@@ -443,8 +444,8 @@ void displayBuffer(Buffer* buf, int mode)
     pStr os = Strnew();
     struct Writer w = makeWriter(os);
     conv_to_system(&WcOption, &w, buf->buffername);
-    term_title(os->ptr);
-    refresh();
+    tty_title(os->ptr);
+    refresh(tty_file());
 
     if (activeImage && displayImage && buf->img && buf->image_loaded) {
         drawImage();
@@ -1109,8 +1110,8 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
             Currentbuf->cursorY + Currentbuf->rootY);
     else
         message(s, LASTLINE, 0);
-    refresh();
-    sleep_till_anykey(sec, purge);
+    refresh(tty_file());
+    tty_sleep_till_anykey(sec, purge);
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
         displayBuffer(Currentbuf, B_NORMAL);
 }

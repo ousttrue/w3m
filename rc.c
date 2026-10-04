@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "w3m.h"
+#include "w3m_tty.h"
 #include "gettext_helper.h"
 #include "alloc.h"
 #include "func.h"
@@ -21,7 +22,6 @@
 #include "regex.h"
 #include "search.h"
 #include "symbol.h"
-#include "terms.h"
 #include "http_request.h"
 #include "version.h"
 #include "libwc/status.h"

@@ -1,5 +1,7 @@
 #include "linein.h"
 #include "w3m.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "str_gc.h"
 #include "gettext_helper.h"
 #include "http_request.h"
@@ -14,7 +16,6 @@
 #include "rc.h"
 #include "search.h"
 #include "tab.h"
-#include "terms.h"
 
 #include <dirent.h>
 #include <stdlib.h>
@@ -204,10 +205,10 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
             addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
         clrtoeolx();
         move(LASTLINE, opos + x - offset);
-        refresh();
+        refresh(tty_file());
 
     next_char:
-        c = getch();
+        c = tty_getch();
         cm_clear = TRUE;
         cm_disp_clear = TRUE;
         if (!i_quote && (((cm_mode & CPL_ALWAYS) && (c == CTRL_I || (space_autocomplete && c == ' '))) || ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
@@ -268,7 +269,7 @@ struct Str inputLineHistSearch(const char* prompt, const char* def_str,
         return (struct Str) { };
 
     move(LASTLINE, 0);
-    refresh();
+    refresh(tty_file());
     p = strBuf->ptr;
     if (flag & (IN_FILENAME | IN_COMMAND)) {
         SKIP_BLANKS(p);
@@ -371,10 +372,10 @@ void _esc(void)
 {
     char c;
 
-    switch (c = getch()) {
+    switch (c = tty_getch()) {
     case '[':
     case 'O':
-        switch (getch()) {
+        switch (tty_getch()) {
         case 'A':
             _prev();
             break;
@@ -659,7 +660,7 @@ void next_compl(int next)
         return;
 
     if (status != CPL_OK && status != CPL_MENU)
-        bell();
+        tty_bell();
     if (status == CPL_FAIL)
         return;
 

@@ -1,5 +1,7 @@
 #include "http_request.h"
 #include "w3m.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "textlist.h"
 #include "alloc.h"
 #include "str_gc.h"
@@ -14,7 +16,6 @@
 #include "html.h"
 #include "myctype.h"
 #include "rc.h"
-#include "terms.h"
 #include "version.h"
 
 #include <strings.h>
@@ -465,11 +466,11 @@ int openSocket(const char* hostname,
     int a1, a2, a3, a4;
     unsigned long adr;
 #endif /* not INET6 */
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
 
     if (fmInitialized) {
         message(Sprintf(_("Opening socket..."))->ptr, 0, 0);
-        refresh();
+        refresh(tty_file());
     }
     if (SETJMP(AbortLoading) != 0) {
 #ifdef SOCK_DEBUG
@@ -1436,7 +1437,7 @@ int needs_proxy(const char* domain)
 {
     struct TextListItem* tl;
     volatile int ret = 0;
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
 
     if (NO_proxy_domains == NULL || NO_proxy_domains->nitem == 0 || domain == NULL)
         return 0;

@@ -253,37 +253,7 @@ extern pStr unescape_spaces(pStr s);
 
 
 extern Buffer* page_info_panel(Buffer* buf);
-extern int initscr(void);
-extern void move(int line, int column);
-extern void addmch(const char* p, size_t len);
-extern void addch(char c);
-extern void standout(void);
-extern void standend(void);
-extern void bold(void);
-extern void boldend(void);
-extern void underline(void);
-extern void underlineend(void);
-extern void graphstart(void);
-extern void graphend(void);
-extern int graph_ok(void);
-extern void setfcolor(int color);
-extern void setbcolor(int color);
-extern void refresh(void);
-extern void clrtoeolx(void);
-extern void clrtobotx(void);
-extern void addstr(const char* s);
-extern void addnstr(const char* s, int n);
-extern void addnstr_sup(const char* s, int n);
-extern void crmode(void);
-extern void term_noecho(void);
-extern void term_raw(void);
-extern void term_cooked(void);
-extern void term_cbreak(void);
-extern void term_title(const char* s);
-extern void toggle_stand(void);
-extern void bell(void);
-extern int sleep_till_anykey(int sec, int purge);
-extern void touch_cursor(void);
+
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 extern ParsedURL* baseURL(Buffer* buf);

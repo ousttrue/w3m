@@ -56,6 +56,8 @@ set(TARGET_NAME ${PROJECT_NAME})
 add_executable(
   ${TARGET_NAME}
   main.c
+  w3m_tty.c
+  w3m_screen.c
   alarm.c
   keybind.c
   url_stream.c
@@ -81,7 +83,6 @@ add_executable(
   mailcap.c
   image.c
   symbol.c
-  terms.c
   http_request.c
   ftp.c
   mimehead.c

@@ -4,6 +4,7 @@
 #include "table.h"
 #include "textlist.h"
 #include "w3m.h"
+#include "w3m_tty.h"
 #include "indep.h"
 #include "html_parser.h"
 #include "entity.h"
@@ -16,7 +17,6 @@
 #include "parsetagx.h"
 #include "rc.h"
 #include "symbol.h"
-#include "terms.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -71,7 +71,6 @@ void set_table_matrix(struct table*, int);
 static double
 weight(int x)
 {
-
     if (x < COLS)
         return (double)x;
     else

@@ -61,7 +61,3 @@ extern void loadImage(struct _Buffer* buf, int flag);
 extern ImageCache* getImage(Image* image, struct Url* current, int flag);
 extern int getImageSize(ImageCache* cache);
 
-extern void put_image_osc5379(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);
-extern void put_image_sixel(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int n_terminal_image);
-extern void put_image_iterm2(const char* url, int x, int y, int w, int h);
-extern void put_image_kitty(const char* url, int x, int y, int w, int h, int sx, int sy, int sw, int sh, int c, int r);

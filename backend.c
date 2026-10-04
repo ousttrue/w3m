@@ -1,5 +1,6 @@
 #include "backend.h"
 #include "w3m.h"
+#include "w3m_tty.h"
 #include "textlist.h"
 #include "tab.h"
 #include "charset.h"
@@ -7,7 +8,6 @@
 #include "cookie.h"
 #include "download.h"
 #include "proto.h"
-#include "terms.h"
 #include "http_request.h"
 #include "libwc/charset.h"
 

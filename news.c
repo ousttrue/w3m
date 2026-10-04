@@ -2,6 +2,8 @@
 #include "buffer.h"
 #include "http_request.h"
 #include "w3m.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "input_stream.h"
 #include "mymktime.h"
 #include "indep.h"
@@ -10,7 +12,6 @@
 #include "proto.h"
 #include "myctype.h"
 #include "rc.h"
-#include "terms.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -333,7 +334,7 @@ pStr loadNewsgroup(ParsedURL* pu, wc_ces* charset)
     }
     if (fmInitialized) {
         message(Sprintf("Reading newsgroup %s...", group)->ptr, 0, 0);
-        refresh();
+        refresh(tty_file());
     }
     qgroup = html_quote(group);
     group = file_unquote(group)->ptr;

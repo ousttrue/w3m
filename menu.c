@@ -1,6 +1,8 @@
 #include "menu.h"
 #include "defun.h"
 #include "w3m.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "gettext_helper.h"
 #include "StrWriter.h"
 #include "alloc.h"
@@ -18,7 +20,6 @@
 #include "search.h"
 #include "symbol.h"
 #include "tab.h"
-#include "terms.h"
 #include "libwc/status.h"
 #include "libwc/charset.h"
 
@@ -865,7 +866,7 @@ int select_menu(Menu* menu, int mselect)
     }
     move(menu->y + mselect - menu->offset, menu->x);
     toggle_stand();
-    refresh();
+    refresh(tty_file());
 
     return (menu->select);
 }
@@ -1043,7 +1044,7 @@ menu_dispatch_with_mouse(int (*keymap[128])(char c))
 {
     char c;
 
-    c = getch();
+    c = tty_getch();
 
     if (IS_ASCII(c)) /* menu keymaps have 128 entries, so skip non-ascii */
         return (*keymap[(int)c])(c);
@@ -1079,7 +1080,7 @@ mEsc(char c)
 static int
 mEscB(char c)
 {
-    c = getch();
+    c = tty_getch();
     if (IS_DIGIT(c))
         return (mEscD(c));
     else if (IS_ASCII(c))
@@ -1094,10 +1095,10 @@ mEscD(char c)
     int d;
 
     d = (int)c - (int)'0';
-    c = getch();
+    c = tty_getch();
     if (IS_DIGIT(c)) {
         d = d * 10 + (int)c - (int)'0';
-        c = getch();
+        c = tty_getch();
     }
     if (c == '~')
         return (MenuEscDKeymap[d](c));

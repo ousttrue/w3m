@@ -2,6 +2,8 @@
 #include "defun.h"
 #include "textlist.h"
 #include "w3m.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "alloc.h"
 #include "backend.h"
 #include "gettext_helper.h"
@@ -35,7 +37,6 @@
 #include "regex.h"
 #include "search.h"
 #include "tab.h"
-#include "terms.h"
 #include "util.h"
 #include "http_request.h"
 #include "version.h"
@@ -124,7 +125,6 @@ Hist* SaveHist;
 Hist* ShellHist;
 Hist* TextHist;
 Hist* URLHist;
-extern int opt_cols;
 int (*searchRoutine)(Buffer*, const char*);
 int fold_pre;
 
@@ -359,7 +359,7 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
                 i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
 
                 printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-                sleep_till_anykey(1, 1);
+                tty_sleep_till_anykey(1, 1);
             }
 
             lock = 0;
@@ -602,7 +602,7 @@ escKeyProc(int c, int esc, unsigned char* map)
 DEFUN(escmap, ESCMAP, "ESC map")
 {
     char c;
-    c = getch();
+    c = tty_getch();
     if (IS_ASCII(c))
         escKeyProc(c, K_ESC, EscKeymap);
 }
@@ -610,7 +610,7 @@ DEFUN(escmap, ESCMAP, "ESC map")
 DEFUN(escbmap, ESCBMAP, "ESC [ map")
 {
     char c;
-    c = getch();
+    c = tty_getch();
     if (IS_DIGIT(c)) {
         escdmap(c);
         return;
@@ -624,10 +624,10 @@ escdmap(char c)
 {
     int d;
     d = (int)c - (int)'0';
-    c = getch();
+    c = tty_getch();
     if (IS_DIGIT(c)) {
         d = d * 10 + (int)c - (int)'0';
-        c = getch();
+        c = tty_getch();
     }
     if (c == '~')
         escKeyProc(d, K_ESCD, EscDKeymap);
@@ -636,7 +636,7 @@ escdmap(char c)
 DEFUN(multimap, MULTIMAP, "multimap")
 {
     char c;
-    c = getch();
+    c = tty_getch();
     if (IS_ASCII(c)) {
         CurrentKey = K_MULTI | (CurrentKey << 16) | c;
         escKeyProc(c, 0, NULL);
@@ -679,7 +679,7 @@ static void
 resize_screen(void)
 {
     need_resize_screen = false;
-    setlinescols();
+    tty_update_size();
     setupscreen();
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -844,7 +844,7 @@ srchcore(const char* str, int (*func)(Buffer*, const char*))
 
     str = conv_search_string(SearchString, DisplayCharset);
     SigActionFunc prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
+    tty_crmode();
     if (SETJMP(IntReturn) == 0) {
         for (i = 0; i < PREC_NUM; i++) {
             result = func(Currentbuf, str);
@@ -853,7 +853,7 @@ srchcore(const char* str, int (*func)(Buffer*, const char*))
         }
     }
     mySignal(SIGINT, prevtrap);
-    term_raw();
+    tty_raw();
     return result;
 }
 
@@ -1236,10 +1236,10 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output")
         return;
     }
     SigActionFunc prevtrap = mySignal(SIGINT, intTrap);
-    crmode();
+    tty_crmode();
     Buffer* buf = getshell(cmd);
     mySignal(SIGINT, prevtrap);
-    term_raw();
+    tty_raw();
     if (buf == NULL) {
         disp_message(_("Execution failed"), true);
         return;
@@ -1272,7 +1272,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output")
         printf(_("\n[Hit any key]"));
         fflush(stdout);
         fmInit();
-        getch();
+        tty_getch();
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -1560,7 +1560,7 @@ _quitfm(int ask)
     else if (ask && !confirm(Strnew_charp(_("Do you want to exit w3m?"))))
         goto nope;
 
-    term_title(""); /* XXX */
+    tty_title(""); /* XXX */
     if (activeImage)
         termImage();
     fmTerm();
@@ -1650,7 +1650,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 #endif /* not SIGSTOP */
     move(LASTLINE, 0);
     clrtoeolx();
-    refresh();
+    refresh(tty_file());
     fmTerm();
 #ifndef SIGSTOP
     shell = getenv("SHELL");
@@ -1942,7 +1942,7 @@ loadLink(const char* url, const char* target, const char* referer, FormList* req
     const int* no_referer_ptr;
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
-    refresh();
+    refresh(tty_file());
 
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
     base = baseURL(Currentbuf);
@@ -2159,7 +2159,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer")
     if (a == NULL)
         return;
     message(Sprintf(_("loading %s"), a->url)->ptr, 0, 0);
-    refresh();
+    refresh(tty_file());
     buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
     if (buf == NULL) {
         char* emsg = Sprintf(_("Can't load %s"), a->url)->ptr;
@@ -3224,7 +3224,7 @@ cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* 
     if (handleMailto(url))
         return;
 
-    refresh();
+    refresh(tty_file());
     Buffer* buf = loadGeneralFile(url, current, referer, 0, request);
     if (buf == NULL) {
         pStr os = Strnew();
@@ -3933,7 +3933,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     if (Currentbuf->bufferprop & BP_FRAME && (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
         if (fmInitialized) {
             message("Rendering frame", 0, 0);
-            refresh();
+            refresh(tty_file());
         }
         if (!(buf = renderFrame(fbuf, 1))) {
             displayBuffer(Currentbuf, B_NORMAL);
@@ -3973,7 +3973,7 @@ DEFUN(reload, RELOAD, "Load current document anew")
     }
     url = parsedURL2Str(&Currentbuf->currentURL);
     message(_("Reloading..."), 0, 0);
-    refresh();
+    refresh(tty_file());
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
@@ -4121,7 +4121,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
     }
     if (fmInitialized) {
         message("Rendering frame", 0, 0);
-        refresh();
+        refresh(tty_file());
     }
     buf = renderFrame(Currentbuf, 0);
     if (buf == NULL) {
@@ -5928,14 +5928,14 @@ int main(int argc, char** argv)
                 if (need_resize_screen)
                     resize_screen();
                 loadImage(Currentbuf, IMG_FLAG_NEXT);
-            } while (sleep_till_anykey(1, 0) <= 0);
+            } while (tty_sleep_till_anykey(1, 0) <= 0);
         } else {
             do {
                 if (need_resize_screen)
                     resize_screen();
-            } while (sleep_till_anykey(1, 0) <= 0);
+            } while (tty_sleep_till_anykey(1, 0) <= 0);
         }
-        c = getch();
+        c = tty_getch();
         if (CurrentAlarm->sec > 0) {
             alarm(0);
         }

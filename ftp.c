@@ -1,6 +1,8 @@
 #include "ftp.h"
 #include "Str.h"
 #include "w3m.h"
+#include "w3m_screen.h"
+#include "w3m_tty.h"
 #include "indep.h"
 #include "str_gc.h"
 #include "alloc.h"
@@ -12,7 +14,6 @@
 #include "linein.h"
 #include "myctype.h"
 #include "rc.h"
-#include "terms.h"
 #include "input_stream.h"
 #include "http_request.h"
 
@@ -196,7 +197,7 @@ ftp_login(FTP ftp)
                     ftp->user)
                     ->ptr,
             0, 0);
-        refresh();
+        refresh(tty_file());
     }
     ftp_command(ftp, "USER", ftp->user, &status);
     /*
@@ -208,7 +209,7 @@ ftp_login(FTP ftp)
         goto open_err;
     if (fmInitialized) {
         message("Sending FTP password to remote server.", 0, 0);
-        refresh();
+        refresh(tty_file());
     }
     ftp_command(ftp, "PASS", ftp->pass, &status);
     if (status != 230)
@@ -414,19 +415,12 @@ openFTPStream(ParsedURL* pu, URLFile* uf)
         find_auth_user_passwd(pu, NULL, &uname, &pwd, 0);
         if (pwd == NULL) {
             if (fmInitialized) {
-                term_raw();
+                tty_raw();
                 pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD).ptr);
                 pwd = Str_conv_to_system(&WcOption, pwd);
-                term_cbreak();
+                tty_cbreak();
             } else {
-#ifndef __MINGW32_VERSION
                 pwd = Strnew_charp((char*)getpass("Password: "));
-#else
-                term_raw();
-                pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
-                pwd = Str_conv_to_system(pwd);
-                term_cbreak();
-#endif /* __MINGW32_VERSION */
             }
             add_auth_cookie_flag = true;
         }

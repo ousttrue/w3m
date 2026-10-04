@@ -1,13 +1,14 @@
 #include "image.h"
 #include "textlist.h"
 #include "w3m.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "str_const.h"
 #include "str_gc.h"
 #include "alloc.h"
 #include "config.h"
 #include "proto.h"
 #include "rc.h"
-#include "terms.h"
 #include "hash.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -61,7 +62,7 @@ getCharSize(void)
     pStr tmp;
     int w = 0, h = 0;
 
-    set_environ("W3M_TTY", ttyname_tty());
+    set_environ("W3M_TTY", tty_name());
 
     if (enable_inline_image) {
         int ppc, ppl;
@@ -285,7 +286,7 @@ void drawImage(void)
         n_terminal_image = 0;
 
     touch_cursor();
-    refresh();
+    refresh(tty_file());
 }
 
 void clearImage(void)
@@ -391,7 +392,7 @@ showImageProgress(Buffer* buf)
             drawImage();
         message(Sprintf("%d/%d images loaded", l, n)->ptr,
             buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-        refresh();
+        refresh(tty_file());
     }
 }
 
@@ -491,7 +492,7 @@ void loadImage(Buffer* buf, int flag)
             continue;
         }
 
-        flush_tty();
+        tty_flush();
 #ifdef DONT_CALL_GC_AFTER_FORK
         loadargs[0] = MyProgramName;
         loadargs[1] = "-$$getimage";

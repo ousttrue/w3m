@@ -1,10 +1,7 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "util.h"
-
+#include "w3m_tty.h"
 #include "config.h"
 #include "display.h"
-#include "myctype.h"
-#include "terms.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +16,7 @@ exec_cmd(char *cmd)
 	printf("\n[Hit any key]");
 	fflush(stdout);
 	fmInit();
-	getch();
+	tty_getch();
 
 	return rv;
     }

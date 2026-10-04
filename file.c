@@ -1,4 +1,6 @@
 #include "file.h"
+#include "w3m_tty.h"
+#include "w3m_screen.h"
 #include "mymktime.h"
 #include "textlist.h"
 #include "gettext_helper.h"
@@ -33,7 +35,6 @@
 #include "symbol.h"
 #include "tab.h"
 #include "table.h"
-#include "terms.h"
 #include "http_request.h"
 #include "libwc/charset.h"
 #include "libwc/status.h"
@@ -435,7 +436,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
             http_response_code = atoi(p);
             if (fmInitialized) {
                 message(lineBuf2->ptr, 0, 0);
-                refresh();
+                refresh(tty_file());
             }
         }
         if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
@@ -814,7 +815,7 @@ loadGeneralFile(const char* path, ParsedURL* volatile current, const char* refer
     Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = true;
-    SigActionFunc volatile prevtrap = NULL;
+    // SigActionFunc volatile prevtrap = NULL;
     struct TextList* extra_header = TextList_new();
     pStr uname = NULL;
     pStr pwd = NULL;
@@ -933,9 +934,9 @@ load_doc:
         || (((pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) || (pu.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy && needs_proxy(pu.host))) {
 
         if (fmInitialized) {
-            term_cbreak();
+            tty_cbreak();
             message(Sprintf(_("%s contacted. Waiting for reply..."), pu.host)->ptr, 0, 0);
-            refresh();
+            refresh(tty_file());
         }
         if (t_buf == NULL)
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -5673,7 +5674,7 @@ void showProgress(size_t* linelen, size_t* trbyte)
         for (j = pos + 1; j <= i; j++)
             addch('|');
         standend();
-        refresh();
+        refresh(tty_file());
     } else {
         cur_time = time(0);
         if (*trbyte == 0) {
@@ -5696,7 +5697,7 @@ void showProgress(size_t* linelen, size_t* trbyte)
             messages = Sprintf("%7s loaded", fmtrbyte);
         }
         message(messages->ptr, 0, 0);
-        refresh();
+        refresh(tty_file());
     }
 }
 
@@ -5874,7 +5875,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
     int volatile image_flag;
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
 
     if (fmInitialized && graph_ok()) {
         symbol_width = symbol_width0 = 1;
@@ -6010,7 +6011,7 @@ phase2:
 Buffer*
 loadHTMLString(pStr page)
 {
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
     URLFile f = init_stream(SCM_LOCAL, newStrStream(page));
     Buffer* newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
@@ -6046,7 +6047,7 @@ pStr loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
     pStr lbuf, name, file, host, port, type;
     char* volatile p, * volatile q;
     int link, pre;
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
     wc_ces doc_charset = DocumentCharset;
 
     tmp = parsedURL2Str(pu);
@@ -6197,7 +6198,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     size_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
 
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
@@ -6276,7 +6277,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
     pStr tmp, tmpf;
     FILE* src = NULL;
     URLFile f;
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
     struct stat st;
     ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
 
@@ -6569,7 +6570,7 @@ Line* getNextPage(Buffer* buf, int plen)
     Lineprop* propBuffer = NULL;
 
     Linecolor* colorBuffer = NULL;
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
 
     if (buf->pagerSource == NULL)
         return NULL;
@@ -6673,7 +6674,7 @@ int save2tmp(URLFile uf, const char* tmpf)
 {
     FILE* ff;
     size_t linelen = 0, trbyte = 0;
-    volatile SigActionFunc prevtrap = NULL;
+    // volatile SigActionFunc prevtrap = NULL;
     static JMP_BUF env_bak;
     volatile int retval = 0;
     unsigned char* volatile buf = NULL;
@@ -6766,7 +6767,7 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
     }
 
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
-        flush_tty();
+        tty_flush();
         if (!fork()) {
             setup_child(false, 0, UFfileno(&uf));
             if (save2tmp(uf, tmpf->ptr) < 0)
@@ -6934,7 +6935,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
         }
         lock = tmpfname(CurrentPid, TMPF_DFL, ".lock")->ptr;
         symlink(p, lock);
-        flush_tty();
+        tty_flush();
         pid = fork();
         if (!pid) {
             setup_child(false, 0, -1);
@@ -7030,7 +7031,7 @@ int doFileSave(URLFile uf, const char* defstr)
         }
         const char* lock = tmpfname(CurrentPid, TMPF_DFL, ".lock")->ptr;
         symlink(p, lock);
-        flush_tty();
+        tty_flush();
         pid_t pid = fork();
         if (!pid) {
             int err;
@@ -7128,7 +7129,7 @@ char confirm_multi(const char* prompt)
     if (QuietMessage)
         return 'n';
     if (fmInitialized) {
-        term_raw();
+        tty_raw();
         ans = inputChar(prompt).ptr;
     } else {
         printf("%s", prompt);

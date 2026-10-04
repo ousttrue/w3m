@@ -1,5 +1,7 @@
 #include "buffer.h"
 #include "tab.h"
+#include "w3m_screen.h"
+#include "w3m_tty.h"
 #include "form.h"
 #include "input_stream.h"
 #include "url_stream.h"
@@ -15,7 +17,6 @@
 #include "frame.h"
 #include "proto.h"
 #include "rc.h"
-#include "terms.h"
 #include "util.h"
 #include "libwc/status.h"
 
@@ -393,7 +394,7 @@ listBuffer(Buffer* top, const Buffer* current)
         0);
     standend();
     move(c, 0);
-    refresh();
+    refresh(tty_file());
     return buf->nextBuffer;
 }
 
@@ -428,9 +429,9 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
     listBuffer(topbuf, currentbuf);
 
     for (;;) {
-        if ((c = getch()) == ESC_CODE) {
-            if ((c = getch()) == '[' || c == 'O') {
-                switch (c = getch()) {
+        if ((c = tty_getch()) == ESC_CODE) {
+            if ((c = tty_getch()) == '[' || c == 'O') {
+                switch (c = tty_getch()) {
                 case 'A':
                     c = 'k';
                     break;
@@ -512,7 +513,7 @@ selectBuffer(Buffer* firstbuf, Buffer* currentbuf, char* selectchar)
             return currentbuf;
         }
         move(spoint, 0);
-        refresh();
+        refresh(tty_file());
     }
 }
 

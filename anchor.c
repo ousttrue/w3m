@@ -1,5 +1,6 @@
 #include "anchor.h"
 #include "indep.h"
+#include "w3m_tty.h"
 #include "textlist.h"
 #include "alloc.h"
 #include "config.h"
@@ -7,7 +8,6 @@
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
-#include "terms.h"
 #include "http_request.h"
 
 #include <strings.h>
