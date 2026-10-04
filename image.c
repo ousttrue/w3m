@@ -1,4 +1,5 @@
 #include "image.h"
+#include "textlist.h"
 #include "w3m.h"
 #include "str_const.h"
 #include "str_gc.h"

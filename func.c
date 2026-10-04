@@ -1,6 +1,3 @@
-/*
- * w3m func.c
- */
 #include "func.h"
 #include "gettext_helper.h"
 #include "w3m.h"
@@ -10,15 +7,10 @@
 #include "config.h"
 #include "proto.h"
 #include "keybind.h"
-#include "mouse.h"
 #include "myctype.h"
 #include "rc.h"
 #include "regex.h"
-#include "symbol.h"
 #include "libwc/charset.h"
-#include <sys/stat.h>
-#include <stdio.h>
-
 
 #include "menu.h"
 #include "history.h"
@@ -26,6 +18,9 @@
 #include "proto.h"
 #include "funcname.c"
 #include "functable.c"
+
+#include <sys/stat.h>
+#include <stdio.h>
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv* keyData = NULL;

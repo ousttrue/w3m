@@ -1,7 +1,6 @@
 // client-side image maps
 #pragma once
 #include "Str.h"
-#include "textlist.h"
 
 struct MapArea {
     const char* url;

@@ -1,7 +1,6 @@
 #pragma once
 #include "line.h"
 #include "anchor.h"
-#include "config.h"
 #include "form.h"
 #include "map.h"
 #include "url.h"

@@ -1,7 +1,6 @@
 #pragma once
 #include "url.h"
 #include "Str.h"
-#include "textlist.h"
 
 struct auth_param {
     char* name;
@@ -33,6 +32,7 @@ void add_auth_user_passwd(ParsedURL* pu, char* realm,
     pStr uname, pStr pwd, int is_proxy);
 
 // from file
+struct TextList;
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
     struct TextList* extra_header, ParsedURL* pu, struct http_request* hr,
     struct form_list* request,

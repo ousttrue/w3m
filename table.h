@@ -1,17 +1,13 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef W3M_TABLE_H
-#define W3M_TABLE_H
-
+#pragma once
 #include "Str.h"
 #include "buffer.h"
 #include "file.h"
-#include "textlist.h"
 
 #include "matrix.h"
 
-#define MAX_TABLE 20		/* maximum nest level of table */
+#define MAX_TABLE 20 /* maximum nest level of table */
 #define MAX_TABLE_N_LIMIT 2000
-#define MAX_TABLE_N 20		/* maximum number of table in same level */
+#define MAX_TABLE_N 20 /* maximum number of table in same level */
 
 #define MAXROW_LIMIT 32767
 #define MAXROW 50
@@ -25,9 +21,9 @@
 typedef unsigned short table_attr;
 
 /* flag */
-#define TBL_IN_ROW     1
-#define TBL_EXPAND_OK  2
-#define TBL_IN_COL     4
+#define TBL_IN_ROW 1
+#define TBL_EXPAND_OK 2
+#define TBL_IN_COL 4
 
 #define MAXCELL 20
 #define MAXROWCELL 1000
@@ -45,12 +41,12 @@ struct table_cell {
 };
 
 struct table_in {
-    struct table *ptr;
+    struct table* ptr;
     short col;
     short row;
     short cell;
     short indent;
-    struct TextLineList *buf;
+    struct TextLineList* buf;
 };
 
 struct table_linfo {
@@ -78,43 +74,43 @@ struct table {
     int flag;
 #ifdef TABLE_EXPAND
     int real_width;
-#endif				/* TABLE_EXPAND */
+#endif /* TABLE_EXPAND */
     pStr caption;
     pStr id;
-    struct GeneralList ***tabdata;
-    table_attr **tabattr;
+    struct GeneralList*** tabdata;
+    table_attr** tabattr;
     table_attr trattr;
-    pStr **tabidvalue;
-    pStr *tridvalue;
+    pStr** tabidvalue;
+    pStr* tridvalue;
     short tabwidth[MAXCOL];
     short minimum_width[MAXCOL];
     short fixed_width[MAXCOL];
     struct table_cell cell;
-    int *tabheight;
-    struct table_in *tables;
+    int* tabheight;
+    struct table_in* tables;
     short ntable;
     short tables_size;
-    struct TextList *suspended_data;
+    struct TextList* suspended_data;
     /* use for counting skipped spaces */
     struct table_linfo linfo;
-    MAT *matrix;
-    VEC *vector;
+    MAT* matrix;
+    VEC* vector;
     int sloppy_width;
 };
 
-#define TBLM_PRE	RB_PRE
-#define TBLM_SCRIPT	RB_SCRIPT
-#define TBLM_STYLE	RB_STYLE
-#define TBLM_PLAIN	RB_PLAIN
-#define TBLM_NOBR	RB_NOBR
-#define TBLM_PRE_INT	RB_PRE_INT
-#define TBLM_INTXTA	RB_INTXTA
-#define TBLM_INSELECT	RB_INSELECT
-#define TBLM_PREMODE	(TBLM_PRE | TBLM_PRE_INT | TBLM_SCRIPT | TBLM_STYLE | TBLM_PLAIN | TBLM_INTXTA)
-#define TBLM_SPECIAL	(TBLM_PRE | TBLM_PRE_INT | TBLM_SCRIPT | TBLM_STYLE | TBLM_PLAIN | TBLM_NOBR)
-#define TBLM_DEL	RB_DEL
-#define TBLM_S		RB_S
-#define TBLM_ANCHOR	0x1000000
+#define TBLM_PRE RB_PRE
+#define TBLM_SCRIPT RB_SCRIPT
+#define TBLM_STYLE RB_STYLE
+#define TBLM_PLAIN RB_PLAIN
+#define TBLM_NOBR RB_NOBR
+#define TBLM_PRE_INT RB_PRE_INT
+#define TBLM_INTXTA RB_INTXTA
+#define TBLM_INSELECT RB_INSELECT
+#define TBLM_PREMODE (TBLM_PRE | TBLM_PRE_INT | TBLM_SCRIPT | TBLM_STYLE | TBLM_PLAIN | TBLM_INTXTA)
+#define TBLM_SPECIAL (TBLM_PRE | TBLM_PRE_INT | TBLM_SCRIPT | TBLM_STYLE | TBLM_PLAIN | TBLM_NOBR)
+#define TBLM_DEL RB_DEL
+#define TBLM_S RB_S
+#define TBLM_ANCHOR 0x1000000
 
 struct table_mode {
     unsigned int pre_mode;
@@ -126,14 +122,13 @@ struct table_mode {
     unsigned char end_tag;
 };
 
-int feed_table(struct table *tbl, const char *line, struct table_mode *mode, int width, int internal);
-int visible_length(const char *str);
-struct table *begin_table(int border, int spacing, int padding, int vspace);
-void align(struct TextLine *lbuf, int width, int mode);
-void check_rowcol(struct table *tbl, struct table_mode *mode);
-void end_table(struct table *tbl);
+int feed_table(struct table* tbl, const char* line, struct table_mode* mode, int width, int internal);
+int visible_length(const char* str);
+struct table* begin_table(int border, int spacing, int padding, int vspace);
+struct TextLine;
+void align(struct TextLine* lbuf, int width, int mode);
+void check_rowcol(struct table* tbl, struct table_mode* mode);
+void end_table(struct table* tbl);
 void initRenderTable(void);
-void pushTable(struct table *, struct table *);
-void renderTable(struct table *t, int max_width, struct html_feed_environ *h_env);
-
-#endif
+void pushTable(struct table*, struct table*);
+void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env);

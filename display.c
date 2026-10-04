@@ -7,17 +7,15 @@
 #include "buffer.h"
 #include "indep.h"
 #include "charset.h"
-#include "config.h"
 #include "display.h"
 #include "proto.h"
-#include "mouse.h"
 #include "rc.h"
 #include "symbol.h"
 #include "tab.h"
 #include "terms.h"
 #include "history.h"
+#include "textlist.h"
 #include "libwc/status.h"
-
 #include <math.h>
 #include <signal.h>
 

@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "table.h"
+#include "textlist.h"
 #include "w3m.h"
 #include "indep.h"
 #include "html_parser.h"

@@ -4,6 +4,7 @@
 #include "myctype.h"
 #include "hash.h"
 #include "rc.h"
+#include "textlist.h"
 
 #include <stdio.h>
 #include <strings.h>

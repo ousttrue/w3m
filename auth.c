@@ -1,5 +1,6 @@
 #include "auth.h"
 #include "w3m.h"
+#include "textlist.h"
 #include "gettext_helper.h"
 #include "str_gc.h"
 #include "alloc.h"

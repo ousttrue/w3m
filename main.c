@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "defun.h"
+#include "textlist.h"
 #include "w3m.h"
 #include "alloc.h"
 #include "backend.h"
@@ -27,7 +28,6 @@
 #include "funcname1.h"
 #include "linein.h"
 #include "keybind.h"
-#include "mouse.h"
 #include "menu.h"
 #include "myctype.h"
 #include "pathdefs.h"

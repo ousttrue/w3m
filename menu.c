@@ -10,7 +10,6 @@
 #include "proto.h"
 #include "func.h"
 #include "funcname1.h"
-#include "mouse.h"
 #include "myctype.h"
 #include "linein.h"
 #include "keybind.h"

@@ -3,7 +3,6 @@
 #include "url_stream.h"
 #include "Str.h"
 #include "form.h"
-#include "textlist.h"
 
 #define NO_REFERER ((char*)-1)
 
@@ -29,6 +28,7 @@ typedef struct http_request {
 
 pStr HTTPrequestMethod(HRequest* hr);
 pStr HTTPrequestURI(ParsedURL* pu, HRequest* hr);
+struct TextList;
 URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request,
     struct TextList* extra_header, URLFile* ouf,

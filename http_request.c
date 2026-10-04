@@ -1,5 +1,6 @@
 #include "http_request.h"
 #include "w3m.h"
+#include "textlist.h"
 #include "alloc.h"
 #include "str_gc.h"
 #include "gettext_helper.h"

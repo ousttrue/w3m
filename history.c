@@ -1,4 +1,5 @@
 #include "history.h"
+#include "textlist.h"
 #include "indep.h"
 #include "str_gc.h"
 #include "gettext_helper.h"

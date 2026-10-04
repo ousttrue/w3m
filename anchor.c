@@ -1,5 +1,6 @@
 #include "anchor.h"
 #include "indep.h"
+#include "textlist.h"
 #include "alloc.h"
 #include "config.h"
 #include "proto.h"
