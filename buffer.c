@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "input_stream.h"
+#include "gettext_helper.h"
 #include "w3m.h"
 #include "str_gc.h"
 #include "Str.h"

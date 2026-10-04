@@ -1,6 +1,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "menu.h"
 #include "w3m.h"
+#include "gettext_helper.h"
 #include "StrWriter.h"
 #include "alloc.h"
 #include "buffer.h"

@@ -1,6 +1,9 @@
 #include "alloc.h"
+#include <libintl.h>
+#include <locale.h>
 #define MAINPROGRAM
 #include "backend.h"
+#include "gettext_helper.h"
 #include "alarm.h"
 #include "news.h"
 #include "ftp.h"
@@ -222,10 +225,9 @@ int main(int argc, char** argv)
 #if defined(ENABLE_NLS) || defined(USE_M17N)
     setlocale(LC_ALL, "");
 #endif
-#ifdef ENABLE_NLS
+
     bindtextdomain(PACKAGE, LOCALEDIR);
     textdomain(PACKAGE);
-#endif
 
 #if (defined(__MINGW32_VERSION) || defined(__EMX__)) \
     && !defined(SILENCE_DEPRECATION_WARNING)

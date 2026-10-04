@@ -2,6 +2,7 @@
 #include "w3m.h"
 #include "alloc.h"
 #include "str_gc.h"
+#include "gettext_helper.h"
 #include "news.h"
 #include "ftp.h"
 #include "Str.h"

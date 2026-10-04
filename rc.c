@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "w3m.h"
+#include "gettext_helper.h"
 #include "alloc.h"
 #include "func.h"
 #include "indep.h"

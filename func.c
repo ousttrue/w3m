@@ -3,6 +3,7 @@
  * w3m func.c
  */
 #include "func.h"
+#include "gettext_helper.h"
 #include "w3m.h"
 #include "ctrlcode.h"
 #include "alloc.h"

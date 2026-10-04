@@ -1,6 +1,7 @@
 #include "history.h"
 #include "indep.h"
 #include "str_gc.h"
+#include "gettext_helper.h"
 #include "w3m.h"
 #include "alloc.h"
 #include "config.h"

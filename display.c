@@ -1,5 +1,6 @@
 #include "display.h"
 #include "ctrlcode.h"
+#include "gettext_helper.h"
 #include "myctype.h"
 #include "w3m.h"
 #include "StrWriter.h"

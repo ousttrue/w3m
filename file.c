@@ -1,5 +1,6 @@
 #include "file.h"
 #include "mymktime.h"
+#include "gettext_helper.h"
 #include "alarm.h"
 #include "ctrlcode.h"
 #include "news.h"

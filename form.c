@@ -3,6 +3,7 @@
  */
 #include "alloc.h"
 #include "w3m.h"
+#include "gettext_helper.h"
 #include "func.h"
 #include "buffer.h"
 #include "str_const.h"
