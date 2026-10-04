@@ -50,6 +50,7 @@
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) > (b) ? (b) : (a))
+#define REAL_WIDTH(w, limit) (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
 
 int w3m_debug;
 int w3m_dump = 0;
@@ -6425,6 +6426,7 @@ loadcmdout(const char* cmd,
 /*
  * getshell: execute shell command and get the result into a buffer
  */
+#define SHELLBUFFERNAME "*Shellout*"
 Buffer*
 getshell(const char* cmd)
 {
@@ -6551,6 +6553,7 @@ openGeneralPagerBuffer(struct input_stream* stream)
     return buf;
 }
 
+#define CPIPEBUFFERNAME "*stream(closed)*"
 Line* getNextPage(Buffer* buf, int plen)
 {
     Line* volatile top = buf->topLine, * volatile last = buf->lastLine, * volatile cur = buf->currentLine;

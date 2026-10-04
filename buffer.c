@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "tab.h"
 #include "input_stream.h"
 #include "url_stream.h"
 #include "gettext_helper.h"
@@ -25,6 +26,35 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+
+// #ifdef MAINPROGRAM
+static int REV_LB[MAX_LB] = {
+    LB_N_FRAME,
+    LB_FRAME,
+    LB_N_INFO,
+    LB_INFO,
+    LB_N_SOURCE,
+};
+// #else /* not MAINPROGRAM */
+// extern int REV_LB[];
+// #endif /* not MAINPROGRAM */
+
+void cmd_loadBuffer(Buffer* buf, int prop, int linkid)
+{
+    if (buf == NULL) {
+        disp_err_message("Can't load string", false);
+    } else if (buf != NO_BUFFER) {
+        buf->bufferprop |= (BP_INTERNAL | prop);
+        if (!(buf->bufferprop & BP_NO_URL))
+            buf->currentURL = copyParsedURL(&Currentbuf->currentURL);
+        if (linkid != LB_NOLINK) {
+            buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
+            Currentbuf->linkBuffer[linkid] = buf;
+        }
+        pushBuffer(buf);
+    }
+    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
 
 #ifdef USE_MOUSE
 #if defined(USE_GPM) || defined(USE_SYSMOUSE)

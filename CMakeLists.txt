@@ -65,6 +65,7 @@ add_executable(
   compression.c
   line.c
   buffer.c
+  tab.c
   display.c
   mymktime.c
   auth.c

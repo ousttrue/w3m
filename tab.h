@@ -17,9 +17,10 @@ extern TabBuffer* CurrentTab;
 extern TabBuffer* FirstTab;
 extern TabBuffer* LastTab;
 
-extern TabBuffer* deleteTab(TabBuffer* tab);
-
 #define Currentbuf (CurrentTab->currentBuffer)
 #define Firstbuf (CurrentTab->firstBuffer)
 #define NO_TABBUFFER ((TabBuffer*)1)
 #define NO_BUFFER ((Buffer*)1)
+
+void pushBuffer(Buffer* buf);
+TabBuffer* deleteTab(TabBuffer* tab);

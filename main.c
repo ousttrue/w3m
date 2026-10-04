@@ -1,9 +1,8 @@
 #include "alloc.h"
-#include <libintl.h>
-#include <locale.h>
 #define MAINPROGRAM
 #include "backend.h"
 #include "gettext_helper.h"
+#include "tab.h"
 #include "alarm.h"
 #include "news.h"
 #include "ftp.h"
@@ -42,6 +41,8 @@
 #include "libwc/status.h"
 #include "libwc/charset.h"
 
+#include <libintl.h>
+#include <locale.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -51,6 +52,12 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <time.h>
+
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
+
+#define DICTBUFFERNAME "*dictionary*"
 
 #define COPY_BUFROOT(dstbuf, srcbuf)       \
     {                                      \
@@ -168,7 +175,6 @@ static void _goLine(const char*);
 static void _newT(void);
 static void _nextA(int);
 static void _prevA(int);
-static void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
 static void cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* request);
 static void cmd_loadfile(const char* path);
 static void delBuffer(Buffer* buf);
@@ -1460,26 +1466,6 @@ DEFUN(multimap, MULTIMAP, "multimap")
     if (IS_ASCII(c)) {
         CurrentKey = K_MULTI | (CurrentKey << 16) | c;
         escKeyProc(c, 0, NULL);
-    }
-}
-
-static void
-pushBuffer(Buffer* buf)
-{
-    Buffer* b;
-
-#ifdef USE_IMAGE
-    deleteImage(Currentbuf);
-#endif
-    if (clear_buffer)
-        tmpClearBuffer(Currentbuf);
-    if (Firstbuf == Currentbuf) {
-        buf->nextBuffer = Firstbuf;
-        Firstbuf = Currentbuf = buf;
-    } else if ((b = prevBuffer(Firstbuf, Currentbuf)) != NULL) {
-        b->nextBuffer = buf;
-        buf->nextBuffer = Currentbuf;
-        Currentbuf = buf;
     }
 }
 
@@ -4227,24 +4213,6 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 {
     goURL0("Goto relative URL: ", true);
-}
-
-static void
-cmd_loadBuffer(Buffer* buf, int prop, int linkid)
-{
-    if (buf == NULL) {
-        disp_err_message("Can't load string", false);
-    } else if (buf != NO_BUFFER) {
-        buf->bufferprop |= (BP_INTERNAL | prop);
-        if (!(buf->bufferprop & BP_NO_URL))
-            buf->currentURL = copyParsedURL(&Currentbuf->currentURL);
-        if (linkid != LB_NOLINK) {
-            buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
-            Currentbuf->linkBuffer[linkid] = buf;
-        }
-        pushBuffer(buf);
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* load bookmark */

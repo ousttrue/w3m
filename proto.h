@@ -175,13 +175,7 @@ extern void save_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
 extern void restore_fonteffect(struct html_feed_environ* h_env,
     struct readbuffer* obuf);
-#ifdef USE_IMAGE
-extern void deleteImage(Buffer* buf);
-extern void getAllImage(Buffer* buf);
-extern void loadImage(Buffer* buf, int flag);
-extern ImageCache* getImage(Image* image, ParsedURL* current, int flag);
-extern int getImageSize(ImageCache* cache);
-#endif
+
 extern pStr process_img(struct parsed_tag* tag, int width);
 extern pStr process_anchor(struct parsed_tag* tag, const char* tagbuf);
 extern pStr process_input(struct parsed_tag* tag);

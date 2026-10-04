@@ -123,6 +123,9 @@ typedef struct _Buffer {
     int mainline;
 } Buffer;
 
+#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
+#define CUR_LINENUMBER(buf) ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
+
 Buffer* deleteBuffer(Buffer* first, Buffer* delbuf);
 Buffer* newBuffer(int width);
 Buffer* nthBuffer(Buffer* firstbuf, int n);
@@ -149,3 +152,4 @@ int columnSkip(Buffer* buf, int offset);
 Line* lineSkip(Buffer* buf, Line* line, int offset, int last);
 Line* currentLineSkip(Buffer* buf, Line* line, int offset, int last);
 pStr guess_save_name(Buffer* buf, const char* file);
+void cmd_loadBuffer(Buffer* buf, int prop, int linkid);
