@@ -182,7 +182,6 @@ KeyAbort(SIGNAL_ARG)
     LONGJMP(AbortLoading, 1);
 }
 
-#ifdef USE_SSL
 SSL_CTX* ssl_ctx = NULL;
 
 void free_ssl_ctx(void)
@@ -401,7 +400,7 @@ eend:
 }
 
 static void
-SSL_write_from_file(SSL* ssl, char* file)
+SSL_write_from_file(SSL* ssl, const char* file)
 {
     FILE* fd;
     int c;
@@ -416,10 +415,8 @@ SSL_write_from_file(SSL* ssl, char* file)
     }
 }
 
-#endif /* USE_SSL */
-
 static void
-write_from_file(int sock, char* file)
+write_from_file(int sock, const char* file)
 {
     FILE* fd;
     int c;

@@ -4,5 +4,5 @@
 int backend(void);
 
 extern int w3m_backend;
-extern TextLineList* backend_halfdump_buf;
+extern struct TextLineList* backend_halfdump_buf;
 extern struct TextList* backend_batch_commands;

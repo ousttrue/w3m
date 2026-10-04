@@ -18,7 +18,7 @@
 #include <sys/types.h>
 
 int w3m_backend = false;
-TextLineList* backend_halfdump_buf;
+struct TextLineList* backend_halfdump_buf;
 struct TextList* backend_batch_commands = NULL;
 
 /* Prototype declaration of internal functions */
@@ -104,7 +104,7 @@ internal_get(const char* url, int flag, FormList* request)
     do_download = false;
     if (buf != NULL && buf != NO_BUFFER) {
         if (is_html_type(buf->type) && backend_halfdump_buf) {
-            TextLineListItem* p;
+            struct TextLineListItem* p;
             pStr first, last;
             int len = 0;
             for (p = backend_halfdump_buf->first; p; p = p->next) {
@@ -263,7 +263,7 @@ show_column(struct TextList* argv)
 
 /* Call appropriate command function based on given string */
 static void
-call_command_function(char* str)
+call_command_function(const char* str)
 {
     int i;
     struct TextList* argv = split(str);
@@ -282,12 +282,11 @@ call_command_function(char* str)
 /* Main function */
 int backend(void)
 {
-    char* str;
-
     w3m_dump = 0;
     if (COLS == 0)
         COLS = DEFAULT_COLS;
 
+    const char* str;
     if (backend_batch_commands) {
         while ((str = popText(backend_batch_commands)))
             call_command_function(str);

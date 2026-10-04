@@ -1,5 +1,4 @@
 #include "textlist.h"
-
 #include "Str.h"
 #include "alloc.h"
 
@@ -107,10 +106,10 @@ appendGeneralList(struct GeneralList* tl, struct GeneralList* tl2)
 
 /* Line text list */
 
-TextLine*
+struct TextLine*
 newTextLine(pStr line, int pos)
 {
-    TextLine* lbuf = New(TextLine);
+    struct TextLine* lbuf = New(struct TextLine);
     if (line)
         lbuf->line = line;
     else
@@ -119,13 +118,13 @@ newTextLine(pStr line, int pos)
     return lbuf;
 }
 
-void appendTextLine(TextLineList* tl, pStr line, int pos)
+void appendTextLine(struct TextLineList* tl, pStr line, int pos)
 {
 
     if (tl->last == NULL) {
         pushTextLine(tl, newTextLine(Strdup(line), pos));
     } else {
-        TextLine* lbuf = tl->last->ptr;
+        struct TextLine* lbuf = tl->last->ptr;
         if (lbuf->line)
             Strcat(lbuf->line, line);
         else

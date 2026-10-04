@@ -179,7 +179,7 @@ extern pStr process_n_form(void);
 extern int getMetaRefreshParam(const char* q, pStr* refresh_uri);
 extern int HTMLtagproc1(struct parsed_tag* tag,
     struct html_feed_environ* h_env);
-extern void HTMLlineproc2(Buffer* buf, TextLineList* tl);
+extern void HTMLlineproc2(Buffer* buf, struct TextLineList* tl);
 extern void HTMLlineproc0(const char* istr, struct html_feed_environ* h_env,
     int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
@@ -188,7 +188,7 @@ extern char* convert_size(size_t size, int usefloat);
 extern char* convert_size2(size_t size1, size_t size2, int usefloat);
 extern void showProgress(size_t* linelen, size_t* trbyte);
 extern void init_henv(struct html_feed_environ*, struct readbuffer*,
-    struct environment*, int, TextLineList*, int, int);
+    struct environment*, int, struct TextLineList*, int, int);
 extern void completeHTMLstream(struct html_feed_environ*,
     struct readbuffer*);
 extern void loadHTMLstream(struct UrlStream* f, Buffer* newBuf, FILE* src,

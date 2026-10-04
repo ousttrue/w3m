@@ -24,9 +24,7 @@ extern void* rpopValue(struct GeneralList* tl);
 extern void delValue(struct GeneralList* tl, struct ListItem* it);
 extern struct GeneralList* appendGeneralList(struct GeneralList*, struct GeneralList*);
 
-//
 // 'const char*'
-//
 struct TextListItem {
     const char* ptr;
     struct TextListItem* next;
@@ -64,29 +62,41 @@ inline static struct TextList* appendTextList(struct TextList* tl, struct TextLi
     return (struct TextList*)appendGeneralList((struct GeneralList*)(tl), (struct GeneralList*)(tl2));
 }
 
-// Line text list
-
-typedef struct _TextLine {
+// struct TextLine{pSr, int};
+struct TextLine {
     pStr line;
     int pos;
-} TextLine;
-
-typedef struct _textlinelistitem {
-    TextLine* ptr;
-    struct _textlinelistitem* next;
-    struct _textlinelistitem* prev;
-} TextLineListItem;
-
-typedef struct _textlinelist {
-    TextLineListItem* first;
-    TextLineListItem* last;
+};
+struct TextLineListItem {
+    struct TextLine* ptr;
+    struct TextLineListItem* next;
+    struct TextLineListItem* prev;
+};
+struct TextLineList {
+    struct TextLineListItem* first;
+    struct TextLineListItem* last;
     int nitem;
-} TextLineList;
+};
 
-extern TextLine* newTextLine(pStr line, int pos);
-extern void appendTextLine(TextLineList* tl, pStr line, int pos);
-#define newTextLineList() ((TextLineList*)newGeneralList())
-#define pushTextLine(tl, lbuf) pushValue((struct GeneralList*)(tl), (void*)(lbuf))
-#define popTextLine(tl) ((TextLine*)popValue((struct GeneralList*)(tl)))
-#define rpopTextLine(tl) ((TextLine*)rpopValue((struct GeneralList*)(tl)))
-#define appendTextLineList(tl, tl2) ((TextLineList*)appendGeneralList((struct GeneralList*)(tl), (struct GeneralList*)(tl2)))
+struct TextLine* newTextLine(pStr line, int pos);
+void appendTextLine(struct TextLineList* tl, pStr line, int pos);
+inline static struct TextLineList* newTextLineList()
+{
+    return (struct TextLineList*)newGeneralList();
+}
+inline static void pushTextLine(struct TextLineList* tl, struct TextLine* lbuf)
+{
+    pushValue((struct GeneralList*)(tl), (void*)(lbuf));
+}
+inline static struct TextLine* popTextLine(struct TextLineList* tl)
+{
+    return (struct TextLine*)popValue((struct GeneralList*)(tl));
+}
+inline static struct TextLine* rpopTextLine(struct TextLineList* tl)
+{
+    return (struct TextLine*)rpopValue((struct GeneralList*)(tl));
+}
+inline static struct TextLineList* appendTextLineList(struct TextLineList* tl, struct TextLineList* tl2)
+{
+    return (struct TextLineList*)appendGeneralList((struct GeneralList*)(tl), (struct GeneralList*)(tl2));
+}

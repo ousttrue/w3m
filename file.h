@@ -126,7 +126,7 @@ struct readbuffer {
 
 struct html_feed_environ {
     struct readbuffer *obuf;
-    TextLineList *buf;
+    struct TextLineList *buf;
     FILE *f;
     pStr tagbuf;
     int limit;

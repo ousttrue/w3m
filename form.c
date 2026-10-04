@@ -725,15 +725,15 @@ int formChooseOptionByMenu(struct form_item_list* fi, int x, int y)
 }
 #endif /* USE_MENU */
 
-void form_write_data(FILE* f, char* boundary, char* name, char* value)
+void form_write_data(FILE* f, const char* boundary, const char* name, const char* value)
 {
     fprintf(f, "--%s\r\n", boundary);
     fprintf(f, "Content-Disposition: form-data; name=\"%s\"\r\n\r\n", name);
     fprintf(f, "%s\r\n", value);
 }
 
-void form_write_from_file(FILE* f, char* boundary, char* name, char* filename,
-    char* file)
+void form_write_from_file(FILE* f, const char* boundary, const char* name, const char* filename,
+    const char* file)
 {
     FILE* fd;
     struct stat st;

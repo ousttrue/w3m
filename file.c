@@ -1722,7 +1722,7 @@ fillline(struct readbuffer* obuf, int indent)
 void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int indent,
     int force, int width)
 {
-    TextLineList* buf = h_env->buf;
+    struct TextLineList* buf = h_env->buf;
     FILE* f = h_env->f;
     pStr line = obuf->line, pass = NULL;
     char *hidden_anchor = NULL, *hidden_img = NULL, *hidden_bold = NULL,
@@ -1849,7 +1849,7 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
     }
 
     if (force == 1 || obuf->flag & RB_NFLUSHED) {
-        TextLine* lbuf = newTextLine(line, obuf->pos);
+        struct TextLine* lbuf = newTextLine(line, obuf->pos);
         if (RB_GET_ALIGN(obuf) == RB_CENTER) {
             align(lbuf, width, ALIGN_CENTER);
         } else if (RB_GET_ALIGN(obuf) == RB_RIGHT) {
@@ -2016,7 +2016,7 @@ void purgeline(struct html_feed_environ* h_env)
 {
     char *p, *q;
     pStr tmp;
-    TextLine* tl;
+    struct TextLine* tl;
 
     if (h_env->buf == NULL || h_env->blank_lines == 0)
         return;
@@ -4360,12 +4360,12 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
         outp = New_Reuse(Lineprop, outp, out_size); \
     }
 
-static TextLineListItem* _tl_lp2;
+static struct TextLineListItem* _tl_lp2;
 
 static pStr
 textlist_feed(void)
 {
-    TextLine* p;
+    struct TextLine* p;
     if (_tl_lp2 != NULL) {
         p = _tl_lp2->ptr;
         _tl_lp2 = _tl_lp2->next;
@@ -5040,7 +5040,7 @@ addLink(Buffer* buf, struct parsed_tag* tag)
         buf->linklist = l;
 }
 
-void HTMLlineproc2(Buffer* buf, TextLineList* tl)
+void HTMLlineproc2(Buffer* buf, struct TextLineList* tl)
 {
     _tl_lp2 = tl->first;
     HTMLlineproc2body(buf, textlist_feed, -1);
@@ -5700,7 +5700,7 @@ void showProgress(size_t* linelen, size_t* trbyte)
 }
 
 void init_henv(struct html_feed_environ* h_env, struct readbuffer* obuf,
-    struct environment* envs, int nenv, TextLineList* buf,
+    struct environment* envs, int nenv, struct TextLineList* buf,
     int limit, int indent)
 {
     envs[0].env = HTML_BODY;
@@ -5816,7 +5816,7 @@ print_internal_information(struct html_feed_environ* henv)
 {
     int i;
     pStr s;
-    TextLineList* tl = newTextLineList();
+    struct TextLineList* tl = newTextLineList();
 
     s = Strnew_charp("<internal>");
     pushTextLine(tl, newTextLine(s, 0));
@@ -5856,7 +5856,7 @@ print_internal_information(struct html_feed_environ* henv)
     if (henv->buf)
         appendTextLineList(henv->buf, tl);
     else if (henv->f) {
-        TextLineListItem* p;
+        struct TextLineListItem* p;
         for (p = tl->first; p; p = p->next)
             fprintf(henv->f, "%s\n", Str_conv_to_halfdump(&WcOption, p->ptr->line)->ptr);
     }

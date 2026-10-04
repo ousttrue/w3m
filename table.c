@@ -259,7 +259,7 @@ static void
 check_row(struct table* t, int row)
 {
     int i, r;
-    struct TextList*** tabdata;
+    struct GeneralList*** tabdata;
     table_attr** tabattr;
     int* tabheight;
     pStr** tabidvalue;
@@ -314,9 +314,9 @@ void pushdata(struct table* t, int row, int col, const char* data)
 {
     check_row(t, row);
     if (t->tabdata[row][col] == NULL)
-        t->tabdata[row][col] = newTextList();
+        t->tabdata[row][col] = newGeneralList();
 
-    pushText(t->tabdata[row][col], data ? data : "");
+    pushText((struct TextList*)t->tabdata[row][col], data ? data : "");
 }
 
 static void
@@ -453,7 +453,7 @@ maximum_visible_length_plain(const char* str, int offset)
     return visible_length_plain(str);
 }
 
-void align(TextLine* lbuf, int width, int mode)
+void align(struct TextLine* lbuf, int width, int mode)
 {
     int i, l, l1, l2;
     pStr buf, line = lbuf->line;
@@ -497,10 +497,10 @@ void align(TextLine* lbuf, int width, int mode)
 void print_item(struct table* t, int row, int col, int width, pStr buf)
 {
     int alignment;
-    TextLine* lbuf;
+    struct TextLine* lbuf;
 
     if (t->tabdata[row])
-        lbuf = popTextLine(t->tabdata[row][col]);
+        lbuf = popTextLine((struct TextLineList*)t->tabdata[row][col]);
     else
         lbuf = NULL;
 
@@ -645,10 +645,10 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
     if (tbl->tabdata[row] == NULL || tbl->tabdata[row][col] == NULL)
         return;
     orgdata = (struct TextList*)tbl->tabdata[row][col];
-    tbl->tabdata[row][col] = newTextList();
+    tbl->tabdata[row][col] = newGeneralList();
 
     init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL,
-        (TextLineList*)tbl->tabdata[row][col],
+        (struct TextLineList*)tbl->tabdata[row][col],
         get_spec_cell_width(tbl, row, col), 0);
     obuf.flag |= RB_INTABLE;
     if (h_env.limit > maxlimit)
@@ -664,7 +664,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
                 parsedtag_get_value(tag, ATTR_TID, &id);
             if (id >= 0 && id < tbl->ntable && tbl->tables[id].ptr) {
                 int alignment;
-                TextLineListItem* ti;
+                struct TextLineListItem* ti;
                 struct table* t = tbl->tables[id].ptr;
                 int limit = tbl->tables[id].indent + t->total_width;
                 tbl->tables[id].ptr = NULL;
@@ -1596,7 +1596,7 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
 
     for (i = 0; i <= t->maxcol; i++) {
         for (j = 0; j <= t->maxrow; j++) {
-            TextLineList* l;
+            struct TextLineList* l;
             int k;
             if ((t->tabattr[j][i] & HTT_Y) || (t->tabattr[j][i] & HTT_TOP) || (t->tabdata[j][i] == NULL))
                 continue;
@@ -1621,7 +1621,7 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
             l = newTextLineList();
             for (k = 0; k < h; k++)
                 pushTextLine(l, newTextLine(NULL, 0));
-            t->tabdata[j][i] = (struct TextList*)appendGeneralList(
+            t->tabdata[j][i] = appendGeneralList(
                 (struct GeneralList*)l,
                 (struct GeneralList*)t->tabdata[j][i]);
         }
@@ -1946,7 +1946,7 @@ begin_cell(struct table* t, struct table_mode* mode)
     if (t->suspended_data) {
         check_row(t, t->row);
         if (t->tabdata[t->row][t->col] == NULL)
-            t->tabdata[t->row][t->col] = newTextList();
+            t->tabdata[t->row][t->col] = newGeneralList();
         appendGeneralList(
             (struct GeneralList*)t->tabdata[t->row][t->col],
             (struct GeneralList*)t->suspended_data);

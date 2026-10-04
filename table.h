@@ -50,7 +50,7 @@ struct table_in {
     short row;
     short cell;
     short indent;
-    TextLineList *buf;
+    struct TextLineList *buf;
 };
 
 struct table_linfo {
@@ -81,7 +81,7 @@ struct table {
 #endif				/* TABLE_EXPAND */
     pStr caption;
     pStr id;
-    struct TextList ***tabdata;
+    struct GeneralList ***tabdata;
     table_attr **tabattr;
     table_attr trattr;
     pStr **tabidvalue;
@@ -129,7 +129,7 @@ struct table_mode {
 int feed_table(struct table *tbl, const char *line, struct table_mode *mode, int width, int internal);
 int visible_length(const char *str);
 struct table *begin_table(int border, int spacing, int padding, int vspace);
-void align(TextLine *lbuf, int width, int mode);
+void align(struct TextLine *lbuf, int width, int mode);
 void check_rowcol(struct table *tbl, struct table_mode *mode);
 void end_table(struct table *tbl);
 void initRenderTable(void);
