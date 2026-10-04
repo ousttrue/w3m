@@ -1,24 +1,19 @@
+#include "news.h"
 #include "buffer.h"
 #include "w3m.h"
 #include "mymktime.h"
 #include "indep.h"
 #include "charset.h"
 #include "config.h"
-#include "display.h"
-#include "fm.h"
 #include "proto.h"
 #include "myctype.h"
 #include "rc.h"
 #include "terms.h"
-#include "symbol.h"
 
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-
-#ifdef USE_NNTP
 
 #define NEWS_ENDLINE(p) \
     ((*(p) == '.' && ((p)[1] == '\n' || (p)[1] == '\r' || (p)[1] == '\0')) || *(p) == '\n' || *(p) == '\r' || *(p) == '\0')
@@ -307,11 +302,7 @@ openNewsStream(ParsedURL* pu)
     return NULL;
 }
 
-#ifdef USE_M17N
 pStr loadNewsgroup(ParsedURL* pu, wc_ces* charset)
-#else
-pStr loadNewsgroup0(ParsedURL* pu)
-#endif
 {
     volatile pStr page;
     pStr tmp;
@@ -517,5 +508,3 @@ void disconnectNews(void)
 {
     news_quit(&current_news);
 }
-
-#endif /* USE_NNTP */

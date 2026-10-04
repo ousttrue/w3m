@@ -390,17 +390,7 @@ extern pStr loadFTPDir0(ParsedURL* pu);
 #endif
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-#ifdef USE_NNTP
-extern struct input_stream* openNewsStream(ParsedURL* pu);
-#ifdef USE_M17N
-extern pStr loadNewsgroup(ParsedURL* pu, wc_ces* charset);
-#else
-extern pStr loadNewsgroup0(ParsedURL* pu);
-#define loadNewsgroup(pu, charset) loadNewsgroup0(pu)
-#endif
-extern void closeNews(void);
-extern void disconnectNews(void);
-#endif
+
 
 extern void addMultirowsForm(Buffer* buf, AnchorList* al);
 extern Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);

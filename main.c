@@ -2,6 +2,7 @@
 #include "alloc.h"
 #define MAINPROGRAM
 #include "backend.h"
+#include "news.h"
 #include "StrWriter.h"
 #include "indep.h"
 #include "input_stream.h"

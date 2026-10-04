@@ -1,5 +1,6 @@
 #include "file.h"
 #include "mymktime.h"
+#include "news.h"
 #include "w3m.h"
 #include "func.h"
 #include "compression.h"
