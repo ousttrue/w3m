@@ -1043,7 +1043,7 @@ void addMChar(char* p, Lineprop mode, size_t len)
         addmch(p, len);
 }
 
-static GeneralList* message_list = NULL;
+static struct GeneralList* message_list = NULL;
 
 void record_err_message(const char* s)
 {
@@ -1063,7 +1063,7 @@ Buffer*
 message_list_panel(void)
 {
     pStr tmp = Strnew_size(LINES * COLS);
-    ListItem* p;
+    struct ListItem* p;
 
     /* FIXME: gettextize? */
     Strcat_charp(tmp,

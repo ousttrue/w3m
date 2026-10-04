@@ -31,7 +31,7 @@ pStr HTTPrequestMethod(HRequest* hr);
 pStr HTTPrequestURI(ParsedURL* pu, HRequest* hr);
 URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     struct URLOption* option, FormList* request,
-    TextList* extra_header, URLFile* ouf,
+    struct TextList* extra_header, URLFile* ouf,
     HRequest* hr, unsigned char* status);
 
 extern pStr header_string;
@@ -53,7 +53,7 @@ extern char* GOPHER_proxy;
 extern ParsedURL GOPHER_proxy_parsed;
 #endif /* USE_GOPHER */
 extern char* NO_proxy;
-extern TextList* NO_proxy_domains;
+extern struct TextList* NO_proxy_domains;
 extern int NOproxy_netaddr;
 extern char NoCache;
 

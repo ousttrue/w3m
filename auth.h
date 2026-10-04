@@ -34,7 +34,7 @@ void add_auth_user_passwd(ParsedURL* pu, char* realm,
 
 // from file
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, ParsedURL* pu, struct http_request* hr,
+    struct TextList* extra_header, ParsedURL* pu, struct http_request* hr,
     struct form_list* request,
     pStr* uname, pStr* pwd);
 

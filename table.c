@@ -220,7 +220,7 @@ newTable(void)
 
     t = New(struct table);
     t->max_rowsize = MAXROW;
-    t->tabdata = New_N(GeneralList**, MAXROW);
+    t->tabdata = New_N(struct GeneralList**, MAXROW);
     t->tabattr = New_N(table_attr*, MAXROW);
     t->tabheight = NewAtom_N(int, MAXROW);
     t->tabidvalue = New_N(pStr*, MAXROW);
@@ -259,7 +259,7 @@ static void
 check_row(struct table* t, int row)
 {
     int i, r;
-    GeneralList*** tabdata;
+    struct GeneralList*** tabdata;
     table_attr** tabattr;
     int* tabheight;
     pStr** tabidvalue;
@@ -271,7 +271,7 @@ check_row(struct table* t, int row)
         r = max(t->max_rowsize * 2, row + 1);
         if (r <= 0 || r > MAXROW_LIMIT)
             r = MAXROW_LIMIT;
-        tabdata = New_N(GeneralList**, r);
+        tabdata = New_N(struct GeneralList**, r);
         tabattr = New_N(table_attr*, r);
         tabheight = NewAtom_N(int, r);
         tabidvalue = New_N(pStr*, r);
@@ -299,7 +299,7 @@ check_row(struct table* t, int row)
     }
 
     if (t->tabdata[row] == NULL) {
-        t->tabdata[row] = New_N(GeneralList*, MAXCOL);
+        t->tabdata[row] = New_N(struct GeneralList*, MAXCOL);
         t->tabattr[row] = NewAtom_N(table_attr, MAXCOL);
         t->tabidvalue[row] = New_N(pStr, MAXCOL);
         for (i = 0; i < MAXCOL; i++) {
@@ -635,8 +635,8 @@ get_spec_cell_width(struct table* tbl, int row, int col)
 
 void do_refill(struct table* tbl, int row, int col, int maxlimit)
 {
-    TextList* orgdata;
-    TextListItem* l;
+    struct TextList* orgdata;
+    struct TextListItem* l;
     struct readbuffer obuf;
     struct html_feed_environ h_env;
     struct environment envs[MAX_ENV_LEVEL];
@@ -644,7 +644,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
 
     if (tbl->tabdata[row] == NULL || tbl->tabdata[row][col] == NULL)
         return;
-    orgdata = (TextList*)tbl->tabdata[row][col];
+    orgdata = (struct TextList*)tbl->tabdata[row][col];
     tbl->tabdata[row][col] = newGeneralList();
 
     init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL,
@@ -1621,7 +1621,7 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
             l = newTextLineList();
             for (k = 0; k < h; k++)
                 pushTextLine(l, newTextLine(NULL, 0));
-            t->tabdata[j][i] = appendGeneralList((GeneralList*)l,
+            t->tabdata[j][i] = appendGeneralList((struct GeneralList*)l,
                 t->tabdata[j][i]);
         }
     }
@@ -1947,7 +1947,7 @@ begin_cell(struct table* t, struct table_mode* mode)
         if (t->tabdata[t->row][t->col] == NULL)
             t->tabdata[t->row][t->col] = newGeneralList();
         appendGeneralList(t->tabdata[t->row][t->col],
-            (GeneralList*)t->suspended_data);
+            (struct GeneralList*)t->suspended_data);
         t->suspended_data = NULL;
     }
 }

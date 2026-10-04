@@ -472,7 +472,7 @@ dump_source(Buffer* buf)
 static void
 dump_head(Buffer* buf)
 {
-    TextListItem* ti;
+    struct TextListItem* ti;
 
     if (buf->document_header == NULL) {
         if (w3m_dump & DUMP_EXTRA)

@@ -81,7 +81,7 @@ struct table {
 #endif				/* TABLE_EXPAND */
     pStr caption;
     pStr id;
-    GeneralList ***tabdata;
+    struct GeneralList ***tabdata;
     table_attr **tabattr;
     table_attr trattr;
     pStr **tabidvalue;
@@ -94,7 +94,7 @@ struct table {
     struct table_in *tables;
     short ntable;
     short tables_size;
-    TextList *suspended_data;
+    struct TextList *suspended_data;
     /* use for counting skipped spaces */
     struct table_linfo linfo;
     MAT *matrix;

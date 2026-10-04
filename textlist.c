@@ -1,154 +1,135 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "textlist.h"
 
 #include "Str.h"
 #include "alloc.h"
 
-/* General doubly linked list */
-
-ListItem *
-newListItem(void *s, ListItem *n, ListItem *p)
+struct ListItem*
+newListItem(void* s, struct ListItem* n, struct ListItem* p)
 {
-    ListItem *it;
-    it = New(ListItem);
+    struct ListItem* it = New(struct ListItem);
     it->ptr = s;
     it->next = n;
     it->prev = p;
     return it;
 }
 
-GeneralList *
+struct GeneralList*
 newGeneralList(void)
 {
-    GeneralList *tl = New(GeneralList);
+    struct GeneralList* tl = New(struct GeneralList);
     tl->first = tl->last = NULL;
     tl->nitem = 0;
     return tl;
 }
 
-void
-pushValue(GeneralList *tl, void *s)
+void pushValue(struct GeneralList* tl, void* s)
 {
-    ListItem *it;
     if (s == NULL || tl == NULL || tl->nitem >= GENERAL_LIST_MAX)
-	return;
-    it = newListItem(s, NULL, tl->last);
+        return;
+    struct ListItem* it = newListItem(s, NULL, tl->last);
     if (tl->first == NULL) {
-	tl->first = it;
-	tl->last = it;
-	tl->nitem = 1;
-    }
-    else {
-	tl->last->next = it;
-	tl->last = it;
-	tl->nitem++;
+        tl->first = it;
+        tl->last = it;
+        tl->nitem = 1;
+    } else {
+        tl->last->next = it;
+        tl->last = it;
+        tl->nitem++;
     }
 }
 
-void *
-popValue(GeneralList *tl)
+void* popValue(struct GeneralList* tl)
 {
-    ListItem *f;
-
     if (tl == NULL || tl->first == NULL)
-	return NULL;
-    f = tl->first;
+        return NULL;
+    struct ListItem* f = tl->first;
     tl->first = f->next;
     if (tl->first)
-	tl->first->prev = NULL;
+        tl->first->prev = NULL;
     else
-	tl->last = NULL;
+        tl->last = NULL;
     tl->nitem--;
     return f->ptr;
 }
 
-void *
-rpopValue(GeneralList *tl)
+void* rpopValue(struct GeneralList* tl)
 {
-    ListItem *f;
-
     if (tl == NULL || tl->last == NULL)
-	return NULL;
-    f = tl->last;
+        return NULL;
+    struct ListItem* f = tl->last;
     tl->last = f->prev;
     if (tl->last)
-	tl->last->next = NULL;
+        tl->last->next = NULL;
     else
-	tl->first = NULL;
+        tl->first = NULL;
     tl->nitem--;
     return f->ptr;
 }
 
-void
-delValue(GeneralList *tl, ListItem *it)
+void delValue(struct GeneralList* tl, struct ListItem* it)
 {
     if (it->prev)
-	it->prev->next = it->next;
+        it->prev->next = it->next;
     else
-	tl->first = it->next;
+        tl->first = it->next;
     if (it->next)
-	it->next->prev = it->prev;
+        it->next->prev = it->prev;
     else
-	tl->last = it->prev;
+        tl->last = it->prev;
     tl->nitem--;
 }
 
-GeneralList *
-appendGeneralList(GeneralList *tl, GeneralList *tl2)
+struct GeneralList*
+appendGeneralList(struct GeneralList* tl, struct GeneralList* tl2)
 {
     if (tl && tl2) {
-	if (tl2->first) {
-	    if (tl->last) {
-		if (tl->nitem + tl2->nitem > GENERAL_LIST_MAX) {
-		    return tl;
-		}
-		tl->last->next = tl2->first;
-		tl2->first->prev = tl->last;
-		tl->last = tl2->last;
-		tl->nitem += tl2->nitem;
-	    }
-	    else {
-		tl->first = tl2->first;
-		tl->last = tl2->last;
-		tl->nitem = tl2->nitem;
-	    }
-	}
-	tl2->first = tl2->last = NULL;
-	tl2->nitem = 0;
+        if (tl2->first) {
+            if (tl->last) {
+                if (tl->nitem + tl2->nitem > GENERAL_LIST_MAX) {
+                    return tl;
+                }
+                tl->last->next = tl2->first;
+                tl2->first->prev = tl->last;
+                tl->last = tl2->last;
+                tl->nitem += tl2->nitem;
+            } else {
+                tl->first = tl2->first;
+                tl->last = tl2->last;
+                tl->nitem = tl2->nitem;
+            }
+        }
+        tl2->first = tl2->last = NULL;
+        tl2->nitem = 0;
     }
 
     return tl;
 }
 
-
 /* Line text list */
 
-TextLine *
+TextLine*
 newTextLine(pStr line, int pos)
 {
-    TextLine *lbuf = New(TextLine);
+    TextLine* lbuf = New(TextLine);
     if (line)
-	lbuf->line = line;
+        lbuf->line = line;
     else
-	lbuf->line = Strnew();
+        lbuf->line = Strnew();
     lbuf->pos = pos;
     return lbuf;
 }
 
-void
-appendTextLine(TextLineList *tl, pStr line, int pos)
+void appendTextLine(TextLineList* tl, pStr line, int pos)
 {
-    TextLine *lbuf;
 
     if (tl->last == NULL) {
-	pushTextLine(tl, newTextLine(Strdup(line), pos));
-    }
-    else {
-	lbuf = tl->last->ptr;
-	if (lbuf->line)
-	    Strcat(lbuf->line, line);
-	else
-	    lbuf->line = line;
-	lbuf->pos += pos;
+        pushTextLine(tl, newTextLine(Strdup(line), pos));
+    } else {
+        TextLine* lbuf = tl->last->ptr;
+        if (lbuf->line)
+            Strcat(lbuf->line, line);
+        else
+            lbuf->line = line;
+        lbuf->pos += pos;
     }
 }

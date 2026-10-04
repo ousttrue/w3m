@@ -300,13 +300,13 @@ pStr get_auth_param(struct auth_param* auth, const char* name)
 }
 
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
-    TextList* extra_header, ParsedURL* pu, struct http_request* hr,
+    struct TextList* extra_header, ParsedURL* pu, struct http_request* hr,
     FormList* request,
     pStr* uname, pStr* pwd)
 {
     pStr ss = NULL;
     pStr tmp;
-    TextListItem* i;
+    struct TextListItem* i;
     int a_found;
     int auth_header_len = strlen(auth_header);
     char* realm = NULL;
@@ -411,11 +411,10 @@ void getAuthCookie(struct http_auth* hauth, char* auth_header,
 }
 
 static int
-skip_auth_token(char** pp)
+skip_auth_token(const char** pp)
 {
-    char* p;
     int first = AUTHCHR_NUL, typ;
-
+    const char* p;
     for (p = *pp;; ++p) {
         switch (*p) {
         case '\0':
@@ -459,9 +458,9 @@ endoftoken:
 }
 
 static pStr
-extract_auth_val(char** q)
+extract_auth_val(const char** q)
 {
-    unsigned char* qq = *(unsigned char**)q;
+    const unsigned char* qq = *(const unsigned char**)q;
     int quoted = 0;
     pStr val = Strnew();
 
@@ -507,15 +506,14 @@ extract_auth_val(char** q)
         Strcat_char(val, *qq++);
     }
 end_token:
-    *q = (char*)qq;
+    *q = (const char*)qq;
     return val;
 }
 
-static char*
-extract_auth_param(char* q, struct auth_param* auth)
+static const char*
+extract_auth_param(const char* q, struct auth_param* auth)
 {
     struct auth_param* ap;
-    char* p;
 
     for (ap = auth; ap->name != NULL; ap++) {
         ap->val = NULL;
@@ -528,7 +526,7 @@ extract_auth_param(char* q, struct auth_param* auth)
 
             len = strlen(ap->name);
             if (strncasecmp(q, ap->name, len) == 0 && (IS_SPACE(q[len]) || q[len] == '=')) {
-                p = q + len;
+                const char* p = q + len;
                 SKIP_BLANKS(p);
                 if (*p != '=')
                     return q;
@@ -539,7 +537,7 @@ extract_auth_param(char* q, struct auth_param* auth)
         }
         if (ap->name == NULL) {
             /* skip unknown param */
-            p = q;
+            const char* p = q;
             if (skip_auth_token(&q) == AUTHCHR_TOKEN && (IS_SPACE(*q) || *q == '=')) {
                 SKIP_BLANKS(q);
                 if (*q != '=')
@@ -862,15 +860,14 @@ findAuthentication(struct http_auth* hauth, Buffer* buf, char* auth_field)
 {
     struct http_auth* ha;
     int len = strlen(auth_field), slen;
-    TextListItem* i;
-    char *p0, *p;
+    struct TextListItem* i;
 
     bzero(hauth, sizeof(struct http_auth));
     for (i = buf->document_header->first; i != NULL; i = i->next) {
         if (strncasecmp(i->ptr, auth_field, len) == 0) {
-            for (p = i->ptr + len; p != NULL && *p != '\0';) {
+            for (const char* p = i->ptr + len; p != NULL && *p != '\0';) {
                 SKIP_BLANKS(p);
-                p0 = p;
+                const char* p0 = p;
                 for (ha = &www_auth[0]; ha->scheme != NULL; ha++) {
                     slen = strlen(ha->scheme);
                     if (strncasecmp(p, ha->scheme, slen) == 0) {

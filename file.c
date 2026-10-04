@@ -330,7 +330,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
     char c;
     pStr lineBuf2 = NULL;
     pStr tmp;
-    TextList* headerlist;
+    struct TextList* headerlist;
     wc_ces charset = WC_CES_US_ASCII, mime_charset;
     char* tmpf;
     FILE* src = NULL;
@@ -620,9 +620,9 @@ char* checkHeader(Buffer* buf, const char* field)
         return NULL;
 
     int len = strlen(field);
-    for (TextListItem* i = buf->document_header->first; i != NULL; i = i->next) {
+    for (struct TextListItem* i = buf->document_header->first; i != NULL; i = i->next) {
         if (!strncasecmp(i->ptr, field, len)) {
-            char* p = i->ptr + len;
+            const char* p = i->ptr + len;
             return remove_space(p)->ptr;
         }
     }
@@ -814,7 +814,7 @@ loadGeneralFile(const char* path, ParsedURL* volatile current, const char* refer
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = true;
     SigActionFunc volatile prevtrap = NULL;
-    TextList* extra_header = newTextList();
+    struct TextList* extra_header = newTextList();
     pStr uname = NULL;
     pStr pwd = NULL;
     pStr realm = NULL;

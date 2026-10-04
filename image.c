@@ -320,7 +320,7 @@ void clearImage(void)
 static int n_load_image = 0;
 static Hash_sv* image_hash = NULL;
 static Hash_sv* image_file = NULL;
-static GeneralList* image_list = NULL;
+static struct GeneralList* image_list = NULL;
 static ImageCache** image_cache = NULL;
 static Buffer* image_buffer = NULL;
 

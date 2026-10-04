@@ -125,8 +125,8 @@ printMailcapPanel(char* mailcap)
 static void
 editMailcap(const char* mailcap, struct parsed_tagarg* args)
 {
-    TextList* t = newTextList();
-    TextListItem* ti;
+    struct TextList* t = newTextList();
+    struct TextListItem* ti;
     FILE* f;
     pStr tmp;
     char *type, *viewer;

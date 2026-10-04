@@ -101,11 +101,9 @@ typedef struct _Buffer {
     int* clone;
     size_t trbyte;
     char check_url;
-#ifdef USE_M17N
     wc_ces document_charset;
     uint8_t auto_detect;
-#endif
-    TextList* document_header;
+    struct TextList* document_header;
     FormItemList* form_submit;
     const char* savecache;
     const char* edit;

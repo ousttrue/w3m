@@ -312,7 +312,7 @@ extern struct mailcap* searchMailcap(struct mailcap* table, const char* type);
 extern void initMailcap(void);
 extern char* acceptableMimeTypes(void);
 extern struct mailcap* searchExtViewer(const char* type);
-extern TextList* make_domain_list(char* domain_list);
+extern struct TextList* make_domain_list(char* domain_list);
 
 
 extern void addMultirowsForm(Buffer* buf, AnchorList* al);

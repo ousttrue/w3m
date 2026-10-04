@@ -65,9 +65,9 @@ struct cookie {
 };
 static struct cookie* First_cookie;
 
-static TextList* Cookie_reject_domains;
-static TextList* Cookie_accept_domains;
-static TextList* Cookie_avoid_wrong_number_of_dots_domains;
+static struct TextList* Cookie_reject_domains;
+static struct TextList* Cookie_accept_domains;
+static struct TextList* Cookie_avoid_wrong_number_of_dots_domains;
 
 static long long cf_mtime;
 static int is_saved = 1;
@@ -371,7 +371,7 @@ pStr find_cookie(ParsedURL* pu)
 
 int check_avoid_wrong_number_of_dots_domain(pStr domain)
 {
-    TextListItem* tl;
+    struct TextListItem* tl;
     int avoid_wrong_number_of_dots_domain = FALSE;
 
     if (Cookie_avoid_wrong_number_of_dots_domains && Cookie_avoid_wrong_number_of_dots_domains->nitem > 0) {
@@ -852,7 +852,7 @@ void set_cookie_flag(struct parsed_tagarg* arg)
 
 int check_cookie_accept_domain(const char* domain)
 {
-    TextListItem* tl;
+    struct TextListItem* tl;
 
     if (domain == NULL)
         return 0;

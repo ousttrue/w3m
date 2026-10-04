@@ -16,7 +16,7 @@ struct MapArea {
 
 struct MapList {
     pStr name;
-    GeneralList* area;
+    struct GeneralList* area;
     struct MapList* next;
 };
 

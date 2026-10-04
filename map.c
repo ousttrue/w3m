@@ -78,7 +78,7 @@ inMapArea(struct MapArea* a, int x, int y)
 static int
 nearestMapArea(struct MapList* ml, int x, int y)
 {
-    ListItem* al;
+    struct ListItem* al;
     int i, l, n = -1, min = -1, limit = pixel_per_char * pixel_per_char + pixel_per_line * pixel_per_line;
 
     if (!ml || !ml->area)
@@ -100,7 +100,7 @@ nearestMapArea(struct MapList* ml, int x, int y)
 static int
 searchMapArea(Buffer* buf, struct MapList* ml, Anchor* a_img)
 {
-    ListItem* al;
+    struct ListItem* al;
     int i, n;
     int px, py;
 
@@ -134,7 +134,7 @@ retrieveCurrentMapArea(Buffer* buf)
     Anchor *a_img, *a_form;
     FormItemList* fi;
     struct MapList* ml;
-    ListItem* al;
+    struct ListItem* al;
     int i, n;
 
     a_img = retrieveCurrentImg(buf);
@@ -196,7 +196,7 @@ struct MapArea*
 follow_map_menu(Buffer* buf, char* name, Anchor* a_img, int x, int y)
 {
     struct MapList* ml;
-    ListItem* al;
+    struct ListItem* al;
     int i, selected = -1;
     int initial = 0;
 
@@ -382,7 +382,7 @@ static void
 append_map_info(Buffer* buf, pStr tmp, FormItemList* fi)
 {
     struct MapList* ml;
-    ListItem* al;
+    struct ListItem* al;
     struct MapArea* a;
     ParsedURL pu;
     char *p, *q;
@@ -499,7 +499,7 @@ append_frame_info(Buffer* buf, pStr html, struct frameset* set, int level)
 /* get last modified time */
 static char* last_modified(Buffer* buf)
 {
-    TextListItem* ti;
+    struct TextListItem* ti;
     struct stat st;
 
     if (buf->document_header) {
@@ -526,7 +526,7 @@ page_info_panel(Buffer* buf)
     pStr tmp = Strnew_size(1024);
     Anchor* a;
     ParsedURL pu;
-    TextListItem* ti;
+    struct TextListItem* ti;
     struct frameset* f_set = NULL;
     int all;
     char *p, *q;

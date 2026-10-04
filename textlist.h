@@ -1,55 +1,51 @@
-/* vi: set sw=4 ts=8 ai sm noet : */
-#ifndef W3M_TEXTLIST_H
-#define W3M_TEXTLIST_H
-
+#pragma once
 #include "Str.h"
-
-#include <limits.h>
 
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 
-/* General doubly linked list */
-
-typedef struct _listitem {
+// General doubly linked list
+struct ListItem {
     void* ptr;
-    struct _listitem* next;
-    struct _listitem* prev;
-} ListItem;
+    struct ListItem* next;
+    struct ListItem* prev;
+};
 
-typedef struct _generallist {
-    ListItem* first;
-    ListItem* last;
+struct GeneralList {
+    struct ListItem* first;
+    struct ListItem* last;
     int nitem;
-} GeneralList;
+};
 
-extern ListItem* newListItem(void* s, ListItem* n, ListItem* p);
-extern GeneralList* newGeneralList(void);
-extern void pushValue(GeneralList* tl, void* s);
-extern void* popValue(GeneralList* tl);
-extern void* rpopValue(GeneralList* tl);
-extern void delValue(GeneralList* tl, ListItem* it);
-extern GeneralList* appendGeneralList(GeneralList*, GeneralList*);
+extern struct ListItem* newListItem(void* s, struct ListItem* n, struct ListItem* p);
+extern struct GeneralList* newGeneralList(void);
+extern void pushValue(struct GeneralList* tl, void* s);
+extern void* popValue(struct GeneralList* tl);
+extern void* rpopValue(struct GeneralList* tl);
+extern void delValue(struct GeneralList* tl, struct ListItem* it);
+extern struct GeneralList* appendGeneralList(struct GeneralList*, struct GeneralList*);
 
-/* Text list */
+// Text list
+struct TextListItem {
+    const char* ptr;
+    struct TextListItem* next;
+    struct TextListItem* prev;
+};
 
-typedef struct _textlistitem {
-    char* ptr;
-    struct _textlistitem* next;
-    struct _textlistitem* prev;
-} TextListItem;
-
-typedef struct _textlist {
-    TextListItem* first;
-    TextListItem* last;
+struct TextList {
+    struct TextListItem* first;
+    struct TextListItem* last;
     int nitem;
-} TextList;
+};
 
-#define newTextList() ((TextList*)newGeneralList())
-#define pushText(tl, s) pushValue((GeneralList*)(tl), (void*)allocStr((s)).ptr)
-#define popText(tl) ((char*)popValue((GeneralList*)(tl)))
-#define rpopText(tl) ((char*)rpopValue((GeneralList*)(tl)))
-#define delText(tl, i) delValue((GeneralList*)(tl), (void*)(i))
-#define appendTextList(tl, tl2) ((TextList*)appendGeneralList((GeneralList*)(tl), (GeneralList*)(tl2)))
+inline static struct TextList* newTextList()
+{
+    return ((struct TextList*)newGeneralList());
+}
+#define pushText(tl, s) pushValue((struct GeneralList*)(tl), (void*)allocStr((s)).ptr)
+#define popText(tl) ((char*)popValue((struct GeneralList*)(tl)))
+#define rpopText(tl) ((char*)rpopValue((struct GeneralList*)(tl)))
+#define delText(tl, i) delValue((struct GeneralList*)(tl), (void*)(i))
+#define appendTextList(tl, tl2) ((struct TextList*)appendGeneralList((struct GeneralList*)(tl), (struct GeneralList*)(tl2)))
 
 /* Line text list */
 
@@ -73,9 +69,7 @@ typedef struct _textlinelist {
 extern TextLine* newTextLine(pStr line, int pos);
 extern void appendTextLine(TextLineList* tl, pStr line, int pos);
 #define newTextLineList() ((TextLineList*)newGeneralList())
-#define pushTextLine(tl, lbuf) pushValue((GeneralList*)(tl), (void*)(lbuf))
-#define popTextLine(tl) ((TextLine*)popValue((GeneralList*)(tl)))
-#define rpopTextLine(tl) ((TextLine*)rpopValue((GeneralList*)(tl)))
-#define appendTextLineList(tl, tl2) ((TextLineList*)appendGeneralList((GeneralList*)(tl), (GeneralList*)(tl2)))
-
-#endif
+#define pushTextLine(tl, lbuf) pushValue((struct GeneralList*)(tl), (void*)(lbuf))
+#define popTextLine(tl) ((TextLine*)popValue((struct GeneralList*)(tl)))
+#define rpopTextLine(tl) ((TextLine*)rpopValue((struct GeneralList*)(tl)))
+#define appendTextLineList(tl, tl2) ((TextLineList*)appendGeneralList((struct GeneralList*)(tl), (struct GeneralList*)(tl2)))

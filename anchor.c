@@ -818,7 +818,7 @@ link_list_panel(Buffer* buf)
             fi = fi->parent->item;
             if (fi->parent->method == FORM_METHOD_INTERNAL && !Strcmp_charp(fi->parent->action, "map") && fi->value) {
                 struct MapList* ml = searchMapList(buf, fi->value->ptr);
-                ListItem* mi;
+                struct ListItem* mi;
                 struct MapArea* m;
                 if (!ml)
                     continue;

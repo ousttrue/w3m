@@ -54,7 +54,7 @@ char* GOPHER_proxy = NULL;
 ParsedURL GOPHER_proxy_parsed;
 #endif /* USE_GOPHER */
 char* NO_proxy = NULL;
-TextList* NO_proxy_domains;
+struct TextList* NO_proxy_domains;
 int NOproxy_netaddr = true;
 char NoCache = false;
 
@@ -107,11 +107,11 @@ sock_log(char* message, ...)
 
 #endif
 
-static TextList* mimetypes_list;
+static struct TextList* mimetypes_list;
 static struct table2** UserMimeTypes;
 
 static struct table2*
-loadMimeTypes(char* filename)
+loadMimeTypes(const char* filename)
 {
     FILE* f;
     char *d, *type;
@@ -163,7 +163,7 @@ loadMimeTypes(char* filename)
 void initMimeTypes(void)
 {
     int i;
-    TextListItem* tl;
+    struct TextListItem* tl;
 
     if (non_null(mimetypes_files))
         mimetypes_list = make_domain_list(mimetypes_files);
@@ -862,10 +862,10 @@ pStr HTTPrequestURI(ParsedURL* pu, HRequest* hr)
 }
 
 static pStr
-HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
+HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, struct TextList* extra)
 {
     pStr tmp;
-    TextListItem* i;
+    struct TextListItem* i;
 #ifdef USE_COOKIE
     pStr cookie;
 #endif /* USE_COOKIE */
@@ -943,7 +943,7 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, TextList* extra)
 
 URLFile
 openURL(const char* url, ParsedURL* pu, ParsedURL* current,
-    struct URLOption* option, FormList* request, TextList* extra_header,
+    struct URLOption* option, FormList* request, struct TextList* extra_header,
     URLFile* ouf, HRequest* hr, unsigned char* status)
 {
     pStr tmp;
@@ -1325,8 +1325,8 @@ static void
 add_index_file(ParsedURL* pu, URLFile* uf)
 {
     char *p, *q;
-    TextList* index_file_list = NULL;
-    TextListItem* ti;
+    struct TextList* index_file_list = NULL;
+    struct TextListItem* ti;
 
     if (non_null(index_file))
         index_file_list = make_domain_list(index_file);
@@ -1389,12 +1389,12 @@ const char* guessContentType(const char* filename)
     return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
-TextList*
+struct TextList*
 make_domain_list(char* domain_list)
 {
     char* p;
     pStr tmp;
-    TextList* domains = NULL;
+    struct TextList* domains = NULL;
 
     p = domain_list;
     tmp = Strnew_size(64);
@@ -1436,7 +1436,7 @@ domain_match(const char* pat, const char* domain)
 
 int needs_proxy(const char* domain)
 {
-    TextListItem* tl;
+    struct TextListItem* tl;
     volatile int ret = 0;
     volatile SigActionFunc prevtrap = NULL;
 

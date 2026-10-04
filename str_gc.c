@@ -400,7 +400,7 @@ pStr base64_encode(const char* src, size_t len)
     return dest;
 }
 
-TextList* fileToDelete;
+struct TextList* fileToDelete;
 
 void initFileToDelete()
 {

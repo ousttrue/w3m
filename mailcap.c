@@ -14,7 +14,7 @@ static struct mailcap DefaultMailcap[] = {
     { NULL, NULL, 0, NULL, NULL, NULL }
 };
 
-static TextList* mailcap_list;
+static struct TextList* mailcap_list;
 static struct mailcap** UserMailcap;
 
 int mailcapMatch(struct mailcap* mcap, const char* type)
@@ -178,7 +178,7 @@ extractMailcapEntry(char* mcap_entry, struct mailcap* mcap)
 }
 
 static struct mailcap*
-loadMailcap(char* filename)
+loadMailcap(const char* filename)
 {
     FILE* f;
     int i, n;
@@ -219,7 +219,7 @@ loadMailcap(char* filename)
 
 void initMailcap(void)
 {
-    TextListItem* tl;
+    struct TextListItem* tl;
     int i;
 
     if (non_null(mailcap_files))
@@ -236,7 +236,7 @@ void initMailcap(void)
 char* acceptableMimeTypes(void)
 {
     static pStr types = NULL;
-    TextList* l;
+    struct TextList* l;
     Hash_si* mhash;
     char* p;
     int i;

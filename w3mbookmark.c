@@ -117,7 +117,7 @@ insert_bookmark(char *bmark, struct parsed_tagarg *data)
     char *url;
     char *section, *title;
     FILE *f;
-    TextList *tl = newTextList();
+    struct TextList *tl = newTextList();
     int section_found = 0;
     int bmark_added = 0;
     pStr tmp, section_tmp;
