@@ -216,9 +216,9 @@ enum CGIFN_TYPE {
 
 struct CgiInfo {
     enum CGIFN_TYPE type;
-    const char* file;
-    const char* name;
-    const char* path_info;
+    const char* expanded;
+    const char* uri;
+    // const char* relative_path;
 };
 
 static pStr
@@ -247,22 +247,21 @@ cgi_filename(const char* uri)
 {
     struct CgiInfo info = {
         .type = 0,
-        .file = uri,
-        .name = uri,
-        .path_info = NULL,
+        .expanded = uri,
+        .uri = uri,
+        // .relative_path = NULL,
     };
 
-    int offset;
     if (cgi_bin && strncmp(uri, "/cgi-bin/", 9) == 0) {
-        offset = 9;
-        if ((info.path_info = strchr(uri + offset, '/')))
-            info.name = allocStr_n(uri, info.path_info - uri).ptr;
-        pStr tmp = checkPath(info.name + offset, cgi_bin);
+        int offset = 9;
+        // if ((info.relative_path = strchr(uri + offset, '/')))
+        //     info.uri = allocStr_n(uri, info.relative_path - uri).ptr;
+        pStr tmp = checkPath(info.uri + offset, cgi_bin);
         if (!tmp) {
             info.type = CGIFN_NORMAL;
             return info;
         }
-        info.file = tmp->ptr;
+        info.expanded = tmp->ptr;
         info.type = CGIFN_CGIBIN;
         return info;
     }
@@ -270,6 +269,7 @@ cgi_filename(const char* uri)
     pStr tmp = Strnew_charp(w3m_lib_dir());
     if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
+    int offset;
     if (strncmp(uri, "/$LIB/", 6) == 0)
         offset = 6;
     else if (strncmp(uri, tmp->ptr, tmp->len) == 0)
@@ -284,16 +284,16 @@ cgi_filename(const char* uri)
             return info;
         }
         uri = tmp2->ptr;
-        info.name = uri;
+        info.uri = uri;
         offset = tmp->len;
     } else {
         info.type = CGIFN_NORMAL;
         return info;
     }
-    if ((info.path_info = strchr(uri + offset, '/')))
-        info.name = allocStr_n(uri, info.path_info - uri).ptr;
-    Strcat_charp(tmp, info.name + offset);
-    info.file = tmp->ptr;
+    // if ((info.relative_path = strchr(uri + offset, '/')))
+    //     info.uri = allocStr_n(uri, info.relative_path - uri).ptr;
+    Strcat_charp(tmp, info.uri + offset);
+    info.expanded = tmp->ptr;
     info.type = CGIFN_LIBDIR;
     return info;
 }
@@ -360,17 +360,17 @@ set_cgi_environ(const char* name, const char* fn, const char* req_uri)
     set_environ("SCRIPT_FILENAME", fn);
     set_environ("REQUEST_URI", req_uri);
 }
+
 FILE* localcgi_post(const char* uri,
     const char* qstr, FormList* request, const char* referer)
 {
-    FILE *fr = NULL, *fw = NULL;
-    pid_t pid;
-    const char* tmpf = NULL;
-
     struct CgiInfo cgi = cgi_filename(uri);
-    if (!check_local_cgi(cgi.file, cgi.type))
+    if (!check_local_cgi(cgi.expanded, cgi.type))
         return NULL;
+
     writeLocalCookie();
+    FILE* fw = NULL;
+    const char* tmpf = NULL;
     if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
         tmpf = tmpfname(CurrentPid, TMPF_DFL, NULL)->ptr;
         fw = fopen(tmpf, "w");
@@ -379,9 +379,10 @@ FILE* localcgi_post(const char* uri,
     }
     if (qstr)
         uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
-    const char* cgi_dir = mydirname(cgi.file)->ptr;
-    const char* cgi_basename = mybasename(cgi.file);
-    pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
+    const char* cgi_dir = mydirname(cgi.expanded)->ptr;
+    const char* cgi_basename = mybasename(cgi.expanded);
+    FILE* fr = NULL;
+    pid_t pid = open_pipe_rw(&fr, NULL); /* open_pipe_rw() forks */
     /* Don't invoke gc after here, or the program might crash in some platforms */
     if (pid < 0) {
         if (fw)
@@ -396,9 +397,9 @@ FILE* localcgi_post(const char* uri,
     /* child */
     setup_child(true, 2, fw ? fileno(fw) : -1);
 
-    set_cgi_environ(cgi.name, cgi.file, uri);
-    if (cgi.path_info)
-        set_environ("PATH_INFO", cgi.path_info);
+    set_cgi_environ(cgi.uri, cgi.expanded, uri);
+    // if (cgi.relative_path)
+    //     set_environ("PATH_INFO", cgi.relative_path);
     if (referer && referer != NO_REFERER)
         set_environ("HTTP_REFERER", referer);
     if (request) {
@@ -432,9 +433,9 @@ FILE* localcgi_post(const char* uri,
             cgi_dir, strerror(errno));
         exit(1);
     }
-    execl(cgi.file, cgi_basename, NULL);
+    execl(cgi.expanded, cgi_basename, NULL);
     fprintf(stderr, "execl(\"%s\", \"%s\", NULL): %s\n",
-        cgi.file, cgi_basename, strerror(errno));
+        cgi.expanded, cgi_basename, strerror(errno));
     exit(1);
 
     /*
