@@ -50,3 +50,4 @@ pStr remove_space(const char* str);
 pStr Str_form_quote(pStr x);
 pStr shell_quote(const char* str);
 pStr guess_filename(const char* file);
+pStr qstr_unquote(pStr s);
