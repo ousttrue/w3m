@@ -127,7 +127,6 @@ extern void tabR(void);
 extern void tabL(void);
 extern void ldDL(void);
 extern void linkLst(void);
-#ifdef USE_MENU
 extern void linkMn(void);
 extern LinkList* link_menu(Buffer* buf);
 extern void accessKey(void);
@@ -135,12 +134,6 @@ extern Anchor* accesskey_menu(Buffer* buf);
 extern void listMn(void);
 extern void movlistMn(void);
 extern Anchor* list_menu(Buffer* buf);
-#else
-#define linkMn nulcmd
-#define accessKey nulcmd
-#define listMn nulcmd
-#define movlistMn nulcmd
-#endif
 extern void undoPos(void);
 extern void redoPos(void);
 extern void cursorTop(void);
@@ -148,11 +141,6 @@ extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
 extern int currentLn(Buffer* buf);
-#ifdef USE_EXTERNAL_URI_LOADER
-extern void initURIMethods(void);
-extern pStr searchURIMethods(ParsedURL* pu);
-extern void chkExternalURIBuffer(Buffer* buf);
-#endif
 extern ParsedURL* schemeToProxy(int scheme);
 struct UrlStream;
 extern void examineFile(const char* path, struct UrlStream* uf);
@@ -206,21 +194,10 @@ extern void completeHTMLstream(struct html_feed_environ*,
 extern void loadHTMLstream(struct UrlStream* f, Buffer* newBuf, FILE* src,
     int internal);
 extern Buffer* loadHTMLString(pStr page);
-#ifdef USE_GOPHER
-#ifdef USE_M17N
 extern pStr loadGopherDir(struct UrlStream* uf, ParsedURL* pu, wc_ces* charset);
 extern pStr loadGopherSearch(ParsedURL* pu, wc_ces* charset);
-#else
-extern pStr loadGopherDir0(struct UrlStream* uf, ParsedURL* pu);
-extern pStr loadGopherSearch0(ParsedURL* pu);
-#define loadGopherDir(uf, pu, charset) loadGopherDir0(uf, pu)
-#define loadGopherSearch(pu, charset) loadGopherSearch0(pu)
-#endif
-#endif /* USE_GOPHER */
 extern Buffer* loadBuffer(struct UrlStream* uf, Buffer* newBuf);
-#ifdef USE_IMAGE
 extern Buffer* loadImageBuffer(struct UrlStream* uf, Buffer* newBuf);
-#endif
 extern void saveBuffer(Buffer* buf, FILE* f, int cont);
 extern void saveBufferBody(Buffer* buf, FILE* f, int cont);
 extern Buffer* getshell(const char* cmd);
@@ -247,9 +224,7 @@ extern void readHeader(struct UrlStream* uf, Buffer* newBuf, int thru, ParsedURL
 extern char* checkHeader(Buffer* buf, const char* field);
 extern void displayBuffer(Buffer* buf, int mode);
 extern void addChar(char c, Lineprop mode);
-#ifdef USE_M17N
 extern void addMChar(char* c, Lineprop mode, size_t len);
-#endif
 extern void record_err_message(const char* s);
 extern Buffer* message_list_panel(void);
 extern void message(const char* s, int return_x, int return_y);
@@ -257,11 +232,7 @@ extern void disp_err_message(const char* s, int redraw_current);
 extern void disp_message_nsec(const char* s, int redraw_current, int sec,
     int purge, int mouse);
 extern void disp_message(const char* s, int redraw_current);
-#ifdef USE_MOUSE
-extern void disp_message_nomouse(char* s, int redraw_current);
-#else
 #define disp_message_nomouse disp_message
-#endif
 extern void set_delayed_message(const char* s);
 extern void cursorUp0(Buffer* buf, int n);
 extern void cursorUp(Buffer* buf, int n);
@@ -274,9 +245,6 @@ extern void arrangeCursor(Buffer* buf);
 extern void arrangeLine(Buffer* buf);
 extern void cursorXY(Buffer* buf, int x, int y);
 extern void restorePosition(Buffer* buf, Buffer* orig);
-#ifndef USE_ANSI_COLOR
-#define checkType(a, b, c) _checkType(a, b)
-#endif
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
@@ -305,9 +273,7 @@ extern void form_write_from_file(FILE* f, char* boundary, char* name,
 extern Buffer* page_info_panel(Buffer* buf);
 extern int initscr(void);
 extern void move(int line, int column);
-#ifdef USE_M17N
 extern void addmch(const char* p, size_t len);
-#endif
 extern void addch(char c);
 extern void standout(void);
 extern void standend(void);
@@ -318,17 +284,9 @@ extern void underlineend(void);
 extern void graphstart(void);
 extern void graphend(void);
 extern int graph_ok(void);
-#ifdef USE_COLOR
 extern void setfcolor(int color);
-#ifdef USE_BG_COLOR
 extern void setbcolor(int color);
-#endif /* USE_BG_COLOR */
-#endif /* USE_COLOR */
 extern void refresh(void);
-#ifdef USE_RAW_SCROLL
-extern void scroll(int);
-extern void rscroll(int);
-#endif
 extern void clrtoeolx(void);
 extern void clrtobotx(void);
 extern void addstr(const char* s);
@@ -343,9 +301,7 @@ extern void term_title(const char* s);
 extern void toggle_stand(void);
 extern void bell(void);
 extern int sleep_till_anykey(int sec, int purge);
-#ifdef USE_IMAGE
 extern void touch_cursor(void);
-#endif
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 extern ParsedURL* baseURL(Buffer* buf);
@@ -362,9 +318,7 @@ extern TextList* make_domain_list(char* domain_list);
 extern void addMultirowsForm(Buffer* buf, AnchorList* al);
 extern Anchor* closest_next_anchor(AnchorList* a, Anchor* an, int x, int y);
 extern Anchor* closest_prev_anchor(AnchorList* a, Anchor* an, int x, int y);
-#ifdef USE_IMAGE
 void addMultirowsImg(Buffer* buf, AnchorList* al);
-#endif
 extern HmarkerList* putHmarker(HmarkerList* ml, int line, int pos, int seq);
 extern void shiftAnchorPosition(AnchorList* a, HmarkerList* hl, int line,
     int pos, int shift);
@@ -377,55 +331,21 @@ extern void decodeB_to_growbuf(struct growbuf* gb, char** ww);
 extern pStr decodeQ(char** ww);
 extern void decodeQP_to_growbuf(struct growbuf* gb, char** ww);
 extern void decodeU_to_growbuf(struct growbuf* gb, char** ww);
-#ifdef USE_M17N
 extern pStr decodeWord(char** ow, wc_ces* charset);
 extern pStr decodeMIME(pStr orgstr, wc_ces* charset);
-#else
-extern pStr decodeWord0(char** ow);
-extern pStr decodeMIME0(pStr orgstr);
-#define decodeWord(ow, charset) decodeWord0(ow)
-#define decodeMIME(orgstr, charset) decodeMIME0(orgstr)
-#endif
 extern FILE* openSecretFile(char* fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
 
-#ifdef USE_M17N
 extern void docCSet(void);
 extern void defCSet(void);
 extern void change_charset(struct parsed_tagarg* arg);
-#else
-#define docCSet nulcmd
-#define defCSet nulcmd
-#endif
 
-#ifdef USE_MARK
 extern void _mark(void);
 extern void nextMk(void);
 extern void prevMk(void);
 extern void reMark(void);
-#else /* not USE_MARK */
-#define _mark nulcmd
-#define nextMk nulcmd
-#define prevMk nulcmd
-#define reMark nulcmd
-#endif /* not USE_MARK */
 
-#ifdef USE_MOUSE
-extern void mouse(void);
-extern void sgrmouse(void);
-extern void mouse_active(void);
-extern void mouse_inactive(void);
-extern void msToggle(void);
-extern void movMs(void);
-#ifdef USE_MENU
-extern void menuMs(void);
-#else
-#define menuMs nulcmd
-#endif
-extern void tabMs(void);
-extern void closeTMs(void);
-#else /* not USE_MOUSE */
 #define mouse nulcmd
 #define sgrmouse nulcmd
 #define msToggle nulcmd
@@ -433,16 +353,13 @@ extern void closeTMs(void);
 #define menuMs nulcmd
 #define tabMs nulcmd
 #define closeTMs nulcmd
-#endif /* not USE_MOUSE */
 
-#ifdef USE_IMAGE
 extern void initImage(void);
 extern void termImage(void);
 extern void addImage(ImageCache* cache, int x, int y, int sx, int sy, int w,
     int h);
 extern void drawImage(void);
 extern void clearImage(void);
-#endif
 
 extern const char* searchKeyData(void);
 
@@ -451,17 +368,9 @@ extern int getKey(const char* s);
 extern char* getKeyData(int key);
 struct regex;
 extern char* getRegexWord(const char** str, struct regex** regex_ret);
-#ifdef USE_MOUSE
-extern void initMouseAction(void);
-#endif
 
-#ifdef USE_DICT
 extern void dictword(void);
 extern void dictwordat(void);
-#else /* not USE_DICT */
-#define dictword nulcmd
-#define dictwordat nulcmd
-#endif /* not USE_DICT */
 
 extern void wrapToggle(void);
 

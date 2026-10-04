@@ -835,9 +835,6 @@ void chkURLBuffer(Buffer* buf)
     for (i = 0; url_like_pat[i]; i++) {
         reAnchor(buf, url_like_pat[i]);
     }
-#ifdef USE_EXTERNAL_URI_LOADER
-    chkExternalURIBuffer(buf);
-#endif
     buf->check_url |= CHK_URL;
 }
 

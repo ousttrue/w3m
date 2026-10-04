@@ -83,13 +83,9 @@
 
 JMP_BUF IntReturn;
 
-#ifdef SIGCHLD
 static void sig_chld(int signo);
-#endif
 
-#ifdef SIGPIPE
 static void SigPipe(SIGNAL_ARG);
-#endif
 
 static int need_resize_screen = false;
 static void resize_hook(SIGNAL_ARG);
@@ -97,19 +93,8 @@ static void resize_screen(void);
 
 static void SigAlarm(SIGNAL_ARG);
 
-#ifdef USE_MARK
 static const char* MarkString = NULL;
-#endif
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif /* USE_GPM */
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-extern int do_getch(void);
-#define getch() do_getch()
-#endif /* defined(USE_GPM) || defined(USE_SYSMOUSE) */
-#endif
 
 typedef struct _Event {
     int cmd;
@@ -128,9 +113,6 @@ DownloadList* LastDL = NULL;
 int CurrentKey;
 const char* CurrentCmdData;
 
-#ifdef USE_MOUSE
-MouseAction mouse_action;
-#endif
 
 int nTab;
 int TabCols = 10;
@@ -220,13 +202,8 @@ int main(int argc, char** argv)
     char* default_type = NULL;
     char* post_file = NULL;
     int opt_restore = false;
-#ifdef USE_M17N
     char* Locale = NULL;
     uint8_t auto_detect;
-#ifdef __EMX__
-    wc_ces CodePage;
-#endif
-#endif
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
     char** getimage_args = NULL;
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
@@ -285,18 +262,11 @@ int main(int argc, char** argv)
         }
     }
 
-#ifdef USE_M17N
     if (non_null(Locale = getenv("LC_ALL")) || non_null(Locale = getenv("LC_CTYPE")) || non_null(Locale = getenv("LANG"))) {
         DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
         DocumentCharset = wc_guess_locale_charset(Locale, DocumentCharset);
         SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
     }
-#ifdef __EMX__
-    CodePage = wc_guess_charset(getCodePage(), 0);
-    if (CodePage)
-        DisplayCharset = DocumentCharset = SystemCharset = CodePage;
-#endif
-#endif
 
     /* initializations */
     init_rc();
@@ -308,14 +278,12 @@ int main(int argc, char** argv)
     URLHist = newHist();
     DictHist = newHist();
 
-#ifdef USE_M17N
     if (FollowLocale && Locale) {
         DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
         SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
     }
     auto_detect = WcOption.auto_detect;
     BookmarkCharset = DocumentCharset;
-#endif
 
     init_from_env();
 
@@ -415,7 +383,6 @@ int main(int argc, char** argv)
             exit(0);
         }
 
-#ifdef USE_COOKIE
         else if (ISOPT("-no-cookie"))
             use_cookie = accept_cookie = false;
         else if (ISOPT("-cookie"))
@@ -430,9 +397,7 @@ int main(int argc, char** argv)
                 CookieFile = cleanupName(tmp->ptr)->ptr;
             }
         }
-#endif /* USE_COOKIE */
 
-#ifdef USE_IMAGE
         else if (ISOPT("-ppl")) {
             double ppc;
             ppc = atof(NXTARG());
@@ -444,14 +409,8 @@ int main(int argc, char** argv)
             enable_inline_image = INLINE_IMG_OSC5379;
         else if (ISOPT("-sixel"))
             enable_inline_image = INLINE_IMG_SIXEL;
-#endif
 
-#ifdef USE_MOUSE
-        else if (ISOPT("-no-mouse"))
-            use_mouse = false;
-#endif /* USE_MOUSE */
 
-#ifdef USE_SSL
         else if (ISOPT("-insecure")) {
 #ifdef OPENSSL_TLS_SECURITY_LEVEL
             set_param_option("ssl_cipher=ALL:eNULL:@SECLEVEL=0");
@@ -460,11 +419,8 @@ int main(int argc, char** argv)
 #endif
             set_param_option("ssl_min_version=all");
             set_param_option("ssl_forbid_method=");
-#ifdef USE_SSL_VERIFY
             set_param_option("ssl_verify_server=0");
-#endif
         }
-#endif /* USE_SSL */
 
         /* Single-letter flags */
         else if (ISOPT("-B"))
@@ -518,21 +474,16 @@ int main(int argc, char** argv)
         } else if (ISOPT("-v"))
             visual_start = true;
 
-#ifdef INET6
         else if (ISOPT("-4") || ISOPT("-6"))
             set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
-#endif
 
-#ifdef USE_COLOR
         else if (ISOPT("-M"))
             useColor = false;
         else if (ISOPT("-H")) {
             deprecated |= 1;
             highIntensityColors = true;
         }
-#endif /* USE_COLOR */
 
-#ifdef USE_M17N
         else if (CHKOPT("-I")) {
             DocumentCharset = wc_guess_charset_short(getarg(argv, &i),
                 DocumentCharset);
@@ -541,7 +492,6 @@ int main(int argc, char** argv)
         } else if (CHKOPT("-O"))
             DisplayCharset = wc_guess_charset_short(getarg(argv, &i),
                 DisplayCharset);
-#endif
 
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
         else if (!strcmp("-$$getimage", argv[i])) {
@@ -866,18 +816,11 @@ int main(int argc, char** argv)
         if (!Currentbuf->event)
             setAlarmEventOrDefaultAlarm(0);
 
-        mouse_action.in_action = false;
-        if (use_mouse)
-            mouse_active();
-
-#ifdef USE_ALARM
         if (CurrentAlarm->sec > 0) {
             mySignal(SIGALRM, SigAlarm);
             alarm(CurrentAlarm->sec);
         }
-#endif
         mySignal(SIGWINCH, resize_hook);
-#ifdef USE_IMAGE
         if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
             do {
                 if (need_resize_screen)
@@ -885,7 +828,6 @@ int main(int argc, char** argv)
                 loadImage(Currentbuf, IMG_FLAG_NEXT);
             } while (sleep_till_anykey(1, 0) <= 0);
         } else
-#endif
         {
             do {
                 if (need_resize_screen)
@@ -893,15 +835,9 @@ int main(int argc, char** argv)
             } while (sleep_till_anykey(1, 0) <= 0);
         }
         c = getch();
-#ifdef USE_ALARM
         if (CurrentAlarm->sec > 0) {
             alarm(0);
         }
-#endif
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#endif /* USE_MOUSE */
         if (IS_ASCII(c)) { /* Ascii */
             if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
                 prec_num = prec_num * 10 + (int)(c - '0');
@@ -944,26 +880,20 @@ void init_from_env(void)
 
     if (!non_null(HTTP_proxy) && ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) || (p = getenv("HTTP_proxy"))))
         HTTP_proxy = p;
-#ifdef USE_SSL
     if (!non_null(HTTPS_proxy) && ((p = getenv("HTTPS_PROXY")) || (p = getenv("https_proxy")) || (p = getenv("HTTPS_proxy"))))
         HTTPS_proxy = p;
     if (HTTPS_proxy == NULL && non_null(HTTP_proxy))
         HTTPS_proxy = HTTP_proxy;
-#endif /* USE_SSL */
-#ifdef USE_GOPHER
     if (!non_null(GOPHER_proxy) && ((p = getenv("GOPHER_PROXY")) || (p = getenv("gopher_proxy")) || (p = getenv("GOPHER_proxy"))))
         GOPHER_proxy = p;
-#endif /* USE_GOPHER */
     if (!non_null(FTP_proxy) && ((p = getenv("FTP_PROXY")) || (p = getenv("ftp_proxy")) || (p = getenv("FTP_proxy"))))
         FTP_proxy = p;
     if (!non_null(NO_proxy) && ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))
         NO_proxy = p;
-#ifdef USE_NNTP
     if (!non_null(NNTP_server) && (p = getenv("NNTPSERVER")) != NULL)
         NNTP_server = p;
     if (!non_null(NNTP_mode) && (p = getenv("NNTPMODE")) != NULL)
         NNTP_mode = p;
-#endif
 
     if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
         Editor = p;
@@ -1012,69 +942,21 @@ fversion(FILE* f)
 #else
         "lang=en"
 #endif
-#ifdef USE_M17N
         ",m17n"
-#endif
-#ifdef USE_IMAGE
         ",image"
-#endif
-#ifdef USE_COLOR
         ",color"
-#ifdef USE_ANSI_COLOR
         ",ansi-color"
-#endif
-#endif
-#ifdef USE_MOUSE
-        ",mouse"
-#ifdef USE_GPM
-        ",gpm"
-#endif
-#ifdef USE_SYSMOUSE
-        ",sysmouse"
-#endif
-#endif
-#ifdef USE_MENU
         ",menu"
-#endif
-#ifdef USE_COOKIE
         ",cookie"
-#endif
-#ifdef USE_SSL
         ",ssl"
-#ifdef USE_SSL_VERIFY
         ",ssl-verify"
-#endif
-#endif
-#ifdef USE_EXTERNAL_URI_LOADER
-        ",external-uri-loader"
-#endif
-#ifdef USE_W3MMAILER
-        ",w3mmailer"
-#endif
-#ifdef USE_NNTP
         ",nntp"
-#endif
-#ifdef USE_GOPHER
         ",gopher"
-#endif
-#ifdef INET6
         ",ipv6"
-#endif
-#ifdef USE_ALARM
         ",alarm"
-#endif
-#ifdef USE_MARK
         ",mark"
-#endif
-#ifdef USE_MIGEMO
-        ",migemo"
-#endif
-#ifdef USE_HISTORY
         ",history"
-#endif
-#ifdef USE_DICT
         ",dict"
-#endif
     );
 }
 
@@ -1095,13 +977,9 @@ help(void)
     puts("options:");
     PUT("+<num>", "goto <num> line");
     PUT("-B", "load bookmark");
-#ifdef USE_M17N
     PUT("-I charset", "document charset");
-#endif
     PUT("-N", "open URL of command line on each new tab");
-#ifdef USE_M17N
     PUT("-O charset", "display/output charset");
-#endif
     PUT("-R", "restore from session file");
     PUT("-T type", "specify content-type");
     PUT("-X", "don't use termcap init/deinit");
@@ -1128,11 +1006,6 @@ help(void)
 }
 #undef PUT
 
-#ifdef USE_M17N
-#ifdef __EMX__
-static char* getCodePage(void);
-#endif
-#endif
 
 static void
 wrap_GC_warn_proc(char* msg, GC_word arg)
@@ -1176,7 +1049,6 @@ wrap_GC_warn_proc(char* msg, GC_word arg)
         fprintf(stderr, msg, (unsigned long)arg);
 }
 
-#ifdef SIGCHLD
 static void
 sig_chld(int signo)
 {
@@ -1198,7 +1070,6 @@ sig_chld(int signo)
     mySignal(SIGCHLD, sig_chld);
     return;
 }
-#endif /* SIGCHLD */
 
 static pStr
 make_optional_header_string(char* s)
@@ -1304,11 +1175,8 @@ dump_extra(Buffer* buf)
     printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
     if (buf->baseURL)
         printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
-#ifdef USE_M17N
     printf("W3m-document-charset: %s\n",
         wc_ces_to_charset(buf->document_charset));
-#endif
-#ifdef USE_SSL
     if (buf->ssl_certificate) {
         pStr tmp = Strnew();
         const char* p;
@@ -1325,7 +1193,6 @@ dump_extra(Buffer* buf)
             Strcat_char(tmp, '\n');
         printf("W3m-ssl-certificate: %s", tmp->ptr);
     }
-#endif
 }
 
 static int
@@ -1378,16 +1245,9 @@ DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing")
 { /* do nothing */
 }
 
-#ifdef __EMX__
-DEFUN(pcmap, PCMAP, "pcmap")
-{
-    w3mFuncList[(int)PcKeymap[(int)getch()]].func();
-}
-#else /* not __EMX__ */
 void pcmap(void)
 {
 }
-#endif
 
 static void
 escKeyProc(int c, int esc, unsigned char* map)
@@ -1421,15 +1281,7 @@ escKeyProc(int c, int esc, unsigned char* map)
 DEFUN(escmap, ESCMAP, "ESC map")
 {
     char c;
-#ifdef USE_MOUSE
-    if (use_mouse)
-        mouse_active();
-#endif
     c = getch();
-#ifdef USE_MOUSE
-    if (use_mouse)
-        mouse_inactive();
-#endif
     if (IS_ASCII(c))
         escKeyProc(c, K_ESC, EscKeymap);
 }
@@ -1512,16 +1364,11 @@ resize_screen(void)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-#ifdef SIGPIPE
 static void
 SigPipe(SIGNAL_ARG)
 {
-#ifdef USE_MIGEMO
-    init_migemo();
-#endif
     mySignal(SIGPIPE, SigPipe);
 }
-#endif
 
 /*
  * Command functions: These functions are called with a keystroke.
@@ -1725,11 +1572,6 @@ dispincsrch(int ch, pStr buf, Lineprop* prop)
         do_next_search = true;
         break;
 
-#ifdef USE_MIGEMO
-    case 034:
-        migemo_active = -migemo_active;
-        goto done;
-#endif
 
     default:
         if (ch >= 0)
@@ -1760,15 +1602,6 @@ dispincsrch(int ch, pStr buf, Lineprop* prop)
     }
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     clear_mark(Currentbuf->currentLine);
-#ifdef USE_MIGEMO
-done:
-    while (*str++ != '\0') {
-        if (migemo_active > 0)
-            *prop++ |= PE_UNDER;
-        else
-            *prop++ &= ~PE_UNDER;
-    }
-#endif
     return -1;
 }
 
@@ -2147,7 +1980,6 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel")
 {
-#ifdef USE_HELP_CGI
     char* lang;
     int n;
     pStr tmp;
@@ -2158,9 +1990,6 @@ DEFUN(ldhelp, HELP, "Show help panel")
         Str_form_quote(Strnew_charp(W3M_VERSION))->ptr,
         Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
-#else
-    cmd_loadURL(helpFile(HELP_FILE), NULL, NO_REFERER, NULL);
-#endif
 }
 
 static void
@@ -2412,18 +2241,12 @@ _quitfm(int ask)
         goto nope;
 
     term_title(""); /* XXX */
-#ifdef USE_IMAGE
     if (activeImage)
         termImage();
-#endif
     fmTerm();
-#ifdef USE_COOKIE
     save_cookies();
-#endif /* USE_COOKIE */
-#ifdef USE_HISTORY
     if (UseHistory && SaveURLHist)
         saveUrlHistory();
-#endif /* USE_HISTORY */
     if (deprecated)
         fputs("DEPRECATION WARNING\n", stderr);
     if (deprecated & 1) {
@@ -2492,9 +2315,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
         if (buf == Currentbuf)
             continue;
-#ifdef USE_IMAGE
         deleteImage(buf);
-#endif
         if (clear_buffer)
             tmpClearBuffer(buf);
     }
@@ -2665,7 +2486,6 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-#ifdef USE_MARK
 
 /* Set / unset mark */
 DEFUN(_mark, MARK, "Set/unset mark")
@@ -2783,7 +2603,6 @@ DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern")
 
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-#endif /* USE_MARK */
 
 static Buffer*
 loadNormalBuf(Buffer* buf, int renderframe)
@@ -2925,15 +2744,10 @@ handleMailto(const char* url)
 
     if (strncasecmp(url, "mailto:", 7))
         return 0;
-#ifdef USE_W3MMAILER
-    if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
-        return 0;
-#else
     if (!non_null(Mailer)) {
         disp_err_message(_("no mailer is specified"), true);
         return 1;
     }
-#endif
 
     /* invoke external mailer */
     if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
@@ -3045,11 +2859,9 @@ save_submit_formlist(FormItemList* src)
     FormItemList* srcitem;
     FormItemList* item;
     FormItemList* ret = NULL;
-#ifdef USE_MENU
     FormSelectOptionItem* opt;
     FormSelectOptionItem* curopt;
     FormSelectOptionItem* srcopt;
-#endif /* USE_MENU */
 
     if (src == NULL)
         return NULL;
@@ -3057,9 +2869,7 @@ save_submit_formlist(FormItemList* src)
     list = New(FormList);
     list->method = srclist->method;
     list->action = Strdup(srclist->action);
-#ifdef USE_M17N
     list->charset = srclist->charset;
-#endif
     list->enctype = srclist->enctype;
     list->nitems = srclist->nitems;
     list->body = srclist->body;
@@ -3077,7 +2887,6 @@ save_submit_formlist(FormItemList* src)
         item->rows = srcitem->rows;
         item->maxlength = srcitem->maxlength;
         item->readonly = srcitem->readonly;
-#ifdef USE_MENU
         opt = curopt = NULL;
         for (srcopt = srcitem->select_option; srcopt; srcopt = srcopt->next) {
             if (!srcopt->checked)
@@ -3096,7 +2905,6 @@ save_submit_formlist(FormItemList* src)
         item->select_option = opt;
         if (srcitem->label)
             item->label = Strdup(srcitem->label);
-#endif /* USE_MENU */
         item->parent = list;
         item->next = NULL;
 
@@ -3171,9 +2979,7 @@ query_from_followform(pStr* query, FormItemList* fi, int multipart)
         if (multipart) {
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-#ifdef USE_IMAGE
                 getMapXY(Currentbuf, retrieveCurrentImg(Currentbuf), &x, &y);
-#endif
                 *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
                 Strcat_charp(*query, ".x");
                 form_write_data(body, fi->parent->boundary, (*query)->ptr,
@@ -3203,9 +3009,7 @@ query_from_followform(pStr* query, FormItemList* fi, int multipart)
             /* not multipart */
             if (f2->type == FORM_INPUT_IMAGE) {
                 int x = 0, y = 0;
-#ifdef USE_IMAGE
                 getMapXY(Currentbuf, retrieveCurrentImg(Currentbuf), &x, &y);
-#endif
                 Strcat(*query,
                     Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
                 Strcat(*query, Sprintf(".x=%d&", x));
@@ -3343,7 +3147,6 @@ _followForm(int submit)
         fi->checked = !fi->checked;
         formUpdateBuffer(a, Currentbuf, fi);
         break;
-#ifdef USE_MENU
     case FORM_SELECT:
         if (submit)
             goto do_submit;
@@ -3355,7 +3158,6 @@ _followForm(int submit)
         if (fi->parent->nitems == 1)
             goto do_submit;
         break;
-#endif /* USE_MENU */
     case FORM_INPUT_IMAGE:
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
@@ -3425,10 +3227,8 @@ _followForm(int submit)
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
                 f2->checked = f2->init_checked;
-#ifdef USE_MENU
                 f2->label = f2->init_label;
                 f2->selected = f2->init_selected;
-#endif /* USE_MENU */
                 formUpdateBuffer(a2, Currentbuf, f2);
             }
         }
@@ -4237,19 +4037,13 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
         BookmarkCharset);
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-#ifdef USE_M17N
                   "&charset=%s"
-#endif
         ,
         (Str_form_quote(localCookie()))->ptr,
         (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
         (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
-#ifdef USE_M17N
         (Str_form_quote(os))->ptr,
         wc_ces_to_charset(BookmarkCharset));
-#else
-        (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
-#endif
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->len;
@@ -4309,12 +4103,8 @@ DEFUN(strSession, STORE, "Store session")
 {
     char *def, *sf;
 
-#ifdef USE_COOKIE
     save_cookies();
-#endif
-#ifdef USE_HISTORY
     saveUrlHistory();
-#endif
 
     def = session_file ? session_file : rcFile(SESSION_FILE)->ptr;
     if (!(sf = inputFilenameHist(Strnew_m_charp("Session file [",
@@ -4392,12 +4182,6 @@ void follow_map(struct parsed_tagarg* arg)
     a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
 
-#ifndef USE_MENU
-        Buffer* buf = follow_map_panel(Currentbuf, name);
-
-        if (buf != NULL)
-            cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
-#endif
 #if defined(USE_MENU) || defined(USE_IMAGE)
         return;
     }
@@ -4426,7 +4210,6 @@ void follow_map(struct parsed_tagarg* arg)
 #endif
 }
 
-#ifdef USE_MENU
 /* link menu */
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
@@ -4481,7 +4264,6 @@ DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
 {
     anchorMn(list_menu, false);
 }
-#endif
 
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
@@ -4490,14 +4272,11 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
 
     buf = link_list_panel(Currentbuf);
     if (buf != NULL) {
-#ifdef USE_M17N
         buf->document_charset = Currentbuf->document_charset;
-#endif
         cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
     }
 }
 
-#ifdef USE_COOKIE
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
@@ -4507,9 +4286,7 @@ DEFUN(cooLst, COOKIE, "View cookie list")
     if (buf != NULL)
         cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
 }
-#endif /* USE_COOKIE */
 
-#ifdef USE_HISTORY
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
@@ -4522,7 +4299,6 @@ DEFUN(svHist, SAVE_HISTORY, "Save browsing history")
     saveUrlHistory();
     disp_message_nsec("History written", true, 1, false, true);
 }
-#endif /* USE_HISTORY */
 
 /* download HREF link */
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
@@ -4631,10 +4407,8 @@ _peekURL(int only_img)
     Anchor* a;
     ParsedURL pu;
     static pStr s = NULL;
-#ifdef USE_M17N
     static Lineprop* p = NULL;
     Lineprop* pp;
-#endif
     static int offset = 0, n;
 
     if (Currentbuf->firstLine == NULL)
@@ -4665,20 +4439,16 @@ _peekURL(int only_img)
     }
     if (DecodeURL)
         s = Strnew_charp(url_decode2(s->ptr, Currentbuf)->ptr);
-#ifdef USE_M17N
     s = checkType(s, &pp, NULL);
     p = NewAtom_N(Lineprop, s->len);
     memmove(p, pp, s->len * sizeof(Lineprop));
-#endif
 disp:
     n = searchKeyNum();
     if (n > 1 && s->len > (n - 1) * (COLS - 1))
         offset = (n - 1) * (COLS - 1);
-#ifdef USE_M17N
     while (offset < s->len && p[offset] & PC_WCHAR2)
         offset++;
-#endif
-    disp_message_nomouse(&s->ptr[offset], true);
+    disp_message(&s->ptr[offset], true);
 }
 
 /* peek URL */
@@ -4705,10 +4475,8 @@ currentURL(void)
 DEFUN(curURL, PEEK, "Show current address")
 {
     static pStr s = NULL;
-#ifdef USE_M17N
     static Lineprop* p = NULL;
     Lineprop* pp;
-#endif
     static int offset = 0, n;
 
     if (Currentbuf->bufferprop & BP_INTERNAL)
@@ -4723,20 +4491,16 @@ DEFUN(curURL, PEEK, "Show current address")
         s = currentURL();
         if (DecodeURL)
             s = Strnew_charp(url_decode2(s->ptr, NULL)->ptr);
-#ifdef USE_M17N
         s = checkType(s, &pp, NULL);
         p = NewAtom_N(Lineprop, s->len);
         memmove(p, pp, s->len * sizeof(Lineprop));
-#endif
     }
     n = searchKeyNum();
     if (n > 1 && s->len > (n - 1) * (COLS - 1))
         offset = (n - 1) * (COLS - 1);
-#ifdef USE_M17N
     while (offset < s->len && p[offset] & PC_WCHAR2)
         offset++;
-#endif
-    disp_message_nomouse(&s->ptr[offset], true);
+    disp_message(&s->ptr[offset], true);
 }
 /* view HTML source */
 
@@ -4753,28 +4517,22 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     }
     if (Currentbuf->sourcefile == NULL) {
         if (Currentbuf->pagerSource && !strcasecmp(Currentbuf->type, "text/plain")) {
-#ifdef USE_M17N
             wc_ces old_charset;
             bool old_fix_width_conv;
-#endif
             FILE* f;
             pStr tmpf = tmpfname(CurrentPid, TMPF_SRC, NULL);
             f = fopen(tmpf->ptr, "w");
             if (f == NULL)
                 return;
-#ifdef USE_M17N
             old_charset = DisplayCharset;
             old_fix_width_conv = WcOption.fix_width_conv;
             DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
                 ? Currentbuf->document_charset
                 : 0;
             WcOption.fix_width_conv = false;
-#endif
             saveBufferBody(Currentbuf, f, true);
-#ifdef USE_M17N
             DisplayCharset = old_charset;
             WcOption.fix_width_conv = old_fix_width_conv;
-#endif
             fclose(f);
             Currentbuf->sourcefile = tmpf->ptr;
         } else {
@@ -4813,9 +4571,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->sourcefile = Currentbuf->sourcefile;
     buf->header_source = Currentbuf->header_source;
     buf->search_header = Currentbuf->search_header;
-#ifdef USE_M17N
     buf->document_charset = Currentbuf->document_charset;
-#endif
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
 
@@ -4836,9 +4592,7 @@ DEFUN(foldPre, FOLD_PRE, "Fold long lines in <pre> elements")
 DEFUN(reload, RELOAD, "Load current document anew")
 {
     Buffer *buf, *fbuf = NULL, sbuf;
-#ifdef USE_M17N
     wc_ces old_charset;
-#endif
     pStr url;
     FormList* request;
     int multipart;
@@ -4902,17 +4656,13 @@ DEFUN(reload, RELOAD, "Load current document anew")
     url = parsedURL2Str(&Currentbuf->currentURL);
     message(_("Reloading..."), 0, 0);
     refresh();
-#ifdef USE_M17N
     old_charset = DocumentCharset;
     if (Currentbuf->document_charset != WC_CES_US_ASCII)
         DocumentCharset = Currentbuf->document_charset;
-#endif
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
-#ifdef USE_M17N
     DocumentCharset = old_charset;
-#endif
     SearchHeader = false;
     DefaultType = NULL;
 
@@ -4950,7 +4700,6 @@ DEFUN(reshape, RESHAPE, "Re-render document")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-#ifdef USE_M17N
 static void
 _docCSet(wc_ces charset)
 {
@@ -5011,7 +4760,6 @@ DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
         DocumentCharset = charset;
     displayBuffer(Currentbuf, B_NORMAL);
 }
-#endif
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks")
 {
@@ -5030,13 +4778,11 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-#ifdef USE_NNTP
 DEFUN(chkNMID, MARK_MID, "Turn Message-ID-like strings into hyperlinks")
 {
     chkNMIDBuffer(Currentbuf);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-#endif /* USE_NNTP */
 
 /* render frames */
 DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
@@ -5196,15 +4942,12 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
             (int)((double)cur * 100.0 / (double)(all ? all : 1)
                 + 0.5),
             col, len);
-#ifdef USE_M17N
     Strcat_charp(tmp, "  ");
     Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
-#endif
 
     disp_message(tmp->ptr, false);
 }
 
-#ifdef USE_IMAGE
 DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
 {
     if (!displayImage)
@@ -5224,391 +4967,7 @@ DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
     Currentbuf->image_flag = IMG_FLAG_SKIP;
     displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
-#endif
 
-#ifdef USE_MOUSE
-
-static int
-mouse_scroll_line(void)
-{
-    if (relative_wheel_scroll)
-        return (relative_wheel_scroll_ratio * LASTLINE + 99) / 100;
-    else
-        return fixed_wheel_scroll_count;
-}
-
-static TabBuffer*
-posTab(int x, int y)
-{
-    TabBuffer* tab;
-
-    if (mouse_action.menu_str && x < mouse_action.menu_width && y == 0)
-        return NO_TABBUFFER;
-    if (y > LastTab->y)
-        return NULL;
-    for (tab = FirstTab; tab; tab = tab->nextTab) {
-        if (tab->x1 <= x && x <= tab->x2 && tab->y == y)
-            return tab;
-    }
-    return NULL;
-}
-
-static void
-do_mouse_action(int btn, int x, int y)
-{
-    MouseActionMap* map = NULL;
-    int ny = -1;
-
-    if (nTab > 1 || mouse_action.menu_str)
-        ny = LastTab->y + 1;
-
-    switch (btn) {
-    case MOUSE_BTN1_DOWN:
-        btn = 0;
-        break;
-    case MOUSE_BTN2_DOWN:
-        btn = 1;
-        break;
-    case MOUSE_BTN3_DOWN:
-        btn = 2;
-        break;
-    default:
-        return;
-    }
-    if (y < ny) {
-        if (mouse_action.menu_str && x >= 0 && x < mouse_action.menu_width) {
-            if (mouse_action.menu_map[btn])
-                map = &mouse_action.menu_map[btn][x];
-        } else
-            map = &mouse_action.tab_map[btn];
-    } else if (y == LASTLINE) {
-        if (mouse_action.lastline_str && x >= 0 && x < mouse_action.lastline_width) {
-            if (mouse_action.lastline_map[btn])
-                map = &mouse_action.lastline_map[btn][x];
-        }
-    } else if (y > ny) {
-        if (y == Currentbuf->cursorY + Currentbuf->rootY && (x == Currentbuf->cursorX + Currentbuf->rootX
-#ifdef USE_M17N
-                || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && x == Currentbuf->cursorX + Currentbuf->rootX + 1)
-#endif
-                    )) {
-            if (retrieveCurrentAnchor(Currentbuf) || retrieveCurrentForm(Currentbuf)) {
-                map = &mouse_action.active_map[btn];
-                if (!(map && map->func))
-                    map = &mouse_action.anchor_map[btn];
-            }
-        } else {
-            int cx = Currentbuf->cursorX, cy = Currentbuf->cursorY;
-            cursorXY(Currentbuf, x - Currentbuf->rootX, y - Currentbuf->rootY);
-            if (y == Currentbuf->cursorY + Currentbuf->rootY && (x == Currentbuf->cursorX + Currentbuf->rootX
-#ifdef USE_M17N
-                    || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && x == Currentbuf->cursorX + Currentbuf->rootX + 1)
-#endif
-                        )
-                && (retrieveCurrentAnchor(Currentbuf) || retrieveCurrentForm(Currentbuf)))
-                map = &mouse_action.anchor_map[btn];
-            cursorXY(Currentbuf, cx, cy);
-        }
-    } else {
-        return;
-    }
-    if (!(map && map->func))
-        map = &mouse_action.default_map[btn];
-    if (map && map->func) {
-        mouse_action.in_action = true;
-        mouse_action.cursorX = x;
-        mouse_action.cursorY = y;
-        CurrentKey = -1;
-        CurrentCmdData = map->data;
-        (*map->func)();
-        CurrentCmdData = NULL;
-    }
-}
-
-static void
-process_mouse(int btn, int x, int y)
-{
-    int delta_x, delta_y, i;
-    static int press_btn = MOUSE_BTN_RESET, press_x, press_y;
-    TabBuffer* t;
-    int ny = -1;
-
-    if (nTab > 1 || mouse_action.menu_str)
-        ny = LastTab->y + 1;
-    if (btn == MOUSE_BTN_UP) {
-        switch (press_btn) {
-        case MOUSE_BTN1_DOWN:
-            if (press_y == y && press_x == x)
-                do_mouse_action(press_btn, x, y);
-            else if (ny > 0 && y < ny) {
-                if (press_y < ny) {
-                    moveTab(posTab(press_x, press_y), posTab(x, y),
-                        (press_y == y) ? (press_x < x) : (press_y < y));
-                    return;
-                } else if (press_x >= Currentbuf->rootX) {
-                    Buffer* buf = Currentbuf;
-                    int cx = Currentbuf->cursorX, cy = Currentbuf->cursorY;
-
-                    t = posTab(x, y);
-                    if (t == NULL)
-                        return;
-                    if (t == NO_TABBUFFER)
-                        t = NULL; /* open new tab */
-                    cursorXY(Currentbuf, press_x - Currentbuf->rootX,
-                        press_y - Currentbuf->rootY);
-                    if (Currentbuf->cursorY == press_y - Currentbuf->rootY && (Currentbuf->cursorX == press_x - Currentbuf->rootX
-#ifdef USE_M17N
-                            || (WcOption.use_wide && Currentbuf->currentLine != NULL && (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos]) == PC_KANJI1) && Currentbuf->cursorX == press_x - Currentbuf->rootX - 1)
-#endif
-                                )) {
-                        displayBuffer(Currentbuf, B_NORMAL);
-                        followTab(t);
-                    }
-                    if (buf == Currentbuf)
-                        cursorXY(Currentbuf, cx, cy);
-                }
-                return;
-            } else {
-                delta_x = x - press_x;
-                delta_y = y - press_y;
-
-                if (abs(delta_x) < abs(delta_y) / 3)
-                    delta_x = 0;
-                if (abs(delta_y) < abs(delta_x) / 3)
-                    delta_y = 0;
-                if (reverse_mouse) {
-                    delta_y = -delta_y;
-                    delta_x = -delta_x;
-                }
-                if (delta_y > 0) {
-                    prec_num = delta_y;
-                    ldown1();
-                } else if (delta_y < 0) {
-                    prec_num = -delta_y;
-                    lup1();
-                }
-                if (delta_x > 0) {
-                    prec_num = delta_x;
-                    col1L();
-                } else if (delta_x < 0) {
-                    prec_num = -delta_x;
-                    col1R();
-                }
-            }
-            break;
-        case MOUSE_BTN2_DOWN:
-        case MOUSE_BTN3_DOWN:
-            if (press_y == y && press_x == x)
-                do_mouse_action(press_btn, x, y);
-            break;
-        case MOUSE_BTN4_DOWN_RXVT:
-            for (i = 0; i < mouse_scroll_line(); i++)
-                ldown1();
-            break;
-        case MOUSE_BTN5_DOWN_RXVT:
-            for (i = 0; i < mouse_scroll_line(); i++)
-                lup1();
-            break;
-        }
-    } else if (btn == MOUSE_BTN4_DOWN_XTERM) {
-        for (i = 0; i < mouse_scroll_line(); i++)
-            ldown1();
-    } else if (btn == MOUSE_BTN5_DOWN_XTERM) {
-        for (i = 0; i < mouse_scroll_line(); i++)
-            lup1();
-    }
-
-    if (btn != MOUSE_BTN4_DOWN_RXVT || press_btn == MOUSE_BTN_RESET) {
-        press_btn = btn;
-        press_x = x;
-        press_y = y;
-    } else {
-        press_btn = MOUSE_BTN_RESET;
-    }
-}
-
-DEFUN(msToggle, MOUSE_TOGGLE, "Toggle mouse support")
-{
-    if (use_mouse) {
-        use_mouse = false;
-    } else {
-        use_mouse = true;
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-DEFUN(mouse, MOUSE, "mouse operation")
-{
-    int btn, x, y;
-
-    btn = (unsigned char)getch() - 32;
-    x = (unsigned char)getch() - 33;
-    if (x < 0)
-        x += 0x100;
-    y = (unsigned char)getch() - 33;
-    if (y < 0)
-        y += 0x100;
-
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
-        return;
-    process_mouse(btn, x, y);
-}
-
-DEFUN(sgrmouse, SGRMOUSE, "SGR 1006 mouse operation")
-{
-    int btn = 0, x = 0, y = 0;
-    unsigned char c;
-
-    do {
-        c = getch();
-        if (IS_DIGIT(c))
-            btn = btn * 10 + c - '0';
-        else if (c == ';')
-            break;
-        else
-            return;
-    } while (1);
-
-    do {
-        c = getch();
-        if (IS_DIGIT(c))
-            x = x * 10 + c - '0';
-        else if (c == ';')
-            break;
-        else
-            return;
-    } while (1);
-    if (x > 0)
-        x--;
-
-    do {
-        c = getch();
-        if (IS_DIGIT(c))
-            y = y * 10 + c - '0';
-        else if (c == 'M')
-            break;
-        else if (c == 'm') {
-            btn |= 3;
-            break;
-        } else
-            return;
-    } while (1);
-    if (y > 0)
-        y--;
-
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
-        return;
-    process_mouse(btn, x, y);
-}
-
-#ifdef USE_GPM
-int gpm_process_mouse(Gpm_Event* event, void* data)
-{
-    int btn = MOUSE_BTN_RESET, x, y;
-    if (event->type & GPM_UP)
-        btn = MOUSE_BTN_UP;
-    else if (event->type & GPM_DOWN) {
-        switch (event->buttons) {
-        case GPM_B_LEFT:
-            btn = MOUSE_BTN1_DOWN;
-            break;
-        case GPM_B_MIDDLE:
-            btn = MOUSE_BTN2_DOWN;
-            break;
-        case GPM_B_RIGHT:
-            btn = MOUSE_BTN3_DOWN;
-            break;
-        }
-    } else {
-        GPM_DRAWPOINTER(event);
-        return 0;
-    }
-    x = event->x;
-    y = event->y;
-    process_mouse(btn, x - 1, y - 1);
-    return 0;
-}
-#endif /* USE_GPM */
-
-#ifdef USE_SYSMOUSE
-int sysm_process_mouse(int x, int y, int nbs, int obs)
-{
-    int btn;
-    int bits;
-
-    if (obs & ~nbs)
-        btn = MOUSE_BTN_UP;
-    else if (nbs & ~obs) {
-        bits = nbs & ~obs;
-        btn = bits & 0x1 ? MOUSE_BTN1_DOWN : (bits & 0x2 ? MOUSE_BTN2_DOWN : (bits & 0x4 ? MOUSE_BTN3_DOWN : 0));
-    } else /* nbs == obs */
-        return 0;
-    process_mouse(btn, x, y);
-    return 0;
-}
-#endif /* USE_SYSMOUSE */
-
-DEFUN(movMs, MOVE_MOUSE, "Move cursor to mouse pointer")
-{
-    if (!mouse_action.in_action)
-        return;
-    if ((nTab > 1 || mouse_action.menu_str) && mouse_action.cursorY < LastTab->y + 1)
-        return;
-    else if (mouse_action.cursorX >= Currentbuf->rootX && mouse_action.cursorY < LASTLINE) {
-        cursorXY(Currentbuf, mouse_action.cursorX - Currentbuf->rootX,
-            mouse_action.cursorY - Currentbuf->rootY);
-    }
-    displayBuffer(Currentbuf, B_NORMAL);
-}
-
-#ifdef USE_MENU
-#ifdef KANJI_SYMBOLS
-#define FRAME_WIDTH 2
-#else
-#define FRAME_WIDTH 1
-#endif
-
-DEFUN(menuMs, MENU_MOUSE, "Pop up menu at mouse pointer")
-{
-    if (!mouse_action.in_action)
-        return;
-    if ((nTab > 1 || mouse_action.menu_str) && mouse_action.cursorY < LastTab->y + 1)
-        mouse_action.cursorX -= FRAME_WIDTH + 1;
-    else if (mouse_action.cursorX >= Currentbuf->rootX && mouse_action.cursorY < LASTLINE) {
-        cursorXY(Currentbuf, mouse_action.cursorX - Currentbuf->rootX,
-            mouse_action.cursorY - Currentbuf->rootY);
-        displayBuffer(Currentbuf, B_NORMAL);
-    }
-    mainMn();
-}
-#endif
-
-DEFUN(tabMs, TAB_MOUSE, "Select tab by mouse action")
-{
-    TabBuffer* tab;
-
-    if (!mouse_action.in_action)
-        return;
-    tab = posTab(mouse_action.cursorX, mouse_action.cursorY);
-    if (!tab || tab == NO_TABBUFFER)
-        return;
-    CurrentTab = tab;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-DEFUN(closeTMs, CLOSE_TAB_MOUSE, "Close tab at mouse pointer")
-{
-    TabBuffer* tab;
-
-    if (!mouse_action.in_action)
-        return;
-    tab = posTab(mouse_action.cursorX, mouse_action.cursorY);
-    if (!tab || tab == NO_TABBUFFER)
-        return;
-    deleteTab(tab);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-#endif /* USE_MOUSE */
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
 {
@@ -5626,7 +4985,6 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
     }
 }
 
-#ifdef USE_DICT
 static void
 execdict(char* word)
 {
@@ -5672,7 +5030,6 @@ DEFUN(dictwordat, DICT_WORD_AT,
 {
     execdict(GetWord(Currentbuf).ptr);
 }
-#endif /* USE_DICT */
 
 void set_buffer_environ(Buffer* buf)
 {
@@ -5752,19 +5109,6 @@ searchKeyNum(void)
     return n * PREC_NUM;
 }
 
-#ifdef __EMX__
-#ifdef USE_M17N
-static char*
-getCodePage(void)
-{
-    unsigned long CpList[8], CpSize;
-
-    if (!getenv("WINDOWID") && !DosQueryCp(sizeof(CpList), CpList, &CpSize))
-        return Sprintf("CP%d", *CpList)->ptr;
-    return NULL;
-}
-#endif
-#endif
 
 void deleteFiles(void)
 {
@@ -5793,21 +5137,11 @@ void w3m_exit(int i)
 {
     if (fmInitialized)
         fmTerm();
-#ifdef USE_MIGEMO
-    init_migemo(); /* close pipe to migemo */
-#endif
     stopDownload();
     deleteFiles();
-#ifdef USE_SSL
     free_ssl_ctx();
-#endif
     disconnectFTP();
-#ifdef USE_NNTP
     disconnectNews();
-#endif
-#ifdef __MINGW32_VERSION
-    WSACleanup();
-#endif
     if (mkd_tmp_dir)
         if (rmdir(mkd_tmp_dir) != 0) {
             err_msg = Strcat(err_msg,
@@ -5847,15 +5181,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
         p = getQWord(&data).ptr;
         CurrentKey = -1;
         CurrentCmdData = *p ? p : NULL;
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#endif
         w3mFuncList[cmd].func();
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_active();
-#endif
         CurrentCmdData = NULL;
     }
     displayBuffer(Currentbuf, B_NORMAL);
@@ -5867,15 +5193,7 @@ SigAlarm(SIGNAL_ARG)
     if (CurrentAlarm->sec > 0) {
         CurrentKey = -1;
         CurrentCmdData = (const char*)CurrentAlarm->data;
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_inactive();
-#endif
         w3mFuncList[CurrentAlarm->cmd].func();
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_active();
-#endif
         CurrentCmdData = NULL;
         if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
             CurrentAlarm->sec = 0;
@@ -5934,9 +5252,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     if (resource == NULL) {
         init_rc();
         sync_with_option();
-#ifdef USE_COOKIE
         initCookie();
-#endif
         displayBuffer(Currentbuf, B_REDRAW_IMAGE);
         return;
     }
@@ -5948,12 +5264,10 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_COOKIE
     if (!strcasecmp(resource, "COOKIE")) {
         initCookie();
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "KEYMAP")) {
         initKeymap(true);
@@ -5965,32 +5279,17 @@ DEFUN(reinit, REINIT, "Reload configuration file")
         return;
     }
 
-#ifdef USE_MOUSE
-    if (!strcasecmp(resource, "MOUSE")) {
-        initMouseAction();
-        displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-        return;
-    }
-#endif
 
-#ifdef USE_MENU
     if (!strcasecmp(resource, "MENU")) {
         initMenu();
         return;
     }
-#endif
 
     if (!strcasecmp(resource, "MIMETYPES")) {
         initMimeTypes();
         return;
     }
 
-#ifdef USE_EXTERNAL_URI_LOADER
-    if (!strcasecmp(resource, "URIMETHODS")) {
-        initURIMethods();
-        return;
-    }
-#endif
 
     disp_err_message(Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, false);
 }
@@ -6160,10 +5459,8 @@ followTab(TabBuffer* tab)
     Buffer* buf;
     Anchor* a;
 
-#ifdef USE_IMAGE
     a = retrieveCurrentImg(Currentbuf);
     if (!(a && a->image && a->image->map))
-#endif
         a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL)
         return;
@@ -6459,9 +5756,7 @@ void download_action(struct parsed_tagarg* arg)
     for (; arg; arg = arg->next) {
         if (!strncmp(arg->arg, "stop", 4)) {
             pid = (pid_t)atoi(&arg->arg[4]);
-#ifndef __MINGW32_VERSION
             kill(pid, SIGKILL);
-#endif
         } else if (!strncmp(arg->arg, "ok", 2))
             pid = (pid_t)atoi(&arg->arg[2]);
         else
@@ -6493,9 +5788,7 @@ void stopDownload(void)
     for (d = FirstDL; d != NULL; d = d->next) {
         if (!d->running)
             continue;
-#ifndef __MINGW32_VERSION
         kill(d->pid, SIGKILL);
-#endif
         unlink(d->lock);
     }
 }
@@ -6505,9 +5798,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
     Buffer* buf;
     int replace = false, new_tab = false;
-#ifdef USE_ALARM
     int reload;
-#endif
 
     if (Currentbuf->bufferprop & BP_INTERNAL && !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
         replace = true;
@@ -6522,9 +5813,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
         }
         return;
     }
-#ifdef USE_ALARM
     reload = checkDownloadList();
-#endif
     buf = DownloadListBuffer();
     if (!buf) {
         displayBuffer(Currentbuf, B_NORMAL);
@@ -6542,11 +5831,9 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     pushBuffer(buf);
     if (replace || new_tab)
         deletePrevBuf();
-#ifdef USE_ALARM
     if (reload)
         Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
             FUNCNAME_reload, NULL);
-#endif
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 

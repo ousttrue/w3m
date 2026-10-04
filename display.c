@@ -21,27 +21,22 @@
 #include <math.h>
 #include <signal.h>
 
-#ifdef USE_COLOR
 int useColor = true;
 int highIntensityColors = false;
 int basic_color = 8; /* don't change */
 int anchor_color = 4; /* blue  */
 int image_color = 2; /* green */
 int form_color = 1; /* red   */
-#ifdef USE_BG_COLOR
 int bg_color = 8; /* don't change */
 int mark_color = 6; /* cyan */
-#endif /* USE_BG_COLOR */
 int useActiveColor = false;
 int active_color = 6; /* cyan */
 int useVisitedColor = false;
 int visited_color = 5; /* magenta  */
-#endif /* USE_COLOR */
 
 static void calcTabPos(void);
 
 /* *INDENT-OFF* */
-#ifdef USE_COLOR
 
 static void effect_anchor_start(void);
 static void effect_anchor_end(void);
@@ -86,22 +81,14 @@ static void effect_mark_end(void);
 #define EFFECT_FORM_START_C setfcolor(form_color)
 #define EFFECT_ACTIVE_START_C (setfcolor(active_color), underline())
 #define EFFECT_VISITED_START_C setfcolor(visited_color)
-#ifdef USE_BG_COLOR
 #define EFFECT_MARK_START_C setbcolor(mark_color)
-#else
-#define EFFECT_MARK_START_C standout()
-#endif
 
 #define EFFECT_IMAGE_END_C setfcolor(basic_color)
 #define EFFECT_ANCHOR_END_C setfcolor(basic_color)
 #define EFFECT_FORM_END_C setfcolor(basic_color)
 #define EFFECT_ACTIVE_END_C (setfcolor(basic_color), underlineend())
 #define EFFECT_VISITED_END_C setfcolor(basic_color)
-#ifdef USE_BG_COLOR
 #define EFFECT_MARK_END_C setbcolor(bg_color)
-#else
-#define EFFECT_MARK_END_C standend()
-#endif
 
 #define EFFECT_ANCHOR_START_M underline()
 #define EFFECT_ANCHOR_END_M underlineend()
@@ -153,11 +140,6 @@ define_effect(effect_anchor_start(void), effect_anchor_end(void),
 {
     if (useColor) {
         if (useActiveColor) {
-#ifdef __EMX__
-            if (!getenv("WINDOWID"))
-                setfcolor(active_color);
-            else
-#endif
             {
                 EFFECT_ACTIVE_START_C;
             }
@@ -207,21 +189,6 @@ effect_visited_end(void)
     }
 }
 
-#else /* not USE_COLOR */
-
-#define EFFECT_ANCHOR_START underline()
-#define EFFECT_ANCHOR_END underlineend()
-#define EFFECT_IMAGE_START standout()
-#define EFFECT_IMAGE_END standend()
-#define EFFECT_FORM_START standout()
-#define EFFECT_FORM_END standend()
-#define EFFECT_ACTIVE_START bold()
-#define EFFECT_ACTIVE_END boldend()
-#define EFFECT_VISITED_START /**/
-#define EFFECT_VISITED_END /**/
-#define EFFECT_MARK_START standout()
-#define EFFECT_MARK_END standend()
-#endif /* not USE_COLOR */
 /* *INDENT-ON* */
 
 void fmTerm(void)
@@ -230,14 +197,8 @@ void fmTerm(void)
         move(LASTLINE, 0);
         clrtoeolx();
         refresh();
-#ifdef USE_IMAGE
         if (activeImage)
             loadImage(NULL, IMG_FLAG_STOP);
-#endif
-#ifdef USE_MOUSE
-        if (use_mouse)
-            mouse_end();
-#endif /* USE_MOUSE */
         reset_tty();
         fmInitialized = false;
     }
@@ -252,10 +213,8 @@ void fmInit(void)
         initscr();
         term_raw();
         term_noecho();
-#ifdef USE_IMAGE
         if (displayImage)
             initImage();
-#endif
     }
     fmInitialized = true;
 }
@@ -269,9 +228,7 @@ static int ccolumn = -1;
 static int ulmode = 0, somode = 0, bomode = 0;
 static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
-#ifdef USE_ANSI_COLOR
 static Linecolor color_mode = 0;
-#endif
 
 static char* delayed_msg = NULL;
 
@@ -279,24 +236,18 @@ static void drawAnchorCursor(Buffer* buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(Buffer* buf, int n);
 static Line* redrawLine(Buffer* buf, Line* l, int i);
-#ifdef USE_IMAGE
 static int image_touch = 0;
 static int draw_image_flag = false;
 static Line* redrawLineImage(Buffer* buf, Line* l, int i);
-#endif
 static int redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
-#ifdef USE_ANSI_COLOR
 static void do_color(Linecolor c);
-#endif
 
 static pStr
 make_lastline_link(Buffer* buf, const char* title, const char* url)
 {
     pStr s = NULL, u;
-#ifdef USE_M17N
     Lineprop* pr;
-#endif
     ParsedURL pu;
     char* p;
     int l = COLS - 1, i;
@@ -319,9 +270,7 @@ make_lastline_link(Buffer* buf, const char* title, const char* url)
     u = parsedURL2Str(&pu);
     if (DecodeURL)
         u = url_decode2(u->ptr, buf);
-#ifdef USE_M17N
     u = checkType(u, &pr, NULL);
-#endif
     if (l <= 4 || l >= get_Str_strwidth(&WcOption, u)) {
         if (!s)
             return u;
@@ -331,17 +280,13 @@ make_lastline_link(Buffer* buf, const char* title, const char* url)
     if (!s)
         s = Strnew_size(COLS);
     i = (l - 2) / 2;
-#ifdef USE_M17N
     while (i && pr[i] & PC_WCHAR2)
         i--;
-#endif
     Strcat_charp_n(s, u->ptr, i);
     Strcat_charp(s, "..");
     i = get_Str_strwidth(&WcOption, u) - (COLS - 1 - get_Str_strwidth(&WcOption, s));
-#ifdef USE_M17N
     while (i < u->len && pr[i] & PC_WCHAR2)
         i++;
-#endif
     Strcat_charp(s, &u->ptr[i]);
     return s;
 }
@@ -379,12 +324,7 @@ make_lastline_message(Buffer* buf)
         }
     }
 
-#ifdef USE_MOUSE
-    if (use_mouse && mouse_action.lastline_str)
-        msg = Strnew_charp(mouse_action.lastline_str);
-    else
-#endif /* not USE_MOUSE */
-        msg = Strnew();
+    msg = Strnew();
     if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
         int cl = buf->currentLine->real_linenumber;
         int ll = buf->lastLine->real_linenumber;
@@ -398,17 +338,14 @@ make_lastline_message(Buffer* buf)
             Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
     } else
         Strcat_charp(msg, _("Viewing"));
-#ifdef USE_SSL
     if (buf->ssl_certificate)
         Strcat_charp(msg, "[SSL]");
-#endif
     Strcat_charp(msg, " <");
     Strcat_charp(msg, buf->buffername);
 
     if (s) {
         int l = COLS - 3 - sl;
         if (get_Str_strwidth(&WcOption, msg) > l) {
-#ifdef USE_M17N
             char* p;
             for (p = msg->ptr; *p; p += get_mclen(p)) {
                 l -= get_mcwidth(&WcOption, p);
@@ -416,7 +353,6 @@ make_lastline_message(Buffer* buf)
                     break;
             }
             l = p - msg->ptr;
-#endif
             Strtruncate(msg, l);
         }
         Strcat_charp(msg, "> ");
@@ -459,9 +395,6 @@ void displayBuffer(Buffer* buf, int mode)
         buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
     if (nTab > 1
-#ifdef USE_MOUSE
-        || mouse_action.menu_str
-#endif
     ) {
         if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
             calcTabPos();
@@ -476,26 +409,7 @@ void displayBuffer(Buffer* buf, int mode)
         mode = B_REDRAW_IMAGE;
     }
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn) {
-#ifdef USE_RAW_SCROLL
-        if (
-#ifdef USE_IMAGE
-            !(activeImage && displayImage && draw_image_flag) &&
-#endif
-            mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
-            int n = buf->topLine->linenumber - cline->linenumber;
-            if (n > 0 && n < buf->LINES) {
-                move(LASTLINE, 0);
-                clrtoeolx();
-                refresh();
-                scroll(n);
-            } else if (n < 0 && n > -buf->LINES) {
-                rscroll(-n);
-            }
-            redrawNLine(buf, n);
-        } else
-#endif
         {
-#ifdef USE_IMAGE
             if (activeImage && (mode == B_REDRAW_IMAGE || cline != buf->topLine || ccolumn != buf->currentColumn)) {
                 if (draw_image_flag)
                     clear();
@@ -504,7 +418,6 @@ void displayBuffer(Buffer* buf, int mode)
                 image_touch++;
                 draw_image_flag = false;
             }
-#endif
             redrawBuffer(buf);
         }
         cline = buf->topLine;
@@ -513,12 +426,10 @@ void displayBuffer(Buffer* buf, int mode)
     if (buf->topLine == NULL)
         buf->topLine = buf->firstLine;
 
-#ifdef USE_IMAGE
     if (buf->need_reshape) {
         displayBuffer(buf, B_FORCE_REDRAW);
         return;
     }
-#endif
 
     drawAnchorCursor(buf);
 
@@ -639,27 +550,16 @@ redrawNLine(Buffer* buf, int n)
     Line* l;
     int i;
 
-#ifdef USE_COLOR
     if (useColor) {
         EFFECT_ANCHOR_END_C;
-#ifdef USE_BG_COLOR
         setbcolor(bg_color);
-#endif /* USE_BG_COLOR */
     }
-#endif /* USE_COLOR */
     if (nTab > 1
-#ifdef USE_MOUSE
-        || mouse_action.menu_str
-#endif
     ) {
         TabBuffer* t;
         int l;
 
         move(0, 0);
-#ifdef USE_MOUSE
-        if (mouse_action.menu_str)
-            addstr(mouse_action.menu_str);
-#endif
         clrtoeolx();
         for (t = FirstTab; t; t = t->nextTab) {
             move(t->y, t->x1);
@@ -698,7 +598,6 @@ redrawNLine(Buffer* buf, int n)
         clrtobotx();
     }
 
-#ifdef USE_IMAGE
     if (!(activeImage && displayImage && buf->img))
         return;
     move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
@@ -707,7 +606,6 @@ redrawNLine(Buffer* buf, int n)
             redrawLineImage(buf, l, i + buf->rootY);
     }
     getAllImage(buf);
-#endif
 }
 
 static Line*
@@ -717,14 +615,10 @@ redrawLine(Buffer* buf, Line* l, int i)
     int column = buf->currentColumn;
     char* p;
     Lineprop* pr;
-#ifdef USE_ANSI_COLOR
     Linecolor* pc;
-#endif
-#ifdef USE_COLOR
     Anchor* a;
     ParsedURL url;
     int k, vpos = -1;
-#endif
 
     if (l == NULL) {
         if (buf->pagerSource) {
@@ -764,16 +658,13 @@ redrawLine(Buffer* buf, Line* l, int i)
     pos = columnPos(l, column);
     p = &(l->lineBuf[pos]);
     pr = &(l->propBuf[pos]);
-#ifdef USE_ANSI_COLOR
     if (useColor && l->colorBuf)
         pc = &(l->colorBuf[pos]);
     else
         pc = NULL;
-#endif
     rcol = COLPOS(l, pos);
 
     for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
-#ifdef USE_COLOR
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -785,17 +676,12 @@ redrawLine(Buffer* buf, Line* l, int i)
                 vpos = a->end.pos;
             }
         }
-#endif
-#ifdef USE_M17N
         delta = wtf_len((uint8_t*)&p[j]);
-#endif
         ncol = COLPOS(l, pos + j + delta);
         if (ncol - column > buf->COLS)
             break;
-#ifdef USE_ANSI_COLOR
         if (pc)
             do_color(pc[j]);
-#endif
         if (rcol < column) {
             for (rcol = column; rcol < ncol; rcol++)
                 addChar(' ', 0);
@@ -805,11 +691,7 @@ redrawLine(Buffer* buf, Line* l, int i)
             for (; rcol < ncol; rcol++)
                 addChar(' ', 0);
         } else {
-#ifdef USE_M17N
             addMChar(&p[j], pr[j], delta);
-#else
-            addChar(p[j], pr[j]);
-#endif
         }
         rcol = ncol;
     }
@@ -858,16 +740,13 @@ redrawLine(Buffer* buf, Line* l, int i)
         graph_mode = false;
         graphend();
     }
-#ifdef USE_ANSI_COLOR
     if (color_mode)
         do_color(0);
-#endif
     if (rcol - column < buf->COLS)
         clrtoeolx();
     return l;
 }
 
-#ifdef USE_IMAGE
 static Line*
 redrawLineImage(Buffer* buf, Line* l, int i)
 {
@@ -937,7 +816,6 @@ redrawLineImage(Buffer* buf, Line* l, int i)
     }
     return l;
 }
-#endif
 
 static int
 redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
@@ -946,33 +824,26 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     int column = buf->currentColumn;
     char* p;
     Lineprop* pr;
-#ifdef USE_ANSI_COLOR
     Linecolor* pc;
-#endif
     int bcol, ecol;
-#ifdef USE_COLOR
     Anchor* a;
     ParsedURL url;
     int k, vpos = -1;
-#endif
 
     if (l == NULL)
         return 0;
     pos = columnPos(l, column);
     p = &(l->lineBuf[pos]);
     pr = &(l->propBuf[pos]);
-#ifdef USE_ANSI_COLOR
     if (useColor && l->colorBuf)
         pc = &(l->colorBuf[pos]);
     else
         pc = NULL;
-#endif
     rcol = COLPOS(l, pos);
     bcol = bpos - pos;
     ecol = epos - pos;
 
     for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
-#ifdef USE_COLOR
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
             a = retrieveAnchor(buf->href, l->linenumber, pos + j);
             if (a) {
@@ -984,17 +855,12 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
                 vpos = a->end.pos;
             }
         }
-#endif
-#ifdef USE_M17N
         delta = wtf_len((uint8_t*)&p[j]);
-#endif
         ncol = COLPOS(l, pos + j + delta);
         if (ncol - column > buf->COLS)
             break;
-#ifdef USE_ANSI_COLOR
         if (pc)
             do_color(pc[j]);
-#endif
         if (j >= bcol && j < ecol) {
             if (rcol < column) {
                 move(i, buf->rootX);
@@ -1007,11 +873,7 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
                 for (; rcol < ncol; rcol++)
                     addChar(' ', 0);
             } else
-#ifdef USE_M17N
                 addMChar(&p[j], pr[j], delta);
-#else
-                addChar(p[j], pr[j]);
-#endif
         }
         rcol = ncol;
     }
@@ -1060,10 +922,8 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
         graph_mode = false;
         graphend();
     }
-#ifdef USE_ANSI_COLOR
     if (color_mode)
         do_color(0);
-#endif
     return rcol - column;
 }
 
@@ -1115,7 +975,6 @@ do_effects(Lineprop m)
     do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
 }
 
-#ifdef USE_ANSI_COLOR
 static void
 do_color(Linecolor c)
 {
@@ -1123,63 +982,43 @@ do_color(Linecolor c)
         setfcolor(c & 0x7);
     else if (color_mode & 0x8)
         setfcolor(basic_color);
-#ifdef USE_BG_COLOR
     if (c & 0x80)
         setbcolor((c >> 4) & 0x7);
     else if (color_mode & 0x80)
         setbcolor(bg_color);
-#endif
     color_mode = c;
 }
-#endif
 
-#ifdef USE_M17N
 void addChar(char c, Lineprop mode)
 {
     addMChar(&c, mode, 1);
 }
 
 void addMChar(char* p, Lineprop mode, size_t len)
-#else
-void addChar(char c, Lineprop mode)
-#endif
 {
     Lineprop m = CharEffect(mode);
-#ifdef USE_M17N
     char c = *p;
 
     if (mode & PC_WCHAR2)
         return;
-#endif
     do_effects(m);
     if (mode & PC_SYMBOL) {
         char** symbol;
-#ifdef USE_M17N
         int w = (mode & PC_KANJI) ? 2 : 1;
 
         c = ((char)wtf_get_code((uint8_t*)p) & 0x7f) - SYMBOL_BASE;
-#else
-        c -= SYMBOL_BASE;
-#endif
         if (graph_ok() && c < N_GRAPH_SYMBOL) {
             if (!graph_mode) {
                 graphstart();
                 graph_mode = true;
             }
-#ifdef USE_M17N
             if (w == 2 && WcOption.use_wide)
                 addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
             else
-#endif
                 addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
         } else {
-#ifdef USE_M17N
             symbol = get_symbol(DisplayCharset, &w);
             addstr(symbol[(unsigned char)c % N_SYMBOL]);
-#else
-            symbol = get_symbol();
-            addch(*symbol[(unsigned char)c % N_SYMBOL]);
-#endif
         }
     } else if (mode & PC_CTRL) {
         switch (c) {
@@ -1200,7 +1039,6 @@ void addChar(char c, Lineprop mode)
             break;
         }
     }
-#ifdef USE_M17N
     else if (mode & PC_UNKNOWN) {
         char buf[5];
         sprintf(buf, "[%.2X]",
@@ -1208,12 +1046,6 @@ void addChar(char c, Lineprop mode)
         addstr(buf);
     } else
         addmch(p, len);
-#else
-    else if (0x80 <= (unsigned char)c && (unsigned char)c <= NBSP_CODE)
-        addch(' ');
-    else
-        addch(c);
-#endif
 }
 
 static GeneralList* message_list = NULL;
@@ -1285,15 +1117,7 @@ void disp_message_nsec(const char* s, int redraw_current, int sec, int purge, in
     else
         message(s, LASTLINE, 0);
     refresh();
-#ifdef USE_MOUSE
-    if (mouse && use_mouse)
-        mouse_active();
-#endif
     sleep_till_anykey(sec, purge);
-#ifdef USE_MOUSE
-    if (mouse && use_mouse)
-        mouse_inactive();
-#endif
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
         displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1302,12 +1126,6 @@ void disp_message(const char* s, int redraw_current)
 {
     disp_message_nsec(s, redraw_current, 10, false, true);
 }
-#ifdef USE_MOUSE
-void disp_message_nomouse(char* s, int redraw_current)
-{
-    disp_message_nsec(s, redraw_current, 10, false, false);
-}
-#endif
 
 void set_delayed_message(const char* s)
 {
@@ -1393,11 +1211,9 @@ void cursorRight(Buffer* buf, int n)
     if (buf->pos == l->len && !(l->next && l->next->bpos))
         return;
     i = buf->pos;
-#ifdef USE_M17N
     Lineprop* p = l->propBuf;
     while (i + delta < l->len && p[i + delta] & PC_WCHAR2)
         delta++;
-#endif
     if (i + delta < l->len) {
         buf->pos = i + delta;
     } else if (l->len == 0) {
@@ -1409,18 +1225,14 @@ void cursorRight(Buffer* buf, int n)
         return;
     } else {
         buf->pos = l->len - 1;
-#ifdef USE_M17N
         while (buf->pos && p[buf->pos] & PC_WCHAR2)
             buf->pos--;
-#endif
     }
     cpos = COLPOS(l, buf->pos);
     buf->visualpos = l->bwidth + cpos - buf->currentColumn;
     delta = 1;
-#ifdef USE_M17N
     while (buf->pos + delta < l->len && p[buf->pos + delta] & PC_WCHAR2)
         delta++;
-#endif
     vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
     if (vpos2 >= buf->COLS && n) {
         columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
@@ -1437,11 +1249,9 @@ void cursorLeft(Buffer* buf, int n)
     if (buf->firstLine == NULL)
         return;
     i = buf->pos;
-#ifdef USE_M17N
     Lineprop* p = l->propBuf;
     while (i - delta > 0 && p[i - delta] & PC_WCHAR2)
         delta++;
-#endif
     if (i >= delta)
         buf->pos = i - delta;
     else if (l->prev && l->bpos) {
@@ -1491,15 +1301,11 @@ void arrangeCursor(Buffer* buf)
         buf->pos = 0;
     else if (buf->pos >= buf->currentLine->len)
         buf->pos = buf->currentLine->len - 1;
-#ifdef USE_M17N
     while (buf->pos > 0 && buf->currentLine->propBuf[buf->pos] & PC_WCHAR2)
         buf->pos--;
-#endif
     col = COLPOS(buf->currentLine, buf->pos);
-#ifdef USE_M17N
     while (buf->pos + delta < buf->currentLine->len && buf->currentLine->propBuf[buf->pos + delta] & PC_WCHAR2)
         delta++;
-#endif
     col2 = COLPOS(buf->currentLine, buf->pos + delta);
     if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
         buf->currentColumn = 0;
@@ -1586,9 +1392,6 @@ void calcTabPos(void)
     int lcol = 0, rcol = 0, col;
     int n1, n2, na, nx, ny, ix, iy;
 
-#ifdef USE_MOUSE
-    lcol = mouse_action.menu_str ? mouse_action.menu_width : 0;
-#endif
 
     if (nTab <= 0)
         return;

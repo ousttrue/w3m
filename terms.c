@@ -84,32 +84,8 @@ static void wc_putc_clear_status(void)
     }
 }
 
-#ifndef __MINGW32_VERSION
 #include <sys/ioctl.h>
-#else
-#include <winsock.h>
-#endif /* __MINGW32_VERSION */
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif /* USE_GPM */
-#ifdef USE_SYSMOUSE
-static int is_xterm = 0;
-#include <osreldate.h>
-#if (__FreeBSD_version >= 400017) || (__FreeBSD_kernel_version >= 400017)
-#include <sys/consio.h>
-#include <sys/fbio.h>
-#else
-#include <machine/console.h>
-#endif
-int (*sysm_handler)(int x, int y, int nbs, int obs);
-static int cwidth = 8, cheight = 16;
-static int xpix, ypix, nbs, obs = 0;
-#endif /* use_SYSMOUSE */
-static void mouse_init(void);
-int mouseActive = 0;
-#endif /* USE_MOUSE */
 
 static const char* title_str;
 static int tty;
@@ -121,10 +97,6 @@ static void getTCstr(void);
 char* displayTitleTerm = NULL;
 int use_ti_te = true;
 
-#ifdef __EMX__
-#define INCL_DOSNLS
-#include <os2.h>
-#endif /* __EMX__ */
 
 #if defined(__CYGWIN__)
 #include <windows.h>
@@ -285,12 +257,6 @@ check_cygwin_console(void)
         if (((ctype = getenv("LC_ALL")) || (ctype = getenv("LC_CTYPE")) || (ctype = getenv("LANG"))) && strncmp(ctype, "ja", 2) == 0) {
             isWinConsole = TERM_CYGWIN_RESERVE_IME;
         }
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-        check_win9x();
-        if (isWin95 && ttyslot() != -1) {
-            isLocalConsole = 0;
-        }
-#endif
     }
 }
 #endif /* __CYGWIN__ */
@@ -309,40 +275,6 @@ typedef struct termios TerminalMode;
 #define MODEFLAG(d) ((d).c_lflag)
 #define IMODEFLAG(d) ((d).c_iflag)
 
-#ifdef __MINGW32_VERSION
-/* dummy struct */
-typedef unsigned char cc_t;
-typedef unsigned int speed_t;
-typedef unsigned int tcflag_t;
-
-#define NCCS 32
-struct termios {
-    tcflag_t c_iflag; /* input mode flags */
-    tcflag_t c_oflag; /* output mode flags */
-    tcflag_t c_cflag; /* control mode flags */
-    tcflag_t c_lflag; /* local mode flags */
-    cc_t c_line; /* line discipline */
-    cc_t c_cc[NCCS]; /* control characters */
-    speed_t c_ispeed; /* input speed */
-    speed_t c_ospeed; /* output speed */
-};
-typedef struct termios TerminalMode;
-#define TerminalSet(fd, x) (0)
-#define TerminalGet(fd, x) (0)
-#define MODEFLAG(d) (0)
-
-/* dummy defines */
-#define SIGHUP (0)
-#define SIGQUIT (0)
-#define ECHO (0)
-#define ISIG (0)
-#define VEOF (0)
-#define ICANON (0)
-#define IXON (0)
-#define IXOFF (0)
-
-char* ttyname(int);
-#endif /* __MINGW32_VERSION */
 
 /* Screen properties */
 #define S_SCREENPROP 0x0f
@@ -355,20 +287,14 @@ char* ttyname(int);
 /* Sort of Character */
 #define C_WHICHCHAR 0xc0
 #define C_ASCII 0x00
-#ifdef USE_M17N
 #define C_WCHAR1 0x40
 #define C_WCHAR2 0x80
-#endif
 #define C_CTRL 0xc0
 
 #define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
-#ifdef USE_M17N
 #define SETCH(var, ch, len) ((var) = New_Reuse(char, (var), (len) + 1), \
     strncpy((var), (ch), (len + 1)))
-#else
-#define SETCH(var, ch, len) ((var) = (ch))
-#endif
 
 /* Charactor Color */
 #define COL_FCOLOR 0xf00
@@ -384,7 +310,6 @@ char* ttyname(int);
 
 #define S_COLORED 0xf00
 
-#ifdef USE_BG_COLOR
 /* Background Color */
 #define COL_BCOLOR 0xf000
 #define COL_BBLACK 0x8000
@@ -398,7 +323,6 @@ char* ttyname(int);
 #define COL_BTERM 0x0000
 
 #define S_BCOLORED 0xf000
-#endif /* USE_BG_COLOR */
 
 #define S_GRAPHICS 0x10
 
@@ -419,11 +343,7 @@ char* ttyname(int);
 typedef unsigned short l_prop;
 
 typedef struct scline {
-#ifdef USE_M17N
     char** lineimage;
-#else
-    char* lineimage;
-#endif
     l_prop* lineprop;
     short isdirty;
     short eol;
@@ -473,7 +393,6 @@ writestr(char* s)
 
 #define MOVE(line, column) writestr(tgoto(T_cm, column, line));
 
-#ifdef USE_IMAGE
 /*
  * From the Kitty spec,
  * <https://sw.kovidgoyal.net/kitty/graphics-protocol/#remote-client>:
@@ -816,14 +735,6 @@ int get_pixel_per_cell(int* ppc, int* ppl)
     int wp, hp, wc, hc;
     int i;
 
-#ifdef TIOCGWINSZ
-    struct winsize ws;
-    if (ioctl(tty, TIOCGWINSZ, &ws) == 0 && ws.ws_ypixel > 0 && ws.ws_row > 0 && ws.ws_xpixel > 0 && ws.ws_col > 0) {
-        *ppc = ws.ws_xpixel / ws.ws_col;
-        *ppl = ws.ws_ypixel / ws.ws_row;
-        return 1;
-    }
-#endif
 
     fputs("\x1b[14t\x1b[18t", ttyf);
     flush_tty();
@@ -857,7 +768,6 @@ int get_pixel_per_cell(int* ppc, int* ppl)
 
     return 0;
 }
-#endif /* USE_IMAGE */
 
 static const char *title_str_common = "\033]0;w3m: %s\007",
                   *title_str_screen = "\033k%s\033\134";
@@ -876,9 +786,6 @@ int set_tty(void)
         tty = 2;
     }
     ttyf = fdopen(tty, "w");
-#ifdef __CYGWIN__
-    check_cygwin_console();
-#endif
     TerminalGet(tty, &d_ioval);
     if (displayTitleTerm) {
         if (!strncmp(displayTitleTerm, "screen", 6)) {
@@ -887,17 +794,11 @@ int set_tty(void)
             title_str = title_str_common;
         }
     }
-#ifdef USE_SYSMOUSE
-    if (!strncmp(getenv("TERM"), "screen", 6)) {
-        is_xterm = 0;
-    }
-#endif
     return 0;
 }
 
 void ttymode_set(int mode, int imode)
 {
-#ifndef __MINGW32_VERSION
     TerminalMode ioval;
 
     TerminalGet(tty, &ioval);
@@ -910,12 +811,10 @@ void ttymode_set(int mode, int imode)
         printf("Error occurred while set %x: errno=%d\n", mode, errno);
         reset_error_exit(SIGNAL_ARGLIST);
     }
-#endif
 }
 
 void ttymode_reset(int mode, int imode)
 {
-#ifndef __MINGW32_VERSION
     TerminalMode ioval;
 
     TerminalGet(tty, &ioval);
@@ -928,7 +827,6 @@ void ttymode_reset(int mode, int imode)
         printf("Error occurred while reset %x: errno=%d\n", mode, errno);
         reset_error_exit(SIGNAL_ARGLIST);
     }
-#endif /* __MINGW32_VERSION */
 }
 
 static void
@@ -978,10 +876,6 @@ extern void w3m_exit(int i);
 static void
 reset_exit_with_value(SIGNAL_ARG, int rval)
 {
-#ifdef USE_MOUSE
-    if (mouseActive)
-        mouse_end();
-#endif /* USE_MOUSE */
     reset_tty();
     w3m_exit(rval);
 }
@@ -1120,22 +1014,6 @@ void setlinescols(void)
 {
     char* p;
     int i;
-#ifdef __EMX__
-    {
-        int s[2];
-        _scrsize(s);
-        COLS = s[0];
-        LINES = s[1];
-
-        if (getenv("WINDOWID")) {
-            FILE* fd = popen("scrsize", "rt");
-            if (fd) {
-                fscanf(fd, "%i %i", &COLS, &LINES);
-                pclose(fd);
-            }
-        }
-    }
-#elif defined(TIOCGWINSZ)
     struct winsize wins;
 
     i = ioctl(tty, TIOCGWINSZ, &wins);
@@ -1143,7 +1021,7 @@ void setlinescols(void)
         LINES = wins.ws_row;
         COLS = wins.ws_col;
     }
-#endif /* defined(TIOCGWINSZ) */
+
     if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
         LINES = i;
     if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
@@ -1156,9 +1034,6 @@ void setlinescols(void)
         COLS = MaxCols;
     if (opt_cols && COLS > opt_cols)
         COLS = opt_cols;
-#if defined(__CYGWIN__)
-    LASTLINE = LINES - (isWinConsole == TERM_CYGWIN_RESERVE_IME ? 2 : 1);
-#endif /* defined(__CYGWIN__) */
 }
 
 void setupscreen(void)
@@ -1174,12 +1049,8 @@ void setupscreen(void)
     if (COLS + 1 > max_COLS) {
         max_COLS = COLS + 1;
         for (i = 0; i < max_LINES; i++) {
-#ifdef USE_M17N
             ScreenElem[i].lineimage = New_N(char*, max_COLS);
             bzero(ScreenElem[i].lineimage, max_COLS * sizeof(char*));
-#else
-            ScreenElem[i].lineimage = New_N(char, max_COLS);
-#endif
             ScreenElem[i].lineprop = New_N(l_prop, max_COLS);
         }
     }
@@ -1228,26 +1099,14 @@ void move(int line, int column)
         CurColumn = column;
 }
 
-#ifdef USE_BG_COLOR
 #define M_SPACE (S_SCREENPROP | S_COLORED | S_BCOLORED | S_GRAPHICS)
-#else /* not USE_BG_COLOR */
-#define M_SPACE (S_SCREENPROP | S_COLORED | S_GRAPHICS)
-#endif /* not USE_BG_COLOR */
 
 static int
-#ifdef USE_M17N
 need_redraw(const char* c1, l_prop pr1, const char* c2, l_prop pr2)
 {
     if (!c1 || !c2 || strcmp(c1, c2))
         return 1;
     if (*c1 == ' ')
-#else
-need_redraw(const char c1, l_prop pr1, const char c2, l_prop pr2)
-{
-    if (c1 != c2)
-        return 1;
-    if (c1 == ' ')
-#endif
         return (pr1 ^ pr2) & M_SPACE & ~S_DIRTY;
 
     if ((pr1 ^ pr2) & ~S_DIRTY)
@@ -1258,26 +1117,17 @@ need_redraw(const char c1, l_prop pr1, const char c2, l_prop pr2)
 
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 
-#ifdef USE_M17N
 #define SPACE " "
-#else
-#define SPACE ' '
-#endif
 
-#ifdef USE_M17N
 void addch(const char c)
 {
     addmch(&c, 1);
 }
 
 void addmch(const char* pc, size_t len)
-#else
-void addch(const char pc)
-#endif
 {
     l_prop* pr;
     int dest, i;
-#ifdef USE_M17N
     static pStr tmp = NULL;
     char** p;
     char c = *pc;
@@ -1287,10 +1137,6 @@ void addch(const char pc)
         tmp = Strnew();
     Strcopy_charp_n(tmp, pc, len);
     pc = tmp->ptr;
-#else
-    char* p;
-    char c = pc;
-#endif
 
     if (CurColumn == COLS)
         wrap();
@@ -1299,12 +1145,6 @@ void addch(const char pc)
     p = ScreenImage[CurLine]->lineimage;
     pr = ScreenImage[CurLine]->lineprop;
 
-#ifndef USE_M17N
-    /* Eliminate unprintables according to * iso-8859-*.
-     * Particularly 0x96 messes up T.Dickey's * (xfree-)xterm */
-    if (IS_INTSPACE(c))
-        c = ' ';
-#endif
 
     if (pr[CurColumn] & S_EOL) {
         if (c == ' ' && !(CurrentMode & M_SPACE)) {
@@ -1319,10 +1159,8 @@ void addch(const char pc)
 
     if (c == '\t' || c == '\n' || c == '\r' || c == '\b')
         SETCHMODE(CurrentMode, C_CTRL);
-#ifdef USE_M17N
     else if (len > 1)
         SETCHMODE(CurrentMode, C_WCHAR1);
-#endif
     else if (!IS_CNTRL(c))
         SETCHMODE(CurrentMode, C_ASCII);
     else
@@ -1330,11 +1168,7 @@ void addch(const char pc)
 
     /* Required to erase bold or underlined character for some * terminal
      * emulators. */
-#ifdef USE_M17N
     i = CurColumn + width - 1;
-#else
-    i = CurColumn;
-#endif
     if (i < COLS && (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) || ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
         touch_line();
         i++;
@@ -1344,16 +1178,13 @@ void addch(const char pc)
                 SETCH(p[i], SPACE, 1);
                 SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
             }
-#ifdef USE_M17N
             else {
                 for (i++; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
                     touch_column(i);
             }
-#endif
         }
     }
 
-#ifdef USE_M17N
     if (CurColumn + width > COLS) {
         touch_line();
         for (i = CurColumn; i < COLS; i++) {
@@ -1378,14 +1209,12 @@ void addch(const char pc)
                 break;
         }
     }
-#endif
     if (CHMODE(CurrentMode) != C_CTRL) {
         if (need_redraw(p[CurColumn], pr[CurColumn], pc, CurrentMode)) {
             SETCH(p[CurColumn], pc, len);
             SETPROP(pr[CurColumn], CurrentMode);
             touch_line();
             touch_column(CurColumn);
-#ifdef USE_M17N
             SETCHMODE(CurrentMode, C_WCHAR2);
             for (i = CurColumn + 1; i < CurColumn + width; i++) {
                 SETCH(p[i], SPACE, 1);
@@ -1399,10 +1228,6 @@ void addch(const char pc)
             }
         }
         CurColumn += width;
-#else
-        }
-        CurColumn++;
-#endif
     } else if (c == '\t') {
         dest = (CurColumn + tab_step) / tab_step * tab_step;
         if (dest >= COLS) {
@@ -1427,10 +1252,8 @@ void addch(const char pc)
         CurColumn = 0;
     } else if (c == '\b' && CurColumn > 0) { /* Backspace */
         CurColumn--;
-#ifdef USE_M17N
         while (CurColumn > 0 && CHMODE(pr[CurColumn]) == C_WCHAR2)
             CurColumn--;
-#endif
     }
 }
 
@@ -1470,17 +1293,13 @@ void standend(void)
 
 void toggle_stand(void)
 {
-#ifdef USE_M17N
     int i;
-#endif
     l_prop* pr = ScreenImage[CurLine]->lineprop;
     pr[CurColumn] ^= S_STANDOUT;
-#ifdef USE_M17N
     if (CHMODE(pr[CurColumn]) != C_WCHAR2) {
         for (i = CurColumn + 1; CHMODE(pr[i]) == C_WCHAR2; i++)
             pr[i] ^= S_STANDOUT;
     }
-#endif
 }
 
 void bold(void)
@@ -1532,14 +1351,11 @@ color_seq(int colmode)
 {
     int n = 30;
     static char seqbuf[32];
-#ifdef USE_COLOR
     n = highIntensityColors ? 90 : 30;
-#endif
     sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + n);
     return seqbuf;
 }
 
-#ifdef USE_BG_COLOR
 void setbcolor(int color)
 {
     CurrentMode &= ~COL_BCOLOR;
@@ -1554,36 +1370,23 @@ bcolor_seq(int colmode)
     sprintf(seqbuf, "\033[%dm", ((colmode >> 12) & 7) + 40);
     return seqbuf;
 }
-#endif /* USE_BG_COLOR */
 
 #define RF_NEED_TO_MOVE 0
 #define RF_CR_OK 1
 #define RF_NONEED_TO_MOVE 2
-#ifdef USE_BG_COLOR
 #define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_BCOLORED | S_GRAPHICS)
-#else /* not USE_BG_COLOR */
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_GRAPHICS)
-#endif /* not USE_BG_COLOR */
 void refresh(void)
 {
     int line, col, pcol;
     int pline = CurLine;
     int moved = RF_NEED_TO_MOVE;
-#ifdef USE_M17N
     char** pc;
-#else
-    char* pc;
-#endif
     l_prop *pr, mode = 0;
     l_prop color = COL_FTERM;
-#ifdef USE_BG_COLOR
     l_prop bcolor = COL_BTERM;
-#endif /* USE_BG_COLOR */
     short* dirty;
 
-#ifdef USE_M17N
     wc_putc_init(&WcOption, InnerCharset, DisplayCharset);
-#endif
     for (line = 0; line <= LASTLINE; line++) {
         dirty = &ScreenImage[line]->isdirty;
         if (*dirty & L_DIRTY) {
@@ -1648,21 +1451,14 @@ void refresh(void)
                  * (COLS-1,LINES-1).
                  */
 #if !defined(USE_BG_COLOR) || defined(__CYGWIN__)
-#ifdef __CYGWIN__
-                if (isWinConsole)
-#endif
                     if (line == LINES - 1 && col == COLS - 1)
                         break;
 #endif /* !defined(USE_BG_COLOR) || defined(__CYGWIN__) */
                 if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) || (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) || (!(pr[col] & S_BOLD) && (mode & S_BOLD)) || (!(pr[col] & S_COLORED) && (mode & S_COLORED))
-#ifdef USE_BG_COLOR
                     || (!(pr[col] & S_BCOLORED) && (mode & S_BCOLORED))
-#endif /* USE_BG_COLOR */
                     || (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
                     if ((mode & S_COLORED)
-#ifdef USE_BG_COLOR
                         || (mode & S_BCOLORED)
-#endif /* USE_BG_COLOR */
                     )
                         writestr(T_op);
                     if (mode & S_GRAPHICS)
@@ -1695,18 +1491,14 @@ void refresh(void)
                         mode = ((mode & ~COL_FCOLOR) | color);
                         writestr(color_seq(color));
                     }
-#ifdef USE_BG_COLOR
                     if ((pr[col] & S_BCOLORED)
                         && (pr[col] ^ mode) & COL_BCOLOR) {
                         bcolor = (pr[col] & COL_BCOLOR);
                         mode = ((mode & ~COL_BCOLOR) | bcolor);
                         writestr(bcolor_seq(bcolor));
                     }
-#endif /* USE_BG_COLOR */
                     if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-#ifdef USE_M17N
                         wc_putc_end(&WcOption, ttyf);
-#endif
                         if (!graph_enabled) {
                             graph_enabled = 1;
                             writestr(T_eA);
@@ -1714,14 +1506,10 @@ void refresh(void)
                         writestr(T_as);
                         mode |= S_GRAPHICS;
                     }
-#ifdef USE_M17N
                     if (pr[col] & S_GRAPHICS)
                         write1(graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
                         wc_putc(&WcOption, pc[col], ttyf);
-#else
-                    write1((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
-#endif
                     pcol = col + 1;
                 }
             }
@@ -1733,24 +1521,18 @@ void refresh(void)
         *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
         if (mode & M_MEND) {
             if (mode & (S_COLORED
-#ifdef USE_BG_COLOR
                     | S_BCOLORED
-#endif /* USE_BG_COLOR */
                     ))
                 writestr(T_op);
             if (mode & S_GRAPHICS) {
                 writestr(T_ae);
-#ifdef USE_M17N
                 wc_putc_clear_status();
-#endif
             }
             writestr(T_me);
             mode &= ~M_MEND;
         }
     }
-#ifdef USE_M17N
     wc_putc_end(&WcOption, ttyf);
-#endif
     MOVE(CurLine, CurColumn);
     flush_tty();
 }
@@ -1771,96 +1553,6 @@ void clear(void)
     CurrentMode = C_ASCII;
 }
 
-#ifdef USE_RAW_SCROLL
-static void
-scroll_raw(void)
-{ /* raw scroll */
-    MOVE(LINES - 1, 0);
-    write1('\n');
-}
-
-void scroll(int n)
-{ /* scroll up */
-    int cli = CurLine, cco = CurColumn;
-    Screen* t;
-    int i, j, k;
-
-    i = LINES;
-    j = n;
-    do {
-        k = j;
-        j = i % k;
-        i = k;
-    } while (j);
-    do {
-        k--;
-        i = k;
-        j = (i + n) % LINES;
-        t = ScreenImage[k];
-        while (j != k) {
-            ScreenImage[i] = ScreenImage[j];
-            i = j;
-            j = (i + n) % LINES;
-        }
-        ScreenImage[i] = t;
-    } while (k);
-
-    for (i = 0; i < n; i++) {
-        t = ScreenImage[LINES - 1 - i];
-        t->isdirty = 0;
-        for (j = 0; j < COLS; j++)
-            t->lineprop[j] = S_EOL;
-        scroll_raw();
-    }
-    move(cli, cco);
-}
-
-void rscroll(int n)
-{ /* scroll down */
-    int cli = CurLine, cco = CurColumn;
-    Screen* t;
-    int i, j, k;
-
-    i = LINES;
-    j = n;
-    do {
-        k = j;
-        j = i % k;
-        i = k;
-    } while (j);
-    do {
-        k--;
-        i = k;
-        j = (LINES + i - n) % LINES;
-        t = ScreenImage[k];
-        while (j != k) {
-            ScreenImage[i] = ScreenImage[j];
-            i = j;
-            j = (LINES + i - n) % LINES;
-        }
-        ScreenImage[i] = t;
-    } while (k);
-    if (T_sr && *T_sr) {
-        MOVE(0, 0);
-        for (i = 0; i < n; i++) {
-            t = ScreenImage[i];
-            t->isdirty = 0;
-            for (j = 0; j < COLS; j++)
-                t->lineprop[j] = S_EOL;
-            writestr(T_sr);
-        }
-        move(cli, cco);
-    } else {
-        for (i = 0; i < LINES; i++) {
-            t = ScreenImage[i];
-            t->isdirty |= L_DIRTY | L_NEED_CE;
-            for (j = 0; j < COLS; j++) {
-                t->lineprop[j] |= S_DIRTY;
-            }
-        }
-    }
-}
-#endif
 
 /* XXX: conflicts with curses's clrtoeol(3) ? */
 void clrtoeol(void)
@@ -1881,7 +1573,6 @@ void clrtoeol(void)
     }
 }
 
-#ifdef USE_BG_COLOR
 static void
 clrtoeol_with_bcolor(void)
 {
@@ -1906,13 +1597,6 @@ void clrtoeolx(void)
 {
     clrtoeol_with_bcolor();
 }
-#else /* not USE_BG_COLOR */
-
-void clrtoeolx(void)
-{
-    clrtoeol();
-}
-#endif /* not USE_BG_COLOR */
 
 static void
 clrtobot_eol(void (*clrtoeol)(void))
@@ -1937,7 +1621,6 @@ void clrtobotx(void)
 
 void addstr(const char* s)
 {
-#ifdef USE_M17N
     int len;
 
     while (*s != '\0') {
@@ -1945,16 +1628,11 @@ void addstr(const char* s)
         addmch(s, len);
         s += len;
     }
-#else
-    while (*s != '\0')
-        addch(*(s++));
-#endif
 }
 
 void addnstr(const char* s, int n)
 {
     int i;
-#ifdef USE_M17N
     int len, width;
 
     for (i = 0; *s != '\0';) {
@@ -1966,16 +1644,11 @@ void addnstr(const char* s, int n)
         s += len;
         i += width;
     }
-#else
-    for (i = 0; i < n && *s != '\0'; i++)
-        addch(*(s++));
-#endif
 }
 
 void addnstr_sup(const char* s, int n)
 {
     int i;
-#ifdef USE_M17N
     int len, width;
 
     for (i = 0; *s != '\0';) {
@@ -1987,10 +1660,6 @@ void addnstr_sup(const char* s, int n)
         s += len;
         i += width;
     }
-#else
-    for (i = 0; i < n && *s != '\0'; i++)
-        addch(*(s++));
-#endif
     for (; i < n; i++)
         addch(' ');
 }
@@ -2020,14 +1689,7 @@ void term_raw(void)
 
 void term_cooked(void)
 {
-#ifdef __EMX__
-    /* On XFree86/OS2, some scrambled characters
-     * will appear when asserting IEXTEN flag.
-     */
-    ttymode_set((TTY_MODE) & ~IEXTEN, 0);
-#else
     ttymode_set(TTY_MODE, 0);
-#endif
     set_cc(VMIN, 4);
 }
 
@@ -2048,16 +1710,6 @@ void term_title(const char* s)
  * TERM=cygwin special handle announced deprecation and
  * no one complains
  */
-#ifdef __CYGWIN__
-        if (isLocalConsole && title_str == CYGWIN_TITLE) {
-            pStr buff;
-            buff = Sprintf(title_str, s);
-            if (buff->length > 1024) {
-                Strtruncate(buff, 1024);
-            }
-            SetConsoleTitle(buff->ptr);
-        } else if (isLocalConsole || !isWinConsole)
-#endif
             fprintf(ttyf, title_str, s);
     }
 }
@@ -2067,11 +1719,7 @@ char getch(void)
     char c;
 
     while (
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-        read_win32_console(&c, 1)
-#else
         read(tty, &c, 1)
-#endif
         < (int)1) {
         if (errno == EINTR || errno == EAGAIN)
             continue;
@@ -2082,76 +1730,6 @@ char getch(void)
     return c;
 }
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-char wgetch(void* p)
-{
-    char c;
-
-    /* read(tty, &c, 1); */
-    while (read(tty, &c, 1) < (ssize_t)1) {
-        if (errno == EINTR || errno == EAGAIN)
-            continue;
-        /* error happend on read(2) */
-        quitfm();
-        break; /* unreachable */
-    }
-    return c;
-}
-
-int do_getch(void)
-{
-    return getch();
-}
-#endif /* USE_GPM */
-
-#ifdef USE_SYSMOUSE
-int sysm_getch(void)
-{
-    fd_set rfd;
-    int key, x, y;
-
-    FD_ZERO(&rfd);
-    FD_SET(tty, &rfd);
-    while (select(tty + 1, &rfd, NULL, NULL, NULL) <= 0) {
-        if (errno == EINTR) {
-            x = xpix / cwidth;
-            y = ypix / cheight;
-            key = (*sysm_handler)(x, y, nbs, obs);
-            if (key != 0)
-                return key;
-        }
-    }
-    return getch();
-}
-
-int do_getch(void)
-{
-    if (is_xterm || !sysm_handler)
-        return getch();
-    else
-        return sysm_getch();
-}
-
-void sysmouse(SIGNAL_ARG)
-{
-    struct mouse_info mi;
-
-    mi.operation = MOUSE_GETINFO;
-    if (ioctl(tty, CONS_MOUSECTL, &mi) == -1)
-        return;
-    xpix = mi.u.data.x;
-    ypix = mi.u.data.y;
-    obs = nbs;
-    nbs = mi.u.data.buttons & 0x7;
-    /* for cosmetic bug in syscons.c on FreeBSD 3.[34] */
-    mi.operation = MOUSE_HIDE;
-    ioctl(tty, CONS_MOUSECTL, &mi);
-    mi.operation = MOUSE_SHOW;
-    ioctl(tty, CONS_MOUSECTL, &mi);
-}
-#endif /* USE_SYSMOUSE */
-#endif /* USE_MOUSE */
 
 void bell(void)
 {
@@ -2166,17 +1744,6 @@ skip_escseq(void)
     c = getch();
     if (c == '[' || c == 'O') {
         c = getch();
-#ifdef USE_MOUSE
-        if (c == 'M') {
-            getch();
-            getch();
-            getch();
-        } else if (c == '<') {
-            c = getch();
-            while (IS_DIGIT(c) || c == ';')
-                c = getch();
-        } else
-#endif
             while (IS_DIGIT(c))
                 c = getch();
     }
@@ -2212,149 +1779,6 @@ int sleep_till_anykey(int sec, int purge)
     return ret;
 }
 
-#ifdef USE_MOUSE
-#define MOUSE_ON                                          \
-    {                                                     \
-        fputs("\033[?1001s\033[?1000h\033[?1006h", ttyf); \
-        flush_tty();                                      \
-    }
-#define MOUSE_OFF                                         \
-    {                                                     \
-        fputs("\033[?1006l\033[?1000l\033[?1001r", ttyf); \
-        flush_tty();                                      \
-    }
-#ifdef USE_GPM
-/* Linux console with GPM support */
-
-void mouse_init(void)
-{
-    Gpm_Connect conn;
-    extern int gpm_process_mouse(Gpm_Event*, void*);
-    int r;
-
-    if (mouseActive)
-        return;
-    conn.eventMask = ~0;
-    conn.defaultMask = 0;
-    conn.maxMod = 0;
-    conn.minMod = 0;
-
-    gpm_handler = NULL;
-    r = Gpm_Open(&conn, 0);
-    if (r == -2) {
-        /*
-         * If Gpm_Open() success, returns >= 0
-         * Gpm_Open() returns -2 in case of xterm.
-         * Gpm_Close() is necessary here. Otherwise,
-         * xterm is being left in the mode where the mouse clicks are
-         * passed through to the application.
-         */
-    } else if (r >= 0) {
-        gpm_handler = gpm_process_mouse;
-    }
-    Gpm_Close();
-    MOUSE_ON;
-    mouseActive = 1;
-}
-
-void mouse_end(void)
-{
-    if (mouseActive == 0)
-        return;
-    MOUSE_OFF;
-    mouseActive = 0;
-}
-
-#elif defined(USE_SYSMOUSE)
-/* *BSD console with sysmouse support */
-void mouse_init(void)
-{
-    mouse_info_t mi;
-    extern int sysm_process_mouse();
-
-    if (mouseActive)
-        return;
-    if (is_xterm) {
-        MOUSE_ON;
-    } else {
-#if defined(FBIO_MODEINFO) || defined(CONS_MODEINFO) /* FreeBSD > 2.x */
-#ifndef FBIO_GETMODE /* FreeBSD 3.x */
-#define FBIO_GETMODE CONS_GET
-#define FBIO_MODEINFO CONS_MODEINFO
-#endif /* FBIO_GETMODE */
-        video_info_t vi;
-
-        if (ioctl(tty, FBIO_GETMODE, &vi.vi_mode) != -1 && ioctl(tty, FBIO_MODEINFO, &vi) != -1) {
-            cwidth = vi.vi_cwidth;
-            cheight = vi.vi_cheight;
-        }
-#endif /* defined(FBIO_MODEINFO) || \
-        * defined(CONS_MODEINFO) */
-        mySignal(SIGUSR2, SIG_IGN);
-        mi.operation = MOUSE_MODE;
-        mi.u.mode.mode = 0;
-        mi.u.mode.signal = SIGUSR2;
-        sysm_handler = NULL;
-        if (ioctl(tty, CONS_MOUSECTL, &mi) != -1) {
-            mySignal(SIGUSR2, sysmouse);
-            mi.operation = MOUSE_SHOW;
-            ioctl(tty, CONS_MOUSECTL, &mi);
-            sysm_handler = sysm_process_mouse;
-        }
-    }
-    mouseActive = 1;
-}
-
-void mouse_end(void)
-{
-    if (mouseActive == 0)
-        return;
-    if (is_xterm) {
-        MOUSE_OFF;
-    } else {
-        mouse_info_t mi;
-        mi.operation = MOUSE_MODE;
-        mi.u.mode.mode = 0;
-        mi.u.mode.signal = 0;
-        ioctl(tty, CONS_MOUSECTL, &mi);
-    }
-    mouseActive = 0;
-}
-
-#else
-/* not GPM nor SYSMOUSE, but use mouse with xterm */
-
-void mouse_init(void)
-{
-    if (mouseActive)
-        return;
-    MOUSE_ON;
-    mouseActive = 1;
-}
-
-void mouse_end(void)
-{
-    if (mouseActive == 0)
-        return;
-    MOUSE_OFF;
-    mouseActive = 0;
-}
-
-#endif /* not USE_GPM nor USE_SYSMOUSE */
-
-void mouse_active(void)
-{
-    if (!mouseActive)
-        mouse_init();
-}
-
-void mouse_inactive(void)
-{
-    if (mouseActive)
-        mouse_end();
-}
-
-#endif /* USE_MOUSE */
 
 void flush_tty(void)
 {
@@ -2362,14 +1786,10 @@ void flush_tty(void)
         fflush(ttyf);
 }
 
-#ifdef USE_IMAGE
 void touch_cursor(void)
 {
-#ifdef USE_M17N
     int i;
-#endif
     touch_line();
-#ifdef USE_M17N
     for (i = CurColumn; i >= 0; i--) {
         touch_column(i);
         if (CHMODE(ScreenImage[CurLine]->lineprop[i]) != C_WCHAR2)
@@ -2380,45 +1800,5 @@ void touch_cursor(void)
             break;
         touch_column(i);
     }
-#else
-    touch_column(CurColumn);
-#endif
-}
-#endif
-
-#ifdef __MINGW32_VERSION
-
-int tgetent(char* bp, char* name)
-{
-    return 0;
 }
 
-int tgetnum(char* id)
-{
-    return -1;
-}
-
-int tgetflag(char* id)
-{
-    return 0;
-}
-
-char* tgetstr(char* id, char** area)
-{
-    id = "";
-}
-
-char* tgoto(char* cap, int col, int row)
-{
-}
-
-int tputs(char* str, int affcnt, int (*putc)(char))
-{
-}
-
-char* ttyname(int tty)
-{
-    return "CON";
-}
-
-#endif /* __MINGW32_VERSION */
