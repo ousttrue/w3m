@@ -497,19 +497,17 @@ append_frame_info(Buffer* buf, pStr html, struct frameset* set, int level)
 }
 
 /* get last modified time */
-static char* last_modified(Buffer* buf)
+static const char* last_modified(Buffer* buf)
 {
-    struct TextListItem* ti;
-    struct stat st;
-
     if (buf->document_header) {
-        for (ti = buf->document_header->first; ti; ti = ti->next) {
+        for (struct TextListItem* ti = buf->document_header->first; ti; ti = ti->next) {
             if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
                 return ti->ptr + 15;
             }
         }
         return "unknown";
     } else if (buf->currentURL.scheme == SCM_LOCAL) {
+        struct stat st;
         if (stat(buf->currentURL.file, &st) < 0)
             return "unknown";
         return ctime(&st.st_mtime);

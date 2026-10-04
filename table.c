@@ -259,7 +259,7 @@ static void
 check_row(struct table* t, int row)
 {
     int i, r;
-    struct GeneralList*** tabdata;
+    struct TextList*** tabdata;
     table_attr** tabattr;
     int* tabheight;
     pStr** tabidvalue;
@@ -314,7 +314,7 @@ void pushdata(struct table* t, int row, int col, const char* data)
 {
     check_row(t, row);
     if (t->tabdata[row][col] == NULL)
-        t->tabdata[row][col] = newGeneralList();
+        t->tabdata[row][col] = newTextList();
 
     pushText(t->tabdata[row][col], data ? data : "");
 }
@@ -645,7 +645,7 @@ void do_refill(struct table* tbl, int row, int col, int maxlimit)
     if (tbl->tabdata[row] == NULL || tbl->tabdata[row][col] == NULL)
         return;
     orgdata = (struct TextList*)tbl->tabdata[row][col];
-    tbl->tabdata[row][col] = newGeneralList();
+    tbl->tabdata[row][col] = newTextList();
 
     init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL,
         (TextLineList*)tbl->tabdata[row][col],
@@ -1621,8 +1621,9 @@ void renderTable(struct table* t, int max_width, struct html_feed_environ* h_env
             l = newTextLineList();
             for (k = 0; k < h; k++)
                 pushTextLine(l, newTextLine(NULL, 0));
-            t->tabdata[j][i] = appendGeneralList((struct GeneralList*)l,
-                t->tabdata[j][i]);
+            t->tabdata[j][i] = (struct TextList*)appendGeneralList(
+                (struct GeneralList*)l,
+                (struct GeneralList*)t->tabdata[j][i]);
         }
     }
 
@@ -1945,8 +1946,9 @@ begin_cell(struct table* t, struct table_mode* mode)
     if (t->suspended_data) {
         check_row(t, t->row);
         if (t->tabdata[t->row][t->col] == NULL)
-            t->tabdata[t->row][t->col] = newGeneralList();
-        appendGeneralList(t->tabdata[t->row][t->col],
+            t->tabdata[t->row][t->col] = newTextList();
+        appendGeneralList(
+            (struct GeneralList*)t->tabdata[t->row][t->col],
             (struct GeneralList*)t->suspended_data);
         t->suspended_data = NULL;
     }

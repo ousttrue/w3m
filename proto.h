@@ -251,24 +251,6 @@ extern void escbmap(void);
 extern void multimap(void);
 extern pStr unescape_spaces(pStr s);
 
-/* XXX: Should be form.h, can't be due to circular deps */
-extern struct form_list* newFormList(char* action, char* method, char* charset,
-    char* enctype, char* target, char* name,
-    struct form_list* _next);
-extern struct form_item_list* formList_addInput(struct form_list* fl,
-    struct parsed_tag* tag);
-extern char* form2str(FormItemList* fi);
-extern int formtype(char* typestr);
-extern void formRecheckRadio(Anchor* a, Buffer* buf, FormItemList* form);
-extern void formResetBuffer(Buffer* buf, AnchorList* formitem);
-extern void formUpdateBuffer(Anchor* a, Buffer* buf, FormItemList* form);
-extern void preFormUpdateBuffer(Buffer* buf);
-extern pStr textfieldrep(pStr s, int width);
-extern void input_textarea(FormItemList* fi);
-extern void do_internal(char* action, char* data);
-extern void form_write_data(FILE* f, char* boundary, char* name, char* value);
-extern void form_write_from_file(FILE* f, char* boundary, char* name,
-    char* filename, char* file);
 
 extern Buffer* page_info_panel(Buffer* buf);
 extern int initscr(void);

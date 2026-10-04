@@ -52,8 +52,8 @@ struct {
 /* *INDENT-ON* */
 
 struct form_list*
-newFormList(char* action, char* method, char* charset, char* enctype,
-    char* target, char* name, struct form_list* _next)
+newFormList(const char* action, const char* method, const char* charset, const char* enctype,
+    const char* target, const char* name, struct form_list* _next)
 {
     struct form_list* l;
     pStr a = Strnew_charp(action);
@@ -75,18 +75,14 @@ newFormList(char* action, char* method, char* charset, char* enctype,
         e = FORM_ENCTYPE_MULTIPART;
     }
 
-#ifdef USE_M17N
     if (charset != NULL)
         c = wc_guess_charset(charset, 0);
-#endif
 
     l = New(struct form_list);
     l->item = l->lastitem = NULL;
     l->action = a;
     l->method = m;
-#ifdef USE_M17N
     l->charset = c;
-#endif
     l->enctype = e;
     l->target = target;
     l->name = name;

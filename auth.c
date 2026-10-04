@@ -729,7 +729,7 @@ AuthDigestCred(struct http_auth* ha, pStr uname, pStr pw, ParsedURL* pu,
                     MD5((unsigned char*)"", 0, md5);
                 }
             } else {
-                MD5((unsigned char*)request->body, request->length, md5);
+                MD5((const unsigned char*)request->body, request->length, md5);
             }
         } else {
             MD5((unsigned char*)"", 0, md5);

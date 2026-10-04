@@ -24,7 +24,7 @@ typedef struct Anchor {
     struct form_item_list* formitem;
 } Anchor;
 
-typedef struct {
+typedef struct AnchorList {
     Anchor* anchors;
     int nanchor;
     int anchormax;

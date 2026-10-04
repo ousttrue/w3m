@@ -24,7 +24,9 @@ extern void* rpopValue(struct GeneralList* tl);
 extern void delValue(struct GeneralList* tl, struct ListItem* it);
 extern struct GeneralList* appendGeneralList(struct GeneralList*, struct GeneralList*);
 
-// Text list
+//
+// 'const char*'
+//
 struct TextListItem {
     const char* ptr;
     struct TextListItem* next;
@@ -41,13 +43,28 @@ inline static struct TextList* newTextList()
 {
     return ((struct TextList*)newGeneralList());
 }
-#define pushText(tl, s) pushValue((struct GeneralList*)(tl), (void*)allocStr((s)).ptr)
-#define popText(tl) ((char*)popValue((struct GeneralList*)(tl)))
-#define rpopText(tl) ((char*)rpopValue((struct GeneralList*)(tl)))
-#define delText(tl, i) delValue((struct GeneralList*)(tl), (void*)(i))
-#define appendTextList(tl, tl2) ((struct TextList*)appendGeneralList((struct GeneralList*)(tl), (struct GeneralList*)(tl2)))
+inline static void pushText(struct TextList* tl, const char* s)
+{
+    pushValue((struct GeneralList*)(tl), (void*)allocStr((s)).ptr);
+}
+inline static const char* popText(struct TextList* tl)
+{
+    return (const char*)popValue((struct GeneralList*)(tl));
+}
+inline static const char* rpopText(struct TextList* tl)
+{
+    return (const char*)rpopValue((struct GeneralList*)(tl));
+}
+inline static void delText(struct TextList* tl, struct TextListItem* i)
+{
+    delValue((struct GeneralList*)(tl), (void*)(i));
+}
+inline static struct TextList* appendTextList(struct TextList* tl, struct TextList* tl2)
+{
+    return (struct TextList*)appendGeneralList((struct GeneralList*)(tl), (struct GeneralList*)(tl2));
+}
 
-/* Line text list */
+// Line text list
 
 typedef struct _TextLine {
     pStr line;

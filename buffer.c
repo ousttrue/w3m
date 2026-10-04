@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "tab.h"
+#include "form.h"
 #include "input_stream.h"
 #include "url_stream.h"
 #include "gettext_helper.h"

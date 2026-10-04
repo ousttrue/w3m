@@ -238,8 +238,6 @@ char* acceptableMimeTypes(void)
     static pStr types = NULL;
     struct TextList* l;
     Hash_si* mhash;
-    char* p;
-    int i;
 
     if (types != NULL)
         return types->ptr;
@@ -251,13 +249,13 @@ char* acceptableMimeTypes(void)
     putHash_si(mhash, "text", 1);
     pushText(l, "image");
     putHash_si(mhash, "image", 1);
-    for (i = 0; i < mailcap_list->nitem; i++) {
+    for (int i = 0; i < mailcap_list->nitem; i++) {
         struct mailcap* mp = UserMailcap[i];
         char* mt;
         if (mp == NULL)
             continue;
         for (; mp->type; mp++) {
-            p = strchr(mp->type, '/');
+            const char* p = strchr(mp->type, '/');
             if (p == NULL)
                 continue;
             mt = allocStr_n(mp->type, p - mp->type).ptr;
@@ -269,6 +267,7 @@ char* acceptableMimeTypes(void)
     }
     types = Strnew();
     Strcat_charp(types, "text/html, text/*;q=0.5");
+    const char* p;
     while ((p = popText(l)) != NULL) {
         Strcat_charp(types, ", ");
         Strcat_charp(types, p);

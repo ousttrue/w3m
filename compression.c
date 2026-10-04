@@ -162,7 +162,7 @@ char* acceptableEncoding(void)
         }
     }
     encodings = Strnew();
-    char* p;
+    const char* p;
     while ((p = popText(l)) != NULL) {
         if (encodings->len)
             Strcat_charp(encodings, ", ");

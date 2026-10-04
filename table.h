@@ -81,7 +81,7 @@ struct table {
 #endif				/* TABLE_EXPAND */
     pStr caption;
     pStr id;
-    struct GeneralList ***tabdata;
+    struct TextList ***tabdata;
     table_attr **tabattr;
     table_attr trattr;
     pStr **tabidvalue;
