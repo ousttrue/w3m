@@ -31,32 +31,35 @@ static inline void array_begin_end(void* _self, const uint8_t* sp, const uint8_t
 {
     struct ArrayData* self = (struct ArrayData*)_self;
     int len = ep - sp;
-    if (len > self->capacity) {
+    if (len + 1 > self->capacity) {
         exit(-1);
     }
     memcpy(self->buf, sp, len);
     self->len = len;
+    self->buf[self->len] = 0;
 }
 
 static inline void array_push_str_len(void* _self, const uint8_t* p, int len)
 {
     struct ArrayData* self = (struct ArrayData*)_self;
-    if (self->len + len > self->capacity) {
+    if (self->len + len + 1 > self->capacity) {
         exit(-1);
     }
     memcpy(self->buf, p, len);
     self->len += len;
+    self->buf[self->len] = 0;
 }
 
 static inline void array_push_str(void* _self, const uint8_t* p)
 {
     int len = strlen((const char*)p);
     struct ArrayData* self = (struct ArrayData*)_self;
-    if (self->len + len > self->capacity) {
+    if (self->len + len + 1 > self->capacity) {
         exit(-1);
     }
     memcpy(self->buf, p, len);
     self->len += len;
+    self->buf[self->len] = 0;
 }
 
 inline static struct Writer arrayWriter(struct ArrayData* data)
