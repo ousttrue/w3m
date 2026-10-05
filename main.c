@@ -940,29 +940,15 @@ isrch(int (*func)(Buffer*, const char*), const char* prompt)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-static void
-srch(int (*func)(Buffer*, const char*), const char* prompt)
-{
-    const char* str;
-    int result;
-    int disp = false;
-    int pos;
+typedef int (*BufferSearchFunc)(Buffer*, const char*);
 
-    str = searchKeyData();
-    if (str == NULL || *str == '\0') {
-        str = inputStrHist(prompt, NULL, TextHist).ptr;
-        if (str != NULL && *str == '\0')
-            str = SearchString;
-        if (str == NULL) {
-            displayBuffer(Currentbuf, B_NORMAL);
-            return;
-        }
-        disp = true;
-    }
-    pos = Currentbuf->pos;
+static void
+srch(BufferSearchFunc func, const char* prompt, const char* str, bool disp)
+{
+    int pos = Currentbuf->pos;
     if (func == forwardSearch)
         Currentbuf->pos += 1;
-    result = srchcore(str, func);
+    int result = srchcore(str, func);
     if (result & SR_FOUND)
         clear_mark(Currentbuf->currentLine);
     else
@@ -973,23 +959,59 @@ srch(int (*func)(Buffer*, const char*), const char* prompt)
     searchRoutine = func;
 }
 
-/* Search regular expression forward */
+DEFUN(srchfor_at, SEARCH_WORD_AT, "Search forward for word at cursor")
+{
+    const char* prompt = "ForwardAt: ";
+    const char* str = GetWord(Currentbuf).ptr;
+    if (str == NULL || *str == '\0') {
+        displayBuffer(Currentbuf, B_NORMAL);
+        return;
+    }
+
+    srch(forwardSearch, prompt, str, true);
+}
 
 DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward")
 {
-    srch(forwardSearch, "Forward: ");
+    const char* prompt = "Forward: ";
+    bool disp = false;
+    const char* str = searchKeyData();
+    if (str == NULL || *str == '\0') {
+        str = inputStrHist(prompt, NULL, TextHist).ptr;
+        if (str != NULL && *str == '\0')
+            str = SearchString;
+        if (str == NULL) {
+            displayBuffer(Currentbuf, B_NORMAL);
+            return;
+        }
+        disp = true;
+    }
+
+    srch(forwardSearch, prompt, str, disp);
+}
+
+DEFUN(srchbak, SEARCH_BACK, "Search backward")
+{
+    const char* prompt = "Backward: ";
+    bool disp = false;
+    const char* str = searchKeyData();
+    if (str == NULL || *str == '\0') {
+        str = inputStrHist(prompt, NULL, TextHist).ptr;
+        if (str != NULL && *str == '\0')
+            str = SearchString;
+        if (str == NULL) {
+            displayBuffer(Currentbuf, B_NORMAL);
+            return;
+        }
+        disp = true;
+    }
+
+    srch(backwardSearch, prompt, str, disp);
 }
 
 DEFUN(isrchfor, ISEARCH, "Incremental search forward")
 {
     isrch(forwardSearch, "I-search: ");
-}
-
-/* Search regular expression backward */
-
-DEFUN(srchbak, SEARCH_BACK, "Search backward")
-{
-    srch(backwardSearch, "Backward: ");
 }
 
 DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward")
@@ -4302,28 +4324,26 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches")
     }
 }
 
-static void
-execdict(char* word)
+static void execdict(const char* word)
 {
-    char *w, *dictcmd;
-    Buffer* buf;
-
     if (!UseDictCommand || word == NULL || *word == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
+
     pStr os = Strnew();
     struct Writer ww = makeWriter(os);
     conv_to_system(&WcOption, &ww, word);
-    w = os->ptr;
+    const char* w = os->ptr;
     if (*w == '\0') {
         displayBuffer(Currentbuf, B_NORMAL);
         return;
     }
-    dictcmd = Sprintf("%s?%s", DictCommand,
+
+    const char* dictcmd = Sprintf("%s?%s", DictCommand,
         Str_form_quote(Strnew_charp(w))->ptr)
-                  ->ptr;
-    buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
+                              ->ptr;
+    Buffer* buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
     if (buf == NULL) {
         disp_message("Execution failed", true);
         return;

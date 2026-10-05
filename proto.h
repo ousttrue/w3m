@@ -19,6 +19,7 @@ extern void lineTop(void);
 extern void lineBottom(void);
 extern void rdrwSc(void);
 extern void srchfor(void);
+extern void srchfor_at(void);
 extern void isrchfor(void);
 extern void srchbak(void);
 extern void isrchbak(void);

@@ -1,4 +1,5 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
+#include "proto.h"
 #include "funcname2.h"
 
 unsigned char GlobalKeymap[128] = {
