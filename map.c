@@ -625,9 +625,10 @@ page_info_panel(Buffer* buf)
 
     if (buf->document_header != NULL) {
         Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-        for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
+        for (ti = buf->document_header->first; ti != NULL; ti = ti->next) {
             Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr),
-                "</pre_int>\n", NULL);
+                "</pre_int><br>\n", NULL);
+        }
         Strcat_charp(tmp, "</pre>\n");
     }
 
