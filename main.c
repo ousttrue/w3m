@@ -3264,17 +3264,13 @@ cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* 
 
 /* go to specified URL */
 static void
-goURL0(const char* prompt, int relative)
+goURL0(const char* prompt, bool relative, const char* url, bool force)
 {
-    char* referer;
-    ParsedURL p_url, *current;
     Buffer* cur_buf = Currentbuf;
-    const int* no_referer_ptr;
-
-    const char* url = searchKeyData();
-    if (url == NULL) {
+    const char* referer = NULL;
+    struct Url* current = NULL;
+    if (force || url == NULL) {
         Hist* hist = copyHist(URLHist);
-        Anchor* a;
 
         current = baseURL(Currentbuf);
         if (current) {
@@ -3284,11 +3280,11 @@ goURL0(const char* prompt, int relative)
             else
                 pushHist(hist, c_url);
         }
-        a = retrieveCurrentAnchor(Currentbuf);
+
+        Anchor* a = retrieveCurrentAnchor(Currentbuf);
         if (a) {
-            char* a_url;
-            p_url = parseURL2(a->url, current);
-            a_url = parsedURL2Str(&p_url)->ptr;
+            struct Url p_url = parseURL2(a->url, current);
+            char* a_url = parsedURL2Str(&p_url)->ptr;
             if (DefaultURLString == DEFAULT_URL_LINK)
                 url = url_decode2(a_url, Currentbuf)->ptr;
             else
@@ -3298,8 +3294,9 @@ goURL0(const char* prompt, int relative)
         if (url != NULL)
             SKIP_BLANKS(url);
     }
+
     if (relative) {
-        no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
+        const int* no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
         current = baseURL(Currentbuf);
         if ((no_referer_ptr && *no_referer_ptr) || current == NULL || current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI || current->scheme == SCM_DATA)
             referer = NO_REFERER;
@@ -3313,6 +3310,7 @@ goURL0(const char* prompt, int relative)
         if (url)
             url = url_encode(url, NULL, 0);
     }
+
     if (url == NULL || *url == '\0') {
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
         return;
@@ -3321,7 +3319,8 @@ goURL0(const char* prompt, int relative)
         gotoLabel(url + 1);
         return;
     }
-    p_url = parseURL2(url, current);
+
+    struct Url p_url = parseURL2(url, current);
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, current, referer, NULL);
     if (Currentbuf != cur_buf) /* success */
@@ -3330,7 +3329,11 @@ goURL0(const char* prompt, int relative)
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer")
 {
-    goURL0("Goto URL: ", false);
+    const char* url = searchKeyData();
+    if (!url) {
+        url = parsedURL2Str(&Currentbuf->currentURL)->ptr;
+    }
+    goURL0("Goto URL: ", false, url, true);
 }
 
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
@@ -3354,7 +3357,8 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
 
 DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address")
 {
-    goURL0("Goto relative URL: ", true);
+    const char* url = searchKeyData();
+    goURL0("Goto relative URL: ", true, url, false);
 }
 
 /* load bookmark */
@@ -4820,15 +4824,16 @@ DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab")
 static void
 tabURL0(TabBuffer* tab, const char* prompt, int relative)
 {
-    Buffer* buf;
 
     if (tab == CurrentTab) {
-        goURL0(prompt, relative);
+        const char* url = searchKeyData();
+        goURL0(prompt, relative, url, false);
         return;
     }
     _newT();
-    buf = Currentbuf;
-    goURL0(prompt, relative);
+
+    Buffer* buf = Currentbuf;
+    goURL0(prompt, relative, searchKeyData(), false);
     if (tab == NULL) {
         if (buf != Currentbuf)
             delBuffer(buf);

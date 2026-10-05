@@ -14,39 +14,39 @@ enum InputLineFlag {
 typedef int (*IncrFunc)(int ch, pStr buf, Lineprop* prop);
 
 struct Str inputLineHistSearch(const char* prompt, const char* def_str,
-    enum InputLineFlag flag, Hist* hist, IncrFunc incfunc);
+    enum InputLineFlag flags, Hist* history, IncrFunc incfunc);
 
-static inline struct Str inputLineHist(const char* p, const char* d, enum InputLineFlag f, Hist* h)
+static inline struct Str inputLineHist(const char* prompt, const char* def_str, enum InputLineFlag flags, Hist* history)
 {
-    return inputLineHistSearch(p, d, f, h, NULL);
+    return inputLineHistSearch(prompt, def_str, flags, history, NULL);
 }
 
-static inline struct Str inputLine(const char* p, const char* d, enum InputLineFlag f)
+static inline struct Str inputLine(const char* prompt, const char* def_str, enum InputLineFlag flags)
 {
-    return inputLineHist(p, d, f, NULL);
+    return inputLineHist(prompt, def_str, flags, NULL);
 }
 
-static inline struct Str inputStr(const char* p, const char* d)
+static inline struct Str inputStr(const char* prompt, const char* def_str)
 {
-    return inputLine(p, d, IN_STRING);
+    return inputLine(prompt, def_str, IN_STRING);
 }
 
-static inline struct Str inputStrHist(const char* p, const char* d, Hist* h)
+static inline struct Str inputStrHist(const char* prompt, const char* def_str, Hist* history)
 {
-    return inputLineHist(p, d, IN_STRING, h);
+    return inputLineHist(prompt, def_str, IN_STRING, history);
 }
 
-static inline struct Str inputFilename(const char* p, const char* d)
+static inline struct Str inputFilename(const char* prompt, const char* def_str)
 {
-    return inputLine(p, d, IN_FILENAME);
+    return inputLine(prompt, def_str, IN_FILENAME);
 }
 
-static inline struct Str inputFilenameHist(const char* p, const char* d, Hist* h)
+static inline struct Str inputFilenameHist(const char* prompt, const char* def_str, Hist* history)
 {
-    return inputLineHist(p, d, IN_FILENAME, h);
+    return inputLineHist(prompt, def_str, IN_FILENAME, history);
 }
 
-static inline struct Str inputChar(const char* p)
+static inline struct Str inputChar(const char* prompt)
 {
-    return inputLine(p, "", IN_CHAR);
+    return inputLine(prompt, "", IN_CHAR);
 }
