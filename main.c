@@ -16,6 +16,7 @@
 #include "input_stream.h"
 #include "entity.h"
 #include "str_gc.h"
+#include "str_const.h"
 #include "w3m.h"
 #include "buffer.h"
 #include "charset.h"

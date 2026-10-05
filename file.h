@@ -152,5 +152,4 @@ extern int w3m_halfload;
 
 extern char SearchHeader;
 extern const char *DefaultType;
-extern char PermitSaveToPipe;
 #endif

@@ -1,5 +1,6 @@
 #include "input_stream.h"
 #include "alloc.h"
+#include "str_const.h"
 #include "w3m.h"
 #include "w3m_tty.h"
 #include "gettext_helper.h"
@@ -8,6 +9,7 @@
 #include "linein.h"
 #include <signal.h>
 #include <openssl/x509v3.h>
+#include <sys/stat.h>
 
 #define STREAM_BUF_SIZE 8192
 #define SSL_BUF_SIZE 1536
@@ -236,9 +238,9 @@ ens_read(void* _handle, unsigned char* buf, int len)
         if (handle->encoding == ENC_BASE64)
             handle->gb.len = memchop(handle->gb.ptr, handle->gb.len);
         else if (handle->encoding == ENC_UUENCODE) {
-            if (handle->gb.len>= 5 && !strncmp(handle->gb.ptr, "begin", 5))
+            if (handle->gb.len >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
                 ISgets_to_growbuf(handle->is, &handle->gb, true);
-            handle->gb.len= memchop(handle->gb.ptr, handle->gb.len);
+            handle->gb.len = memchop(handle->gb.ptr, handle->gb.len);
         }
         growbuf_init_without_GC(&gbtmp);
         p = handle->gb.ptr;
@@ -253,8 +255,8 @@ ens_read(void* _handle, unsigned char* buf, int len)
         handle->pos = 0;
     }
 
-    if (len > handle->gb.len- handle->pos)
-        len = handle->gb.len- handle->pos;
+    if (len > handle->gb.len - handle->pos)
+        len = handle->gb.len - handle->pos;
 
     memcpy(buf, &handle->gb.ptr[handle->pos], len);
     handle->pos += len;
@@ -664,4 +666,24 @@ pStr ssl_get_certificate(SSL* ssl, const char* hostname)
     BIO_free_all(bp);
     X509_free(x);
     return s;
+}
+
+bool canSaveFile(struct input_stream* stream, const char* path2)
+{
+    int des = ISfileno(stream);
+    if (des < 0)
+        // not file
+        return true;
+
+    if (*path2 == '|' && PermitSaveToPipe)
+        return true;
+
+    struct stat st1, st2;
+    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
+        if (st1.st_ino == st2.st_ino)
+            // source and dst is same ?
+            return false;
+
+    // ok
+    return true;
 }

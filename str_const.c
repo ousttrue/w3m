@@ -1,6 +1,9 @@
 #include "str_const.h"
 #include "pathdefs.h"
 #include <string.h>
+#include <sys/stat.h>
+
+char PermitSaveToPipe = false;
 
 int strCmp(const void* s1, const void* s2) /* helper for qsort */
 {
@@ -55,3 +58,16 @@ w3m_help_dir(void)
     return w3m_dir("W3M_HELP_DIR", HELP_DIR);
 }
 
+bool canCopyFile(const char* path1, const char* path2)
+{
+    if (*path2 == '|' && PermitSaveToPipe)
+        return true;
+
+    struct stat st1, st2;
+    if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
+        if (st1.st_ino == st2.st_ino)
+            // same file ?
+            return false;
+
+    return true;
+}

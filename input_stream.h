@@ -85,3 +85,4 @@ static inline int ssl_socket_of(struct input_stream* s)
     assert(s->type == IST_SSL);
     return ((struct ssl_handle*)s->handle)->sock;
 }
+bool canSaveFile(struct input_stream* stream, const char* path);

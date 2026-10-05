@@ -215,8 +215,6 @@ static inline int doFileCopy(const char* tmpf, const char* defstr)
 }
 extern int doFileMove(char* tmpf, char* defstr);
 extern int doFileSave(struct UrlStream uf, const char* defstr);
-extern int checkCopyFile(const char* path1, const char* path2);
-extern int checkSaveFile(struct input_stream* stream, const char* path);
 extern int matchattr(const char* p, const char* attr, int len, pStr* value);
 extern void readHeader(struct UrlStream* uf, Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(Buffer* buf, const char* field);

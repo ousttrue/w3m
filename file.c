@@ -59,7 +59,6 @@ int w3m_halfload = false;
 
 char SearchHeader = false;
 const char* DefaultType = NULL;
-char PermitSaveToPipe = false;
 
 extern int fold_pre;
 static int frame_source = 0;
@@ -1884,10 +1883,10 @@ void flushline(struct html_feed_environ* h_env, struct readbuffer* obuf, int ind
         char *p = line->ptr, *q;
         pStr tmp = Strnew(), tmp2 = Strnew();
 
-#define APPEND(str)                    \
-    if (buf)                           \
+#define APPEND(str)                         \
+    if (buf)                                \
         TextLineList_append(buf, (str), 0); \
-    else if (f)                        \
+    else if (f)                             \
     Strfputs((str), f)
 
         while (*p) {
@@ -6911,7 +6910,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
             if (!canOverWrite(p))
                 return -1;
         }
-        if (checkCopyFile(tmpf, p) < 0) {
+        if (!canCopyFile(tmpf, p)) {
             pStr os = Strnew();
             struct Writer w = makeWriter(os);
             conv_from_system(&WcOption, &w, tmpf);
@@ -6974,7 +6973,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
             if (!canOverWrite(p))
                 return -1;
         }
-        if (checkCopyFile(tmpf, p) < 0) {
+        if (!canCopyFile(tmpf, p)) {
             printf(_("Can't copy. %s and %s are identical."), tmpf, p);
             return -1;
         }
@@ -7020,12 +7019,11 @@ int doFileSave(URLFile uf, const char* defstr)
         }
         if (!canOverWrite(p))
             return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
+        if (!canSaveFile(uf.stream, p)) {
             pStr os = Strnew();
             struct Writer w = makeWriter(os);
             conv_from_system(&WcOption, &w, p);
-            pStr msg = Sprintf(_("Can't save. Load file and %s are identical."),
-                os->ptr);
+            pStr msg = Sprintf(_("Can't save. Load file and %s are identical."), os->ptr);
             disp_err_message(msg->ptr, false);
             return -1;
         }
@@ -7067,7 +7065,7 @@ int doFileSave(URLFile uf, const char* defstr)
         p = expandPath(q)->ptr;
         if (!canOverWrite(p))
             return -1;
-        if (checkSaveFile(uf.stream, p) < 0) {
+        if (!canSaveFile(uf.stream, p)) {
             printf(_("Can't save. Load file and %s are identical."), p);
             return -1;
         }
@@ -7080,33 +7078,6 @@ int doFileSave(URLFile uf, const char* defstr)
         if (PreserveTimestamp && uf.modtime != -1)
             setModtime(p, uf.modtime);
     }
-    return 0;
-}
-
-int checkCopyFile(const char* path1, const char* path2)
-{
-    struct stat st1, st2;
-
-    if (*path2 == '|' && PermitSaveToPipe)
-        return 0;
-    if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
-        if (st1.st_ino == st2.st_ino)
-            return -1;
-    return 0;
-}
-
-int checkSaveFile(struct input_stream* stream, const char* path2)
-{
-    struct stat st1, st2;
-    int des = ISfileno(stream);
-
-    if (des < 0)
-        return 0;
-    if (*path2 == '|' && PermitSaveToPipe)
-        return 0;
-    if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
-        if (st1.st_ino == st2.st_ino)
-            return -1;
     return 0;
 }
 
