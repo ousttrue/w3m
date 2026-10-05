@@ -24,10 +24,10 @@
 
 SigActionFunc prevtrap = NULL;
 
-void TrapOn(SigActionFunc keyAbort)
+void TrapOn(SigActionFunc keyAbort, volatile SigActionFunc *prevtrap)
 {
     if (TrapSignal) {
-        prevtrap = mySignal(SIGINT, keyAbort);
+        *prevtrap = mySignal(SIGINT, keyAbort);
         if (fmInitialized)
             tty_cbreak();
     }

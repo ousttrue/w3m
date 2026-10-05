@@ -11,10 +11,10 @@ extern char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
 extern char gcmap[96];
 
 typedef void (*SigActionFunc)(int);
-void TrapOn(SigActionFunc keyAbort);
+void TrapOn(SigActionFunc keyAbort, volatile SigActionFunc *prevtrap);
 void TrapOff();
 
-#define TRAP_ON TrapOn(KeyAbort)
+#define TRAP_ON TrapOn(KeyAbort, &prevtrap)
 #define TRAP_OFF TrapOff()
 
 struct TermSize {

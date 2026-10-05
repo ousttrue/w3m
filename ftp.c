@@ -486,7 +486,7 @@ pStr loadFTPDir0(struct Url* pu)
     const char *fn, *q;
     const char** flist;
     int i, nfile, nfile_max;
-    // volatile SigActionFunc prevtrap = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 #ifdef USE_M17N
     wc_ces doc_charset = DocumentCharset;
 

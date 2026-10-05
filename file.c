@@ -815,7 +815,7 @@ loadGeneralFile(const char* path, struct Url* volatile current, const char* refe
     Buffer* volatile t_buf = NULL;
     int volatile searchHeader = SearchHeader;
     int volatile searchHeader_through = true;
-    // SigActionFunc volatile prevtrap = NULL;
+    SigActionFunc volatile prevtrap = NULL;
     struct TextList* extra_header = TextList_new();
     pStr uname = NULL;
     pStr pwd = NULL;
@@ -5875,7 +5875,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
     int volatile image_flag;
-    // volatile SigActionFunc prevtrap = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 
     if (fmInitialized && graph_ok()) {
         symbol_width = symbol_width0 = 1;
@@ -6011,7 +6011,7 @@ phase2:
 Buffer*
 loadHTMLString(pStr page)
 {
-    // volatile SigActionFunc prevtrap = NULL;
+    volatile SigActionFunc prevtrap = NULL;
     URLFile f = init_stream(SCM_LOCAL, newStrStream(page));
     Buffer* newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
@@ -6047,7 +6047,7 @@ pStr loadGopherDir(URLFile* uf, struct Url* pu, wc_ces* charset)
     pStr lbuf, name, file, host, port, type;
     char* volatile p, * volatile q;
     int link, pre;
-    // volatile SigActionFunc prevtrap = NULL;
+    volatile SigActionFunc prevtrap = NULL;
     wc_ces doc_charset = DocumentCharset;
 
     tmp = parsedURL2Str(pu);
@@ -6198,7 +6198,7 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
     size_t linelen = 0, trbyte = 0;
     Lineprop* propBuffer = NULL;
     Linecolor* colorBuffer = NULL;
-    // volatile SigActionFunc prevtrap = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 
     if (newBuf == NULL)
         newBuf = newBuffer(INIT_BUFFER_WIDTH);
@@ -6277,7 +6277,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
     pStr tmp, tmpf;
     FILE* src = NULL;
     URLFile f;
-    // volatile SigActionFunc prevtrap = NULL;
+    volatile SigActionFunc prevtrap = NULL;
     struct stat st;
     struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
 
@@ -6570,7 +6570,7 @@ Line* getNextPage(Buffer* buf, int plen)
     Lineprop* propBuffer = NULL;
 
     Linecolor* colorBuffer = NULL;
-    // volatile SigActionFunc prevtrap = NULL;
+    volatile SigActionFunc prevtrap = NULL;
 
     if (buf->pagerSource == NULL)
         return NULL;
@@ -6674,7 +6674,7 @@ int save2tmp(URLFile uf, const char* tmpf)
 {
     FILE* ff;
     size_t linelen = 0, trbyte = 0;
-    // volatile SigActionFunc prevtrap = NULL;
+    volatile SigActionFunc prevtrap = NULL;
     static JMP_BUF env_bak;
     volatile int retval = 0;
     unsigned char* volatile buf = NULL;
