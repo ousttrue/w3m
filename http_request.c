@@ -381,9 +381,9 @@ openSSLHandle(int sock, const char* hostname, const char** p_cert)
     SSL_set_tlsext_host_name(handle, hostname);
 #endif /* !defined(OPENSSL_NO_TLSEXT) */
     if (SSL_connect(handle) > 0) {
-        pStr serv_cert = ssl_get_certificate(handle, hostname);
-        if (serv_cert) {
-            *p_cert = serv_cert->ptr;
+        struct Str serv_cert = ssl_get_certificate(handle, hostname);
+        if (serv_cert.len) {
+            *p_cert = serv_cert.ptr;
             return handle;
         }
         close(sock);
@@ -1008,12 +1008,12 @@ retry:
         if (request && request->body)
             /* local CGI: POST */
             uf.stream = IS_newFile(localcgi_post(pu->real_file, pu->query,
-                                          request, option->referer),
+                                       request, option->referer),
                 fclose);
         else
             /* lodal CGI: GET */
             uf.stream = IS_newFile(localcgi_get(pu->real_file, pu->query,
-                                          option->referer),
+                                       option->referer),
                 fclose);
         if (uf.stream) {
             uf.is_cgi = true;

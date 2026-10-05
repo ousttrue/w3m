@@ -59,6 +59,6 @@ int IS_read(struct input_stream* stream, unsigned char* dst, int bufsize);
 extern int IS_FD(struct input_stream* stream);
 extern int IS_isEnd(struct input_stream* stream);
 extern void ssl_accept_this_site(const char* hostname);
-extern pStr ssl_get_certificate(SSL* ssl, const char* hostname);
+extern struct Str ssl_get_certificate(SSL* ssl, const char* hostname);
 int IS_ssl_socket(struct input_stream* s);
 bool IS_canSaveTo(struct input_stream* stream, const char* path);

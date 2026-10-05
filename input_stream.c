@@ -577,53 +577,49 @@ ssl_check_cert_ident(X509* x, const char* hostname)
     return ret;
 }
 
-pStr ssl_get_certificate(SSL* ssl, const char* hostname)
+struct Str ssl_get_certificate(SSL* ssl, const char* hostname)
 {
-    BIO* bp;
-    X509* x;
-    X509_NAME* xn;
-    char* p;
-    int len;
-    pStr s;
-    char buf[2048];
-    pStr amsg = NULL;
-    pStr emsg;
-    int ans;
-
     if (ssl == NULL)
-        return NULL;
-    x = SSL_get_peer_certificate(ssl);
+        return (struct Str) { };
+
+    X509* x = SSL_get_peer_certificate(ssl);
     if (x == NULL) {
+        bool ans;
         if (accept_this_site
             && strcasecmp(accept_this_site->ptr, hostname) == 0)
             ans = 1;
         else
             ans = confirm(_("No SSL peer certificate: accept?"));
+
+        struct Str amsg = { };
         if (ans)
-            amsg = Strnew_charp(_("Accept SSL session without any peer certificate"));
+            amsg = allocStr(_("Accept SSL session without any peer certificate"));
         else {
             /* FIXME: gettextize? */
             const char* e = "This SSL session was rejected "
                             "to prevent security violation: no peer certificate";
             disp_err_message(e, false);
             free_ssl_ctx();
-            return NULL;
+            return (struct Str) { };
         }
-        if (amsg)
-            disp_err_message(amsg->ptr, false);
+
+        if (amsg.len)
+            disp_err_message(amsg.ptr, false);
         ssl_accept_this_site(hostname);
-        s = amsg ? amsg : Strnew_charp(_("valid certificate"));
-        return s;
+        return amsg.len ? amsg : allocStr(_("valid certificate"));
     }
+
     /* check the cert chain.
      * The chain length is automatically checked by OpenSSL when we
      * set the verify depth in the ctx.
      */
+    pStr amsg = NULL;
     if (ssl_verify_server) {
         long verr;
         if ((verr = SSL_get_verify_result(ssl))
             != X509_V_OK) {
             const char* em = X509_verify_cert_error_string(verr);
+            bool ans;
             if (accept_this_site
                 && strcasecmp(accept_this_site->ptr, hostname) == 0)
                 ans = 1;
@@ -640,12 +636,14 @@ pStr ssl_get_certificate(SSL* ssl, const char* hostname)
                 char* e = Sprintf(_("This SSL session was rejected: %s"), em)->ptr;
                 disp_err_message(e, false);
                 free_ssl_ctx();
-                return NULL;
+                return (struct Str) { };
             }
         }
     }
-    emsg = ssl_check_cert_ident(x, hostname);
+
+    pStr emsg = ssl_check_cert_ident(x, hostname);
     if (emsg != NULL) {
+        bool ans;
         if (accept_this_site
             && strcasecmp(accept_this_site->ptr, hostname) == 0)
             ans = 1;
@@ -665,30 +663,34 @@ pStr ssl_get_certificate(SSL* ssl, const char* hostname)
                             "to prevent security violation";
             disp_err_message(e, false);
             free_ssl_ctx();
-            return NULL;
+            return (struct Str) { };
         }
     }
+
     if (amsg)
         disp_err_message(amsg->ptr, false);
     ssl_accept_this_site(hostname);
-    s = amsg ? amsg : Strnew_charp(_("valid certificate"));
-    Strcat_charp(s, "\n");
-    xn = X509_get_subject_name(x);
+
+    struct Str s = allocStr(amsg ? amsg->ptr : _("valid certificate"));
+    Strcat_charp(&s, "\n");
+    X509_NAME* xn = X509_get_subject_name(x);
+    char buf[2048];
     if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
-        Strcat_charp(s, " subject=<unknown>");
+        Strcat_charp(&s, " subject=<unknown>");
     else
-        Strcat_m_charp(s, " subject=", buf, NULL);
+        Strcat_m_charp(&s, " subject=", buf, NULL);
     xn = X509_get_issuer_name(x);
     if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
-        Strcat_charp(s, ": issuer=<unknown>");
+        Strcat_charp(&s, ": issuer=<unknown>");
     else
-        Strcat_m_charp(s, ": issuer=", buf, NULL);
-    Strcat_charp(s, "\n\n");
+        Strcat_m_charp(&s, ": issuer=", buf, NULL);
+    Strcat_charp(&s, "\n\n");
 
-    bp = BIO_new(BIO_s_mem());
+    BIO* bp = BIO_new(BIO_s_mem());
     X509_print(bp, x);
-    len = (int)BIO_ctrl(bp, BIO_CTRL_INFO, 0, (char*)&p);
-    Strcat_charp_n(s, p, len);
+    char* p;
+    int len = (int)BIO_ctrl(bp, BIO_CTRL_INFO, 0, &p);
+    Strcat_charp_n(&s, p, len);
     BIO_free_all(bp);
     X509_free(x);
     return s;
