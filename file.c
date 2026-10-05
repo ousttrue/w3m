@@ -6908,7 +6908,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
                 p = os->ptr;
             }
             p = expandPath(p)->ptr;
-            if (!checkOverWrite(p))
+            if (!canOverWrite(p))
                 return -1;
         }
         if (checkCopyFile(tmpf, p) < 0) {
@@ -6971,7 +6971,7 @@ int _doFileCopy(const char* tmpf, const char* defstr, int download)
             is_pipe = true;
         else {
             p = expandPath(p)->ptr;
-            if (!checkOverWrite(p))
+            if (!canOverWrite(p))
                 return -1;
         }
         if (checkCopyFile(tmpf, p) < 0) {
@@ -7018,7 +7018,7 @@ int doFileSave(URLFile uf, const char* defstr)
             conv_to_system(&WcOption, &w, p);
             p = os->ptr;
         }
-        if (!checkOverWrite(p))
+        if (!canOverWrite(p))
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
             pStr os = Strnew();
@@ -7065,7 +7065,7 @@ int doFileSave(URLFile uf, const char* defstr)
         if (*q == '\0')
             return -1;
         p = expandPath(q)->ptr;
-        if (!checkOverWrite(p))
+        if (!canOverWrite(p))
             return -1;
         if (checkSaveFile(uf.stream, p) < 0) {
             printf(_("Can't save. Load file and %s are identical."), p);
@@ -7108,17 +7108,5 @@ int checkSaveFile(struct input_stream* stream, const char* path2)
         if (st1.st_ino == st2.st_ino)
             return -1;
     return 0;
-}
-
-int checkOverWrite(const char* path)
-{
-    struct stat st;
-
-    if (stat(path, &st) < 0)
-        return 1;
-    if (confirm(_("File exists. Overwrite?")))
-        return 1;
-    else
-        return 0;
 }
 

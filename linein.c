@@ -1099,3 +1099,17 @@ bool confirm(const char* prompt)
     char ans = confirm_multi(Sprintf("%s (y/N)", prompt)->ptr);
     return ans == 'y';
 }
+
+bool canOverWrite(const char* path)
+{
+    struct stat st;
+    if (stat(path, &st) < 0)
+        // not exists ok
+        return true;
+
+    if (confirm(_("File exists. Overwrite?")))
+        // ok
+        return true;
+
+    return false;
+}

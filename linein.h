@@ -52,3 +52,5 @@ static inline struct Str inputChar(const char* prompt)
 }
 
 bool confirm(const char* prompt);
+
+bool canOverWrite(const char* path);

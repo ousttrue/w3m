@@ -3690,7 +3690,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document")
             file = os->ptr;
         }
         file = expandPath(file)->ptr;
-        if (!checkOverWrite(file)) {
+        if (!canOverWrite(file)) {
             displayBuffer(Currentbuf, B_NORMAL);
             return;
         }
