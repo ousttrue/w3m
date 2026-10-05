@@ -16,52 +16,35 @@ const char* HostName = NULL;
 #endif /* not HTTP_DEFAULT_FILE */
 
 struct UrlSchemeInfo {
-    const char* name;
     enum UrlScheme scheme;
+    const char* names[4];
+    int default_port;
 };
 
 struct UrlSchemeInfo schemetable[] = {
-    { "http", SCM_HTTP },
-    { "gopher", SCM_GOPHER },
-    { "gophers", SCM_GOPHERS },
-    { "ftp", SCM_FTP },
-    { "local", SCM_LOCAL },
-    { "file", SCM_LOCAL },
-    /*  {"exec", SCM_EXEC}, */
-    { "nntp", SCM_NNTP },
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    { "news", SCM_NEWS },
-    /*  {"news", SCM_NEWS_GROUP}, */
-    { "data", SCM_DATA },
-    { "mailto", SCM_MAILTO },
-    { "https", SCM_HTTPS },
-    { 0, SCM_UNKNOWN },
-};
-
-/* XXX: note html.h SCM_ */
-static int DefaultPort[] = {
-    80, /* http */
-    70, /* gopher */
-    21, /* ftp */
-    21, /* ftpdir */
-    0, /* local - not defined */
-    0, /* local-CGI - not defined? */
-    0, /* exec - not defined? */
-    119, /* nntp */
-    119, /* nntp group */
-    119, /* news */
-    119, /* news group */
-    0, /* data - not defined */
-    0, /* mailto - not defined */
-    70, /* gophers */
-    443, /* https */
+    { .scheme = SCM_HTTP, .names = { "http" }, .default_port = 80 },
+    { .scheme = SCM_GOPHER, .names = { "gopher" }, .default_port = 70 },
+    { .scheme = SCM_FTP, .names = { "ftp" }, .default_port = 21 },
+    { .scheme = SCM_FTPDIR, .names = { "ftp" }, .default_port = 21 },
+    { .scheme = SCM_LOCAL, .names = { "local", "file" }, .default_port = 0 },
+    { .scheme = SCM_LOCAL_CGI, .names = { "local", "file" }, .default_port = 0 },
+    { .scheme = SCM_EXEC, .names = { "exec" }, .default_port = 0 },
+    { .scheme = SCM_NNTP, .names = { "nntp" }, .default_port = 119 },
+    { .scheme = SCM_NNTP_GROUP, .names = { "nntp" }, .default_port = 119 },
+    { .scheme = SCM_NEWS, .names = { "news" }, .default_port = 119 },
+    { .scheme = SCM_NEWS_GROUP, .names = { "news" }, .default_port = 119 },
+    { .scheme = SCM_DATA, .names = { "data" }, .default_port = 0 },
+    { .scheme = SCM_MAILTO, .names = { "mailto" }, .default_port = 0 },
+    { .scheme = SCM_GOPHERS, .names = { "gophers" }, .default_port = 70 },
+    { .scheme = SCM_HTTPS, .names = { "https" }, .default_port = 443 },
+    { 0 },
 };
 
 const char* schemeNumToName(enum UrlScheme scheme)
 {
-    for (int i = 0; schemetable[i].name; i++) {
+    for (int i = 0; schemetable[i].names[0]; i++) {
         if (schemetable[i].scheme == scheme)
-            return schemetable[i].name;
+            return schemetable[i].names[0];
     }
     return 0;
 }
@@ -74,14 +57,16 @@ enum UrlScheme getURLScheme(const char** url)
     while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
         p++;
     if (*p == ':') { /* scheme found */
-        scheme = SCM_UNKNOWN;
-        const char* q;
-        for (int i = 0; (q = schemetable[i].name); i++) {
-            int len = strlen(q);
-            if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-                scheme = schemetable[i].scheme;
-                *url = p + 1;
-                break;
+        scheme = SCM_MISSING;
+        for (int i = 0; schemetable[i].names[0]; i++) {
+            for (int j = 0; j < 4 && schemetable[i].names[j]; ++j) {
+                const char* q = schemetable[i].names[j];
+                int len = strlen(q);
+                if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
+                    scheme = schemetable[i].scheme;
+                    *url = p + 1;
+                    break;
+                }
             }
         }
     }
@@ -90,7 +75,12 @@ enum UrlScheme getURLScheme(const char** url)
 
 int getDefaultPort(enum UrlScheme scheme)
 {
-    return DefaultPort[scheme];
+    for (int i = 0; schemetable[i].names[0]; i++) {
+        if (schemetable[i].scheme == scheme) {
+            return schemetable[i].default_port;
+        }
+    }
+    return 0;
 }
 
 bool is_localhost(const char* host)
@@ -119,7 +109,7 @@ struct Url copyParsedURL(const struct Url* q)
         url.query = allocStr(q->query).ptr;
     } else {
         memset(&url, 0, sizeof(struct Url));
-        url.scheme = SCM_UNKNOWN;
+        url.scheme = SCM_MISSING;
     }
     return url;
 }
@@ -270,15 +260,15 @@ struct Url parseURL(const char* src, const struct Url* current)
         goto analyze_file;
     }
     /* scheme part has been found */
-    if (url.scheme == SCM_UNKNOWN) {
+    if (url.scheme == SCM_MISSING) {
         url.file = allocStr(src).ptr;
         return url;
     }
     /* get host and port */
     if (p[0] != '/' || p[1] != '/') { /* scheme:foo or scheme:/foo */
         url.host = NULL;
-        if (url.scheme != SCM_UNKNOWN)
-            url.port = DefaultPort[url.scheme];
+        if (url.scheme != SCM_MISSING)
+            url.port = getDefaultPort(url.scheme);
         else
             url.port = 0;
         goto analyze_file;
@@ -343,8 +333,8 @@ analyze_url:
         url.host = copyPath(q, p - q,
             COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE)
                        ->ptr;
-        if (url.scheme != SCM_UNKNOWN)
-            url.port = DefaultPort[url.scheme];
+        if (url.scheme != SCM_MISSING)
+            url.port = getDefaultPort(url.scheme);
         else
             url.port = 0;
         break;
@@ -361,7 +351,7 @@ analyze_file:
          */
         url.scheme = SCM_FTP; /* ftp://host/... */
         if (url.port == 0)
-            url.port = DefaultPort[SCM_FTP];
+            url.port = getDefaultPort(SCM_FTP);
     }
     if ((*p == '\0' || *p == '#' || *p == '?') && url.host == NULL) {
         url.file = "";

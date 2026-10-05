@@ -656,8 +656,6 @@ _parsedURL2Str(const struct Url* pu, int pass, int user, int label)
     };
 
     if (pu->scheme == SCM_MISSING) {
-        return Strnew_charp("???");
-    } else if (pu->scheme == SCM_UNKNOWN) {
         return Strnew_charp(pu->file);
     }
     if (pu->host == NULL && pu->file == NULL && label && pu->label != NULL) {
@@ -1050,7 +1048,7 @@ retry:
             }
         }
         if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
-            if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
+            if (scheme == SCM_MISSING) {
 #ifdef USE_SSL
                 /* retry it as "https://" */
                 u = Strnew_m_charp("https://", url, NULL)->ptr;
@@ -1313,7 +1311,6 @@ retry:
         uf.stream = IS_newStr(tmp);
         uf.guess_type = (*p != '\0') ? p : "text/plain";
         return uf;
-    case SCM_UNKNOWN:
     default:
         return uf;
     }

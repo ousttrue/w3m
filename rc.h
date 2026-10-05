@@ -33,7 +33,7 @@ enum {
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
 #define MINIMUM_PIXEL_PER_CHAR 4.0
 
-#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
+#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_MISSING && !(pu)->file)
 #define SCONF_RESERVED 0
 #define SCONF_SUBSTITUTE_URL 1
 #define SCONF_URL_CHARSET 2

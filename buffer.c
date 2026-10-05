@@ -81,7 +81,7 @@ newBuffer(int width)
         exit(3);
     bzero(n, sizeof(Buffer));
     n->width = width;
-    n->currentURL.scheme = SCM_UNKNOWN;
+    n->currentURL.scheme = SCM_MISSING;
     n->baseURL = NULL;
     n->baseTarget = NULL;
     n->buffername = "";
@@ -259,7 +259,6 @@ writeBufferName(Buffer* buf, int n)
             }
             break;
         }
-        case SCM_UNKNOWN:
         case SCM_MISSING:
             break;
         default:

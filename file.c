@@ -201,7 +201,7 @@ loadSomething(URLFile* f,
             buf->buffername = os->ptr;
         }
     }
-    if (buf->currentURL.scheme == SCM_UNKNOWN)
+    if (buf->currentURL.scheme == SCM_MISSING)
         buf->currentURL.scheme = f->scheme;
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
         buf->sourcefile = buf->filename;
@@ -888,7 +888,7 @@ load_doc:
             page = loadNewsgroup(&pu, &charset);
             t = "news:group";
             break;
-        case SCM_UNKNOWN:
+        case SCM_MISSING:
             disp_err_message(Sprintf(_("Unknown URI: %s"),
                                  parsedURL2Str(&pu)->ptr)
                                  ->ptr,
@@ -6416,7 +6416,7 @@ loadcmdout(const char* cmd,
     FILE* f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    URLFile uf = init_stream(SCM_UNKNOWN, IS_newFile(f, pclose));
+    URLFile uf = init_stream(SCM_MISSING, IS_newFile(f, pclose));
     Buffer* buf = loadproc(&uf, defaultbuf);
     us_close(&uf);
     return buf;
@@ -6502,7 +6502,7 @@ openGeneralPagerBuffer(struct input_stream* stream)
     Buffer* buf;
     const char* t = "text/plain";
     Buffer* t_buf = NULL;
-    URLFile uf = init_stream(SCM_UNKNOWN, stream);
+    URLFile uf = init_stream(SCM_MISSING, stream);
 
     content_charset = 0;
     t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -6597,7 +6597,7 @@ Line* getNextPage(Buffer* buf, int plen)
     }
     TRAP_ON;
 
-    uf = init_stream(SCM_UNKNOWN, NULL);
+    uf = init_stream(SCM_MISSING, NULL);
     for (i = 0; i < plen; i++) {
         if (!(lineBuf2 = IS_gets(buf->pagerSource, true)))
             return NULL;

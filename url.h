@@ -9,23 +9,22 @@ extern const char* HostName;
  * _parsedURL2Str in url.c
  */
 enum UrlScheme {
-    SCM_UNKNOWN = 255,
-    SCM_MISSING = 254,
-    SCM_HTTP = 0,
-    SCM_GOPHER = 1,
-    SCM_FTP = 2,
-    SCM_FTPDIR = 3,
-    SCM_LOCAL = 4,
-    SCM_LOCAL_CGI = 5,
-    SCM_EXEC = 6,
-    SCM_NNTP = 7,
-    SCM_NNTP_GROUP = 8,
-    SCM_NEWS = 9,
-    SCM_NEWS_GROUP = 10,
-    SCM_DATA = 11,
-    SCM_MAILTO = 12,
-    SCM_GOPHERS = 13,
-    SCM_HTTPS = 14,
+    SCM_MISSING = 0,
+    SCM_HTTP,
+    SCM_GOPHER,
+    SCM_FTP,
+    SCM_FTPDIR,
+    SCM_LOCAL,
+    SCM_LOCAL_CGI,
+    SCM_EXEC,
+    SCM_NNTP,
+    SCM_NNTP_GROUP,
+    SCM_NEWS,
+    SCM_NEWS_GROUP,
+    SCM_DATA,
+    SCM_MAILTO,
+    SCM_GOPHERS,
+    SCM_HTTPS,
 };
 
 struct Url {
@@ -58,4 +57,4 @@ static inline pStr Str_form_unquote(pStr x)
     return Str_url_unquote(x, true, false);
 }
 pStr file_to_url(const char* file, const char* CurrentDir);
-pStr url_unquote_conv(const char *url, wc_ces charset);
+pStr url_unquote_conv(const char* url, wc_ces charset);

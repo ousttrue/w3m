@@ -797,7 +797,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                                     &base, charset);
                                 tag->need_reconstruct = true;
                                 url = parseURL2(tag->value[j], &base);
-                                if (url.scheme == SCM_UNKNOWN ||
+                                if (url.scheme == SCM_MISSING ||
 #ifndef USE_W3MMAILER
                                     url.scheme == SCM_MAILTO ||
 #endif
