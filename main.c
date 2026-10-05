@@ -4471,6 +4471,9 @@ static void deleteFiles(void)
             unlink(firstframe->ptr);
         }
     }
+
+    rmdir(Sprintf("%s/%d", tmp_dir, CurrentPid)->ptr);
+    rmdir(Sprintf("%s/%d", rc_dir, CurrentPid)->ptr);
 }
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
@@ -5362,6 +5365,7 @@ int main(int argc, char** argv)
 
     CurrentDir = currentdir();
     CurrentPid = getpid();
+
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
     if (argv[0] && *argv[0])
         MyProgramName = argv[0];
@@ -5414,6 +5418,8 @@ int main(int argc, char** argv)
     BookmarkCharset = DocumentCharset;
 
     init_from_env();
+    mkdir(Sprintf("%s/%d", rc_dir, CurrentPid)->ptr, 0700);
+    mkdir(Sprintf("%s/%d", tmp_dir, CurrentPid)->ptr, 0700);
 
     /* argument search 2 */
     for (i = 1; i < argc; i++) {

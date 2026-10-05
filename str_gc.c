@@ -429,10 +429,11 @@ static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
 pStr tmpfname(int CurrentPid, enum TmpFileType type, const char* ext)
 {
-    pStr tmpf = Sprintf("%s/w3m%s%d-%d%s",
+    pStr tmpf = Sprintf("%s/%d/w3m%s-%d%s",
         type == TMPF_HIST ? rc_dir : tmp_dir,
+        CurrentPid,
         tmpf_base[type],
-        CurrentPid, tmpf_seq[type]++, (ext) ? ext : "");
+        tmpf_seq[type]++, (ext) ? ext : "");
     TextList_push(fileToDelete, tmpf->ptr);
     return tmpf;
 }
@@ -598,4 +599,3 @@ pStr qstr_unquote(pStr s)
     } else
         return s;
 }
-
