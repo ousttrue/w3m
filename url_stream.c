@@ -31,7 +31,7 @@ void UFhalfclose(URLFile* f)
         closeNews();
         break;
     default:
-        UFclose(f);
+        us_close(f);
         break;
     }
 }

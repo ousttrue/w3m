@@ -568,13 +568,13 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                 if (frame.body->type && !strcasecmp(frame.body->type, "text/plain")) {
                     pStr tmp;
                     fprintf(f1, "<pre>\n");
-                    while ((tmp = StrmyUFgets(&f2)) && tmp->len) {
+                    while ((tmp = IS_gets(f2.stream, true)) && tmp->len) {
                         tmp = convertLine(NULL, tmp, HTML_MODE, &charset,
                             doc_charset);
                         fprintf(f1, "%s", html_quote(tmp->ptr));
                     }
                     fprintf(f1, "</pre>\n");
-                    UFclose(&f2);
+                    us_close(&f2);
                     break;
                 }
                 do {
@@ -584,7 +584,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
 
                     do {
                         if (*p == '\0') {
-                            pStr tmp = StrmyUFgets(&f2);
+                            pStr tmp = IS_gets(f2.stream, true);
                             if (!tmp || tmp->len == 0)
                                 break;
                             tmp = convertLine(NULL, tmp, HTML_MODE, &charset,
@@ -872,7 +872,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                 }
                 while (t_stack--)
                     fputs("</TABLE>\n", f1);
-                UFclose(&f2);
+                us_close(&f2);
                 break;
             case F_FRAMESET:
             render_frameset:

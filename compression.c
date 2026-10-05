@@ -208,7 +208,7 @@ void uncompress_stream(URLFile* uf, const char** src, int SAVE_BUF_SIZE)
     /* child1 -- stdout|f1=uf -> parent */
     pid1 = open_pipe_rw(&f1, NULL);
     if (pid1 < 0) {
-        UFclose(uf);
+        us_close(uf);
         return;
     }
     if (pid1 == 0) {
@@ -219,7 +219,7 @@ void uncompress_stream(URLFile* uf, const char** src, int SAVE_BUF_SIZE)
         /* uf -> child2 -- stdout|stdin -> child1 */
         pid2 = open_pipe_rw(&f2, NULL);
         if (pid2 < 0) {
-            UFclose(uf);
+            us_close(uf);
             exit(1);
         }
         if (pid2 == 0) {
@@ -228,7 +228,7 @@ void uncompress_stream(URLFile* uf, const char** src, int SAVE_BUF_SIZE)
             int count;
             FILE* f = NULL;
 
-            setup_child(true, 2, UFfileno(uf));
+            setup_child(true, 2, IS_FD(uf->stream));
             if (tmpf)
                 f = fopen(tmpf, "wb");
             while ((count = IS_read(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
@@ -237,7 +237,7 @@ void uncompress_stream(URLFile* uf, const char** src, int SAVE_BUF_SIZE)
                 if (f && fwrite(buf, 1, count, f) != count)
                     break;
             }
-            UFclose(uf);
+            us_close(uf);
             if (f)
                 fclose(f);
             free(buf);

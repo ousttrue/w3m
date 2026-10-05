@@ -560,7 +560,7 @@ void reshapeBuffer(Buffer* buf)
             examineFile(buf->header_source, &h);
             if (h.stream) {
                 readHeader(&h, buf, true, NULL);
-                UFclose(&h);
+                us_close(&h);
             }
         } else if (buf->search_header) /* -m option */
             readHeader(&f, buf, true, NULL);
@@ -574,7 +574,7 @@ void reshapeBuffer(Buffer* buf)
         loadHTMLBuffer(&f, buf);
     else
         loadBuffer(&f, buf);
-    UFclose(&f);
+    us_close(&f);
 #ifdef USE_M17N
     WcOption.auto_detect = old_auto_detect;
     UseContentCharset = true;

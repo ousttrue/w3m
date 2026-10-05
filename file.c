@@ -351,7 +351,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
         if (src)
             newBuf->header_source = tmpf;
     }
-    while ((tmp = StrmyUFgets(uf)) && tmp->len) {
+    while ((tmp = IS_gets(uf->stream, true)) && tmp->len) {
         if (uf->scheme == SCM_NEWS && tmp->ptr[0] == '.')
             Strshrinkfirst(tmp, 1);
         if (w3m_reqlog) {
@@ -376,8 +376,8 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
             } else {
                 lineBuf2 = tmp;
             }
-            c = UFgetc(uf);
-            UFundogetc(uf);
+            c = IS_getc(uf->stream);
+            IS_ungetc(uf->stream);
             if (c == ' ' || c == '\t')
                 /* header line is continued */
                 continue;
@@ -412,7 +412,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                     wc_ces old_charset = newBuf->document_charset;
                     URLFile f = init_stream(SCM_LOCAL, IS_newStr(src));
                     loadHTMLstream(&f, newBuf, NULL, true);
-                    UFclose(&f);
+                    us_close(&f);
                     Line* l;
                     for (l = newBuf->lastLine; l && l->real_linenumber;
                         l = l->prev)
@@ -904,7 +904,7 @@ load_doc:
 
     if (status == HTST_MISSING) {
         TRAP_OFF;
-        UFclose(&f);
+        us_close(&f);
         return NULL;
     }
 
@@ -914,7 +914,7 @@ load_doc:
         TRAP_OFF;
         if (b)
             discardBuffer(b);
-        UFclose(&f);
+        us_close(&f);
         return NULL;
     }
 
@@ -953,7 +953,7 @@ load_doc:
             /* 308: Permanent Redirect (HTTP/1.1) */
             tpath = url_encode(p, NULL, 0);
             request = NULL;
-            UFclose(&f);
+            us_close(&f);
             current = New(struct Url);
             *current = pu;
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -987,7 +987,7 @@ load_doc:
                     TRAP_OFF;
                     goto page_loaded;
                 }
-                UFclose(&f);
+                us_close(&f);
                 add_auth_cookie_flag = 1;
                 status = HTST_NORMAL;
                 goto load_doc;
@@ -1008,7 +1008,7 @@ load_doc:
                     TRAP_OFF;
                     goto page_loaded;
                 }
-                UFclose(&f);
+                us_close(&f);
                 add_auth_cookie_flag = 1;
                 status = HTST_NORMAL;
                 add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
@@ -1101,7 +1101,7 @@ load_doc:
             /* document moved */
             tpath = url_encode(remove_space(p)->ptr, NULL, 0);
             request = NULL;
-            UFclose(&f);
+            us_close(&f);
             add_auth_cookie_flag = 0;
             current = New(struct Url);
             *current = copyParsedURL(&pu);
@@ -1214,7 +1214,7 @@ page_loaded:
         if (doFileSave(f, file) == 0)
             UFhalfclose(&f);
         else
-            UFclose(&f);
+            us_close(&f);
         return NO_BUFFER;
     }
 
@@ -1241,7 +1241,7 @@ page_loaded:
             b->sourcefile = image_source;
             b->real_type = t;
         }
-        UFclose(&f);
+        us_close(&f);
         TRAP_OFF;
         return b;
     }
@@ -1260,7 +1260,7 @@ page_loaded:
         } else {
             TRAP_OFF;
             if (pu.scheme == SCM_LOCAL) {
-                UFclose(&f);
+                us_close(&f);
                 pStr os = Strnew();
                 struct Writer w = makeWriter(os);
                 conv_from_system(&WcOption, &w, guess_save_name(NULL, pu.real_file)->ptr);
@@ -1271,7 +1271,7 @@ page_loaded:
                 if (doFileSave(f, guess_save_name(t_buf, pu.file)->ptr) == 0)
                     UFhalfclose(&f);
                 else
-                    UFclose(&f);
+                    us_close(&f);
             }
             return NO_BUFFER;
         }
@@ -1296,7 +1296,7 @@ page_loaded:
     } else {
         b = loadSomething(&f, proc, t_buf);
     }
-    UFclose(&f);
+    us_close(&f);
     frame_source = 0;
     if (b && b != NO_BUFFER) {
         b->real_scheme = f.scheme;
@@ -5945,7 +5945,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
     meta_charset = 0;
     if (f->stream->type != IST_ENCODED)
         f->stream = IS_newEncoded(f->stream, f->encoding);
-    while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->len) {
+    while ((lineBuf2 = IS_gets(f->stream, true)) && lineBuf2->len) {
         if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
             if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
@@ -6015,7 +6015,7 @@ loadHTMLString(pStr page)
     if (SETJMP(AbortLoading) != 0) {
         TRAP_OFF;
         discardBuffer(newBuf);
-        UFclose(&f);
+        us_close(&f);
         return NULL;
     }
     TRAP_ON;
@@ -6025,7 +6025,7 @@ loadHTMLString(pStr page)
     newBuf->document_charset = WC_CES_US_ASCII;
 
     TRAP_OFF;
-    UFclose(&f);
+    us_close(&f);
     newBuf->topLine = newBuf->firstLine;
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
@@ -6063,7 +6063,7 @@ pStr loadGopherDir(URLFile* uf, struct Url* pu, wc_ces* charset)
     TRAP_ON;
 
     while (1) {
-        if (!(lbuf = StrUFgets(uf)) || lbuf->len == 0)
+        if (!(lbuf = IS_gets(uf->stream, false)) || lbuf->len == 0)
             break;
         if (lbuf->ptr[0] == '.' && (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
             break;
@@ -6317,7 +6317,7 @@ image_buffer:
 
     f = init_stream(SCM_LOCAL, IS_newStr(tmp));
     loadHTMLstream(&f, newBuf, src, true);
-    UFclose(&f);
+    us_close(&f);
     fclose(src);
 
     newBuf->topLine = newBuf->firstLine;
@@ -6418,7 +6418,7 @@ loadcmdout(const char* cmd,
         return NULL;
     URLFile uf = init_stream(SCM_UNKNOWN, IS_newFile(f, pclose));
     Buffer* buf = loadproc(&uf, defaultbuf);
-    UFclose(&uf);
+    us_close(&uf);
     return buf;
 }
 
@@ -6537,7 +6537,7 @@ openGeneralPagerBuffer(struct input_stream* stream)
     } else {
         if (searchExtViewer(t)) {
             buf = doExternal(uf, t, t_buf);
-            UFclose(&uf);
+            us_close(&uf);
             if (buf == NULL || buf == NO_BUFFER)
                 return buf;
         } else { /* unknown type is regarded as text/plain */
@@ -6692,7 +6692,7 @@ int save2tmp(URLFile uf, const char* tmpf)
         char c;
         if (!uf.stream)
             return -1;
-        while (c = UFgetc(&uf), !uf.stream->iseos) {
+        while (c = IS_getc(uf.stream), !uf.stream->iseos) {
             if (c == '\n') {
                 if (check == 0)
                     check++;
@@ -6767,10 +6767,10 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
     if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) && !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
         tty_flush();
         if (!fork()) {
-            setup_child(false, 0, UFfileno(&uf));
+            setup_child(false, 0, IS_FD(uf.stream));
             if (save2tmp(uf, tmpf->ptr) < 0)
                 exit(1);
-            UFclose(&uf);
+            us_close(&uf);
             myExec(command->ptr);
         }
         return NO_BUFFER;
@@ -7034,11 +7034,11 @@ int doFileSave(URLFile uf, const char* defstr)
             int err;
             if ((uf.content_encoding != CMP_NOCOMPRESS) && AutoUncompress)
                 uncompress_stream(&uf, NULL, SAVE_BUF_SIZE);
-            setup_child(false, 0, UFfileno(&uf));
+            setup_child(false, 0, IS_FD(uf.stream));
             err = save2tmp(uf, p);
             if (err == 0 && PreserveTimestamp && uf.modtime != -1)
                 setModtime(p, uf.modtime);
-            UFclose(&uf);
+            us_close(&uf);
             unlink(lock);
             if (err != 0)
                 exit(-err);

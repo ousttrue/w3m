@@ -19,15 +19,12 @@ struct UrlStream {
 };
 typedef struct UrlStream URLFile;
 
-#define StrUFgets(f) IS_gets((f)->stream, false)
-#define StrmyUFgets(f) IS_gets((f)->stream, true)
-#define UFgetc(f) IS_getc((f)->stream)
-#define UFundogetc(f) IS_ungetc((f)->stream)
-#define UFclose(f)                   \
-    if (IS_close((f)->stream) == 0) { \
-        (f)->stream = NULL;          \
+inline static void us_close(struct UrlStream* f)
+{
+    if (IS_close((f)->stream) == 0) {
+        (f)->stream = NULL;
     }
-#define UFfileno(f) IS_FD((f)->stream)
+}
 
 struct URLOption {
     const char* referer;
