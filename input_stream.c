@@ -5,6 +5,7 @@
 #include "gettext_helper.h"
 #include "proto.h"
 #include "http_request.h"
+#include "linein.h"
 #include <signal.h>
 #include <openssl/x509v3.h>
 
@@ -569,7 +570,7 @@ pStr ssl_get_certificate(SSL* ssl, const char* hostname)
             && strcasecmp(accept_this_site->ptr, hostname) == 0)
             ans = 1;
         else
-            ans = confirm(Strnew_charp(_("No SSL peer certificate: accept?")));
+            ans = confirm(_("No SSL peer certificate: accept?"));
         if (ans)
             amsg = Strnew_charp(_("Accept SSL session without any peer certificate"));
         else {
@@ -600,7 +601,7 @@ pStr ssl_get_certificate(SSL* ssl, const char* hostname)
                 ans = 1;
             else {
                 /* FIXME: gettextize? */
-                ans = confirm(Sprintf("%s: accept?", em));
+                ans = confirm(Sprintf("%s: accept?", em)->ptr);
             }
             if (ans) {
                 /* FIXME: gettextize? */
@@ -625,7 +626,7 @@ pStr ssl_get_certificate(SSL* ssl, const char* hostname)
             if (ep->len > COLS - 16)
                 Strshrink(ep, ep->len - (COLS - 16));
             Strcat_charp(ep, ": accept?");
-            ans = confirm(ep);
+            ans = confirm(ep->ptr);
         }
         if (ans) {
             amsg = Strnew_charp(_("Accept unsecure SSL session:"));

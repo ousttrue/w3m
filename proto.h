@@ -218,8 +218,6 @@ extern int doFileSave(struct UrlStream uf, const char* defstr);
 extern int checkCopyFile(const char* path1, const char* path2);
 extern int checkSaveFile(struct input_stream* stream, const char* path);
 extern int checkOverWrite(const char* path);
-extern int confirm(pStr prompt);
-extern char confirm_multi(const char* prompt);
 extern int matchattr(const char* p, const char* attr, int len, pStr* value);
 extern void readHeader(struct UrlStream* uf, Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(Buffer* buf, const char* field);

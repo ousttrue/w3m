@@ -1576,10 +1576,10 @@ static void
 _quitfm(int ask)
 {
     if (checkDownloadList()
-        && !confirm(Strnew_charp(_("Download process retains."
-                                   "Do you want to exit w3m?"))))
+        && !confirm(_("Download process retains."
+                      "Do you want to exit w3m?")))
         goto nope;
-    else if (ask && !confirm(Strnew_charp(_("Do you want to exit w3m?"))))
+    else if (ask && !confirm(_("Do you want to exit w3m?")))
         goto nope;
 
     tty_title(""); /* XXX */
@@ -3407,8 +3407,7 @@ int _strSession(char* sf)
         sf = session_file ? session_file : rcFile(SESSION_FILE)->ptr;
 
     while (stat(sf, &st) == 0) {
-        pStr msg = Strnew_charp(_("Session file exists. Overwrite?"));
-        if (confirm(msg))
+        if (confirm(_("Session file exists. Overwrite?")))
             break;
         sf = inputFilenameHist(_("Session file (empty: Don't store)? "), sf,
             LoadHist)

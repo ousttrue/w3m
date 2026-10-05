@@ -50,3 +50,5 @@ static inline struct Str inputChar(const char* prompt)
 {
     return inputLine(prompt, "", IN_CHAR);
 }
+
+bool confirm(const char* prompt);

@@ -1073,3 +1073,29 @@ void _editor(void)
     if (CurrentTab)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
+
+static char confirm_multi(const char* prompt)
+{
+    if (QuietMessage)
+        return 'n';
+
+    char* ans;
+    if (fmInitialized) {
+        tty_raw();
+        ans = inputChar(prompt).ptr;
+    } else {
+        printf("%s", prompt);
+        fflush(stdout);
+        ans = Strfgets(stdin)->ptr;
+    }
+    if (!ans || !*ans)
+        return '\0';
+    *ans = TOLOWER(*ans);
+    return *ans;
+}
+
+bool confirm(const char* prompt)
+{
+    char ans = confirm_multi(Sprintf("%s (y/N)", prompt)->ptr);
+    return ans == 'y';
+}

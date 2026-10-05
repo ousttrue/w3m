@@ -568,7 +568,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                                     : "<localdomain>"));
                         if (msg->len > COLS - 10)
                             Strshrink(msg, msg->len - (COLS - 10));
-                        ans = confirm(msg);
+                        ans = confirm(msg->ptr);
                     }
                     if (!ans || (err = add_cookie(pu, name, value, expires, domain, path, flag | COO_OVERRIDE, comment, version, port, commentURL))) {
                         err = (err & ~COO_OVERRIDE_OK) - 1;
@@ -7116,37 +7116,9 @@ int checkOverWrite(const char* path)
 
     if (stat(path, &st) < 0)
         return 1;
-    if (confirm(Strnew_charp(_("File exists. Overwrite?"))))
+    if (confirm(_("File exists. Overwrite?")))
         return 1;
     else
         return 0;
 }
 
-char confirm_multi(const char* prompt)
-{
-    char* ans;
-
-    if (QuietMessage)
-        return 'n';
-    if (fmInitialized) {
-        tty_raw();
-        ans = inputChar(prompt).ptr;
-    } else {
-        printf("%s", prompt);
-        fflush(stdout);
-        ans = Strfgets(stdin)->ptr;
-    }
-    if (!ans || !*ans)
-        return '\0';
-    *ans = TOLOWER(*ans);
-    return *ans;
-}
-
-int confirm(pStr prompt)
-{
-    char ans;
-
-    Strcat_charp(prompt, " (y/N)");
-    ans = confirm_multi(prompt->ptr);
-    return ans == 'y';
-}
