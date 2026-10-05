@@ -82,7 +82,7 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
     if (!status)
         return NULL;
     *status = -1; /* error */
-    if (!(tmp = StrISgets(ftp->rf)))
+    if (!(tmp = IS_gets(ftp->rf, false)))
         return NULL;
     if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ')
         sscanf(tmp->ptr, "%d", status);
@@ -99,7 +99,7 @@ ftp_command(FTP ftp, char* cmd, char* arg, int* status)
      * with the same code, followed immediately by Space <SP>,
      * optionally some text, and the Telnet end-of-line code. */
     while (1) {
-        if (!(tmp = StrISgets(ftp->rf)))
+        if (!(tmp = IS_gets(ftp->rf, false)))
             break;
         if (IS_DIGIT(tmp->ptr[0]) && IS_DIGIT(tmp->ptr[1]) && IS_DIGIT(tmp->ptr[2]) && tmp->ptr[3] == ' ') {
             sscanf(tmp->ptr, "%d", status);
@@ -116,7 +116,7 @@ ftp_close(FTP ftp)
         return;
     if (ftp->rf) {
         ftp->rf->unclose = false;
-        ISclose(ftp->rf);
+        IS_close(ftp->rf);
         ftp->rf = NULL;
     }
     if (ftp->wf) {
@@ -181,7 +181,7 @@ ftp_login(FTP ftp)
             }
         }
     }
-    ftp->rf = newInputStream(sock);
+    ftp->rf = IS_newFD(sock);
     if ((sock_wf = dup(sock)) >= 0)
         ftp->wf = fdopen(sock_wf, "wb");
     else
@@ -465,7 +465,7 @@ ftp_read:
     uf->modtime = ftp_modtime(&current_ftp, realpathname);
     ftp_command(&current_ftp, "RETR", realpathname, &status);
     if (status == 125 || status == 150)
-        return newFileStream(current_ftp.data, closeFTPdata);
+        return IS_newFile(current_ftp.data, closeFTPdata);
 
 ftp_dir:
     pu->scheme = SCM_FTPDIR;

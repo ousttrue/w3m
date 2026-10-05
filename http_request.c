@@ -1007,12 +1007,12 @@ retry:
     case SCM_LOCAL_CGI:
         if (request && request->body)
             /* local CGI: POST */
-            uf.stream = newFileStream(localcgi_post(pu->real_file, pu->query,
+            uf.stream = IS_newFile(localcgi_post(pu->real_file, pu->query,
                                           request, option->referer),
                 fclose);
         else
             /* lodal CGI: GET */
-            uf.stream = newFileStream(localcgi_get(pu->real_file, pu->query,
+            uf.stream = IS_newFile(localcgi_get(pu->real_file, pu->query,
                                           option->referer),
                 fclose);
         if (uf.stream) {
@@ -1081,7 +1081,7 @@ retry:
             uf.scheme = pu->scheme;
             return uf;
         }
-        uf.stream = newInputStream(sock);
+        uf.stream = IS_newFD(sock);
         return uf;
     case SCM_HTTP:
 #ifdef USE_SSL
@@ -1102,7 +1102,7 @@ retry:
             hr->flag |= HR_FLAG_PROXY;
 #ifdef USE_SSL
             if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
-                sock = ssl_socket_of(ouf->stream);
+                sock = IS_ssl_socket(ouf->stream);
                 if (!(sslh = openSSLHandle(sock, pu->host,
                           &uf.ssl_certificate))) {
                     *status = HTST_MISSING;
@@ -1166,7 +1166,7 @@ retry:
         }
 #ifdef USE_SSL
         if (pu->scheme == SCM_HTTPS) {
-            uf.stream = newSSLStream(sslh, sock);
+            uf.stream = IS_newSSL(sslh, sock);
             if (sslh)
                 SSL_write(sslh, tmp->ptr, tmp->len);
             else
@@ -1203,7 +1203,7 @@ retry:
             if (hr->command == HR_COMMAND_POST && request->enctype == FORM_ENCTYPE_MULTIPART)
                 write_from_file(sock, request->body);
         }
-        uf.stream = newInputStream(sock);
+        uf.stream = IS_newFD(sock);
         return uf;
 #ifdef USE_GOPHER
     case SCM_GOPHER:
@@ -1270,13 +1270,13 @@ retry:
                 *status = HTST_MISSING;
                 return uf;
             }
-            uf.stream = newSSLStream(sslh, sock);
+            uf.stream = IS_newSSL(sslh, sock);
             SSL_write(sslh, tmp->ptr, tmp->len);
         } else
 #endif
         {
             write(sock, tmp->ptr, tmp->len);
-            uf.stream = newInputStream(sock);
+            uf.stream = IS_newFD(sock);
         }
         if (type != '\0') {
             pu->file = gophertmp->ptr;
@@ -1310,7 +1310,7 @@ retry:
             uf.encoding = ENC_BASE64;
         } else
             tmp = Str_url_unquote(tmp, false, false);
-        uf.stream = newStrStream(tmp);
+        uf.stream = IS_newStr(tmp);
         uf.guess_type = (*p != '\0') ? p : "text/plain";
         return uf;
     case SCM_UNKNOWN:

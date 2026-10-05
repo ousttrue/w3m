@@ -183,7 +183,7 @@ void uncompress_stream(URLFile* uf, const char** src, int SAVE_BUF_SIZE)
     int use_d_arg = 0;
 
     if (uf->stream->type != IST_ENCODED) {
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
+        uf->stream = IS_newEncoded(uf->stream, uf->encoding);
         uf->encoding = ENC_7BIT;
     }
     for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
@@ -231,7 +231,7 @@ void uncompress_stream(URLFile* uf, const char** src, int SAVE_BUF_SIZE)
             setup_child(true, 2, UFfileno(uf));
             if (tmpf)
                 f = fopen(tmpf, "wb");
-            while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+            while ((count = IS_read(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
                 if (fwrite(buf, 1, count, stdout) != count)
                     break;
                 if (f && fwrite(buf, 1, count, f) != count)
@@ -259,5 +259,5 @@ void uncompress_stream(URLFile* uf, const char** src, int SAVE_BUF_SIZE)
             uf->scheme = SCM_LOCAL;
     }
     UFhalfclose(uf);
-    uf->stream = newFileStream(f1, fclose);
+    uf->stream = IS_newFile(f1, fclose);
 }

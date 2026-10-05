@@ -274,7 +274,7 @@ void examineFile(const char* path, URLFile* uf)
         uf->stream = NULL;
         return;
     }
-    uf->stream = openIS(path);
+    uf->stream = IS_open(path);
     if (!do_download) {
         check_compression(path, uf);
         if (uf->compression != CMP_NOCOMPRESS) {
@@ -410,7 +410,7 @@ void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
                 }
                 if (src) {
                     wc_ces old_charset = newBuf->document_charset;
-                    URLFile f = init_stream(SCM_LOCAL, newStrStream(src));
+                    URLFile f = init_stream(SCM_LOCAL, IS_newStr(src));
                     loadHTMLstream(&f, newBuf, NULL, true);
                     UFclose(&f);
                     Line* l;
@@ -1200,7 +1200,7 @@ page_loaded:
         char* file;
         TRAP_OFF;
         if (DecodeCTE && f.stream->type != IST_ENCODED)
-            f.stream = newEncodedStream(f.stream, f.encoding);
+            f.stream = IS_newEncoded(f.stream, f.encoding);
         if (pu.scheme == SCM_LOCAL) {
             struct stat st;
             if (PreserveTimestamp && !stat(pu.real_file, &st))
@@ -1235,7 +1235,7 @@ page_loaded:
     if (image_source) {
         Buffer* b = NULL;
         if (f.stream->type != IST_ENCODED)
-            f.stream = newEncodedStream(f.stream, f.encoding);
+            f.stream = IS_newEncoded(f.stream, f.encoding);
         if (save2tmp(f, image_source) == 0) {
             b = newBuffer(INIT_BUFFER_WIDTH);
             b->sourcefile = image_source;
@@ -1267,7 +1267,7 @@ page_loaded:
                 _doFileCopy(pu.real_file, os->ptr, true);
             } else {
                 if (DecodeCTE && f.stream->type != IST_ENCODED)
-                    f.stream = newEncodedStream(f.stream, f.encoding);
+                    f.stream = IS_newEncoded(f.stream, f.encoding);
                 if (doFileSave(f, guess_save_name(t_buf, pu.file)->ptr) == 0)
                     UFhalfclose(&f);
                 else
@@ -5052,10 +5052,9 @@ static struct input_stream* _file_lp2;
 static pStr
 file_feed(void)
 {
-    pStr s;
-    s = StrISgets(_file_lp2);
+    pStr s = IS_gets(_file_lp2, false);
     if (s && s->len == 0) {
-        ISclose(_file_lp2);
+        IS_close(_file_lp2);
         return NULL;
     }
     return s;
@@ -5945,7 +5944,7 @@ void loadHTMLstream(URLFile* f, Buffer* newBuf, FILE* src, int internal)
         doc_charset = WC_CES_UTF_8;
     meta_charset = 0;
     if (f->stream->type != IST_ENCODED)
-        f->stream = newEncodedStream(f->stream, f->encoding);
+        f->stream = IS_newEncoded(f->stream, f->encoding);
     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->len) {
         if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
@@ -6011,7 +6010,7 @@ Buffer*
 loadHTMLString(pStr page)
 {
     volatile SigActionFunc prevtrap = NULL;
-    URLFile f = init_stream(SCM_LOCAL, newStrStream(page));
+    URLFile f = init_stream(SCM_LOCAL, IS_newStr(page));
     Buffer* newBuf = newBuffer(INIT_BUFFER_WIDTH);
     if (SETJMP(AbortLoading) != 0) {
         TRAP_OFF;
@@ -6220,8 +6219,8 @@ loadBuffer(URLFile* uf, Buffer* volatile newBuf)
 
     nlines = 0;
     if (uf->stream->type != IST_ENCODED)
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
-    while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->len) {
+        uf->stream = IS_newEncoded(uf->stream, uf->encoding);
+    while ((lineBuf2 = IS_gets(uf->stream, true)) && lineBuf2->len) {
         if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
             Strshrinkfirst(lineBuf2, 1);
             if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' || lineBuf2->ptr[0] == '\0') {
@@ -6291,7 +6290,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
         goto image_buffer;
 
     if (uf->stream->type != IST_ENCODED)
-        uf->stream = newEncodedStream(uf->stream, uf->encoding);
+        uf->stream = IS_newEncoded(uf->stream, uf->encoding);
     TRAP_ON;
     if (save2tmp(*uf, cache->file) < 0) {
         TRAP_OFF;
@@ -6316,7 +6315,7 @@ image_buffer:
         return NULL;
     newBuf->mailcap_source = tmpf->ptr;
 
-    f = init_stream(SCM_LOCAL, newStrStream(tmp));
+    f = init_stream(SCM_LOCAL, IS_newStr(tmp));
     loadHTMLstream(&f, newBuf, src, true);
     UFclose(&f);
     fclose(src);
@@ -6417,7 +6416,7 @@ loadcmdout(const char* cmd,
     FILE* f = popen(cmd, "r");
     if (f == NULL)
         return NULL;
-    URLFile uf = init_stream(SCM_UNKNOWN, newFileStream(f, pclose));
+    URLFile uf = init_stream(SCM_UNKNOWN, IS_newFile(f, pclose));
     Buffer* buf = loadproc(&uf, defaultbuf);
     UFclose(&uf);
     return buf;
@@ -6457,7 +6456,7 @@ getpipe(const char* cmd)
         return NULL;
 
     Buffer* buf = newBuffer(INIT_BUFFER_WIDTH);
-    buf->pagerSource = newFileStream(f, pclose);
+    buf->pagerSource = IS_newFile(f, pclose);
     buf->filename = cmd;
     pStr os = Strnew();
     struct Writer w = makeWriter(os);
@@ -6529,7 +6528,7 @@ openGeneralPagerBuffer(struct input_stream* stream)
         buf->type = "text/html";
     } else if (is_plain_text_type(t)) {
         if (stream->type != IST_ENCODED)
-            stream = newEncodedStream(stream, uf.encoding);
+            stream = IS_newEncoded(stream, uf.encoding);
         buf = openPagerBuffer(stream, t_buf);
         buf->type = "text/plain";
     } else if (activeImage && displayImage && !useExtImageViewer && !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
@@ -6543,7 +6542,7 @@ openGeneralPagerBuffer(struct input_stream* stream)
                 return buf;
         } else { /* unknown type is regarded as text/plain */
             if (stream->type != IST_ENCODED)
-                stream = newEncodedStream(stream, uf.encoding);
+                stream = IS_newEncoded(stream, uf.encoding);
             buf = openPagerBuffer(stream, t_buf);
             buf->type = "text/plain";
         }
@@ -6600,7 +6599,7 @@ Line* getNextPage(Buffer* buf, int plen)
 
     uf = init_stream(SCM_UNKNOWN, NULL);
     for (i = 0; i < plen; i++) {
-        if (!(lineBuf2 = StrmyISgets(buf->pagerSource)))
+        if (!(lineBuf2 = IS_gets(buf->pagerSource, true)))
             return NULL;
         if (lineBuf2->len == 0) {
             /* Assume that `cmd == buf->filename' */
@@ -6713,7 +6712,7 @@ int save2tmp(URLFile uf, const char* tmpf)
         int count;
 
         buf = NewWithoutGC_N(unsigned char, SAVE_BUF_SIZE);
-        while ((count = ISread_n(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
+        while ((count = IS_read(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
             if (fwrite(buf, 1, count, ff) != count) {
                 retval = -2;
                 goto _end;
@@ -6751,7 +6750,7 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
     tmpf = tmpfname(CurrentPid, TMPF_DFL, (ext && *ext) ? ext : NULL);
 
     if (uf.stream->type != IST_ENCODED)
-        uf.stream = newEncodedStream(uf.stream, uf.encoding);
+        uf.stream = IS_newEncoded(uf.stream, uf.encoding);
     header = checkHeader(defaultbuf, "Content-Type:");
     if (header) {
         pStr os = Strnew();
@@ -6835,16 +6834,16 @@ doExternal(URLFile uf, const char* type, Buffer* defaultbuf)
 static int
 _MoveFile(const char* path1, const char* path2)
 {
-    struct input_stream* f1;
     FILE* f2;
     int is_pipe;
     size_t linelen = 0, trbyte = 0;
     unsigned char* buf = NULL;
     int count;
 
-    f1 = openIS(path1);
+    struct input_stream* f1 = IS_open(path1);
     if (f1 == NULL)
         return -1;
+
     if (*path2 == '|' && PermitSaveToPipe) {
         is_pipe = true;
         f2 = popen(path2 + 1, "w");
@@ -6853,18 +6852,18 @@ _MoveFile(const char* path1, const char* path2)
         f2 = fopen(path2, "wb");
     }
     if (f2 == NULL) {
-        ISclose(f1);
+        IS_close(f1);
         return -1;
     }
     current_content_length = 0;
     buf = NewWithoutGC_N(unsigned char, SAVE_BUF_SIZE);
-    while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+    while ((count = IS_read(f1, buf, SAVE_BUF_SIZE)) > 0) {
         fwrite(buf, 1, count, f2);
         linelen += count;
         showProgress(&linelen, &trbyte);
     }
     free(buf);
-    ISclose(f1);
+    IS_close(f1);
     if (is_pipe)
         pclose(f2);
     else
@@ -7019,7 +7018,7 @@ int doFileSave(URLFile uf, const char* defstr)
         }
         if (!canOverWrite(p))
             return -1;
-        if (!canSaveFile(uf.stream, p)) {
+        if (!IS_canSaveTo(uf.stream, p)) {
             pStr os = Strnew();
             struct Writer w = makeWriter(os);
             conv_from_system(&WcOption, &w, p);
@@ -7065,7 +7064,7 @@ int doFileSave(URLFile uf, const char* defstr)
         p = expandPath(q)->ptr;
         if (!canOverWrite(p))
             return -1;
-        if (!canSaveFile(uf.stream, p)) {
+        if (!IS_canSaveTo(uf.stream, p)) {
             printf(_("Can't save. Load file and %s are identical."), p);
             return -1;
         }
@@ -7080,4 +7079,3 @@ int doFileSave(URLFile uf, const char* defstr)
     }
     return 0;
 }
-

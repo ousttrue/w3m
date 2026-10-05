@@ -1,4 +1,5 @@
 #include "input_stream.h"
+#include "growbuf.h"
 #include "alloc.h"
 #include "str_const.h"
 #include "w3m.h"
@@ -10,9 +11,25 @@
 #include <signal.h>
 #include <openssl/x509v3.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <openssl/ssl.h>
+#include <assert.h>
 
 #define STREAM_BUF_SIZE 8192
 #define SSL_BUF_SIZE 1536
+
+struct ssl_handle {
+    SSL* ssl;
+    int sock;
+};
+
+struct ens_handle {
+    struct input_stream* is;
+    struct growbuf gb;
+    int pos;
+    enum StreamEncoding encoding;
+};
 
 static bool MUST_BE_UPDATED(struct input_stream* is)
 {
@@ -66,9 +83,9 @@ init_base_stream(struct input_stream* is, int bufsize)
 }
 
 static void
-init_str_stream(struct input_stream* is, pStr s)
+init_str_stream(struct input_stream* is, const char* ptr, int len)
 {
-    init_buffer(is, s->ptr, s->len);
+    init_buffer(is, ptr, len);
 }
 
 // int file descriptor
@@ -88,7 +105,7 @@ basic_close(void* handle)
 }
 
 struct input_stream*
-newInputStream(int des)
+IS_newFD(int des)
 {
     if (des < 0)
         return NULL;
@@ -104,6 +121,11 @@ newInputStream(int des)
     return is;
 }
 
+struct input_stream* IS_open(const char* path)
+{
+    return IS_newFD(open((path), O_RDONLY));
+}
+
 // FILE*
 static int
 file_read(void* handle, unsigned char* buf, int len)
@@ -113,7 +135,7 @@ file_read(void* handle, unsigned char* buf, int len)
 }
 
 struct input_stream*
-newFileStream(FILE* f, int (*closep)(FILE*))
+IS_newFile(FILE* f, int (*closep)(FILE*))
 {
     if (f == NULL)
         return NULL;
@@ -135,12 +157,10 @@ str_read(void*, unsigned char* buf, int len)
 }
 
 struct input_stream*
-newStrStream(pStr s)
+IS_newCharpN(const char* ptr, int len)
 {
-    if (s == NULL)
-        return NULL;
     struct input_stream* is = NewWithoutGC(struct input_stream);
-    init_str_stream(is, s);
+    init_str_stream(is, ptr, len);
     is->type = IST_STR;
     is->handle = NULL;
     is->read = str_read;
@@ -185,7 +205,7 @@ ssl_read(void* _handle, unsigned char* buf, int len)
 }
 
 struct input_stream*
-newSSLStream(SSL* ssl, int sock)
+IS_newSSL(SSL* ssl, int sock)
 {
     if (sock < 0)
         return NULL;
@@ -201,12 +221,18 @@ newSSLStream(SSL* ssl, int sock)
     return is;
 }
 
+int IS_ssl_socket(struct input_stream* s)
+{
+    assert(s->type == IST_SSL);
+    return ((struct ssl_handle*)s->handle)->sock;
+}
+
 // encoded(read decoded data)
 static void
 ens_close(void* _handle)
 {
     struct ens_handle* handle = (struct ens_handle*)_handle;
-    ISclose(handle->is);
+    IS_close(handle->is);
     growbuf_clear(&handle->gb);
     free(handle);
 }
@@ -232,14 +258,14 @@ ens_read(void* _handle, unsigned char* buf, int len)
         char* p;
         struct growbuf gbtmp;
 
-        ISgets_to_growbuf(handle->is, &handle->gb, true);
+        IS_read2growbuf(handle->is, &handle->gb, true);
         if (handle->gb.len == 0)
             return 0;
         if (handle->encoding == ENC_BASE64)
             handle->gb.len = memchop(handle->gb.ptr, handle->gb.len);
         else if (handle->encoding == ENC_UUENCODE) {
             if (handle->gb.len >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-                ISgets_to_growbuf(handle->is, &handle->gb, true);
+                IS_read2growbuf(handle->is, &handle->gb, true);
             handle->gb.len = memchop(handle->gb.ptr, handle->gb.len);
         }
         growbuf_init_without_GC(&gbtmp);
@@ -264,7 +290,7 @@ ens_read(void* _handle, unsigned char* buf, int len)
 }
 
 struct input_stream*
-newEncodedStream(struct input_stream* inner_stream, enum StreamEncoding encoding)
+IS_newEncoded(struct input_stream* inner_stream, enum StreamEncoding encoding)
 {
     if (inner_stream == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 && encoding != ENC_UUENCODE))
         return inner_stream;
@@ -283,7 +309,7 @@ newEncodedStream(struct input_stream* inner_stream, enum StreamEncoding encoding
     return is;
 }
 
-int ISclose(struct input_stream* is)
+int IS_close(struct input_stream* is)
 {
     SigActionFunc prevtrap;
     if (is == NULL)
@@ -303,7 +329,7 @@ int ISclose(struct input_stream* is)
 
 #define POP_CHAR(bs) ((bs)->iseos ? '\0' : (bs)->stream.buf[(bs)->stream.cur++])
 
-int ISgetc(struct input_stream* is)
+int IS_getc(struct input_stream* is)
 {
     if (is == NULL)
         return '\0';
@@ -312,7 +338,7 @@ int ISgetc(struct input_stream* is)
     return POP_CHAR(is);
 }
 
-int ISundogetc(struct input_stream* is)
+int IS_ungetc(struct input_stream* is)
 {
     if (is == NULL)
         return -1;
@@ -324,18 +350,18 @@ int ISundogetc(struct input_stream* is)
     return -1;
 }
 
-pStr StrISgets2(struct input_stream* is, char crnl)
+pStr IS_gets(struct input_stream* is, bool crnl)
 {
     struct growbuf gb;
 
     if (is == NULL)
         return NULL;
     growbuf_init(&gb);
-    ISgets_to_growbuf(is, &gb, crnl);
+    IS_read2growbuf(is, &gb, crnl);
     return growbuf_to_Str(&gb);
 }
 
-void ISgets_to_growbuf(struct input_stream* is, struct growbuf* gb, char crnl)
+void IS_read2growbuf(struct input_stream* is, struct growbuf* gb, char crnl)
 {
     struct stream_buffer* sb = &is->stream;
     int i;
@@ -371,7 +397,7 @@ void ISgets_to_growbuf(struct input_stream* is, struct growbuf* gb, char crnl)
     return;
 }
 
-int ISread_n(struct input_stream* is, unsigned char* dst, int count)
+int IS_read(struct input_stream* is, unsigned char* dst, int count)
 {
     if (is == NULL || count <= 0)
         return -1;
@@ -391,7 +417,7 @@ int ISread_n(struct input_stream* is, unsigned char* dst, int count)
     return len;
 }
 
-int ISfileno(struct input_stream* is)
+int IS_FD(struct input_stream* is)
 {
     if (is == NULL)
         return -1;
@@ -403,7 +429,7 @@ int ISfileno(struct input_stream* is)
     case IST_SSL:
         return ((struct ssl_handle*)is->handle)->sock;
     case IST_ENCODED:
-        return ISfileno(((struct ens_handle*)is->handle)->is);
+        return IS_FD(((struct ens_handle*)is->handle)->is);
     default:
         return -1;
     }
@@ -668,9 +694,9 @@ pStr ssl_get_certificate(SSL* ssl, const char* hostname)
     return s;
 }
 
-bool canSaveFile(struct input_stream* stream, const char* path2)
+bool IS_canSaveTo(struct input_stream* stream, const char* path2)
 {
-    int des = ISfileno(stream);
+    int des = IS_FD(stream);
     if (des < 0)
         // not file
         return true;

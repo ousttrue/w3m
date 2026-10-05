@@ -57,7 +57,7 @@ news_command(News* news, const char* cmd, const char* arg, int* status)
     if (!status)
         return NULL;
     *status = -1;
-    tmp = StrISgets(news->rf);
+    tmp = IS_gets(news->rf, false);
     if (tmp && tmp->len)
         sscanf(tmp->ptr, "%d", status);
     return tmp;
@@ -70,7 +70,7 @@ news_close(News* news)
         return;
     if (news->rf) {
         news->rf->unclose = false;
-        ISclose(news->rf);
+        IS_close(news->rf);
         news->rf = NULL;
     }
     if (news->wf) {
@@ -88,7 +88,7 @@ news_open(News* news)
     sock = openSocket(news->host, "nntp", news->port);
     if (sock < 0)
         goto open_err;
-    news->rf = newInputStream(sock);
+    news->rf = IS_newFD(sock);
     if ((fd = dup(sock)) < 0)
         goto open_err;
     news->wf = fdopen(fd, "wb");
@@ -391,7 +391,7 @@ pStr loadNewsgroup(struct Url* pu, wc_ces* charset)
     if (status == 224) {
         f.scheme = SCM_NEWS;
         while (1) {
-            if (!(tmp = StrISgets(current_news.rf)))
+            if (!(tmp = IS_gets(current_news.rf, false)))
                 break;
             if (NEWS_ENDLINE(tmp->ptr))
                 break;
@@ -471,7 +471,7 @@ news_list:
     if (status != 215)
         goto news_end;
     while (1) {
-        if (!(tmp = StrISgets(current_news.rf)))
+        if (!(tmp = IS_gets(current_news.rf, false)))
             break;
         if (NEWS_ENDLINE(tmp->ptr))
             break;
