@@ -142,13 +142,13 @@ extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
 extern int currentLn(Buffer* buf);
-extern ParsedURL* schemeToProxy(int scheme);
+extern struct Url* schemeToProxy(int scheme);
 struct UrlStream;
 extern void examineFile(const char* path, struct UrlStream* uf);
 extern char* acceptableEncoding(void);
 extern int dir_exist(const char* path);
 extern int is_html_type(const char* type);
-extern Buffer* loadGeneralFile(const char* path, ParsedURL* current, const char* referer,
+extern Buffer* loadGeneralFile(const char* path, struct Url* current, const char* referer,
     int flag, FormList* request);
 extern int is_boundary(const unsigned char*, const unsigned char*);
 extern void push_render_image(pStr str, int width, int limit,
@@ -195,8 +195,8 @@ extern void completeHTMLstream(struct html_feed_environ*,
 extern void loadHTMLstream(struct UrlStream* f, Buffer* newBuf, FILE* src,
     int internal);
 extern Buffer* loadHTMLString(pStr page);
-extern pStr loadGopherDir(struct UrlStream* uf, ParsedURL* pu, wc_ces* charset);
-extern pStr loadGopherSearch(ParsedURL* pu, wc_ces* charset);
+extern pStr loadGopherDir(struct UrlStream* uf, struct Url* pu, wc_ces* charset);
+extern pStr loadGopherSearch(struct Url* pu, wc_ces* charset);
 extern Buffer* loadBuffer(struct UrlStream* uf, Buffer* newBuf);
 extern Buffer* loadImageBuffer(struct UrlStream* uf, Buffer* newBuf);
 extern void saveBuffer(Buffer* buf, FILE* f, int cont);
@@ -221,7 +221,7 @@ extern int checkOverWrite(const char* path);
 extern int confirm(pStr prompt);
 extern char confirm_multi(const char* prompt);
 extern int matchattr(const char* p, const char* attr, int len, pStr* value);
-extern void readHeader(struct UrlStream* uf, Buffer* newBuf, int thru, ParsedURL* pu);
+extern void readHeader(struct UrlStream* uf, Buffer* newBuf, int thru, struct Url* pu);
 extern char* checkHeader(Buffer* buf, const char* field);
 extern void displayBuffer(Buffer* buf, int mode);
 extern void addChar(char c, Lineprop mode);
@@ -257,9 +257,9 @@ extern Buffer* page_info_panel(Buffer* buf);
 
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
-extern ParsedURL* baseURL(Buffer* buf);
-extern pStr parsedURL2Str(const ParsedURL* pu);
-extern pStr parsedURL2RefererStr(ParsedURL* pu);
+extern struct Url* baseURL(Buffer* buf);
+extern pStr parsedURL2Str(const struct Url* pu);
+extern pStr parsedURL2RefererStr(struct Url* pu);
 extern int mailcapMatch(struct mailcap* mcap, const char* type);
 extern struct mailcap* searchMailcap(struct mailcap* table, const char* type);
 extern void initMailcap(void);

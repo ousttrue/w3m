@@ -79,7 +79,7 @@ static struct table* tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
 
 #if defined(USE_M17N) || defined(USE_IMAGE)
-static ParsedURL* cur_baseURL = NULL;
+static struct Url* cur_baseURL = NULL;
 #endif
 static wc_ces cur_document_charset = 0;
 
@@ -325,7 +325,7 @@ int matchattr(const char* p, const char* attr, int len, pStr* value)
     return 0;
 }
 
-void readHeader(URLFile* uf, Buffer* newBuf, int thru, ParsedURL* pu)
+void readHeader(URLFile* uf, Buffer* newBuf, int thru, struct Url* pu)
 {
     char *p, *q;
     const char* emsg;
@@ -658,7 +658,7 @@ checkContentType(Buffer* buf)
 }
 
 static int
-checkRedirection(ParsedURL* pu)
+checkRedirection(struct Url* pu)
 {
     static int nredir = 0;
     pStr tmp;
@@ -804,11 +804,11 @@ static pStr loadLocalDir(const char* dname)
  * loadGeneralFile: load file to buffer
  */
 Buffer*
-loadGeneralFile(const char* path, ParsedURL* volatile current, const char* referer,
+loadGeneralFile(const char* path, struct Url* volatile current, const char* referer,
     int flag, FormList* volatile request)
 {
     URLFile f, *volatile of = NULL;
-    ParsedURL pu;
+    struct Url pu;
     Buffer* b = NULL;
     Buffer* (*volatile proc)(URLFile*, Buffer*);
     const char *t = "text/plain", *volatile real_type = NULL;
@@ -827,8 +827,8 @@ loadGeneralFile(const char* path, ParsedURL* volatile current, const char* refer
     pStr volatile page = NULL;
     int gopher_download = false;
     wc_ces charset = WC_CES_US_ASCII;
-    HRequest hr;
-    ParsedURL* volatile auth_pu;
+    struct HttpRequest hr;
+    struct Url* volatile auth_pu;
 
     const char* volatile tpath = path;
     add_auth_cookie_flag = 0;
@@ -844,7 +844,7 @@ load_doc:
             tpath = (char*)sc_redirect;
             request = NULL;
             add_auth_cookie_flag = 0;
-            current = New(ParsedURL);
+            current = New(struct Url);
             *current = pu;
             status = HTST_NORMAL;
             goto load_doc;
@@ -955,7 +955,7 @@ load_doc:
             tpath = url_encode(p, NULL, 0);
             request = NULL;
             UFclose(&f);
-            current = New(ParsedURL);
+            current = New(struct Url);
             *current = pu;
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
@@ -1104,7 +1104,7 @@ load_doc:
             request = NULL;
             UFclose(&f);
             add_auth_cookie_flag = 0;
-            current = New(ParsedURL);
+            current = New(struct Url);
             *current = copyParsedURL(&pu);
             t_buf = newBuffer(INIT_BUFFER_WIDTH);
             t_buf->bufferprop |= BP_REDIRECTED;
@@ -2283,7 +2283,7 @@ pStr process_img(struct parsed_tag* tag, int width)
         i0 = i;
         if (w < 0 || i < 0) {
             Image image;
-            ParsedURL u;
+            struct Url u;
 
             u = parseURL2(p, cur_baseURL);
             image.url = parsedURL2Str(&u)->ptr;
@@ -4152,7 +4152,7 @@ int HTMLtagproc1(struct parsed_tag* tag, struct html_feed_environ* h_env)
 #if defined(USE_M17N) || defined(USE_IMAGE)
         p = NULL;
         if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            cur_baseURL = New(ParsedURL);
+            cur_baseURL = New(struct Url);
             *cur_baseURL = parseURL(p, NULL);
         }
 #endif
@@ -4422,7 +4422,7 @@ HTMLlineproc2body(Buffer* buf, pStr (*feed)(void), int llimit)
     Anchor** a_textarea = NULL;
     Anchor** a_select = NULL;
 #if defined(USE_M17N) || defined(USE_IMAGE)
-    ParsedURL* base = baseURL(buf);
+    struct Url* base = baseURL(buf);
 #endif
     wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
         buf->document_charset);
@@ -4668,7 +4668,7 @@ HTMLlineproc2body(Buffer* buf, pStr (*feed)(void), int llimit)
                         a_img->hseq = iseq;
                         a_img->image = NULL;
                         if (iseq > 0) {
-                            ParsedURL u;
+                            struct Url u;
                             Image* image;
 
                             u = parseURL2(a_img->url, base);
@@ -4856,7 +4856,7 @@ HTMLlineproc2body(Buffer* buf, pStr (*feed)(void), int llimit)
                         p = url_encode(remove_space(p)->ptr, NULL,
                             buf->document_charset);
                         if (!buf->baseURL)
-                            buf->baseURL = New(ParsedURL);
+                            buf->baseURL = New(struct Url);
                         *buf->baseURL = parseURL2(p, &buf->currentURL);
 #if defined(USE_M17N) || defined(USE_IMAGE)
                         base = buf->baseURL;
@@ -6041,7 +6041,7 @@ loadHTMLString(pStr page)
 /*
  * loadGopherDir: get gopher directory
  */
-pStr loadGopherDir(URLFile* uf, ParsedURL* pu, wc_ces* charset)
+pStr loadGopherDir(URLFile* uf, struct Url* pu, wc_ces* charset)
 {
     pStr volatile tmp;
     pStr lbuf, name, file, host, port, type;
@@ -6161,7 +6161,7 @@ gopher_end:
     return tmp;
 }
 
-pStr loadGopherSearch(ParsedURL* pu, wc_ces* charset)
+pStr loadGopherSearch(struct Url* pu, wc_ces* charset)
 {
     pStr tmp;
     char* volatile p, * volatile q;
@@ -6279,7 +6279,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
     URLFile f;
     // volatile SigActionFunc prevtrap = NULL;
     struct stat st;
-    ParsedURL* pu = newBuf ? &newBuf->currentURL : NULL;
+    struct Url* pu = newBuf ? &newBuf->currentURL : NULL;
 
     loadImage(newBuf, IMG_FLAG_STOP);
     image.url = uf->url;
@@ -6287,7 +6287,7 @@ loadImageBuffer(URLFile* uf, Buffer* newBuf)
     image.width = -1;
     image.height = -1;
     image.cache = NULL;
-    cache = getImage(&image, (ParsedURL*)pu, IMG_FLAG_AUTO);
+    cache = getImage(&image, (struct Url*)pu, IMG_FLAG_AUTO);
     if (!(pu && pu->is_nocache) && cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st))
         goto image_buffer;
 

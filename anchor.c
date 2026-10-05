@@ -739,7 +739,7 @@ link_list_panel(Buffer* buf)
     const FormItemList* fi;
     int i;
     char *t, *u, *p;
-    ParsedURL pu;
+    struct Url pu;
     /* FIXME: gettextize? */
     pStr tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");

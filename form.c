@@ -785,7 +785,7 @@ static struct pre_form*
 add_pre_form(struct pre_form* prev,
     const char* url, Regex* re_url, const char* name, const char* action)
 {
-    ParsedURL pu;
+    struct Url pu;
     struct pre_form* new;
 
     if (prev)

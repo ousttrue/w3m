@@ -7,14 +7,14 @@ struct auth_param {
     pStr val;
 };
 
-struct http_request;
+struct HttpRequest;
 struct form_list;
 struct http_auth {
     int pri;
     char* scheme;
     struct auth_param* param;
-    pStr (*cred)(struct http_auth* ha, pStr uname, pStr pw, ParsedURL* pu,
-        struct http_request* hr, struct form_list* request);
+    pStr (*cred)(struct http_auth* ha, pStr uname, pStr pw, struct Url* pu,
+        struct HttpRequest* hr, struct form_list* request);
 };
 
 enum AUTHCHR {
@@ -24,17 +24,17 @@ enum AUTHCHR {
 };
 
 // from ftp
-int find_auth_user_passwd(ParsedURL* pu, char* realm,
+int find_auth_user_passwd(struct Url* pu, char* realm,
     pStr* uname, pStr* pwd, int is_proxy);
 
 // from ftp and http
-void add_auth_user_passwd(ParsedURL* pu, char* realm,
+void add_auth_user_passwd(struct Url* pu, char* realm,
     pStr uname, pStr pwd, int is_proxy);
 
 // from file
 struct TextList;
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
-    struct TextList* extra_header, ParsedURL* pu, struct http_request* hr,
+    struct TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     struct form_list* request,
     pStr* uname, pStr* pwd);
 

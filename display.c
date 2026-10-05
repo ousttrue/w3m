@@ -245,7 +245,7 @@ make_lastline_link(Buffer* buf, const char* title, const char* url)
 {
     pStr s = NULL, u;
     Lineprop* pr;
-    ParsedURL pu;
+    struct Url pu;
     char* p;
     int l = COLS - 1, i;
 
@@ -612,7 +612,7 @@ redrawLine(Buffer* buf, Line* l, int i)
     Lineprop* pr;
     Linecolor* pc;
     Anchor* a;
-    ParsedURL url;
+    struct Url url;
     int k, vpos = -1;
 
     if (l == NULL) {
@@ -822,7 +822,7 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
     Linecolor* pc;
     int bcol, ecol;
     Anchor* a;
-    ParsedURL url;
+    struct Url url;
     int k, vpos = -1;
 
     if (l == NULL)

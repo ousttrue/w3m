@@ -21,7 +21,7 @@ struct frame_body {
     char flags;
     const char* name;
     const char* url;
-    ParsedURL* baseURL;
+    struct Url* baseURL;
     const char* source;
     const char* type;
     const char* referer;
@@ -40,7 +40,7 @@ struct frameset {
     char attr;
     char dummy;
     const char* name;
-    ParsedURL* currentURL;
+    struct Url* currentURL;
     char** width;
     char** height;
     int col;

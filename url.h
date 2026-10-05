@@ -40,7 +40,6 @@ struct Url {
     const char* label;
     int is_nocache;
 };
-typedef struct Url ParsedURL;
 
 const char* schemeNumToName(enum UrlScheme scheme);
 enum UrlScheme getURLScheme(const char** url);

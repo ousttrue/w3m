@@ -44,16 +44,16 @@ char* w3m_reqlog;
 
 char use_proxy = true;
 char* HTTP_proxy = NULL;
-ParsedURL HTTP_proxy_parsed;
+struct Url HTTP_proxy_parsed;
 #ifdef USE_SSL
 char* HTTPS_proxy = NULL;
-ParsedURL HTTPS_proxy_parsed;
+struct Url HTTPS_proxy_parsed;
 #endif /* USE_SSL */
 char* FTP_proxy = NULL;
-ParsedURL FTP_proxy_parsed;
+struct Url FTP_proxy_parsed;
 #ifdef USE_GOPHER
 char* GOPHER_proxy = NULL;
-ParsedURL GOPHER_proxy_parsed;
+struct Url GOPHER_proxy_parsed;
 #endif /* USE_GOPHER */
 char* NO_proxy = NULL;
 struct TextList* NO_proxy_domains;
@@ -89,7 +89,7 @@ static struct table2 DefaultGuess[] = {
     { NULL, NULL }
 };
 
-static void add_index_file(ParsedURL* pu, URLFile* uf);
+static void add_index_file(struct Url* pu, URLFile* uf);
 
 #ifdef SOCK_DEBUG
 #include <stdarg.h>
@@ -433,7 +433,7 @@ write_from_file(int sock, const char* file)
     }
 }
 
-ParsedURL*
+struct Url*
 baseURL(Buffer* buf)
 {
     if (buf->bufferprop & BP_NO_URL) {
@@ -631,7 +631,7 @@ error:
 }
 
 static pStr
-_parsedURL2Str(const ParsedURL* pu, int pass, int user, int label)
+_parsedURL2Str(const struct Url* pu, int pass, int user, int label)
 {
     pStr tmp;
     /* See SCM_* defines in html.h for correct order of entries. */
@@ -733,13 +733,13 @@ _parsedURL2Str(const ParsedURL* pu, int pass, int user, int label)
     return tmp;
 }
 
-pStr parsedURL2Str(const ParsedURL* pu)
+pStr parsedURL2Str(const struct Url* pu)
 {
     return _parsedURL2Str(pu, false, true, true);
 }
 
 static pStr
-parsedURL2RefererOriginStr(ParsedURL* pu)
+parsedURL2RefererOriginStr(struct Url* pu)
 {
     pStr s;
     const char *f = pu->file, *q = pu->query;
@@ -753,13 +753,13 @@ parsedURL2RefererOriginStr(ParsedURL* pu)
     return s;
 }
 
-pStr parsedURL2RefererStr(ParsedURL* pu)
+pStr parsedURL2RefererStr(struct Url* pu)
 {
     return _parsedURL2Str(pu, false, false, false);
 }
 
 static char*
-otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
+otherinfo(struct Url* target, struct Url* current, const char* referer)
 {
     pStr s = Strnew();
     const int* no_referer_ptr;
@@ -825,7 +825,7 @@ otherinfo(ParsedURL* target, ParsedURL* current, const char* referer)
     return s->ptr;
 }
 
-pStr HTTPrequestMethod(HRequest* hr)
+pStr HTTPrequestMethod(struct HttpRequest* hr)
 {
     switch (hr->command) {
     case HR_COMMAND_CONNECT:
@@ -843,7 +843,7 @@ pStr HTTPrequestMethod(HRequest* hr)
     return NULL;
 }
 
-pStr HTTPrequestURI(ParsedURL* pu, HRequest* hr)
+pStr HTTPrequestURI(struct Url* pu, struct HttpRequest* hr)
 {
     pStr tmp = Strnew();
     if (hr->command == HR_COMMAND_CONNECT) {
@@ -861,7 +861,7 @@ pStr HTTPrequestURI(ParsedURL* pu, HRequest* hr)
 }
 
 static pStr
-HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, struct TextList* extra)
+HTTPrequest(struct Url* pu, struct Url* current, struct HttpRequest* hr, struct TextList* extra)
 {
     pStr tmp;
     struct TextListItem* i;
@@ -941,9 +941,9 @@ HTTPrequest(ParsedURL* pu, ParsedURL* current, HRequest* hr, struct TextList* ex
 }
 
 URLFile
-openURL(const char* url, ParsedURL* pu, ParsedURL* current,
+openURL(const char* url, struct Url* pu, struct Url* current,
     struct URLOption* option, FormList* request, struct TextList* extra_header,
-    URLFile* ouf, HRequest* hr, unsigned char* status)
+    URLFile* ouf, struct HttpRequest* hr, unsigned char* status)
 {
     pStr tmp;
     int sock, scheme;
@@ -951,7 +951,7 @@ openURL(const char* url, ParsedURL* pu, ParsedURL* current,
     pStr gophertmp;
     char type;
     int n;
-    HRequest hr0;
+    struct HttpRequest hr0;
     SSL* sslh = NULL;
 
     if (hr == NULL)
@@ -1321,7 +1321,7 @@ retry:
 
 /* add index_file if exists */
 static void
-add_index_file(ParsedURL* pu, URLFile* uf)
+add_index_file(struct Url* pu, URLFile* uf)
 {
     char *p, *q;
     struct TextList* index_file_list = NULL;
@@ -1535,10 +1535,10 @@ end:
     return ret;
 }
 
-ParsedURL*
+struct Url*
 schemeToProxy(int scheme)
 {
-    ParsedURL* pu = NULL; /* for gcc */
+    struct Url* pu = NULL; /* for gcc */
     switch (scheme) {
     case SCM_HTTP:
         pu = &HTTP_proxy_parsed;
@@ -1566,10 +1566,10 @@ schemeToProxy(int scheme)
 }
 
 wc_ces
-url_to_charset(const char* url, ParsedURL* base, wc_ces doc_charset)
+url_to_charset(const char* url, struct Url* base, wc_ces doc_charset)
 {
-    ParsedURL* pu;
-    ParsedURL pu_buf;
+    struct Url* pu;
+    struct Url pu_buf;
     const wc_ces* csptr;
 
     if (url && *url && *url != '#') {
@@ -1585,7 +1585,7 @@ url_to_charset(const char* url, ParsedURL* base, wc_ces doc_charset)
                                                     : DocumentCharset;
 }
 
-char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset)
+char* url_encode(const char* url, struct Url* base, wc_ces doc_charset)
 {
     return url_quote_conv(url,
         url_to_charset(url, base, doc_charset))

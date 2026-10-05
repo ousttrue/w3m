@@ -6,12 +6,12 @@
 
 #define NO_REFERER ((char*)-1)
 
-typedef struct http_request {
+struct HttpRequest {
     char command;
     char flag;
     const char* referer;
     FormList* request;
-} HRequest;
+};
 
 #define HR_COMMAND_GET 0
 #define HR_COMMAND_POST 1
@@ -26,13 +26,13 @@ typedef struct http_request {
 #define HTST_NORMAL 0
 #define HTST_CONNECT 1
 
-pStr HTTPrequestMethod(HRequest* hr);
-pStr HTTPrequestURI(ParsedURL* pu, HRequest* hr);
+pStr HTTPrequestMethod(struct HttpRequest* hr);
+pStr HTTPrequestURI(struct Url* pu, struct HttpRequest* hr);
 struct TextList;
-URLFile openURL(const char* url, ParsedURL* pu, ParsedURL* current,
+URLFile openURL(const char* url, struct Url* pu, struct Url* current,
     struct URLOption* option, FormList* request,
     struct TextList* extra_header, URLFile* ouf,
-    HRequest* hr, unsigned char* status);
+    struct HttpRequest* hr, unsigned char* status);
 
 extern pStr header_string;
 extern int override_content_type;
@@ -41,16 +41,16 @@ extern char* w3m_reqlog;
 
 extern char use_proxy;
 extern char* HTTP_proxy;
-extern ParsedURL HTTP_proxy_parsed;
+extern struct Url HTTP_proxy_parsed;
 #ifdef USE_SSL
 extern char* HTTPS_proxy;
-extern ParsedURL HTTPS_proxy_parsed;
+extern struct Url HTTPS_proxy_parsed;
 #endif /* USE_SSL */
 extern char* FTP_proxy;
-extern ParsedURL FTP_proxy_parsed;
+extern struct Url FTP_proxy_parsed;
 #ifdef USE_GOPHER
 extern char* GOPHER_proxy;
-extern ParsedURL GOPHER_proxy_parsed;
+extern struct Url GOPHER_proxy_parsed;
 #endif /* USE_GOPHER */
 extern char* NO_proxy;
 extern struct TextList* NO_proxy_domains;
@@ -78,9 +78,9 @@ extern int ssl_path_modified;
 #endif
 
 int needs_proxy(const char* domain);
-char* url_encode(const char* url, ParsedURL* base, wc_ces doc_charset);
+char* url_encode(const char* url, struct Url* base, wc_ces doc_charset);
 int openSocket(const char* hostname,
     const char* remoteport_name, unsigned short remoteport_num);
-wc_ces url_to_charset(const char* url, ParsedURL* base, wc_ces doc_charset);
+wc_ces url_to_charset(const char* url, struct Url* base, wc_ces doc_charset);
 struct _Buffer;
 pStr url_decode2(const char* url, struct _Buffer* buf);

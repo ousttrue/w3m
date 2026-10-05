@@ -83,7 +83,7 @@ find_auth_pass_entry(const char* host, int port, const char* realm, const char* 
     return NULL;
 }
 
-int find_auth_user_passwd(ParsedURL* pu, char* realm,
+int find_auth_user_passwd(struct Url* pu, char* realm,
     pStr* uname, pStr* pwd, int is_proxy)
 {
     struct auth_pass* ent;
@@ -102,7 +102,7 @@ int find_auth_user_passwd(ParsedURL* pu, char* realm,
     return 0;
 }
 
-void add_auth_user_passwd(ParsedURL* pu, char* realm, pStr uname, pStr pwd,
+void add_auth_user_passwd(struct Url* pu, char* realm, pStr uname, pStr pwd,
     int is_proxy)
 {
     struct auth_pass ent;
@@ -117,7 +117,7 @@ void add_auth_user_passwd(ParsedURL* pu, char* realm, pStr uname, pStr pwd,
     add_auth_pass_entry(&ent, 0, 1);
 }
 
-static void invalidate_auth_user_passwd(ParsedURL* pu, char* realm, pStr uname, pStr pwd,
+static void invalidate_auth_user_passwd(struct Url* pu, char* realm, pStr uname, pStr pwd,
     int is_proxy)
 {
     struct auth_pass* ent;
@@ -303,7 +303,7 @@ pStr get_auth_param(struct auth_param* auth, const char* name)
 }
 
 void getAuthCookie(struct http_auth* hauth, char* auth_header,
-    struct TextList* extra_header, ParsedURL* pu, struct http_request* hr,
+    struct TextList* extra_header, struct Url* pu, struct HttpRequest* hr,
     FormList* request,
     pStr* uname, pStr* pwd)
 {
@@ -562,8 +562,8 @@ extract_auth_param(const char* q, struct auth_param* auth)
 }
 
 static pStr
-AuthBasicCred(struct http_auth* ha, pStr uname, pStr pw, ParsedURL* pu,
-    HRequest* hr, FormList* request)
+AuthBasicCred(struct http_auth* ha, pStr uname, pStr pw, struct Url* pu,
+    struct HttpRequest* hr, FormList* request)
 {
     pStr s = Strdup(uname);
     Strcat_char(s, ':');
@@ -635,8 +635,8 @@ enum {
 };
 
 static pStr
-AuthDigestCred(struct http_auth* ha, pStr uname, pStr pw, ParsedURL* pu,
-    HRequest* hr, FormList* request)
+AuthDigestCred(struct http_auth* ha, pStr uname, pStr pw, struct Url* pu,
+    struct HttpRequest* hr, FormList* request)
 {
     pStr tmp, a1buf, a2buf, rd, s;
     unsigned char md5[MD5_DIGEST_LENGTH + 1];

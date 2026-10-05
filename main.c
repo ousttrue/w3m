@@ -156,7 +156,7 @@ static void _goLine(const char*);
 static void _newT(void);
 static void _nextA(int);
 static void _prevA(int);
-static void cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* request);
+static void cmd_loadURL(const char* url, struct Url* current, const char* referer, FormList* request);
 static void cmd_loadfile(const char* path);
 static void delBuffer(Buffer* buf);
 static void do_dump(Buffer*);
@@ -549,7 +549,7 @@ do_dump(Buffer* buf)
                 in_order[i] = buf->hrefList->anchors + i;
             qsort(in_order, nanchor, sizeof(Anchor*), cmp_anchor_hseq);
             for (i = 0; i < nanchor; i++) {
-                ParsedURL pu;
+                struct Url pu;
                 char* url;
                 if (in_order[i]->slave)
                     continue;
@@ -1960,7 +1960,7 @@ loadLink(const char* url, const char* target, const char* referer, FormList* req
     Buffer *buf, *nfbuf;
     union frameset_element* f_element = NULL;
     int flag = 0;
-    ParsedURL *base, pu;
+    struct Url *base, pu;
     const int* no_referer_ptr;
 
     message(Sprintf("loading %s", url)->ptr, 0, 0);
@@ -2722,7 +2722,7 @@ _nextA(int visited)
     BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
-    ParsedURL url;
+    struct Url url;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -2805,7 +2805,7 @@ _prevA(int visited)
     BufferPoint* po;
     Anchor *an, *pan;
     int i, x, y, n = searchKeyNum();
-    ParsedURL url;
+    struct Url url;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -3240,7 +3240,7 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF, "Delete previous buffer (mainly for local C
 }
 
 static void
-cmd_loadURL(const char* url, ParsedURL* current, const char* referer, FormList* request)
+cmd_loadURL(const char* url, struct Url* current, const char* referer, FormList* request)
 {
 
     if (handleMailto(url))
@@ -3344,7 +3344,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer")
         && !(non_null(url = getenv("WWW_HOME"))))
         return;
 
-    ParsedURL p_url;
+    struct Url p_url;
     Buffer* cur_buf = Currentbuf;
     SKIP_BLANKS(url);
     url = url_encode(url, NULL, 0);
@@ -3399,7 +3399,7 @@ int _strSession(char* sf)
 {
     Buffer* buf;
     FILE* f;
-    ParsedURL* url;
+    struct Url* url;
     char* sep;
     struct stat st;
 
@@ -3518,7 +3518,7 @@ void follow_map(struct parsed_tagarg* arg)
     Anchor* an;
     struct MapArea* a;
     int x, y;
-    ParsedURL p_url;
+    struct Url p_url;
 
     an = retrieveCurrentImg(Currentbuf);
     x = Currentbuf->cursorX + Currentbuf->rootX;
@@ -3558,7 +3558,7 @@ void follow_map(struct parsed_tagarg* arg)
 DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
 {
     LinkList* l = link_menu(Currentbuf);
-    ParsedURL p_url;
+    struct Url p_url;
 
     if (!l || !l->url)
         return;
@@ -3749,7 +3749,7 @@ _peekURL(int only_img)
 {
 
     Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
     static pStr s = NULL;
     static Lineprop* p = NULL;
     Lineprop* pp;
@@ -4250,7 +4250,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser")
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser")
 {
     Anchor* a;
-    ParsedURL pu;
+    struct Url pu;
 
     if (Currentbuf->firstLine == NULL)
         return;
@@ -4394,7 +4394,7 @@ void set_buffer_environ(Buffer* buf)
         const char* s = GetWord(buf).ptr;
         set_environ("W3M_CURRENT_WORD", s ? s : "");
         Anchor* a = retrieveCurrentAnchor(buf);
-        ParsedURL pu;
+        struct Url pu;
         if (a) {
             pu = parseURL2(a->url, baseURL(buf));
             set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
@@ -5728,7 +5728,7 @@ int main(int argc, char** argv)
     if (getimage_args) {
         char* image_url = conv_from_system(getimage_args[0]);
         char* base_url = conv_from_system(getimage_args[1]);
-        ParsedURL base_pu;
+        struct Url base_pu;
 
         base_pu = parseURL2(base_url, NULL);
         image_source = getimage_args[2];

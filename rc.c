@@ -1763,7 +1763,7 @@ loadSiteconf(void)
             opt = getWord(&p).ptr;
             SKIP_BLANKS(p);
             if (!newent->re_url) {
-                ParsedURL pu;
+                struct Url pu;
                 if (!url || !*url)
                     continue;
                 pu = parseURL2(url, NULL);
@@ -1828,7 +1828,7 @@ static int strmatchlen(const char* s1, const char* s2, int maxlen)
     return i;
 }
 
-void* querySiteconf(ParsedURL* query_pu, int field)
+void* querySiteconf(struct Url* query_pu, int field)
 {
     struct siteconf_rec* ent;
     pStr u;

@@ -61,7 +61,7 @@ const char* get_param_option(const char* name);
 pStr rcFile(const char* base);
 int set_param_option(const char* option);
 int str_to_bool(const char* value, int old);
-void* querySiteconf(ParsedURL* query_pu, int field);
+void* querySiteconf(struct Url* query_pu, int field);
 void init_rc(void);
 void panel_set_option(struct parsed_tagarg* arg);
 void show_params(FILE* fp);

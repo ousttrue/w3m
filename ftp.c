@@ -366,7 +366,7 @@ void closeFTP(void)
 }
 
 struct input_stream*
-openFTPStream(ParsedURL* pu, URLFile* uf)
+openFTPStream(struct Url* pu, URLFile* uf)
 {
     pStr tmp;
     int status;
@@ -473,9 +473,9 @@ ftp_dir:
 }
 
 #ifdef USE_M17N
-pStr loadFTPDir(ParsedURL* pu, wc_ces* charset)
+pStr loadFTPDir(struct Url* pu, wc_ces* charset)
 #else
-pStr loadFTPDir0(ParsedURL* pu)
+pStr loadFTPDir0(struct Url* pu)
 #endif
 {
     pStr FTPDIRtmp;

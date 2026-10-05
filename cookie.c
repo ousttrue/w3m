@@ -49,7 +49,7 @@ struct portlist {
 };
 
 struct cookie {
-    ParsedURL url;
+    struct Url url;
     pStr name;
     pStr value;
     time_t expires;
@@ -285,7 +285,7 @@ pStr make_cookie(struct cookie* cookie)
     return tmp;
 }
 
-int match_cookie(ParsedURL* pu, struct cookie* cookie, const char* domainname)
+int match_cookie(struct Url* pu, struct cookie* cookie, const char* domainname)
 {
     if (!domainname)
         return 0;
@@ -320,7 +320,7 @@ get_cookie(struct cookie* first_node, pStr domain, pStr path, pStr name)
     return NULL;
 }
 
-pStr find_cookie(ParsedURL* pu)
+pStr find_cookie(struct Url* pu)
 {
     pStr tmp;
     struct cookie *p, *p1, *fco = NULL;
@@ -391,7 +391,7 @@ int check_avoid_wrong_number_of_dots_domain(pStr domain)
     }
 }
 
-int add_cookie(ParsedURL* pu, pStr name, pStr value,
+int add_cookie(struct Url* pu, pStr name, pStr value,
     time_t expires, pStr domain, pStr path,
     int flag, pStr comment, int version, pStr port, pStr commentURL)
 {

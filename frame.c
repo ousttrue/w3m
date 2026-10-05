@@ -308,7 +308,7 @@ void resetFrameElement(union frameset_element* f_element,
         /* frame cascade */
         deleteFrameSetElement(*f_element);
         f_element->set = buf->frameset;
-        f_element->set->currentURL = New(ParsedURL);
+        f_element->set->currentURL = New(struct Url);
         *f_element->set->currentURL = copyParsedURL(&buf->currentURL);
         buf->frameset = popFrameTree(&(buf->frameQ));
         f_element->set->name = f_name;
@@ -332,8 +332,8 @@ void resetFrameElement(union frameset_element* f_element,
 }
 
 static struct frameset*
-frame_download_source(struct frame_body* b, ParsedURL* currentURL,
-    ParsedURL* baseURL, int flag)
+frame_download_source(struct frame_body* b, struct Url* currentURL,
+    struct Url* baseURL, int flag)
 {
     Buffer* buf;
     struct frameset* ret_frameset = NULL;
@@ -377,7 +377,7 @@ frame_download_source(struct frame_body* b, ParsedURL* currentURL,
     if (buf->frameset) {
         ret_frameset = buf->frameset;
         ret_frameset->name = b->name;
-        ret_frameset->currentURL = New(ParsedURL);
+        ret_frameset->currentURL = New(struct Url);
         *ret_frameset->currentURL = copyParsedURL(&buf->currentURL);
         buf->frameset = popFrameTree(&(buf->frameQ));
     }
@@ -450,7 +450,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
     URLFile f2;
     wc_ces charset, doc_charset;
     const char *d_target, *p_target, *s_target, *t_target;
-    ParsedURL *currentURL, base;
+    struct Url *currentURL, base;
     volatile SigActionFunc prevtrap = NULL;
     int flag;
 
@@ -654,7 +654,7 @@ createFrameFile(struct frameset* f, FILE* f1, Buffer* current, int level,
                     if (is_tag) {
                         const char* q = tok->ptr;
                         int j, a_target = 0;
-                        ParsedURL url;
+                        struct Url url;
 
                         if (!(tag = parse_tag(&q, false)))
                             goto token_end;
