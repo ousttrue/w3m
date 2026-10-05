@@ -447,7 +447,7 @@ void displayBuffer(Buffer* buf, int mode)
     tty_title(os->ptr);
     refresh(tty_file());
 
-    if (activeImage && displayImage && buf->img && buf->image_loaded) {
+    if (activeImage && displayImage && buf->imgList && buf->image_loaded) {
         drawImage();
     }
 
@@ -515,7 +515,7 @@ drawAnchorCursor(Buffer* buf)
 
     if (!buf->firstLine || !buf->hmarklist)
         return;
-    if (!buf->href && !buf->formitem)
+    if (!buf->hrefList && !buf->formList)
         return;
 
     an = retrieveCurrentAnchor(buf);
@@ -529,13 +529,13 @@ drawAnchorCursor(Buffer* buf)
     eline = tline + buf->lines;
     prevhseq = buf->hmarklist->prevhseq;
 
-    if (buf->href) {
-        drawAnchorCursor0(buf, buf->href, hseq, prevhseq, tline, eline, 1);
-        drawAnchorCursor0(buf, buf->href, hseq, -1, tline, eline, 0);
+    if (buf->hrefList) {
+        drawAnchorCursor0(buf, buf->hrefList, hseq, prevhseq, tline, eline, 1);
+        drawAnchorCursor0(buf, buf->hrefList, hseq, -1, tline, eline, 0);
     }
-    if (buf->formitem) {
-        drawAnchorCursor0(buf, buf->formitem, hseq, prevhseq, tline, eline, 1);
-        drawAnchorCursor0(buf, buf->formitem, hseq, -1, tline, eline, 0);
+    if (buf->formList) {
+        drawAnchorCursor0(buf, buf->formList, hseq, prevhseq, tline, eline, 1);
+        drawAnchorCursor0(buf, buf->formList, hseq, -1, tline, eline, 0);
     }
     buf->hmarklist->prevhseq = hseq;
 }
@@ -593,7 +593,7 @@ redrawNLine(Buffer* buf, int n)
         clrtobotx();
     }
 
-    if (!(activeImage && displayImage && buf->img))
+    if (!(activeImage && displayImage && buf->imgList))
         return;
     move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
     for (i = 0, l = buf->topLine; i < buf->lines && l; i++, l = l->next) {
@@ -661,7 +661,7 @@ redrawLine(Buffer* buf, Line* l, int i)
 
     for (j = 0; rcol - column < buf->cols && pos + j < l->len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
+            a = retrieveAnchor(buf->hrefList, l->linenumber, pos + j);
             if (a) {
                 url = parseURL2(a->url, baseURL(buf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
@@ -763,7 +763,7 @@ redrawLineImage(Buffer* buf, Line* l, int i)
             rcol = COLPOS(l, pos + j + 1);
             continue;
         }
-        a = retrieveAnchor(buf->img, l->linenumber, pos + j);
+        a = retrieveAnchor(buf->imgList, l->linenumber, pos + j);
         if (a && a->image && a->image->touch < image_touch) {
             Image* image = a->image;
             ImageCache* cache;
@@ -840,7 +840,7 @@ redrawLineRegion(Buffer* buf, Line* l, int i, int bpos, int epos)
 
     for (j = 0; rcol - column < buf->cols && pos + j < l->len; j += delta) {
         if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-            a = retrieveAnchor(buf->href, l->linenumber, pos + j);
+            a = retrieveAnchor(buf->hrefList, l->linenumber, pos + j);
             if (a) {
                 url = parseURL2(a->url, baseURL(buf));
                 if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {

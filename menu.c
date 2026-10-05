@@ -2173,7 +2173,7 @@ Anchor*
 accesskey_menu(Buffer* buf)
 {
     Menu menu;
-    AnchorList* al = buf->href;
+    AnchorList* al = buf->hrefList;
     Anchor* a;
     Anchor** ap;
     int i, n, nitem = 0, key = -1;
@@ -2274,7 +2274,7 @@ Anchor*
 list_menu(Buffer* buf)
 {
     Menu menu;
-    AnchorList* al = buf->href;
+    AnchorList* al = buf->hrefList;
     Anchor* a;
     Anchor** ap;
     int i, n, nitem = 0, key = -1, two = false;

@@ -4694,7 +4694,7 @@ HTMLlineproc2body(Buffer* buf, pStr (*feed)(void), int llimit)
                                 IMG_FLAG_SKIP);
                         } else if (iseq < 0) {
                             BufferPoint* po = buf->imarklist->marks - iseq - 1;
-                            Anchor* a = retrieveAnchor(buf->img,
+                            Anchor* a = retrieveAnchor(buf->imgList,
                                 po->line, po->pos);
                             if (a) {
                                 a_img->url = a->url;
@@ -4995,8 +4995,8 @@ HTMLlineproc2body(Buffer* buf, pStr (*feed)(void), int llimit)
             forms[form_id]->next = forms[form_id - 1];
     buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
     if (n_textarea)
-        addMultirowsForm(buf, buf->formitem);
-    addMultirowsImg(buf, buf->img);
+        addMultirowsForm(buf, buf->formList);
+    addMultirowsImg(buf, buf->imgList);
 }
 
 static void
@@ -5577,7 +5577,7 @@ loadHTMLBuffer(URLFile* f, Buffer* newBuf)
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
     if (n_textarea)
-        formResetBuffer(newBuf, newBuf->formitem);
+        formResetBuffer(newBuf, newBuf->formList);
     if (src)
         fclose(src);
 
@@ -6034,7 +6034,7 @@ loadHTMLString(pStr page)
     newBuf->type = "text/html";
     newBuf->real_type = newBuf->type;
     if (n_textarea)
-        formResetBuffer(newBuf, newBuf->formitem);
+        formResetBuffer(newBuf, newBuf->formList);
     return newBuf;
 }
 

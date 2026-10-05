@@ -334,7 +334,7 @@ void deleteImage(Buffer* buf)
 
     if (!buf)
         return;
-    al = buf->img;
+    al = buf->imgList;
     if (!al)
         return;
     for (i = 0, a = al->anchors; i < al->nanchor; i++, a++) {
@@ -355,7 +355,7 @@ void getAllImage(Buffer* buf)
     if (!buf)
         return;
     buf->image_loaded = true;
-    al = buf->img;
+    al = buf->imgList;
     if (!al)
         return;
     current = baseURL(buf);
@@ -377,7 +377,7 @@ showImageProgress(Buffer* buf)
 
     if (!buf)
         return;
-    al = buf->img;
+    al = buf->imgList;
     if (!al)
         return;
     for (i = 0, l = 0, n = 0, a = al->anchors; i < al->nanchor; i++, a++) {

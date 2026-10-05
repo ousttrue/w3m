@@ -541,12 +541,12 @@ do_dump(Buffer* buf)
     if (w3m_dump == DUMP_BUFFER) {
         int i;
         saveBuffer(buf, stdout, false);
-        if (displayLinkNumber && buf->href) {
-            int nanchor = buf->href->nanchor;
+        if (displayLinkNumber && buf->hrefList) {
+            int nanchor = buf->hrefList->nanchor;
             printf("\nReferences:\n\n");
-            Anchor** in_order = New_N(Anchor*, buf->href->nanchor);
+            Anchor** in_order = New_N(Anchor*, buf->hrefList->nanchor);
             for (i = 0; i < nanchor; i++)
-                in_order[i] = buf->href->anchors + i;
+                in_order[i] = buf->hrefList->anchors + i;
             qsort(in_order, nanchor, sizeof(Anchor*), cmp_anchor_hseq);
             for (i = 0; i < nanchor; i++) {
                 ParsedURL pu;
@@ -2562,8 +2562,8 @@ _followForm(int submit)
         }
         break;
     case FORM_INPUT_RESET:
-        for (i = 0; i < Currentbuf->formitem->nanchor; i++) {
-            a2 = &Currentbuf->formitem->anchors[i];
+        for (i = 0; i < Currentbuf->formList->nanchor; i++) {
+            a2 = &Currentbuf->formList->anchors[i];
             f2 = a2->formitem;
             if (f2->parent == fi->parent && f2->name && f2->value && f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN && f2->type != FORM_INPUT_RESET) {
                 f2->value = f2->init_value;
@@ -2614,9 +2614,9 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink")
         if (hseq >= hl->nmark)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->hrefList, po->line, po->pos);
         if (an == NULL)
-            an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+            an = retrieveAnchor(Currentbuf->formList, po->line, po->pos);
         hseq++;
     } while (an == NULL);
 
@@ -2649,9 +2649,9 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink")
         if (hseq < 0)
             return;
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->hrefList, po->line, po->pos);
         if (an == NULL)
-            an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+            an = retrieveAnchor(Currentbuf->formList, po->line, po->pos);
         hseq--;
     } while (an == NULL);
 
@@ -2678,9 +2678,9 @@ DEFUN(nthA, LINK_N, "Go to the nth link")
         return;
 
     po = hl->marks + n - 1;
-    an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+    an = retrieveAnchor(Currentbuf->hrefList, po->line, po->pos);
     if (an == NULL)
-        an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+        an = retrieveAnchor(Currentbuf->formList, po->line, po->pos);
     if (an == NULL)
         return;
 
@@ -2752,9 +2752,9 @@ _nextA(int visited)
                     goto _end;
                 }
                 po = &hl->marks[hseq];
-                an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+                an = retrieveAnchor(Currentbuf->hrefList, po->line, po->pos);
                 if (visited != true && an == NULL)
-                    an = retrieveAnchor(Currentbuf->formitem, po->line,
+                    an = retrieveAnchor(Currentbuf->formList, po->line,
                         po->pos);
                 hseq++;
                 if (visited == true && an) {
@@ -2765,9 +2765,9 @@ _nextA(int visited)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_next_anchor(Currentbuf->href, NULL, x, y);
+            an = closest_next_anchor(Currentbuf->hrefList, NULL, x, y);
             if (visited != true)
-                an = closest_next_anchor(Currentbuf->formitem, an, x, y);
+                an = closest_next_anchor(Currentbuf->formList, an, x, y);
             if (an == NULL) {
                 if (visited == true)
                     return;
@@ -2835,9 +2835,9 @@ _prevA(int visited)
                     goto _end;
                 }
                 po = hl->marks + hseq;
-                an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
+                an = retrieveAnchor(Currentbuf->hrefList, po->line, po->pos);
                 if (visited != true && an == NULL)
-                    an = retrieveAnchor(Currentbuf->formitem, po->line,
+                    an = retrieveAnchor(Currentbuf->formList, po->line,
                         po->pos);
                 hseq--;
                 if (visited == true && an) {
@@ -2848,9 +2848,9 @@ _prevA(int visited)
                 }
             } while (an == NULL || an == pan);
         } else {
-            an = closest_prev_anchor(Currentbuf->href, NULL, x, y);
+            an = closest_prev_anchor(Currentbuf->hrefList, NULL, x, y);
             if (visited != true)
-                an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
+                an = closest_prev_anchor(Currentbuf->formList, an, x, y);
             if (an == NULL) {
                 if (visited == true)
                     return;
@@ -2886,7 +2886,7 @@ _nextI(void)
 {
     BufferPoint* po;
     Anchor *an, *pan;
-    AnchorList* al = Currentbuf->img;
+    AnchorList* al = Currentbuf->imgList;
     int i, x, y, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
@@ -2911,7 +2911,7 @@ _nextI(void)
     }
     for (i = 0; i < n; i++) {
         pan = an;
-        an = closest_next_anchor(Currentbuf->img, NULL, x, y);
+        an = closest_next_anchor(Currentbuf->imgList, NULL, x, y);
         if (an == NULL && pan == NULL)
             return;
         if (an == NULL) {
@@ -2934,7 +2934,7 @@ _prevI(void)
 {
     BufferPoint* po;
     Anchor *an, *pan;
-    AnchorList* al = Currentbuf->img;
+    AnchorList* al = Currentbuf->imgList;
     int i, x, y, n = searchKeyNum();
 
     if (Currentbuf->firstLine == NULL)
@@ -2958,7 +2958,7 @@ _prevI(void)
     }
     for (i = 0; i < n; i++) {
         pan = an;
-        an = closest_prev_anchor(Currentbuf->img, NULL, x, y);
+        an = closest_prev_anchor(Currentbuf->imgList, NULL, x, y);
         if (an == NULL && pan == NULL)
             return;
         if (an == NULL) {
@@ -3013,9 +3013,9 @@ nextX(int d, int dy)
         an = NULL;
         while (1) {
             for (; x >= 0 && x < l->len; x += d) {
-                an = retrieveAnchor(Currentbuf->href, y, x);
+                an = retrieveAnchor(Currentbuf->hrefList, y, x);
                 if (!an)
-                    an = retrieveAnchor(Currentbuf->formitem, y, x);
+                    an = retrieveAnchor(Currentbuf->formList, y, x);
                 if (an) {
                     pan = an;
                     break;
@@ -3068,9 +3068,9 @@ nextY(int d)
             hseq = abs(an->hseq);
         an = NULL;
         for (; y >= 0 && y <= Currentbuf->lastLine->linenumber; y += d) {
-            an = retrieveAnchor(Currentbuf->href, y, x);
+            an = retrieveAnchor(Currentbuf->hrefList, y, x);
             if (!an)
-                an = retrieveAnchor(Currentbuf->formitem, y, x);
+                an = retrieveAnchor(Currentbuf->formList, y, x);
             if (an && hseq != abs(an->hseq)) {
                 pan = an;
                 break;
@@ -3574,7 +3574,7 @@ anchorMn(Anchor* (*menu_func)(Buffer*), int go)
     Anchor* a;
     BufferPoint* po;
 
-    if (!Currentbuf->href || !Currentbuf->hmarklist)
+    if (!Currentbuf->hrefList || !Currentbuf->hmarklist)
         return;
     a = menu_func(Currentbuf);
     if (!a || a->hseq < 0)
@@ -5943,7 +5943,7 @@ int main(int argc, char** argv)
             alarm(CurrentAlarm->sec);
         }
         mySignal(SIGWINCH, resize_hook);
-        if (activeImage && displayImage && Currentbuf->img && !Currentbuf->image_loaded) {
+        if (activeImage && displayImage && Currentbuf->imgList && !Currentbuf->image_loaded) {
             do {
                 if (need_resize_screen)
                     resize_screen();

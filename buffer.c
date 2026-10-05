@@ -542,10 +542,10 @@ void reshapeBuffer(Buffer* buf)
         buf->frameset = popFrameTree(&(buf->frameQ));
     }
 
-    buf->href = NULL;
-    buf->name = NULL;
-    buf->img = NULL;
-    buf->formitem = NULL;
+    buf->hrefList = NULL;
+    buf->nameList = NULL;
+    buf->imgList = NULL;
+    buf->formList = NULL;
     buf->formlist = NULL;
     buf->linklist = NULL;
     buf->maplist = NULL;
@@ -616,7 +616,7 @@ void reshapeBuffer(Buffer* buf)
     if (buf->real_scheme == SCM_NNTP || buf->real_scheme == SCM_NEWS)
         reAnchorNewsheader(buf);
 #endif
-    formResetBuffer(buf, sbuf.formitem);
+    formResetBuffer(buf, sbuf.formList);
 }
 
 /* shallow copy */

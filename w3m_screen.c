@@ -766,7 +766,6 @@ void addnstr_sup(const char* s, int n)
 
 void touch_cursor(void)
 {
-    int i;
     touch_line();
     for (int i = CurColumn; i >= 0; i--) {
         touch_column(i);

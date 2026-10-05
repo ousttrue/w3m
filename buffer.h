@@ -81,10 +81,10 @@ typedef struct _Buffer {
     short cols;
     short lines;
     struct input_stream* pagerSource;
-    AnchorList* href;
-    AnchorList* name;
-    AnchorList* img;
-    AnchorList* formitem;
+    AnchorList* hrefList;
+    AnchorList* nameList;
+    AnchorList* imgList;
+    AnchorList* formList;
     LinkList* linklist;
     FormList* formlist;
     struct MapList* maplist;
